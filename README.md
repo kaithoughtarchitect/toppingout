@@ -1,6 +1,8 @@
 # Topping Out
 
-**Ship one ticket at a time with AI coding agents, and end each job with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.**
+**Let AI coding agents work through your tickets for hours, even overnight, without drifting: every job starts fresh from files, a cheap model does the heavy coding, and your Claude Code limit lasts far longer.**
+
+Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 
