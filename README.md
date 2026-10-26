@@ -2,6 +2,8 @@
 
 **Ship one ticket at a time with AI coding agents, and end each job with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.**
 
+Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
+
 The smallest loop:
 
 1. a **foreman** session reads the ticket and the code, and writes exact work orders;

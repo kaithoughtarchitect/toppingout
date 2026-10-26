@@ -30,6 +30,11 @@ from wiki_graph_html import TEMPLATE as ATLAS_TEMPLATE, build_data, logo_uri  # 
 
 ROOT = SCRIPTS.parent
 OUT = ROOT / "docs"
+# the custom domain GitHub Pages serves docs/ at; written to docs/CNAME on every build, since the build clears docs/
+DOMAIN = "toppingout.dev"
+SITE_URL = "https://" + DOMAIN + "/"
+# the link preview (1200x630, dark), drawn from the front page's own headline by foreman-site-tools/og-card.mjs
+OG_CARD = "assets/brand/og-card.png"
 CONTENT = OUT / "content"  # skills/<name>.md and agents/<name>.md
 
 # the generated pages, copied unchanged into docs/raw/: (raw name, source)
@@ -2379,10 +2384,11 @@ FRONT = {
 }
 
 # The install as it will work at launch (the owner's call, 2026-10-06: show it as if it exists).
-# These commands are the requests-file entry 4 ask; until the development session confirms each one
-# works, keep "confirmed" False: every build then warns, so the site can't launch with a dead command.
+# Confirmed by the development session on 2026-10-26 (requests-file entry 4, closed): a fresh clone of the public
+# repo, the installer's 18/18 self-tests, and an install into an empty repo. If these commands change, set
+# "confirmed" back to False until they are re-checked: every build then warns, so the site never shows a dead command.
 INSTALL = {
-    "confirmed": False,
+    "confirmed": True,
     "repo": "kaithoughtarchitect/toppingout",
     "steps": [
         ("Get the package", "Anywhere on your machine. Needs git.", "git clone https://github.com/kaithoughtarchitect/toppingout"),
@@ -4552,6 +4558,26 @@ if(window.ResizeObserver)new ResizeObserver(function(){size();if(!running)draw()
 THREE_JS = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
 
 
+def share_tags(rel: str, title: str, description: str) -> str:
+    """Canonical link plus Open Graph and Twitter tags, so a shared link shows a title, a line and the card.
+    `rel` is the page's path under docs/; the front page is the site root."""
+    url = SITE_URL + ("" if rel == "index.html" else rel)
+    return (f'<link rel="canonical" href="{url}">'
+            f'<meta property="og:type" content="website"><meta property="og:site_name" content="Topping Out">'
+            f'<meta property="og:url" content="{url}"><meta property="og:title" content="{esc(title)}">'
+            f'<meta property="og:description" content="{esc(description)}">'
+            f'<meta property="og:image" content="{SITE_URL}{OG_CARD}"><meta property="og:image:width" content="1200">'
+            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Stop babysitting agents. Hire a foreman.">'
+            f'<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}">'
+            f'<meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="{SITE_URL}{OG_CARD}">')
+
+
+SHARE_MARK = "<!--share-->"
+# a generated page in raw/ shares as the site page that frames it
+RAW_SHARE = {"raw/route.html": "route.html", "raw/atlas.html": "atlas.html", "raw/board.html": "board.html",
+             "raw/foreman-playbook.html": "playbooks.html", "raw/builder-playbook.html": "playbooks.html"}
+
+
 class Site:
     def __init__(self):
         self.data = build_data(ROOT / "skills-wiki")
@@ -4598,13 +4624,13 @@ class Site:
                 f'<span class="where">{esc(here)}</span><button type="button" data-plan aria-expanded="false">Site plan</button></header>')
         return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
                 f'<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-                f'<title>{esc(title)}</title><meta name="description" content="{esc(description)}">'
+                f'<title>{esc(title)}</title><meta name="description" content="{esc(description)}">{SHARE_MARK}'
                 f'{self.icon}{THEME_HEAD}{FONTS}<style>{BASE_CSS}{css}</style></head><body>'
                 f'<div class="site">{plan}<div class="mainc">{mbar}{body}</div></div>'
                 + SHELL_JS + THEME_TAIL + WELCOME_JS + "</body></html>\n")
 
     def foot(self) -> str:
-        return '<footer class="site-foot"><span>Topping Out</span><span>MIT licence</span><span>toppingout.dev</span></footer>'
+        return '<footer class="site-foot"><span>Topping Out</span><span>MIT licence</span><span>' + DOMAIN + '</span></footer>'
 
     def framed(self, sheet: str, title: str, description: str, raw: str) -> str:
         body = f'<iframe class="frame" src="{raw}" title="{esc(title)}"></iframe>'
@@ -5644,10 +5670,16 @@ def main() -> int:
     for d in ("skills", "agents", "raw"):
         (OUT / d).mkdir()
     (OUT / ".nojekyll").write_text("", encoding="utf-8")
+    (OUT / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8", newline="\n")
 
     written = []
 
     def write(rel: str, text: str) -> None:
+        if rel.endswith(".html"):
+            m = re.search(r'<title>(.*?)</title><meta name="description" content="(.*?)">' + SHARE_MARK, text)
+            if not m:
+                raise SystemExit(f"build_site: {rel} has no title and description to share")
+            text = text.replace(SHARE_MARK, share_tags(rel, html.unescape(m.group(1)), html.unescape(m.group(2))), 1)
         (OUT / rel).write_text(text, encoding="utf-8", newline="\n")
         written.append(OUT / rel)
 
@@ -5658,6 +5690,9 @@ def main() -> int:
             shutil.copyfile(ROOT / src, OUT / raw)
         # every generated page opens dark first too, also when opened on its own (D23), and in standards mode, not quirks
         text = (OUT / raw).read_text(encoding="utf-8").replace(OLD_THEME_HEAD, "")
+        frame = RAW_SHARE[raw]
+        m = re.search(r"<title>(.*?)</title>", text)
+        text = (share_tags(frame, html.unescape(m.group(1)) + " · Topping Out", FRONT["description"]) if m else "") + text
         if not text.lstrip().lower().startswith("<!doctype"):
             text = "<!doctype html>" + THEME_HEAD + text
         else:
