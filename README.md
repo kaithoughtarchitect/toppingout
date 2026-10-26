@@ -9,6 +9,8 @@ Each job ends with evidence you can check: what was asked, what was built, what 
 > **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and the expensive model burns your usage on typing.
 >
 > **What Topping Out does:** splits the work. A foreman plans each job in a fresh session and never writes code, a cheaper builder does the typing, inspectors from another model family check it, and you give the word for what matters.
+>
+> **Even a very cheap builder works.** The weaker the builder, the tighter the foreman writes the work orders: one checkable outcome each, every decision already settled ([builder profiles](BUILDER-PROFILES.md)).
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 
