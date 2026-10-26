@@ -6,6 +6,16 @@ Each job ends with evidence you can check: what was asked, what was built, what 
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 
+![The project board: an Ishikawa (fishbone) diagram whose head is the product outcome and whose ribs are the jobs that feed it, here a synthetic example](assets/readme/board.webp)
+
+*The project board (synthetic example): the head is what the product must do, every rib is one job. Solid is merged, yellow is next, dotted is blocked.*
+
+### Try it in 2 minutes
+
+1. `git clone https://github.com/kaithoughtarchitect/toppingout`
+2. In Claude Code, in the repo that will hold your records, say: `Read <path to toppingout>/skills/f-setup/SKILL.md and follow it`
+3. Give the foreman one small ticket. It walks the site, then asks for your "go".
+
 The smallest loop:
 
 1. a **foreman** session reads the ticket and the code, and writes exact work orders;
@@ -150,6 +160,8 @@ Most of the method is instructions the agents follow; a few checks are scripts t
 | The review is independent | **a script, when used:** `scripts/cross-review-dispatch.mjs` seats the reviewer on another vendor's CLI, in a separate process, from a brief (`/pack-review`) | the foreman writes the brief, so it chooses what the reviewer is pointed at and told (the reviewer can also read the checkout, read-only); seats exist only for Claude and codex foremen; this is separation, not adversarial isolation |
 | The whole ask is done | **instruction plus a record:** the acceptance ledger lists every requirement and check with its evidence, and `/f-signoff` refuses unless every row is PASS. A change to the ask is recorded in the owner's own words (`METHOD.md` §2) | the ledger is written and checked by agents; a wrong PASS is caught only by the reviews or by you |
 | Builder names stay out of the records | **a script the foreman runs:** `skills/f-signoff/names-check.mjs` checks every staged record at the records push and exits non-zero on a hit | it runs only when the foreman calls it at the records push; it checks only the names in your names file, and skips allowed contexts and rendered board pages |
+
+If this saves you a babysitting session, a star helps others find it.
 
 ## Licence
 
