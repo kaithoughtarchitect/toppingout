@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "project": {
+    "slug": "example-project",
+    "title": "Example Project",
+    "eyebrow": "Example product · project from BLUEPRINT-2026-09-21",
+    "standfirst": "One sentence on where the project stands today: what has merged, what is being built, what is waiting on a decision.",
+    "head": {
+      "outcome": "The outcome every job feeds: the one thing the project exists to make true",
+      "test": "how that outcome is judged (e.g. the owner's walkthrough verdict), never a green gate alone"
+    },
+    "repo": "<target repo path>",
+    "project_file": "foreman/projects/example-project/PROJECT.md",
+    "owed": [
+      "Something the project still owes, kept visible until it is done or dropped on the owner's word."
+    ],
+    "lesson": {
+      "title": "A lesson that holds across jobs",
+      "rule": "The rule it leaves, in one or two sentences."
+    },
+    "alerts": [
+      "Anything the owner must not miss, e.g. the tracker disagreeing with the repository."
+    ],
+    "facts": [
+      "A standing fact about the project, e.g. a path no job may touch."
+    ]
+  },
+  "publish": {
+    "url": null,
+    "granted": false,
+    "local_html": "board.html"
+  },
+  "version": 1,
+  "updated": "2026-09-25",
+  "next": "01",
+  "jobs": [
+    {
+      "id": "00",
+      "title": "Frozen acceptance controls",
+      "ticket": "tickets/TICKET-00-frozen-controls.md",
+      "key": null,
+      "state": "merged",
+      "needs": [],
+      "summary": "What this job made possible, in one or two sentences.",
+      "pr": "#1",
+      "merge": "abc1234",
+      "notes": [
+        "A lesson or debt worth keeping visible on the board."
+      ],
+      "kind": "build",
+      "run": "J1",
+      "twigs": [
+        "what it made possible",
+        "the proof that mattered",
+        "a lesson worth keeping"
+      ],
+      "figures": [
+        {
+          "n": "0",
+          "label": "tests red at head that were green at base",
+          "tone": "good"
+        }
+      ],
+      "lesson": "The one lesson this job leaves, the same one its Logbook card carries."
+    },
+    {
+      "id": "01",
+      "title": "First buildable slice",
+      "ticket": "tickets/TICKET-01-first-slice.md",
+      "key": null,
+      "state": "open",
+      "needs": [
+        "00"
+      ],
+      "summary": "What it builds and why it is next.",
+      "notes": [],
+      "kind": "build"
+    },
+    {
+      "id": "02",
+      "title": "Slice that waits on 01",
+      "ticket": "tickets/TICKET-02-second-slice.md",
+      "key": null,
+      "state": "open",
+      "needs": [
+        "01"
+      ],
+      "summary": "Blocked until job 01 merges.",
+      "notes": [],
+      "kind": "build"
+    },
+    {
+      "id": "03",
+      "title": "A decision, not a build",
+      "ticket": "tickets/TICKET-03-decision.md",
+      "key": null,
+      "state": "decision",
+      "needs": [],
+      "summary": "No work order can unblock this; it needs the owner's call or a research spike.",
+      "decision": "What exactly must be decided, by whom, and what each answer would unlock.",
+      "notes": [],
+      "kind": "decision"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Topping Out is LF everywhere: bash runners break on CRLF, and the method checks reports for CR bytes.
+* text=auto eol=lf
+*.png binary

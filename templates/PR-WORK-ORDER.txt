@@ -1,0 +1,39 @@
+Use this ONLY after the owner has said the word to push and open
+the PR (e.g. "open the PR"). Otherwise the foreman opens it itself
+on that word. Opening is never merging.
+
+OWNER INSTRUCTIONS - DO NOT COPY THIS BLOCK
+==============================================
+<"Sent by the foreman as a one-line pointer." | "Owner: paste the one-line pointer below.">
+  Read the file <this file's absolute path>, lines <A> to <B> only, and carry it out exactly as written.
+==============================================
+
+>>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
+You are the builder on J<N>. This is work order <m>: OPEN THE PR.
+The owner has authorised pushing this branch and opening the PR.
+ONE job. No code change. Do NOT merge. One report, STOP.
+
+Use Bash (Git Bash on Windows). Prefix line on every command:
+  REC="<records>"; DAY="<day folder>"; WT="<worktree>";
+
+PART 0 - STATE CHECK
+0.1  git -C "$WT" rev-parse HEAD    -> <final head sha> (the reviewed head)
+0.2  git -C "$WT" status --short    -> only: <the profile's dirty-file allowlist, or empty>
+
+PART A
+A.1  node "<skills>/f-signoff/names-check.mjs" --names "<names file>" [--allow "<allowed file>"] "$DAY/<PR body file>"
+     (exit 0 required; exit 1 or 2: STOP)
+     (must print nothing; if it prints anything, STOP)
+A.2  git -C "$WT" push <remote> <branch>        (never --force)
+A.3  git -C "$WT" ls-remote <remote> refs/heads/<branch>   -> must equal <final head sha>
+A.4  Open the PR on <host> from <branch> to <main>, title "<KEY> <title>",
+     body = the file above, exactly: <host CLI or API command>
+A.5  Paste the PR number and URL.
+
+REPORT: $DAY/JOB-<N>-WORK-ORDER-<m>-REPORT.md: every command and output,
+the PR URL, final line "WORK ORDER <m> DONE" or "WORK ORDER <m> STOPPED: <why>".
+
+RULES: never merge, never force-push, never push any other branch, never
+edit the PR body. Never name a model, agent, vendor or tool.
+### END OF WORK ORDER <m>. WRITE THE REPORT FILE, THEN STOP.
+<<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<

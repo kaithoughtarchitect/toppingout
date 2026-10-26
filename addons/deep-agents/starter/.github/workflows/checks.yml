@@ -1,0 +1,57 @@
+# CI: re-run the repo's checks on a fresh Linux machine on every push and PR.
+# No secrets are used: tests run on a scripted fake model, so nothing calls a paid API.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install
+        run: python -m pip install -r requirements.txt
+
+      - name: Deep Agents sources (fetched if they aren't committed)
+        run: python deepagents-ref/scripts/setup_sources.py --if-missing
+
+      - name: Tests (fake model, includes a real two-process restart)
+        run: |
+          if [ -d tests ]; then python -m pytest -rfE; else echo "no tests/ yet: skipped"; fi
+
+      - name: Deep Agents API check (no invented imports or parameters)
+        run: |
+          # bash -e: guard the folder first, or a missing src/ fails the step silently
+          if [ -d src ] && files=$(find src -name '*.py') && [ -n "$files" ]; then
+            python deepagents-ref/scripts/check_imports.py $files
+          else
+            echo "no src/ yet: skipped"
+          fi
+
+      - name: Reference wiki lint (structure and links; stale pages are reported, refresh with MAINTAINING.md)
+        run: python deepagents-ref/scripts/wiki_lint.py
+
+      - name: Checked recipes still hold on the installed deepagents
+        run: python deepagents-ref/scripts/check_recipes.py
+
+      - name: Topping Out install check
+        run: python .claude/skills/f-board/test_render_board.py

@@ -1,0 +1,68 @@
+OWNER: give the builder the one-line pointer below, not the text.
+  Read the file <this file's absolute path>, lines <A> to <B> only, and carry it out exactly as written.
+
+>>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
+You are the builder on J<N> of <product line>.
+This is the PRE-FLIGHT: a no-product-writes check of what this environment
+lets you do (its one side effect: `git fetch` updates remote-tracking refs), before any real work starts. You write NO product code,
+you make NO commits, you create NO worktree, and you change nothing
+except one scratch file (created and deleted in check 4) and the one
+report file at the end.
+
+WHO DOES WHAT
+- Another session, "the foreman", plans the work and
+  writes every work order. You build, one work order at a time.
+- The owner carries work orders and reports between the two sessions
+  by hand. Nobody watches this session between steps, so never stop
+  to ask a question and wait: write it into the report.
+- Report only what you OBSERVED. If you did not run something, say
+  "not run" - never describe what a command would probably print.
+
+THE TWO REPOSITORIES
+  Records: <records repo path>
+  System under test: <target repo path>
+  Worktrees are created under: <worktree root>
+
+THE CHECKS - run each, paste the exact command and its output
+1. Shell. Which shell do your commands run in? Run pwd. Name the
+   folder this environment treats as your open project. Work orders
+   require Bash (Git Bash on Windows); prove it:
+     bash --version | head -1
+     bash -c 'comm -13 <(printf "a\nb\n") <(printf "a\nc\n")'     (must print: c)
+2. Reading the target repo, outside your project:
+     git -C "<target>" fetch <remote> --prune
+     git -C "<target>" rev-parse <remote>/<main>
+     git -C "<target>" status --short
+   Expected: <remote>/<main> = <sha>, status empty. Say whether each ran
+   or was refused.
+3. Read the first 20 lines of <a known file in the target> and report
+   its first heading line.
+4. WRITING outside your project: create <worktree root>/preflight-j<N>.txt
+   containing "preflight", read it back, DELETE it, confirm it is gone.
+   If refused, quote the exact message.
+5. Tools: git --version, <package manager> --version, <runtime> --version,
+   docker --version, docker ps --format "{{.Names}} | {{.Status}}"
+   (read-only; never restart, stop or remove a container),
+   <worktree tool> --version. Report output or "not found".
+6. Permissions. Which of these happen WITHOUT asking a human: edit
+   files, run shell commands, git commit, git push? Report what you
+   observed, not what you assume.
+
+WRITE ONE REPORT FILE, LF LINE ENDINGS
+  <day folder>/JOB-<N>-BUILDER-PREFLIGHT-REPORT.md
+One section per check, each with the exact command and its output,
+then a final line: "READY" if checks 1 (Bash and process substitution),
+2, 3, 4 and 5 (git, package manager, runtime) all worked, otherwise "BLOCKED:" and exactly what
+failed.
+
+RULES THAT ARE NOT NEGOTIABLE
+1. No product code, no commits, no worktree, no push, no merge, no
+   tickets, no messages, no branch or worktree deletion.
+2. Never git add -A.
+3. Never name a model, an agent, a vendor of AI or a tool as the
+   producer of work. Only "the builder" and "the foreman".
+4. Never restart, stop or remove a container.
+5. Do not run any test suite in this step.
+
+### END OF THE PRE-FLIGHT. WRITE THE REPORT FILE, THEN STOP.
+<<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<

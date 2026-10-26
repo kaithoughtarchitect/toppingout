@@ -1,0 +1,188 @@
+FOREMAN PRE-SEND CHECKLIST (tick every box before the pointer goes out; RULES.md "Foreman rules")
+[ ] One independently verifiable outcome (it may carry several D- decisions; two outcomes = two work orders).
+[ ] Every decision labelled D-... and final, down to the exact expression or data shape.
+[ ] Every command exact; prefix line on every command; NEW and SUITE defined once.
+[ ] State check pins worktree, branch and the exact HEAD sha (re-pinned after the previous work order's review).
+[ ] Tests that must fail at the current head are named - and each one CAN exist (checked against the code). A correct test that cannot fail first (the language already gives the behaviour, or it pins a value that already exists, like a product name) is named as such under TESTS THAT CANNOT FAIL FIRST, with what pins it, never listed as must-fail.
+[ ] Hostile-input checklist H1-Hn specific to this task; coverage gate, probes per task, G1-G6, untested paths.
+[ ] Existing tests of every touched module run before the commit, with the adapter's literal ran_ok + failed_ids diff (templates/TEST-ADAPTERS.md).
+[ ] Reading fence lists only what the builder may open.
+[ ] Every anchor a probe uses stays unique after this work order's edits (checked with grep).
+[ ] After a plan-check finding changed a decision, every probe anchor and test name that cites that decision was re-checked.
+[ ] Every assertion about logs, callbacks or library behaviour was probed in scratch first.
+[ ] Page work: you clicked the change in a real browser before the owner does (a string test doesn't prove page JavaScript).
+[ ] Character or prompt text: the owner's intent is quoted in words, not a list of forbidden nouns.
+[ ] Each long run (a whole suite, a base-vs-head leg) in its own tool call, writing its own exit file; never two chained in one call (a call past the builder's tool limit loses the exit code).
+[ ] One report file, numbered sections, STOP.
+[ ] Payload line range computed from the banners; one-line pointer only.
+[ ] No builder name anywhere.
+
+OWNER INSTRUCTIONS - DO NOT COPY THIS BLOCK
+==============================================
+<"Sent by the foreman as a one-line pointer." | "Owner: paste the one-line pointer below.">
+  Read the file <this file's absolute path>, lines <A> to <B> only, and carry it out exactly as written.
+
+CLIPBOARD CHECK - the foreman's cross-check that the pointer's line range is right (computed from the banner line numbers, not by eye):
+  The payload is lines <A> to <B> of this file.
+  First payload line reads: "You are the builder on J<N>. This is work order <m>."
+  Last payload line reads:  "### END OF WORK ORDER <m>. WRITE THE REPORT FILE, THEN STOP."
+==============================================
+
+>>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
+You are the builder on J<N>. This is work order <m>.
+Done when: <the tests that pass at head>, one commit, the report written.
+Read the whole work order before you act. ONE outcome: <task, in one line>,
+test-first, one commit, captures, one report, STOP.
+Every design decision below is made. Do not change or extend any of
+them. If one cannot be built exactly as written, stop and say why.
+Do not wait for anything.
+
+Use Bash (Git Bash on Windows). Start EVERY command with this exact prefix line:
+  REC="<records>"; DAY="<day folder>"; WT="<worktree>"; source "$REC/test-adapter.sh"; O="$DAY/wo<m>"; mkdir -p "$O";
+
+Test commands (always from $WT, through the repo's test adapter, templates/TEST-ADAPTERS.md):
+  NEW   = ( cd "$WT" && run_tests "$O/new.txt" "$O/new.exit" <new test file> )
+  SUITE = ( cd "$WT" && run_tests "$O/suite.txt" "$O/suite.exit" <the whole test folder> )
+  (paid keys are stripped inside run_tests by the adapter's no_paid guard)
+
+FILES YOU MAY READ
+------------------
+  <the previous capture's baseline file>, the runners in $DAY, and ANY
+  file inside $WT. Nothing else in $DAY or $REC.
+
+PART 0 - STATE CHECK (stop on any mismatch; write it in the report)
+-------------------------------------------------------------------
+0.1  git -C "$WT" rev-parse --show-toplevel          -> <worktree path>
+0.2  git -C "$WT" branch --show-current                -> <branch>
+0.3  git -C "$WT" rev-parse HEAD                        -> <exact full HEAD sha after the last reviewed work order>
+0.4  git -C "$WT" status --short                       -> only: <the profile's dirty-file allowlist, or empty>
+0.5  (diagnostics) git -C "$WT" log --oneline <base>..HEAD | wc -l -> <n>; git -C "$WT" log -1 --format=%s -> <subject>
+0.6  ls "$REC/foreman/jobs/<job file name>"     -> the file is listed (existence only; don't open it).
+     Missing: STOP. This isn't a job yet; work order 1 creates the job file.
+
+<PART A - REPAIRS FROM THE LAST REVIEW, if any: for each R<i>, the
+ test to add (must FAIL now), the exact fix, the test PASSES after.>
+
+THE DECISIONS (settled)
+-----------------------
+D-<x>  Where: <function, position in it, signature kept or changed>.
+D-<y>  What: <exact expressions, data shapes, attribute access rules>.
+D-<z>  Failure behaviour: <which errors are caught (Python: Exception,
+       never BaseException), what is written, what passes through unchanged>.
+D-<w>  Invariants: <what the change must never alter>.
+D-<v>  Data rule: <what may and may not appear in any payload or error>.
+
+HOSTILE-INPUT CHECKLIST (every item needs a test; a repeat of a
+finding already warned about here ends this builder's run)
+-----------------------------------------------------------------
+H1 missing keys / wrong types: <this task's concrete case -> expected>.
+H2 validation bypass (e.g. Pydantic model_construct, an ORM's unvalidated
+   constructor, a cast that skips the parser): <case -> expected>.
+H3 control characters in labels: <case -> expected>.
+H4 data riding along in a chained error or a payload (e.g. Python
+   __context__/__cause__, a wrapped error's message): <a marker string
+   like "SECRET-PEER-TEXT" must appear nowhere>.
+H5 trusting unverified input: <what untrusted value must never reach>.
+<For a database proof instead: isolation of the disposable DB; never
+ the shared port; it cannot pass for the wrong reason; no secrets or
+ DSNs in failure output.>
+
+TEST-FIRST - these tests must FAIL at the current head
+------------------------------------------------------
+Write them FIRST, run NEW, paste the failure lines. Every one must
+fail. If any passes, stop: it does not test what it names.
+  <test_name>   (<VP id>, <H id>)
+
+TESTS THAT CANNOT FAIL FIRST (named by the foreman; not run red)
+------------------------------------------------------------------
+  <test_name> - why it can't fail first; pinned by mutation probe <id> in <step>   (or "none")
+  ...
+<If the code under test already exists: BEFORE the real run, break
+ one key assertion on purpose, run, confirm it FAILS, paste the line,
+ restore the assertion exactly (editor, your file only, never git
+ checkout), run again - it must pass.>
+
+BUILD
+-----
+B.1  Implement D-<x> to D-<v> in <file>.
+B.2  Run NEW: all pass. Run SUITE: RAN_OK, then the failing-test IDs
+     identical to the baseline's (the repo's test adapter,
+     templates/TEST-ADAPTERS.md), passed = baseline passed + your new tests:
+       ran_ok "$O/suite.txt" "$O/suite.exit" && diff <(failed_ids <baseline output>) <(failed_ids "$O/suite.txt")
+     Any difference: do not commit; report; STOP.
+B.2a COVERAGE GATE. Run NEW once more under branch coverage:
+       <NEW under the profile's branch-coverage command, e.g. pytest
+        --cov=<new module> --cov-branch --cov-report=term-missing>
+     Paste the table. Every uncovered line or branch in the code you
+     wrote this work order needs EITHER a test (add it, test-first) OR a
+     one-line reason the foreman already gave in this
+     work order (list: <none | the allowed exceptions>). Nothing else.
+B.2b PROBES FOR THIS TASK'S GUARDS. For every guard this work order adds
+     (<list them: the check, the flag-and-raise, the freeze ...>), add
+     its mutation probe to <probe harness> now and run it:
+       <probe command> <probe ids>
+     Every probe must print BITES. On GREEN: report and STOP (rule 7).
+B.2c THE STANDARD GAP CHECKLIST. For each item, name the test that
+     covers it, or write "not applicable: <why>":
+       G1 cancellation (Python: CancelledError / BaseException; other
+          runtimes: their cancellation signal) passes through every
+          handler you wrote untouched;
+       G2 every outgoing call leg receives the deadline/timeout;
+       G3 every input field reaches its destination (assert it there);
+       G4 every error path is mapped to its typed error AND tested;
+       G5 multi-item cases (two or more seats/rows/entries, mixed),
+          not only a single item;
+       G6 the caller's own bad input is refused with the local typed
+          error, never a raw library exception.
+B.3  <forbidden-import search> (must print nothing)
+B.4  Commit:
+       git -C "$WT" add <explicit paths>
+       git -C "$WT" diff --cached --name-only     (exactly those)
+       git -C "$WT" commit -m "<KEY> <verb phrase>"
+B.5  Captures, serially: bash "$DAY/<gate runner>" t<k> then
+     bash "$DAY/<other runner>" t<k>; wait for "ALL DONE" in each
+     summary.txt; count the .exit files.
+
+REPORT - ONE FILE, LF ENDINGS
+-----------------------------
+  $DAY/JOB-<N>-WORK-ORDER-<m>-REPORT.md
+Every claim cites its evidence: the command and its output, the commit
+hash, the test name. A claim without evidence is treated as not done.
+In order: 0. The report's first line: "NEEDS FROM THE FOREMAN: none" or
+"NEEDS FROM THE FOREMAN: BLOCKED on <what>". 1. PART 0 outputs. 2. The test-first failure lines (say which,
+if any, passed and why). 3. NEW and SUITE summary lines, the diff
+command and its output. 3a. The coverage table (B.2a) and, for each
+uncovered line, its test or its allowed reason. 3b. The probe results
+(B.2b), each BITES. 3c. The gap checklist (B.2c), G1-G6, each with its
+test name or "not applicable: <why>". 3d. UNTESTED PATHS: every path in
+your code you did NOT test, and why - write "none" only if the coverage
+table is empty. 4. B.3 output. 5. git log <base>..HEAD and
+git show --stat HEAD. 6. The capture tables and every difference from
+the previous capture - do not explain a difference away. 7. Anything
+not done exactly as written, and why - or "none". 7a. NOT CONFIRMED:
+anything you could not confirm, and where you looked - or "none". 8. The CR-byte count
+of this report (must be 0). 9. Final line: "WORK ORDER <m> DONE" or
+"WORK ORDER <m> STOPPED: <why>".
+
+RULES THAT ARE NOT NEGOTIABLE
+-----------------------------
+1. Touch only <files>.
+2. One commit, message exactly as B.4, subject line only, no trailer
+   of any kind, explicit paths, never git add -A, no push, no merge,
+   no ticket changes, no messages.
+3. Never name a model, an agent, a vendor of AI or a tool as the
+   producer of work, anywhere.
+4. Every test run strips the paid keys first; every -u before every
+   VAR=value.
+5. Serial runs only. Never restart, stop or remove a container.
+6. A new red test anywhere is a finding: report it, never retry it to
+   green.
+7. A mutation probe that comes back GREEN (the tests still pass with
+   the guard removed) almost always means a MISSING TEST, not a badly
+   aimed probe. If any probe goes GREEN: report the probe, the exact
+   mutation and the output, and STOP. Never re-aim the probe, never
+   swap in a contrived input to make it bite, never weaken the
+   mutation. The foreman decides what test is missing.
+
+### END OF WORK ORDER <m>. WRITE THE REPORT FILE, THEN STOP.
+<<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<

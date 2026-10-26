@@ -1,0 +1,61 @@
+THE INDEPENDENT INSPECTION: /pack-review -> /xreview -> /adjudicate
+
+Who does what
+  1. The foreman runs /pack-review in its own session (templates/PACK-REVIEW.md)
+     and writes <day folder>/blind-pack/REVIEW-BRIEF.md plus the diff file.
+     Every path inside the brief is ABSOLUTE (the reviewer runs in the
+     target worktree, not in the records repo).
+  2. The foreman checks the brief BEFORE it goes out (PACK-REVIEW.md §2):
+     the goal and constraints are this ticket's (verbatim), the range is
+     base..final head, the non-goals are the settled decisions, nothing
+     names a model or vendor.
+  3. A FRESH session on a DIFFERENT model family runs /xreview on it.
+     If the foreman is Claude, the reviewer is codex (the codex CLI
+     on the subscription, its latest model); if the foreman is
+     codex, the reviewer is Claude. Never a session that has seen the
+     work.
+  4. The reviewer's output comes back; the foreman runs
+     /adjudicate: every claim reproduced first, then ACCEPT / REJECT /
+     PARTIAL / CANNOT VERIFY. Accepted fixes go to the builder as a
+     work order (test-first), or, in the converged case, are made by the
+     foreman exactly as the reviewer specified.
+
+HOW THE REVIEW REACHES THE REVIEWER - pick one
+
+First name the foreman's family: claude (a Claude / Anthropic model) or
+codex (a codex / OpenAI model). A Pi-hosted or other harness foreman uses
+the family of the MODEL doing the work, not the harness name. The reviewer
+is always the OTHER family. If the family is neither, there is no
+independent seat: stop and tell the owner.
+
+A) Automated (preferred once set up). The dispatcher lives in the
+   RECORDS repo (SETUP §1 installs it at <records>/scripts/, next to
+   <records>/.claude/skills/xreview/SKILL.md, which it embeds). Call it
+   by absolute path, pass the foreman's family as --host, and point the
+   reviewer at the target worktree:
+     node "<records>/scripts/cross-review-dispatch.mjs" --host <the foreman's family: claude | codex>        --cwd "<absolute target worktree>"        --brief "<absolute day folder>/blind-pack/REVIEW-BRIEF.md"        --out "<absolute day folder>/blind-pack/xreview-out"
+   Claude foreman: --host claude (the reviewer is seated on codex).
+   codex foreman:  --host codex  (the reviewer is seated on Claude).
+   It seats the reviewer on the other family by a fixed rule, embeds the
+   xreview skill and the work order, runs it headless and read-only, and
+   refuses (exit 2, CROSS_REVIEW_NO_SEAT) if no independent seat exists or
+   the --host family is not recognised. Check it first with --self-test.
+   (An Orca pane running the OTHER family's CLI in the target worktree is
+   the interactive alternative.)
+
+B) Hand-carried: the owner opens a fresh session of the OTHER family in
+   the target worktree (Claude foreman -> a fresh codex session; codex
+   foreman -> a fresh Claude Code session) and pastes the ONE line below
+   (every path absolute; the xreview skill may not be installed in the
+   target repo, so the line names its file). Open the session with:
+     Claude foreman:  cd "<absolute target worktree>" && codex
+     codex foreman:   cd "<absolute target worktree>" && claude
+   The line to paste is the same for either family:
+
+>>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
+Follow the review skill in <records>/.claude/skills/xreview/SKILL.md exactly, on the review brief <absolute day folder>/blind-pack/REVIEW-BRIEF.md (the diff it names is in the same folder; read any file in this worktree for context, nothing else in the records). Write your complete output to <absolute day folder>/blind-pack/XREVIEW-ANSWER.md, then STOP.
+<<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<
+
+   Then tell the foreman: "xreview is back".
+   If the reviewing session says in its Independence section that it has
+   seen the work, say so: /adjudicate weighs it differently.

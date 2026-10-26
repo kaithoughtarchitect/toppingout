@@ -1,0 +1,55 @@
+OWNER INSTRUCTIONS - DO NOT COPY THIS BLOCK
+==============================================
+<"Sent by the foreman as a one-line pointer." | "Owner: paste the one-line pointer below.">
+  Read the file <this file's absolute path>, lines <A> to <B> only, and carry it out exactly as written.
+==============================================
+
+>>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
+You are the builder on J<N>. This is work order 2: THE PLAN.
+ONE job: write the plan into the job file. No product code, no
+commits in the target repo. One report, STOP. Do not wait for anything.
+
+Use Bash (Git Bash on Windows). Start EVERY command with this exact prefix line:
+  REC="<records>"; DAY="<day folder>"; WT="<worktree>"; J="<job file>";
+
+FILES YOU MAY READ
+  $J, the ticket transcript <path>, and ANY file inside $WT. Nothing
+  else in $DAY or $REC. <If the builder is on audition, this fence is
+  what keeps the hard points out of reach: list nothing that names them.>
+
+PART 0 - STATE CHECK
+0.1  git -C "$WT" rev-parse HEAD       -> <base sha>
+0.2  git -C "$WT" status --short       -> only: <the profile's dirty-file allowlist, or empty>
+0.3  test -f "$J" && echo ok           -> ok
+
+PART A - PLAN
+Write the plan into the job file's Phases 1-4, as plain steps (no
+planning commands). Never stop at a question: nobody is watching;
+write every question into the report and continue with the most
+conservative reading. Checks are the repo's own: <the gates>.
+  A.1 Requirements: every acceptance criterion, verbatim, as a
+      numbered requirement, plus explicit exclusions (who owns them).
+  A.2 Design: components, data flow, error handling (every failure ->
+      an exact type), boundaries, alternatives rejected and why.
+  A.3 Plan validation: every file:line you cite, verified by a command.
+  A.4 Verification points: a table, header <exact>, at least 3 negative.
+  A.5 Tasks: ordered, each with owned files, its tests, and the
+      existing tests of every module it touches.
+
+Every claim in the plan cites file:line from $WT. A citation you did
+not verify by command is marked "unverified".
+
+REPORT - ONE FILE, LF ENDINGS: $DAY/JOB-<N>-WORK-ORDER-2-REPORT.md
+  1. PART 0 outputs. 2. Which path you took (commands or plain steps).
+  3. The plan's section list with line numbers in $J. 4. Every question
+  you would have asked, with the reading you chose. 5. Every citation
+  you could not verify. 6. CR-byte count (0). 7. Final line:
+  "WORK ORDER 2 DONE" or "WORK ORDER 2 STOPPED: <why>".
+
+RULES THAT ARE NOT NEGOTIABLE
+1. No product code. No commit in either repo.
+2. Never name a model, agent, vendor or tool. Only "the builder".
+3. No push, merge, ticket change or message.
+
+### END OF WORK ORDER 2. WRITE THE REPORT FILE, THEN STOP.
+<<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<

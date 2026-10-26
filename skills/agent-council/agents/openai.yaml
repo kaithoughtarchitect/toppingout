@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Council"
+  short_description: "Cost-aware repository council with native seats"
+  default_prompt: "Use $agent-council to choose an appropriate assurance profile and settle this repository-dependent decision with an independent audit."

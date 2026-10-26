@@ -1,0 +1,19 @@
+# Python caches
+__pycache__/
+*.pyc
+
+# working folders and temporary files
+scratch/
+*.tmp
+*.part
+
+# picker receipts: a pick is a one-off record for one session, never package content
+council-pick.json
+plancheck-pick.json
+agent-council-pick.json
+
+# editor and OS clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

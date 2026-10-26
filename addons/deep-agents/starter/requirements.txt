@@ -1,0 +1,8 @@
+# Agent runtime. deepagents is pinned to the version deepagents-ref/ was checked against;
+# bump it only together with deepagents-ref (see deepagents-ref/MAINTAINING.md).
+deepagents==0.7.29
+langchain-openrouter>=0.2.0
+langgraph-checkpoint-sqlite==3.1.1
+langgraph-checkpoint-postgres==3.1.2
+psycopg[binary,pool]
+pytest

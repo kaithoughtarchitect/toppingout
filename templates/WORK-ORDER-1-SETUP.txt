@@ -1,0 +1,112 @@
+OWNER INSTRUCTIONS - DO NOT COPY THIS BLOCK
+==============================================
+<"Sent by the foreman as a one-line pointer." | "Owner: paste the one-line pointer below.">
+  Read the file <this file's absolute path>, lines <A> to <B> only, and carry it out exactly as written.
+CLIPBOARD CHECK (the foreman's own cross-check that A-B is right):
+  First payload line: "You are the builder on J<N>. This is work order 1."
+  Last payload line:  "### END OF WORK ORDER 1. WRITE THE REPORT FILE, THEN STOP."
+==============================================
+
+>>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
+You are the builder on J<N>. This is work order 1.
+ONE job: set up the job and capture the baseline. You write NO
+product code and make NO commits. Every command is exact. If a step
+fails, write the command and its output into the report and STOP.
+
+Use Bash (Git Bash on Windows). Your shell may not keep variables between calls, so start
+EVERY command with this exact prefix line:
+  REC="<records>"; DAY="<day folder>"; SUT="<target repo>"; WT="<worktree>";
+
+FILES YOU MAY READ IN THIS STEP - ONLY THESE
+  $DAY/<gate runner>, $DAY/<other runner>, <job template path>, and
+  the test files PART 4 names inside $WT. Do not open other day-folder notes.
+
+PART 0 - STATE CHECK
+0.0  node "<skills>/f-signoff/endgame.mjs" check --root "$REC"     expected: ENDGAME_CLEAR (exit 0).
+     Any other result: STOP and report it. The last job's end-game isn't finished.
+0.1  git -C "$SUT" fetch <remote> --prune
+0.2  (separate call) git -C "$SUT" rev-parse <remote>/<main>    expected: <sha>
+     If different: use YOUR value as the base, say so, continue.
+0.3  ls -d "$WT"     expected: "No such file or directory". If it exists: STOP.
+     <Pane link (METHOD §4): the foreman has already cut $WT. Then 0.3 expects $WT to EXIST,
+      1.1 is skipped, and 1.2-1.5 run as checks on the foreman's worktree.>
+0.4  git -C "$SUT" status --short     expected: empty. Never change $SUT itself.
+
+PART 1 - CUT THE WORKTREE BY NAME
+1.1  <worktree tool> create --repo "<target>" --name <branch> --base-branch <remote>/<main> <flags>
+     Never "main", never a SHA.
+1.2  cd "$WT" && <dependency sync command, if the profile has one>   (its own call)
+1.2b (separate call) cd "$WT" && no_paid <the runner's collect-only mode over the suite: pytest --collect-only -q /
+     jest --listTests / go test -run '^$' ./... / cargo test --no-run>: it proves the imports as the tests see them.
+     Never a hand-made import check against the environment (a conftest that puts src/ on the path makes it fail falsely).
+1.3  TWO separate calls: git -C "$WT" rev-parse HEAD ; git -C "$WT" rev-parse <remote>/<main>
+     Both must equal the base. If not: remove nothing, rebase nothing, STOP.
+1.4  git -C "$WT" branch --show-current     expected: <branch>
+1.5  git -C "$WT" status --short     paste it (only files on the profile's dirty-file allowlist may appear; they are never staged).
+
+PART 2 - CHECK THE RUNNERS (do not edit them)
+<Strong builder instead: "PART 2 - WRITE THE RUNNERS: copy <records>/.../snippets/run-gates-*.sh to $DAY/run-gates-<ticket>.sh, set WT= and LOG= first, rewrite the header, then run the checks below.">
+2.1  bash -n <each runner> && echo syntax-ok
+2.2  tr -cd '\r' < <each runner> | wc -c     (must be 0)
+2.3  grep -n '^WT=' <each runner>     (must name $WT)
+Any failure: report and STOP.
+
+PART 3 - CAPTURE t0, SERIALLY
+3.1  bash "$DAY/<gate runner>" t0    wait for "ALL DONE" in its summary.txt
+3.2  bash "$DAY/<other runner>" t0   only after 3.1 is done
+3.3  Count the .exit files (<n> and <n>) and "ALL DONE" in each summary.
+3.4  For every capture: its .exit value and the LAST line of its .txt.
+A failing test at t0 is not yours to fix: record it exactly. Known
+intermittents: <list>. Do not re-run anything to make it green.
+For comparison, the last job's final captures at this tree read:
+<figures>. State every difference; do not explain it away.
+
+PART 3b - FOR THE OWNER'S WALKTHROUGH (only if the product runs locally)
+  Record a free local port (the default may be taken on this machine) and how
+  local config the worktree lacks (a git-ignored .env) reaches it: copied in,
+  never committed. Both go in the report.
+
+PART 4 - MECHANISM QUESTIONS (answer from the code, quoting file:line)
+Q1 <question>   Q2 <question>   ...
+
+PART 5 - THE JOB FILE
+5.1  Create foreman/jobs/JOB_<YYYY-MM-DD>_<slug>.md (the name /f-signoff looks for) with exactly the header between the
+     "----8<----" lines below, every <...> filled with the real value.
+5.2  Append the template body: sed -n '/^## Risk Assessment/,$p' <template> >> <job file>
+5.3  CR-byte count must be 0.   5.4  grep -n '^\*\*Foreman:\*\*' -> exactly one line.
+----8<----
+# Job <NN>: <title>
+
+**Project:** <project slug or , >
+**J-number:** J<n> · **Board:** <NN>
+**Ticket:** <key and link>
+**SourcePlan:** <blueprint section path or , >
+**Lane:** <STANDARD | QUICK | FULL>
+**Inspections:** lens inspection: <run | SKIP (QUICK)> · independent inspection: run
+**Validation strategy:** <code-read | check | harness | UI>
+**Budgets:** repair work orders per task <n> · wall time <…> · foreman tokens <…>
+**Foreman:** the foreman
+**Builder:** the builder
+**Target repo:** <path> · **Worktree:** <absolute path> · **Branch:** <branch>
+**Base:** <full sha> (<the exact command>) · **Final head:** <filled at Phase 7> · **Started:** <YYYY-MM-DD HH:MM>
+**Acceptance ledger:** <day folder>/JOB-<NN>-ACCEPTANCE-LEDGER.md
+<any decided-again grants (e.g. a disposable-database arm), the
+uncovered-code note>
+----8<----
+
+REPORT - ONE FILE, LF ENDINGS: $DAY/JOB-<N>-WORK-ORDER-1-REPORT.md
+  1. Every command from PARTS 0-2, 3.3 and 5.3-5.4 with its output.
+  2. The t0 tables and every difference from the last job's figures.
+  3. Q1-Qn. 4. The job file's path. 5. "Disagreements": every value
+  this work order gave you that a command contradicted, or "none".
+  6. Final line: "WORK ORDER 1 DONE" or "WORK ORDER 1 STOPPED: <why>".
+
+RULES THAT ARE NOT NEGOTIABLE
+1. No product code, no commits, no push, no merge, no ticket change, no
+   messages, no branch or worktree deletion.
+2. Never name a model, agent, vendor or tool. Only "the builder".
+3. Every test run strips the paid keys first. Serial runs only. Never
+   touch a container. Never point a roles test at the shared database.
+
+### END OF WORK ORDER 1. WRITE THE REPORT FILE, THEN STOP.
+<<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<

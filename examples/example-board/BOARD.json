@@ -1,0 +1,275 @@
+{
+  "schema": 1,
+  "project": {
+    "eyebrow": "Example board · synthetic demonstration data",
+    "title": "Bramble Books: the online shop",
+    "standfirst": "A made-up project showing what a Topping Out board looks like a few weeks in: an independent bookshop moving its catalogue, orders and stock online. Every job, number, quote and commit on this page is invented.",
+    "head": {
+      "outcome": "A customer can buy a book online, and stock never goes negative.",
+      "test": "An order placed on the live site reaches the shop's packing list within a minute, and the stock count drops by exactly one."
+    },
+    "owed": [
+      "Search ranks exact title matches below fuzzy ones (board 03's lens inspection; the owner deferred it to after launch).",
+      "The dispatch email has no plain-text version yet.",
+      "Password reset emails are not rate-limited per address (board 02's cross-model review; accepted as a debt until go-live).",
+      "The catalogue import keeps no record of which spreadsheet a title came from.",
+      "Basket expiry runs on page load, not on a schedule: an idle basket outlives its 30 days until its owner returns."
+    ],
+    "alerts": [
+      "Board 07 needs the owner's decision: refunds by card only, or store credit too?"
+    ],
+    "facts": [
+      "Payments run in the provider's test mode until board 09.",
+      "Stock is counted per shop, not per shelf.",
+      "Every build job so far took four to six work orders."
+    ],
+    "lesson": {
+      "title": "A green probe means the test doesn't test the guard",
+      "rule": "When removing the stock guard left every test passing, the builder stopped and reported instead of re-aiming the probe. The missing test was the real finding."
+    }
+  },
+  "publish": {
+    "local_html": "board.html"
+  },
+  "version": 14,
+  "updated": "2026-10-12",
+  "next": "05",
+  "jobs": [
+    {
+      "id": "01",
+      "title": "Catalogue import",
+      "state": "merged",
+      "run": "J1",
+      "pr": "#1",
+      "merge": "3f9c2a1",
+      "ticket": "tickets/TICKET-01-catalogue-import.md",
+      "summary": "Imports the shop's spreadsheet of 4,200 titles into the catalogue, rejecting rows without an ISBN.",
+      "twigs": [
+        "37 rows without an ISBN rejected, listed for the owner",
+        "Greptile 5/5 on the first round"
+      ],
+      "figures": [
+        {
+          "n": "4,200",
+          "label": "titles",
+          "tone": "good"
+        },
+        {
+          "n": "212",
+          "label": "tests",
+          "tone": "good"
+        },
+        {
+          "n": "18",
+          "label": "mutation probes bite",
+          "tone": "good"
+        },
+        {
+          "n": "37",
+          "label": "rows rejected",
+          "tone": "warn"
+        }
+      ],
+      "lesson": "Count the rows in and the rows out: a silent skip looks exactly like a clean import."
+    },
+    {
+      "id": "02",
+      "title": "Customer accounts",
+      "state": "merged",
+      "run": "J2",
+      "pr": "#2",
+      "merge": "8b14d07",
+      "ticket": "tickets/TICKET-02-accounts.md",
+      "summary": "Sign-up, sign-in and password reset.",
+      "twigs": [
+        "reset links expire after 30 minutes",
+        "lens inspection: 2 findings, both fixed",
+        "reset rate limit owed"
+      ],
+      "figures": [
+        {
+          "n": "341",
+          "label": "tests",
+          "tone": "good"
+        },
+        {
+          "n": "26",
+          "label": "mutation probes bite",
+          "tone": "good"
+        },
+        {
+          "n": "0",
+          "label": "tests red at head only",
+          "tone": "good"
+        }
+      ],
+      "lesson": "Write the hostile inputs into the work order: the builder tests what it is told to test."
+    },
+    {
+      "id": "03",
+      "title": "Search",
+      "state": "merged",
+      "needs": [
+        "01"
+      ],
+      "run": "J3",
+      "pr": "#3",
+      "merge": "c2e7f55",
+      "ticket": "tickets/TICKET-03-search.md",
+      "summary": "Title, author and ISBN search over the catalogue.",
+      "twigs": [
+        "ISBN with or without dashes",
+        "exact matches rank low: owed",
+        "Greptile 4/5, then 5/5"
+      ],
+      "figures": [
+        {
+          "n": "402",
+          "label": "tests",
+          "tone": "good"
+        },
+        {
+          "n": "31",
+          "label": "mutation probes bite",
+          "tone": "good"
+        },
+        {
+          "n": "1",
+          "label": "finding deferred by the owner",
+          "tone": "warn"
+        }
+      ],
+      "lesson": "Probe every ranking rule, not just the happy path."
+    },
+    {
+      "id": "04",
+      "title": "Basket",
+      "state": "merged",
+      "needs": [
+        "01",
+        "02"
+      ],
+      "run": "J4",
+      "pr": "#4",
+      "merge": "a90b3c6",
+      "ticket": "tickets/TICKET-04-basket.md",
+      "summary": "Add, remove and change quantities; the basket survives a sign-out and expires after 30 days.",
+      "twigs": [
+        "survives a sign-out",
+        "two-tab race found by the cross-model review",
+        "2 repair work orders"
+      ],
+      "figures": [
+        {
+          "n": "455",
+          "label": "tests",
+          "tone": "good"
+        },
+        {
+          "n": "38",
+          "label": "mutation probes bite",
+          "tone": "good"
+        },
+        {
+          "n": "2",
+          "label": "repair work orders from the foreman's own mistakes",
+          "tone": "warn"
+        }
+      ],
+      "notes": [
+        "Owner's word, 2026-10-03 (quoted): \"keep a basket for 30 days, not forever\". Recorded in the job file before work order 2."
+      ],
+      "lesson": "Two tabs are two customers: test every shared row from both at once."
+    },
+    {
+      "id": "05",
+      "title": "Checkout and payment",
+      "state": "in-progress",
+      "needs": [
+        "04"
+      ],
+      "run": "J5",
+      "ticket": "tickets/TICKET-05-checkout.md",
+      "summary": "Card payment in the provider's test mode; an order is created only after the payment succeeds.",
+      "twigs": [
+        "work order 3 of 5",
+        "lens inspection next"
+      ],
+      "figures": [
+        {
+          "n": "512",
+          "label": "tests so far",
+          "tone": "good"
+        },
+        {
+          "n": "44",
+          "label": "mutation probes bite",
+          "tone": "good"
+        }
+      ]
+    },
+    {
+      "id": "06",
+      "title": "Stock that never goes negative",
+      "state": "open",
+      "needs": [
+        "05"
+      ],
+      "ticket": "tickets/TICKET-06-stock.md",
+      "summary": "Two customers buying the last copy at once: one order succeeds, the other is told it's sold out."
+    },
+    {
+      "id": "07",
+      "title": "Refund policy",
+      "kind": "decision",
+      "state": "decision",
+      "decision": "Refunds by card only, or store credit as well?"
+    },
+    {
+      "id": "08",
+      "title": "Dispatch emails",
+      "state": "open",
+      "needs": [
+        "05"
+      ],
+      "ticket": "tickets/TICKET-08-dispatch.md",
+      "summary": "An email when the order is packed, with the tracking number."
+    },
+    {
+      "id": "09",
+      "title": "Go live",
+      "state": "open",
+      "needs": [
+        "06",
+        "07",
+        "08",
+        "11"
+      ],
+      "summary": "Switch payments to live mode and open the shop."
+    },
+    {
+      "id": "10",
+      "title": "Delivery zones",
+      "kind": "decision",
+      "state": "resolved",
+      "resolution": "UK only for launch; the owner will revisit Europe after three months."
+    },
+    {
+      "id": "11",
+      "title": "Order history",
+      "state": "open",
+      "needs": [
+        "02",
+        "05"
+      ],
+      "summary": "A customer sees their past orders and can download a receipt."
+    }
+  ],
+  "log": [
+    "v14 · board 05 work order 3 sent",
+    "v13 · board 05 started (run J5)",
+    "v12 · board 04 merged (#4, a90b3c6); next: 05",
+    "v11 · board 11 added on the owner's word",
+    "v10 · board 10 decided: UK only for launch"
+  ]
+}
