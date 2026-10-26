@@ -32,7 +32,8 @@ Writing the plan (f-blueprint), not for planning one ticket's job (the foreman's
 - It writes nothing until you say "go" for the project.
 - Research and owner decisions are their own jobs, never hidden inside another: a question that ends in your answer is a decision job; research that produces a file is a build job and goes through a PR.
 - Every verification point is carried by at least one job, and every plan task maps to a job or to "not carried, on purpose" with its reason.
-- `foreman/projects/<slug>/` holds `PROJECT.md`, one ticket file per job with the acceptance quoted, and a `BOARD.json` that `render_board.py` validated and rendered.
+- `foreman/projects/<slug>/` holds `PROJECT.md`, one ticket file per job with the acceptance quoted and a "Why this job" that says in plain sentences what the job makes possible, never only its plan task, and a `BOARD.json` that `render_board.py` validated and rendered.
+- Each job on the board has a summary: one plain sentence saying what it builds, taken from the blueprint task's Outcome, with plan references after it in brackets, never a summary of references alone.
 - It committed nothing, and never deleted or rewrote the source plan.
 
 ## The two ways to run it

@@ -7,6 +7,7 @@
 - `board.html` is regenerated from `BOARD.json` and never edited by hand.
 - With no board link yet, it renders locally and asks you before the first publish; after that it republishes to the same private link.
 - The builder is never named on the board.
+- Every job carries a summary that says in plain words what it builds, and `check` warns on a summary that is only plan references.
 
 ## Common questions
 
@@ -17,6 +18,10 @@ Only the foreman. Board updates are the foreman's own records, so they need no P
 ### What happens at the end of a job?
 
 After the merge is verified, `close` records the job as merged and chooses the next job in one version. The next job is picked by what unblocks the most, then the most partial work, then the project's order.
+
+### What is a job's summary?
+
+The line on the Job tab that says what the job builds, so you know what it does without opening its ticket. It is one sentence, under about 20 words, with any plan references after it in brackets: "Loads the catalogue as a runtime block, so later jobs can use it. (T2, VP-6)". If one is unclear, `summary <job> --text "..."` replaces it, and `add` takes a `--summary` for a new job.
 
 ### What if one job turns out to be covered by another?
 
