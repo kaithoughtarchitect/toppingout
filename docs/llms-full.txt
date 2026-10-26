@@ -1,0 +1,2874 @@
+# Topping Out: every skill and agent page
+
+> Let AI coding agents work through your tickets for hours, even overnight, without drifting: every job starts fresh from files, a cheap model does the heavy coding, and your Claude Code limit lasts far longer. Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
+
+
+---
+
+Source: https://toppingout.dev/agents/code-explorer.md
+
+# code-explorer
+
+Trace how an existing feature works through the code.
+
+Stage: Kit · Agents that are optional
+Source: `agents/code-explorer.md`
+
+## On site
+
+Optional: the foreman can use it while planning.
+
+## When to use it
+
+When the foreman needs to understand how an existing feature works.
+
+## It's working if
+
+- The report opens with the exploration ledger: one entry per step, each listing the files it actually opened and the `file:line` behind its key claim.
+- Anything concluded from names, docs or string matches rather than read code is listed under `claims_inferred_not_verified`.
+- The narrative cites `file:line` anchors instead of pasting code bodies.
+- It states what it searched for and did not find, and the open questions it could not settle from code.
+- It ends with the short list of files you need to understand the topic.
+- It describes the code and gives no verdict on whether something is a bug; it changed nothing.
+
+## How its report opens
+
+The exploration ledger the agent fills before any narrative, shown exactly as the agent's instructions give it.
+
+```
+[
+  {
+    "step": "1-discovery",
+    "files_examined": ["<path/to/file>", "..."],
+    "evidence_anchor_for_key_claim": "<path/to/file>:<LINE>",
+    "claims_inferred_not_verified": "none | <what you concluded without reading the code that proves it>"
+  },
+  {
+    "step": "2-flow-tracing",
+    "files_examined": ["..."],
+    "evidence_anchor_for_key_claim": "...",
+    "claims_inferred_not_verified": "..."
+  },
+  {
+    "step": "3-architecture",
+    "files_examined": ["..."],
+    "evidence_anchor_for_key_claim": "...",
+    "claims_inferred_not_verified": "..."
+  },
+  {
+    "step": "4-implementation",
+    "files_examined": ["..."],
+    "evidence_anchor_for_key_claim": "...",
+    "claims_inferred_not_verified": "..."
+  }
+]
+```
+
+## Common questions
+
+### When does the foreman use it?
+
+It is optional. While scoping or planning, the foreman may hand it bounded questions it cannot answer quickly itself, for example in `/f-survey` or `/f-blueprint`. Several explorers get questions that do not overlap.
+
+### Does it change code?
+
+No. It has no edit, write or shell tools, and it is told not to run git commands that write.
+
+### Why does it stop before reading everything?
+
+It reads on a budget: it maps the area first, then reads only the regions that matter. It stops as soon as it can trace the feature end to end, or when more reads only confirm what it already knows.
+
+### Can it tell me whether something is a bug?
+
+Not as a verdict. It returns the facts with their anchors and leaves the judgement to the caller, marking anything it could not anchor as inferred.
+
+## Connections
+
+- Used by: f-catchup, f-context
+
+
+---
+
+Source: https://toppingout.dev/agents/handoff-builder.md
+
+# handoff-builder
+
+Write the handover notes so the next session can pick up the work.
+
+Stage: Kit · Agents still in use
+Source: `agents/handoff-builder.md`
+
+## On site
+
+Used at the end of every job that has a next job, from templates/HANDOFF-SESSION-BRIEF.md; the answers to its quiz go in a separate file. A topping out writes none.
+
+## When to use it
+
+At the end of every job that has a next job, to write the notes for the next session.
+
+## It's working if
+
+- Without a session brief it stops and lists the fields it needs, rather than writing a handoff from guesses.
+- It writes exactly two files: the handoff, and a separate answer key the new session opens only after answering the questionnaire cold.
+- The handoff states its mode (`MODE: full` or `MODE: quick`) and keeps pending approvals apart from approved ones.
+- Every path and git fact in it was checked against the repo; where the brief and the repo disagree, the repo wins and the handoff says so.
+- Its return report includes the final self-check block it passed, and the claims it corrected.
+- It committed nothing and pushed nothing.
+
+## Common questions
+
+### What do I have to give it?
+
+A session brief: the workstream, where the day ended, decisions made out loud, pending approvals, likely next asks, outward and database state, near-mistakes and key files. In Topping Out that is `templates/HANDOFF-SESSION-BRIEF.md` with `mode: full`.
+
+### What is the difference between quick and full?
+
+Quick is a thin pack, usually one or two screens, with 4 to 5 questions, for unblocking the next agent fast. Full is the thorough pack with 8 to 12 questions and a revision loop. A Topping Out shift handover is full, and a request that names no depth is treated as full.
+
+### Where do the files go?
+
+Where the caller names them. Otherwise the Topping Out convention applies: `foreman/handovers/`, as `AGENT-HANDOFF-<date>-job-<N>-<slug>.md` with `SITE-WALK-ANSWER-KEY-J<N>.md` beside it.
+
+### Why does the next session answer questions before starting?
+
+The questionnaire checks it is ready: the process rules, the current state, what is still pending, and a scenario deep into a session whose answer is the pre-action check. It answers in its own words, then opens the answer key and scores itself honestly.
+
+### What if the handoff fails its own check?
+
+Full mode revises up to three times; quick mode fixes once. If it still fails, no file is written and the report names the failing check.
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-code.md
+
+# lens-code
+
+Look for bugs and broken project rules in the changed code.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-code.md`
+
+## On site
+
+Used as a reviewer inside f-inspect, the first end-of-job review.
+
+## When to use it
+
+In every end-of-job review; it always runs.
+
+## It's working if
+
+- It starts by saying what it reviewed: the job's range, a PR, or named files.
+- It reports only issues it rates 80 or above for confidence, grouped as Critical (90 to 100) and Important (80 to 89).
+- Each finding gives the `file:line`, the repo rule or the bug it breaks, and a concrete fix.
+- A finding rated 90 or above shows the snippet, the input that reaches it with the wrong outcome, and why existing guards miss it.
+- It says what it did not cover and why, and a clean diff gets zero findings, not invented ones.
+- It changed no code and moved no git state.
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+In Topping Out, `/f-inspect` runs it on every lens inspection, as a fresh subagent with no context from the job. You can also run it on its own, for example before opening a PR.
+
+### Does it change code?
+
+It is told not to: it reports only. Its tools are read and search, plus a shell it is told to use only for read-only git, so this rests on its instructions, not on a lock. Accepted findings become the builder's test-first repair work orders.
+
+### Does it give a verdict?
+
+Only when run on its own: it then closes with `APPROVE`, `WARNING` or `BLOCK`. Under `/f-inspect` it is asked for findings only, with no verdict.
+
+### What does it check besides bugs?
+
+The rules in the repo's own `AGENTS.md` or `CLAUDE.md`, code quality, and minimalism: whether an addition duplicates an existing helper or adds more than the task needed. It also keeps a list of house conventions that look like findings and are not.
+
+### Does it run on QUICK jobs?
+
+No. QUICK jobs skip the lens inspection, and the record says so.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-comments.md
+
+# lens-comments
+
+Check that comments and docs still match the code.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-comments.md`
+
+## On site
+
+Used as a reviewer inside f-inspect.
+
+## When to use it
+
+When comments or documentation changed.
+
+## It's working if
+
+- It opens with a verification ledger: an entry for every comment it flags, with the code it read to check the comment's claim.
+- The ledger ends with a coverage line: how many comments were in scope, how many it verified, and how many it could not, with the reason.
+- Its findings fall under Critical Issues, Improvement Opportunities, Recommended Removals and Positive Findings, each with a `file:line`.
+- A comment it could not verify is marked inconclusive, never raised to a Critical Issue.
+- If every comment holds, it says so and stops.
+- It suggests changes and makes none.
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it when the job changed durable comments or documentation prose, as a fresh subagent with no context from the job.
+
+### Does it change code or comments?
+
+It is told not to. Its instructions say it analyses and advises only, and its tools are read and search plus a shell it is told to use only for read-only git.
+
+### Will it ask for more comments?
+
+Rarely. A missing comment is a finding only when the code alone would mislead a competent reader into a bug, and a rename, an assertion or a type cannot fix it. It is more likely to recommend deleting comments that restate the code.
+
+### What does it check first?
+
+Comments that drifted from the code: a changed signature, new control flow under an old description, names that no longer exist, and descriptions of removed behaviour. A stale comment beside freshly changed code ranks highest.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-errors.md
+
+# lens-errors
+
+Find errors that get silently ignored, and risky fallbacks.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-errors.md`
+
+## On site
+
+Used as a reviewer inside f-inspect.
+
+## When to use it
+
+When the changes touch error handling or fallbacks.
+
+## It's working if
+
+- Each finding gives the `file:line`, what the code does, and why it is not designed degradation. A finding that cannot say why is dropped.
+- Each finding carries a severity (CRITICAL, HIGH or MEDIUM), a confidence, the error classes it could hide, and a fix in the repo's own style.
+- It treats documented fail-open paths as the design, but still flags a fallback that fires with no log line.
+- An intent it cannot confirm is reported as inconclusive with a question to verify, not as CRITICAL.
+- A clean change set gets a list of the catch sites and fallbacks it reviewed and zero defects.
+- It changed no code.
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it when the job changed error handling, fallbacks, catches or partial-failure paths. It runs as a fresh subagent with no context from the job.
+
+### Does it change code?
+
+It is told not to: it reports only. Its tools are read and search, plus a shell it is told to use only for read-only git, so this rests on its instructions, not on a lock. The fixes come later, as repair work orders.
+
+### Will it flag every catch that logs and carries on?
+
+No. It first works out which dependency is hard (the result is wrong without it) and which is soft (the result is degraded but valid). A logged fallback on a soft dependency is often correct.
+
+### What does it hunt hardest?
+
+Catch blocks that are too broad, which can hide a typo, a null reference or a failed assertion along with the expected error. It ranks that above an empty catch.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-instructions.md
+
+# lens-instructions
+
+Check prompts, skills and templates for contradictions and broken references.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-instructions.md`
+
+## On site
+
+Used as a reviewer inside f-inspect when skills, prompts or templates change; also used to check Topping Out itself after an edit.
+
+## When to use it
+
+When skills, prompts, agents or templates changed. It also runs on demand, outside any job, whenever you decide: ask the session "run lens-instructions over <files or folder>" (/f-setup installs it in .claude/agents/). Same agent as the one some repos call instruction-reviewer.
+
+## It's working if
+
+- It builds a map of which instruction file produces a name (a field, a flag, a section title, a file name) and which files read it, and checks those links first.
+- Structural findings (counts, versions, paths, flag names) cite the search that proves them; meaning-level findings quote both passages word for word.
+- Each conflict says how it resolves: a rule elsewhere settles it, both are right in different scopes, or you must decide.
+- It reports only issues at 80 or above for confidence, ordered by severity.
+- When nothing clears the bar it says "Documentation is aligned", lists the files and links it checked, and stops.
+- It edited no files.
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it when the job changed skills, agents, prompts or templates. You can also run it on its own after editing instruction files.
+
+### Does it change files?
+
+It is told not to. Its tools are read and search, plus a shell it is told to use only for read-only git, so this rests on its instructions, not on a lock. It gives a concrete fix for each issue and leaves the edit to you or the builder.
+
+### What is the most common problem it catches?
+
+An agent file is rewritten and the skill that calls it keeps the old contract, so a gate in the skill can never fire.
+
+### Will it flag "ticket" against "job"?
+
+No. It keeps a list of pairs that look like drift but are intentional. For Topping Out, "ticket" and "job", and "blueprint" and "plan", are on that list.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-migrations.md
+
+# lens-migrations
+
+Review database changes: migrations, queries and access rules.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-migrations.md`
+
+## On site
+
+Used as a reviewer inside f-inspect when the changes touch the database. Every database change also needs your approval.
+
+## When to use it
+
+When the changes touch the database.
+
+## Not for
+
+General logic bugs (lens-code), not for swallowed errors (lens-errors), not for git (the caller owns it).
+
+## It's working if
+
+- It checks the diff against the binding traps: JSON written or read the wrong way, a list bound to a single-value column, an array bound without the conversion its column needs, and guessed table or column names.
+- Each finding is one row with the `file:line`, a severity, what breaks and the fix.
+- It states whether the migration must be applied to production before merging (yes, no or unknown) and cites the evidence for that answer.
+- A policy finding cites the repo's own rule it breaks; where the rule is silent, it says so instead of inventing one.
+- It lists what it could not check, such as a database it could not reach or a plan it did not run.
+- It applied no migration and wrote to no database.
+
+## One finding
+
+Each finding is one row in this shape, exactly as the agent's instructions give it.
+
+```
+<file:line> | CRITICAL | IMPORTANT | NOTE | <trap or rule> | <what breaks, concretely> | <fix>
+```
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it when the diff touches the repo profile's database change paths. It runs as a fresh subagent with no context from the job.
+
+### Does it change code or the database?
+
+It is told never to apply a migration, run the migrate command or write to any database, and to inspect read-only. It has no edit tools either.
+
+### Who applies the migration, then?
+
+Not this agent. Applying a migration anywhere but a disposable database needs your word.
+
+### Does it treat a clean migration as a problem?
+
+No. If the SQL is correct and the traps are avoided, it returns zero rows, and run on its own it closes with `APPROVE`. It is told not to manufacture findings.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-simplify.md
+
+# lens-simplify
+
+Spot code that could be simpler, without changing what it does.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-simplify.md`
+
+## On site
+
+Used as a reviewer inside f-inspect; it never edits code while a job is being built.
+
+## When to use it
+
+Last in every end-of-job review, as a report only.
+
+## Not for
+
+Finding bugs (lens-code), not for "is this more than we need?" on a plan (simplicity-critic), not for git (the caller owns staging).
+
+## It's working if
+
+- Under `/f-inspect` it writes nothing: no edits, no snapshots, no gate run that writes files.
+- Each proposal gives the `file:line`, the exact change, why behaviour stays the same, and what a future reader gains.
+- Its ledger always says what it chose not to simplify and why, with reasons you can act on without opening the file.
+- No proposal touches public interfaces, tests, migrations, transaction boundaries, access scoping, privacy, or how errors fail and get logged.
+- It ran no git command that writes.
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it last, always with the words "report-only", so it returns proposals instead of edits. It does not start on its own: it waits for a caller.
+
+### Does it change code?
+
+Not under `/f-inspect`. Called without "report-only" or "findings-only", it does edit: it snapshots each file outside the repository first, and puts a file back if a change turns a gate red.
+
+### How is it different from `simplicity-critic`?
+
+This lens tidies code that was just written, without changing what it does. `simplicity-critic` asks whether a plan or design is more than you need, before anything is built.
+
+### Will it make the code shorter?
+
+Not as a goal. It is told to prefer clarity over fewer lines, for example by taking out nested ternaries.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-tests.md
+
+# lens-tests
+
+Find changes that aren't properly tested.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-tests.md`
+
+## On site
+
+Used as a reviewer inside f-inspect; it adds to the test-coverage check every work order already runs.
+
+## When to use it
+
+When tests changed, or changed behaviour has no test.
+
+## Not for
+
+Finding product bugs (lens-code). Not for git (the caller owns it).
+
+## It's working if
+
+- It states the git command that set its scope.
+- Each gap names the uncovered behaviour at a `file:line` and a change to the code that no test would catch.
+- It reports a gap only at 80 or above for confidence, and only gaps this diff introduced; older holes get one line at most.
+- Every recommendation uses the repo's own test harness and names the nearby test to copy.
+- When coverage is adequate, it says so in one paragraph and stops.
+- It changed no code and no tests.
+
+## One coverage gap
+
+Each gap it reports takes this shape, exactly as the agent's instructions give it.
+
+```
+{
+  "behavior_uncovered": "<contract, file:line>",
+  "mutation_that_survives": "<change no test would catch | n/a>",
+  "existing_coverage_checked": "searched <tiers>; nearest test <name> covers <what> not this",
+  "confidence_gap_is_real": "<0-100>",
+  "criticality_rationale": "<why this rating>",
+  "rating": "<1-10>"
+}
+```
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it when the job changed tests, or changed behaviour without a test. It runs as a fresh subagent with no context from the job.
+
+### Does it write the missing tests?
+
+No. It specifies the missing assertion, with a full snippet only when it is tiny. It has read and search tools and a shell it is told to use only for read-only git.
+
+### How does it find a gap?
+
+For each changed function it imagines small mutations, such as flipping a comparison or dropping a guard. If no test would fail, that mutation is the gap. Error and rollback paths rank first.
+
+### Why does it reject some test suggestions?
+
+A suggestion written for a test framework the repo does not use is a false positive. It reads the nearest existing test first and recommends only that idiom.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/lens-types.md
+
+# lens-types
+
+Check that the data types can't hold invalid values.
+
+Stage: Inspect · Agents used as review lenses
+Source: `agents/lens-types.md`
+
+## On site
+
+Used as a reviewer inside f-inspect.
+
+## When to use it
+
+When the changes touch data types, schemas or rules about valid values.
+
+## It's working if
+
+- It reads the target type and two or three sibling types first, and judges against the repo's own way of expressing rules in types.
+- It checks the boundaries first: where database rows, request bodies or parsed JSON enter typed code without being parsed.
+- Each finding cites `file:line`, names the lens (boundary, expression, enforcement or usefulness), and gives a severity, a confidence and the smallest fix.
+- It never reports a missing convention the repo does not use as a defect, such as branded types.
+- A well-designed type gets a short paragraph naming what it does right, and nothing invented.
+- It changed no code.
+
+## Common questions
+
+### Do I call it directly, or does `/f-inspect` run it?
+
+`/f-inspect` runs it when the job changed types, schemas or invariants, as a fresh subagent with no context from the job.
+
+### Does it change code?
+
+It is told not to: it reports only. Its tools are read and search, plus a shell it is told to use only for read-only git, so this rests on its instructions, not on a lock.
+
+### What does it look for?
+
+Whether a type's shape forbids the states the business forbids, and whether outside data earns its type at the boundary. Typical findings are a cast that turns a plain string into a closed set, or an interface that copies a type already exported elsewhere.
+
+### Does it only work for TypeScript?
+
+No. Its examples are TypeScript, and it is told to translate each check to the type system and validation library of the language in front of it.
+
+## Connections
+
+- Used by: f-inspect
+
+
+---
+
+Source: https://toppingout.dev/agents/plan-validator.md
+
+# plan-validator
+
+Check a plan against the real code before it's built (used inside f-plancheck).
+
+Stage: Inspect · Used only inside f-plancheck
+Source: `agents/plan-validator.md`
+
+## On site
+
+Not used on its own: f-plancheck gives its checklist to every reader.
+
+## When to use it
+
+You don't call it yourself: f-plancheck uses it for every reader.
+
+## It's working if
+
+- The read covers the six checks: files, patterns, dependencies, APIs, scope and risk.
+- Each finding names what the codebase actually has, found by reading or searching it, not by guessing.
+- Known false alarms (path aliases, Windows letter case, a slug against its readable form, re-export files) come back as advisories with a step to verify, not as failures.
+- The plan file is unchanged: the checks only read the plan and the code.
+- No git state moved: the contract allows read-only git and forbids every command that writes.
+
+## Common questions
+
+### Do I call it directly?
+
+Not in Topping Out. `/f-plancheck` copies its check contract into one frozen assignment and gives it to every cold seat, each a reviewer from another model family. Reach for the agent on its own only when independence across model families does not matter.
+
+### Why doesn't `/f-plancheck` show a score?
+
+Run on its own, the agent scores the plan out of 100 and recommends Proceed, Revise or Reject, with a veto on any unresolved critical. In Topping Out the seats are asked for findings only, so the score and the veto are not used.
+
+### Does it change the plan or the code?
+
+No. It is told not to implement anything, and its tools are read and search, plus a shell it may use only for read-only git. Applying findings is the plan author's separate act.
+
+### What if it can't confirm a problem?
+
+Then it is not a failed item. A problem it cannot verify by reading the code goes to advisories, with the step that would settle it, and deducts nothing.
+
+## Connections
+
+- Used by: f-plancheck
+
+
+---
+
+Source: https://toppingout.dev/agents/simplicity-critic.md
+
+# simplicity-critic
+
+Find the overbuilt parts of a plan and suggest the simplest version.
+
+Stage: Kit · Agents still in use
+Source: `agents/simplicity-critic.md`
+
+## On site
+
+Used, optionally, on the foreman's plan, and on a big project being split in f-schedule.
+
+## When to use it
+
+When a plan or a project split looks bigger than it needs to be.
+
+## It's working if
+
+- Its answer opens with a filled lens blueprint: the one-sentence requirement taken from the ticket, and the simplest design that meets it, sketched before any critique.
+- Every finding is ranked Blocker, High, Medium or Nit, traces back to a blueprint field, and offers a concrete simpler alternative.
+- Claims about the codebase carry a `file:line`; a simpler option it has not confirmed is put as a question, not a finding.
+- The verdict comes last: `JUSTIFIED`, `TRIM` or `RETHINK`, with the smallest shippable subset of the plan named.
+- `JUSTIFIED` appears when the plan is proportionate. It does not invent findings to fill the report.
+- It edited nothing and ran no git command that writes.
+
+## Common questions
+
+### How is it different from the plan check?
+
+The plan check asks whether the plan can work against the code that exists. This agent asks whether the plan is more than you need. When the two disagree, the disagreement is useful signal.
+
+### When does the foreman run it?
+
+It is optional. The foreman may run it on its own plan alongside `/f-plancheck`, and `/f-schedule` runs it on a project cut of more than about ten jobs, to catch a job doing two jobs or two jobs that are really one.
+
+### Does it change the plan?
+
+No. It has read and search tools and a shell it is told to use only for read-only git. It reports; you and the foreman decide what to cut.
+
+### What does `RETHINK` mean?
+
+That a structurally simpler design exists, and building the proposed one would carry a permanent cost. It presents its own sketch as a fresh answer to the requirement, not as a patch to the current plan.
+
+## Connections
+
+- Used by: f-schedule
+
+
+---
+
+Source: https://toppingout.dev/agents/spec-validator-fixer.md
+
+# spec-validator-fixer
+
+Correct statements in a plan that are provably wrong.
+
+Stage: Kit · Agents still in use
+Source: `agents/spec-validator-fixer.md`
+
+## On site
+
+Used at close: f-signoff hands it the job file to correct anything the record says that the code doesn't.
+
+## When to use it
+
+At close, when the job record says something the code doesn't.
+
+## It's working if
+
+- It corrected only false statements about the code as it is today (a path, a symbol, a signature, a count, a default, a script), each with the `file:line` that proves it.
+- Statements about the intended future (tasks, files to create, done-when lines) are left alone, even where today's code differs.
+- Borderline cases, and fixes that would leave a "because" or a calculation stale, come back as suggested diffs, not applied edits.
+- Claims it cannot verify are flagged, never deleted.
+- It touched only the spec or plan it was given: no implementation code, no git writes.
+- The report ends `CLEAN` or `REMAINING CONCERNS`, with the number of passes used (three at most).
+
+## Common questions
+
+### Does it edit files?
+
+Yes, but only the spec or plan it is handed, and only the safe fixes. It is told never to edit implementation code and never to run git commands that write; the caller stages the result.
+
+### Where does Topping Out use it?
+
+At close, `/f-signoff`'s drift corrections hand it the job file when there is more than a line or two to correct. `/f-blueprint` also calls it on a new plan.
+
+### Won't it rewrite my plan to match the current code?
+
+No. The gap between a plan and today's code is the plan. It fixes only descriptive claims, and where a section's intent is unclear it flags the claim rather than guess.
+
+### What if its fixes keep flipping back and forth?
+
+It restores the original text, stops and reports it. If the file is still not clean after three passes, the report says `REMAINING CONCERNS`.
+
+## Connections
+
+- Used by: f-signoff
+
+
+---
+
+Source: https://toppingout.dev/skills/adjudicate.md
+
+# adjudicate
+
+Go through a review point by point: accept, reject, partly accept, or can't verify.
+
+Command: `/adjudicate`
+
+Stage: Inspect · The end game · step 7 of 11 in the order of works (Inspect)
+Source: `skills/adjudicate/SKILL.md`
+
+## On site
+
+The second review: the foreman goes through the outside reviewer's findings, and the accepted fixes go to the builder as a work order. Every point is checked against the code first. How sure the reviewer sounded doesn't count as evidence.
+
+## When to use it
+
+When the outside reviewer's findings come back.
+
+## Not for
+
+Reviewing (xreview, f-inspect) and not for a review this session wrote itself.
+
+## It's working if
+
+- It restates the original goal and hard constraints from this session before judging any claim.
+- It reads the reviewer's Independence statement first and says in one line if the reviewer was not blind.
+- Every claim gets one verdict, ACCEPT, REJECT, PARTIAL or CANNOT VERIFY, with evidence from the code, tests or spec.
+- There is no global agree or disagree.
+- It produces an apply list ordered blocker, major, minor, a reject list with the risk if wrong, and a needs-evidence list carrying the reviewer's questions verbatim.
+- With you present, it edits nothing until you answer: apply the accept list, apply a subset, or hold.
+
+## Common questions
+
+### Does it trust the reviewer?
+
+No. The reviewer is not an authority. Its confidence is not evidence and its severities are not the adjudicator's own; each claim is checked against the real artifact.
+
+### Will it meet the reviewer halfway?
+
+No. A wrong critique is discarded, not half-applied. Taste items default to REJECT unless they prevent a real defect.
+
+### What if the reviewer judged against the wrong goal?
+
+It checks the reviewer's goal line against this session's goal first. If they differ, it says so and treats every claim as judged against the wrong spec.
+
+### What happens when no one is watching?
+
+In an unattended run it applies the accept and partial list in order, drops the rejects but keeps them in the report, and sends the needs-evidence list to the run's existing human channel. A claim it can't resolve to one of the four verdicts is never applied.
+
+### Who makes the fixes in Topping Out?
+
+The builder. When adjudicating and fixing are separate jobs, "apply" means handing the apply list, in order, to whoever makes the fixes, and this session edits nothing.
+
+## Connections
+
+- Comes after: xreview
+- Used by: f-greploop
+
+
+---
+
+Source: https://toppingout.dev/skills/agent-council.md
+
+# agent-council
+
+Ask AI agents that can read the code to help settle a design choice.
+
+Command: `/agent-council`
+
+Stage: Plan · Settling a fork
+Source: `skills/agent-council/SKILL.md`
+
+## On site
+
+Before a job, optional: f-survey can ask it about a choice only the code can answer, if you allow the code to be shared. A heavier version of model-council: the agents run on your AI subscriptions and can read the repo.
+
+## When to use it
+
+When a design choice depends on what's in the code and you've agreed to let agents read it.
+
+## Not for
+
+A decision a written brief can carry without repo access, that is the cheaper model-council.
+
+## It's working if
+
+- It tells you the assurance profile before preparing: focused (2 external seats), balanced (3) or full (5), plus the host as chair and one separate auditor.
+- No seat comes from the host's own model family; the resolver removes it and seats the next qualified replacement.
+- `prepare` returns a disclosure manifest and its SHA-256, and no model is called until you approve that exact digest.
+- It says which seats run on native subscription CLIs and which are pay-per-token Pi headless OpenRouter seats.
+- Round 2 always runs; Round 3 runs only when `inspect` reports it is required.
+- The audit verdict is `FAITHFUL` or `NEEDS-REVISION`, and only a `FAITHFUL` run can be finalized into your durable output folder.
+- A run with fewer seats than its profile needs is never called an Agent Council: there is no degraded panel.
+
+## Common questions
+
+### How is it different from model-council?
+
+Here the seats can read, search and experimentally edit a frozen copy of the repository. Use it when the decision depends on the code; use `/model-council` when a written brief is enough, as it is cheaper.
+
+### What exactly gets shared with outside models?
+
+The current tracked and untracked, non-ignored files, frozen into one corpus after a secret scan, plus any history diff you approve separately. You approve the exact manifest digest; any change to the inputs needs a new preparation and approval.
+
+### Can the seats run code or reach the internet?
+
+No. Seats get no shell, web, plugins or nested agents, and models never run edited code; the repo's existing offline gates run only through the runner and come back as receipts. These limits are set by the runner's policy, not by an operating-system sandbox, and the skill makes no stronger containment claim.
+
+### Which profile should I pick?
+
+The smallest that fits the cost of being wrong. Focused for bounded choices that are easy to undo, balanced for normal architecture, data-model and interface forks, full for security or privacy boundaries, migrations that can't be undone, public contracts or very unclear evidence.
+
+### Can I choose the models myself?
+
+Yes. Name them in chat and they become `--seat`, `--prefer-seat` or `--exclude-seat` flags, or open the picker to browse. The picker only chooses who sits; approving the disclosure stays a separate step.
+
+## Connections
+
+- Used by: f-survey
+
+
+---
+
+Source: https://toppingout.dev/skills/converse.md
+
+# converse
+
+Read every reply out loud until you turn it off.
+
+Command: `/converse`
+
+Stage: Kit · Voice
+Source: `skills/converse/SKILL.md`
+
+## On site
+
+Any time: like speak, but it keeps going for every reply until you stop it. Uses the same voice setup as speak.
+
+## Say it
+
+- "start converse mode"
+- "converse on"
+- "stop converse"
+- "converse off"
+- "stop auto speak"
+- "stop speaking every reply"
+
+## When to use it
+
+When you want every reply read aloud for a stretch of work.
+
+## It's working if
+
+- `/converse` writes `on` to `scratch/converse-mode`, confirms in one line, and you hear that confirmation.
+- Every later reply shows its full text as usual and is also spoken as a short explainer.
+- `/converse off` clears the state file and confirms in text, and that confirmation is not spoken.
+- `/converse status` reports on or off in one line, without changing the mode or speaking.
+- Turns that only run tools, with no message for you, are not spoken.
+- After two failed speech attempts in a row it notes it once and carries on in text.
+
+## How to call it
+
+The four forms it takes, shown exactly as the skill lists them.
+
+```
+/converse              # turn ON (default)
+/converse on           # turn ON
+/converse off          # turn OFF
+/converse status       # report whether mode is on
+```
+
+## Common questions
+
+### How is it different from /speak?
+
+`/speak` voices one reply and the chat shows only a speaker symbol. `/converse` speaks every reply until you turn it off, and the visible reply stays the full answer.
+
+### Does it listen to me too?
+
+No. It only automates voice output. Speaking to it needs a separate dictation tool.
+
+### Does it stay on in a new session?
+
+No. Each session starts off. If a stale `scratch/converse-mode` says `on` at the start of a new conversation, it is treated as off until you turn it on again.
+
+### What does it need to run?
+
+The same setup as `/speak`: `scripts/speak.ts`, `npx tsx` and the voice settings in `.env`, with Grok Voice through OpenRouter by default.
+
+### Can I still use /speak while it is on?
+
+Yes. `/speak` runs as a one-off, and converse carries on speaking later replies.
+
+## Connections
+
+- Uses: speak
+
+
+---
+
+Source: https://toppingout.dev/skills/f-archive-search.md
+
+# f-archive-search
+
+Search the archived Logbook cards.
+
+Command: `/f-archive-search`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-archive-search/SKILL.md`
+
+## On site
+
+The Logbook: when f-search finds nothing and the lesson may be older. Searches foreman/logbook/archived/.
+
+## Say it
+
+- "look in the archive"
+- "we knew this before"
+- "search the old cards"
+
+## When to use it
+
+When a normal Logbook search finds nothing and the lesson might be old.
+
+## It's working if
+
+- Results are grouped by archive number, each with the card's id, type, cluster, summary and path.
+- Related ids from the same archive's `logbook_links.md` are listed next to a hit when there are any.
+- It searches only `foreman/logbook/archived/*/entries/`, never the live Logbook.
+- If there are no archive batches yet, it says so and points you to `/f-search`.
+- When nothing matches, it says none were found in the batches that exist, with no sample cards.
+
+## Common questions
+
+### When should I use this instead of `/f-search`?
+
+When `/f-search` comes back empty and the lesson may be older than the last rotation. `/f-search` reads live cards only; this reads archived cards only.
+
+### How should I phrase the search?
+
+Keep the terms simple. It matches text inside the card files, ignoring case.
+
+### Why does it say there is nothing to search?
+
+The Logbook has not been rotated yet, so `archived/` holds no numbered batches. Your cards are all still live.
+
+## Connections
+
+- Comes after: f-search
+
+
+---
+
+Source: https://toppingout.dev/skills/f-archive.md
+
+# f-archive
+
+Move old Logbook cards to the archive when there are too many, keeping a summary set.
+
+Command: `/f-archive`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-archive/SKILL.md`
+
+## On site
+
+The Logbook: f-shift runs it by itself once there are more than 250 cards. Moves older cards to foreman/logbook/archived/ and keeps a short summary set, as ARCHIVE-SYSTEM.md describes.
+
+## Say it
+
+- "the logbook is too big"
+- "rotate the logbook"
+- "archive old cards"
+
+## When to use it
+
+When the Logbook passes 250 cards (f-shift does it for you).
+
+## It's working if
+
+- Without `--execute` it only previews: the live count, the archive number, the 50 kept cards with scores and clusters, and a few that would leave. Nothing is copied or deleted.
+- With 250 live cards or fewer, it archives nothing and says why.
+- After a real run, the archived cards sit in a new numbered folder under `foreman/logbook/archived/`, with a `MANIFEST.json` and a `MANIFEST.md`.
+- The live Logbook keeps 50 index cards, plus every `ruled-out` card.
+- The index and links are rebuilt for the kept cards, with counts taken from the files.
+- The report ends with the helper's exit and its `verify` result. It staged, committed and pushed nothing.
+
+## Common questions
+
+### Will it archive cards without asking me?
+
+No. Other skills start it automatically when the live count passes 250, but it stays a dry run until you say `--execute`.
+
+### What stops it losing cards?
+
+All copying, hashing and deleting goes through the helper script `foreman/logbook/archive_cards.py`. It copies every card, checks each copy's hash, and only then deletes. On any mismatch or missing copy it exits 1, deletes nothing, and prints `VERIFY FAILED` lines.
+
+### Which cards stay live?
+
+It scores each card on how many links it has and how recent it is, then keeps the top 50, at most 10 per cluster, filling any spare slots by score. Every `ruled-out` card is kept as well, so `/f-survey` can still find it.
+
+### Can I undo an archive?
+
+Yes. `archive_cards.py restore` checks the archive first, copies back only cards that are missing, and never overwrites a live card that differs. Archive folders are never deleted.
+
+### Does it merge or retire duplicate cards?
+
+No. It rotates by count and judges nothing. Reconciling duplicates and contradictions is `/f-dream`.
+
+## Connections
+
+- Used by: f-shift
+
+
+---
+
+Source: https://toppingout.dev/skills/f-blueprint.md
+
+# f-blueprint
+
+Write the full plan once every decision is made.
+
+Command: `/f-blueprint`
+
+Stage: Plan · Before a job · step 2 of 11 in the order of works (Write the plan)
+Source: `skills/f-blueprint/SKILL.md`
+
+## On site
+
+Before a job, step 2: the full plan for a project, checked next by f-plancheck and then split into jobs by f-schedule. It sets the goal, the decisions that are fixed, what must be true when it's done, the tasks, and anything that needs your approval. No code yet.
+
+## When to use it
+
+When every choice is settled and it's time to write the plan for the whole project.
+
+## Not for
+
+Open decisions (f-survey), not for cutting into tickets (f-schedule), not for building.
+
+## It's working if
+
+- It wrote exactly one file, `foreman/blueprints/ready/BLUEPRINT-YYYY-MM-DD_<short-slug>.md`, with a status of `ready` or `blocked-on-decision`.
+- The plan names the head, the locked decisions (`D0…`), the verification points, the ordered tasks (`T0…`) and every assumption, HALT and outward item, with research and owner decisions listed as such, not hidden inside a task.
+- Every unresolved row carries a default if silent, or `HALT until decided`.
+- Each task names the paths it owns, its prerequisites, its outcome, what it traces to, and a verify step that uses a gate the repo already has.
+- The plan ends with a `## Plan check findings` heading and an empty findings table, ready for `/f-plancheck`.
+- `foreman/blueprints/README.md` has a **Ready** entry for it, usually saying it needs `/f-plancheck`.
+- It implemented nothing, opened no job, did not run `/f-plancheck`, and staged, committed and pushed nothing.
+
+## Common questions
+
+### Why did it stop and send me back to the survey?
+
+A load-bearing choice was still open: architecture, data model, API, acceptance or scope. It won't invent one to finish the plan; `/f-survey` settles it first.
+
+### Why did it stop before writing anything?
+
+Its first step checks the end-game lock. If the last job's close-out isn't finished, it stops and names the missing steps.
+
+### Does it look at the code?
+
+Yes, to ground the agreement, not to grow it. It confirms the real paths, symbols, tests and gates, and if the code disagrees with what was agreed, it surfaces the conflict instead of rewriting the deal.
+
+### Is one blueprint one job?
+
+No. A blueprint is a project. After `/f-plancheck` and your answers to its findings, `/f-schedule` cuts it into one-PR tickets.
+
+### What if I decide to postpone it?
+
+Move the file to `foreman/blueprints/deferred/` and its index entry to **Deferred**, with the trigger that brings it back. The skill never deletes a blueprint.
+
+## Connections
+
+- Comes after: f-survey
+- Leads to: f-plancheck
+
+
+---
+
+Source: https://toppingout.dev/skills/f-board.md
+
+# f-board
+
+Update the project board when a job starts, merges, gets stuck or is added.
+
+Command: `/f-board`
+
+Stage: Run a job · Starting and running a job · step 11 of 11 in the order of works (Close)
+Source: `skills/f-board/SKILL.md`
+
+## On site
+
+Throughout a project: marks a job as started when you say go, merged after the merge, and stuck when it stops. It works out by itself which jobs are ready and which are waiting, counts each change as a new version, and republishes the board page at the same link. When every job is done the board tops out: it is frozen as the project's record, and the next head gets a new board. An iteration board takes small jobs as they are found.
+
+## Say it
+
+- "go"
+- "what's next?"
+- "show me the board"
+
+## When to use it
+
+Whenever a job starts, merges, gets stuck or is added, so the board stays true.
+
+## Not for
+
+Cutting a plan into jobs (f-schedule).
+
+## It's working if
+
+- Each event is one `render_board.py` command and bumps the board's version exactly once.
+- Ready and blocked are worked out by the tool, never stored, and only one job is in progress at a time.
+- The tool refuses bad data or an impossible event, such as starting a blocked job, closing without `--next` when a job becomes eligible, or a merged job without its SHA.
+- A close is recorded only after the merge was checked in the repository, never on a report's word.
+- `board.html` is regenerated from `BOARD.json` and never edited by hand.
+- With no board link yet, it renders locally and asks you before the first publish; after that it republishes to the same private link.
+- The builder is never named on the board.
+
+## Common questions
+
+### Who updates the board?
+
+Only the foreman. Board updates are the foreman's own records, so they need no PR and no word from you, except the first publish of the page.
+
+### What happens at the end of a job?
+
+After the merge is verified, `close` records the job as merged and chooses the next job in one version. The next job is picked by what unblocks the most, then the most partial work, then the project's order.
+
+### What if one job turns out to be covered by another?
+
+You say so, and a `covered` event records it with your words quoted: the job leaves the board, pointing at the job that covers it.
+
+### What does exit code 4 mean?
+
+The event was recorded in `BOARD.json` but the page wasn't written, usually a locked or missing path. Fix the cause and run `render_board.py BOARD.json` to refresh the page. Never replay the event, or it is recorded twice.
+
+### Can I edit `BOARD.json` myself?
+
+You can edit the text fields, such as lessons, alerts, debts and facts, and the next render picks them up. Don't change a job's state by hand: states change only through the tool's events.
+
+### How do I start a board for a project that wasn't scheduled?
+
+Run `render_board.py <project>/BOARD.json init` with the project's title, its outcome, how you'd know it worked and its first job. Then `add` each job, and `add --merged` with the PR and merge SHA for a job that merged before the board existed. `init` refuses to overwrite a board that's already there.
+
+### Can a project go without a board?
+
+No. Every project has one: the close-out's board step ticks only the project's `BOARD.json`.
+
+### What happens when every job is done?
+
+The board tops out. `topout` freezes it as the project's record: no event runs after it, and any job not finished is recorded as carried over. With jobs still unfinished, it tops out only on your own words (`--quote`), never a goal's. `--head yes`, `partly` or `no` records whether the project reached its head, and `report` prints the topping out report's table, the carried jobs and the owed items.
+
+## Connections
+
+- Comes after: f-signoff
+- Used by: f-schedule, f-shift, f-setup
+
+
+---
+
+Source: https://toppingout.dev/skills/f-card.md
+
+# f-card
+
+Save one lesson worth keeping as a Logbook card.
+
+Command: `/f-card`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-card/SKILL.md`
+
+## On site
+
+The Logbook (the project's memory of lessons): any time something worth keeping is learned, during a job or not. Each card is a lesson (why), a method (how) or a record of what was built, written from the templates in foreman/logbook/entries/, with its evidence.
+
+## Say it
+
+- "capture this"
+- "save this learning"
+- "make a card for that"
+
+## When to use it
+
+Whenever you learn something worth remembering for future jobs.
+
+## It's working if
+
+- It shows you the full card, its quality score and its file path, and asks "Create this card? (y/n)" before writing anything.
+- The card is one INSIGHT, METHOD or BUILD file in the matching folder under `foreman/logbook/entries/`, with an ID shaped like `TYPE_YYYYMMDD_SHORT_NAME`.
+- If an existing card covers the same idea, it warns you and offers to add evidence to that card instead.
+- The new card has a row in `foreman/logbook/logbook_index.md`, and the total card count there is recounted from the files.
+- Any related cards it names appear as links in `foreman/logbook/logbook_links.md`.
+- It writes one card per run and leaves the constitution alone.
+
+## What it prints when the card is written
+
+Once you approve the card, it confirms the write in this shape, exactly as the skill prints it.
+
+```
+Card created: TYPE_YYYYMMDD_SHORT_NAME
+File: foreman/logbook/entries/{type}/TYPE_YYYYMMDD_SHORT_NAME.md
+Cluster: [cluster] | Impact: [impact]
+
+Run /f-distill to propose it for the constitution.
+```
+
+## Common questions
+
+### What if I run it with no arguments?
+
+It reads the conversation and suggests up to three candidates, each tagged with its type. You pick one, and run it again for more.
+
+### What happens if the card is thin?
+
+Each card gets a quality score, a rough check rather than a measurement. Below 75 out of 100, it shows the score and what is missing, and asks whether to fix the card or create it anyway.
+
+### Do I need an open job?
+
+No. It needs no job and no session file. Without a session, the card records the conversation date instead.
+
+### Does the card become a rule?
+
+Not by itself. Promoting a card into the constitution is `/f-distill`, which it suggests once the card is written.
+
+### What is the `project` type?
+
+An old name for BUILD. It is still accepted, and the card is written as BUILD.
+
+### What happens when the Logbook gets big?
+
+If the live card count passes 250 after the write, it runs `/f-archive` as a dry run. Nothing is archived unless you say go.
+
+
+---
+
+Source: https://toppingout.dev/skills/f-catchup.md
+
+# f-catchup
+
+Write Logbook cards for past jobs that never got any.
+
+Command: `/f-catchup`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-catchup/SKILL.md`
+
+## On site
+
+The Logbook: once to fill it from past jobs, or after a gap. It shows you what's missing and waits for a yes. Checks each lesson against its job before writing it, and skips jobs with nothing to learn.
+
+## When to use it
+
+When past jobs finished without anyone saving their lessons.
+
+## Not for
+
+A session status refresh (f-status).
+
+## It's working if
+
+- It shows which completed jobs are covered by cards and which are not, with estimated card counts, then waits for your yes before writing any card.
+- Each card it writes was checked against its source job and against existing card IDs.
+- Routine jobs are skipped with "no cards warranted", rather than given a card each.
+- New cards appear as rows in `logbook_index.md`, with the counts recounted from the card files.
+- The report lists jobs inspected, cards created and skipped, and the gaps left.
+- Completed jobs are untouched, `/f-distill` did not run, and nothing was staged, committed or pushed.
+
+## Common questions
+
+### Will it run on its own?
+
+No. It is set to run only when you type it, because it writes many card files.
+
+### Can I limit how far back it looks?
+
+Yes: `--since YYYY-MM-DD`. Without it, it compares completed-job dates with the latest indexed cards.
+
+### How is it different from `/f-card`?
+
+`/f-card` writes one card from the conversation you are in. This works through past completed jobs in bulk and fills in the ones that never got cards.
+
+### Does it update the rules too?
+
+No. When it finishes it offers `/f-distill` as a separate step for you to choose.
+
+## Connections
+
+- Uses: code-explorer
+
+
+---
+
+Source: https://toppingout.dev/skills/f-comply.md
+
+# f-comply
+
+Check whether the agent really follows a rule when it's tempted to break it.
+
+Command: `/f-comply`
+
+Stage: Kit · Rules that bind
+Source: `skills/f-comply/SKILL.md`
+
+## On site
+
+Before trusting a new builder, or before making a rule automatic: it checks that the rules in RULES.md are really followed. It grades what the session actually did, not what it said. A result that isn't clear counts as a fail.
+
+## Say it
+
+- "does this rule actually work"
+- "test the NEVERs"
+- "is RULES.md being followed"
+
+## When to use it
+
+Before you trust a new builder with real work, or before turning a rule into an automatic check.
+
+## Not for
+
+Measures existing rules: not for writing them (f-distill promotes a card into the constitution). Not a code gate.
+
+## It's working if
+
+- `--run` refuses with exit 2 unless you pass `--host-authority-ok` or set `FOREMAN_COMPLY_DISPOSABLE_HOST`, before any directory is made or any CLI is started.
+- `--list` and `--dry-run` show the cases and the exact prompts without spending anything.
+- Each case and level reports one of four outcomes: held, declined, violated or inconclusive.
+- A violation quotes the attempted commands and any completed git-state evidence.
+- Inconclusive turns are counted separately, never as a pass, and the exit code is 1 when any turn was inconclusive.
+- The run ends with an `F_COMPLY_RESULT` line giving the measured count next to the total.
+
+## The result line
+
+The last line of every run, shown exactly as the runner prints it, so a script can read it.
+
+```
+F_COMPLY_RESULT {"measured":14,"total":15,"violated":[{"id":"stage-by-filename","level":"competing"}],"inconclusive":1}
+```
+
+## Common questions
+
+### Which rules does it test?
+
+Five cases: staging by file name, no destructive reset, no secret staging, no push without your word, and subject-only commits. Secret staging is a Topping Out convention rather than a line in `RULES.md`, and its case says so.
+
+### Is it safe to run on my machine?
+
+Each turn runs in a fresh throwaway repo under the temp folder, deleted afterwards, with your git config, hooks, remotes and API keys kept out. It is not an OS sandbox: the tempted session runs as you and can reach anything by absolute path, which is why `--run` needs your explicit acknowledgment.
+
+### Does a model judge whether the rule held?
+
+No. Grading is deterministic: it reads the commands the session actually ran and the throwaway repo's final git state. Text written into a file doesn't count as a command unless a case names that file.
+
+### Why three levels?
+
+Supportive shows the agent can comply, neutral shows the rule binds on its own, and competing shows it survives pressure. A rule that only holds at supportive is a reminder, not a rule.
+
+### Which builders can it measure?
+
+It drives one `claude -p` seat per level, so it measures a Claude Code session directly. This runner doesn't yet drive a builder from another model family, so treat such a builder as unmeasured.
+
+### What should I do with a red result?
+
+Promote the rule to a hook, since a rule that fails at neutral or competing depends on recall. Promoting anything into the constitution or a hook needs your word.
+
+
+---
+
+Source: https://toppingout.dev/skills/f-context.md
+
+# f-context
+
+Get a quick, complete picture of a repo before working in it.
+
+Command: `/f-context`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-context/SKILL.md`
+
+## On site
+
+The Logbook: when you're new to a repo, or before rethinking a plan. At a job's start, f-shift already does this for the job. It only reads, never changes anything. It can trace features with code-explorer, and --deep also digs through the commit history.
+
+## Say it
+
+- "get me up to speed on this project"
+- "what is this codebase"
+- "orient me"
+
+## When to use it
+
+When you arrive at a repo you don't know, or before re-planning work.
+
+## Not for
+
+A mid-session refresher, which is free (f-status). Not for Logbook card search (f-search).
+
+## It's working if
+
+- The brief covers the project and its current priority, the git state, active work, the Logbook cards that match the focus, the relevant architecture, standing warnings and a short starting sequence with source paths.
+- It names the active work in one focus line before it searches the Logbook.
+- With a focus, it adds a short deep dive on that area. With `--deep`, it adds a Deep Context section.
+- If a step fails, it carries on and tells you what is missing.
+- It edited no files, staged, committed and pushed nothing, and called no paid services.
+
+## How to call it
+
+The three ways to start it, exactly as the skill lists them.
+
+```
+/f-context
+/f-context [focus-area]
+/f-context --deep [focus-area]
+```
+
+## Common questions
+
+### When should I use it?
+
+When you arrive at a repo cold, or before re-scoping. At a job's start `/f-shift` already loads the job's cards, and a mid-session "where are we" is `/f-status`, which costs nothing.
+
+### What does `--deep` add?
+
+Full commit messages read for the reasons behind changes, tracing of the most-changed files and what they affect, similar code to follow, and the neighbourhoods of recently changed files. It is meant for coming back after a long break or before resuming complex work.
+
+### What can I give as a focus?
+
+A path, a system name, or a cluster slug that your Logbook already uses.
+
+### Why does it cost more than other skills?
+
+It reads widely and may send helper agents to answer bounded questions, with more digging under `--deep`. That is why it suggests cheaper skills when they fit.
+
+## Connections
+
+- Uses: code-explorer
+
+
+---
+
+Source: https://toppingout.dev/skills/f-distill.md
+
+# f-distill
+
+Turn the most important lessons into firm rules, with your approval.
+
+Command: `/f-distill`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-distill/SKILL.md`
+
+## On site
+
+The Logbook: now and then. Lessons about the product become rules in the repo's own instructions; lessons about the method become Foreman rules. Shows you the proposed rules first and writes nothing until you approve them.
+
+## Say it
+
+- "distill the logbook"
+- "pull the best learnings into the rules"
+
+## When to use it
+
+Now and then, when some lessons keep coming up and deserve to become firm rules.
+
+## Not for
+
+Capturing one card (f-card), not for merging or retiring cards (f-dream).
+
+## It's working if
+
+- It shows a preview of short NEVER or ALWAYS bullets, each tagged with its destination and its source card ids, and writes nothing until you approve the exact bullets.
+- Product lessons go to the repo's constitution; method lessons are shown as a diff to Topping Out's `RULES.md` or playbooks.
+- A bullet that contradicts an existing rule is shown as a proposed change to that rule, with both texts.
+- Approved bullets are merged into the existing NEVER/ALWAYS sections, with no new "Distillation" heading.
+- Each source card gains a `distilled: <date> -> <destination>` line in its front matter.
+- The report lists cards analysed, bullets written per destination, and the high-value cards that missed the cut on age or links.
+
+## Common questions
+
+### How does it pick which cards to promote?
+
+It ranks cards on confidence, links, recency, how actionable they are and impact, with extra weight for anti-patterns and critical lessons. The number only orders candidates; it is not a percentage.
+
+### Where do the rules end up?
+
+Lessons about your codebase go to the constitution the repo profile names, `AGENTS.md` or `CLAUDE.md`. Lessons about how Topping Out works become a proposed change to the Topping Out package, made only on your word.
+
+### Can a card overrule an existing rule?
+
+Not by itself. A conflict is shown to you as a proposed change, with the old and new text.
+
+### How many bullets will it propose?
+
+There are caps per kind: 5 anti-patterns, 5 insights, 3 methods, 3 recent and 3 builds.
+
+### How is it different from `/f-dream`?
+
+This promotes the best cards upward into rules. `/f-dream` cleans up the cards themselves: duplicates, contradictions and repeated mistakes.
+
+
+---
+
+Source: https://toppingout.dev/skills/f-dream.md
+
+# f-dream
+
+Look back over past jobs: merge repeated lessons and spot mistakes that keep happening.
+
+Command: `/f-dream`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-dream/SKILL.md`
+
+## On site
+
+The Logbook: now and then. It shows what it would change first, and only applies it with your permission. Every change can be undone, and it never removes a card marked critical.
+
+## Say it
+
+- "reflect across the jobs"
+- "are we repeating mistakes"
+- "clean up contradictions in the logbook"
+
+## When to use it
+
+Now and then, to tidy the Logbook: merge repeats and spot patterns.
+
+## Not for
+
+Reconciles content: not for promoting knowledge upward (f-distill), nor for rotating by count (f-archive).
+
+## It's working if
+
+- By default it reads the last ten completed jobs and returns a numbered proposal, writing nothing.
+- Each proposed change cites its evidence, its target cards, the relationship changes, a confidence and a rollback.
+- The proposal holds at most 10 changes and never retires a CRITICAL card on its own.
+- The output gives the proposal ID, the corpus size, merges, supersessions, new patterns and anything skipped or flagged.
+- When applied, each retired card is copied and the copy checked before the live copy is removed, and an applied manifest can reverse every change.
+- It staged, committed and pushed nothing.
+
+## Common questions
+
+### Does a plain run change anything?
+
+No. The default is a dry run. It suggests a path for the proposal, but saves it only with `--save-proposal` and your explicit write authority.
+
+### How do I apply a proposal?
+
+Run `--apply --proposal <id>` with the saved proposal's id. It applies only the accepted items, and there is no "most recent" default.
+
+### What does it treat as a duplicate or a contradiction?
+
+It checks every candidate against its source. The same lesson in different contexts is not a duplicate, and advice that depends on context is not a contradiction.
+
+### Can I choose which jobs it reads?
+
+Yes: `--since` and `--jobs` bound the set.
+
+### When does it stop partway?
+
+On an unclear card identity, missing provenance, a copy that fails its check, or links that don't add up.
+
+### How is it different from `/f-archive`?
+
+`/f-archive` rotates cards out by count and judges nothing. This reads the content and reconciles it.
+
+
+---
+
+Source: https://toppingout.dev/skills/f-greploop.md
+
+# f-greploop
+
+Run an open pull request through Greptile's review, up to three rounds.
+
+Command: `/f-greploop`
+
+Stage: Merge, close and Logbook · PR and merge · step 9 of 11 in the order of works (Review the PR)
+Source: `skills/f-greploop/SKILL.md`
+
+## On site
+
+After you open the pull request and say "greploop", before you say "merge". Then the pull request's description is checked, on every job. Each finding is checked, the builder makes the fixes, the tests run again every round, and the fixes are pushed with your permission.
+
+## Say it
+
+- "merge"
+- "greploop"
+
+## When to use it
+
+After the pull request is open, when you say "greploop".
+
+## Not for
+
+The lens inspection (f-inspect) or the independent inspection (xreview); never merges.
+
+## It's working if
+
+- It checks the PR's head matches the job's final head before asking for a review.
+- It asks with the comment `@greptileai review` exactly, once per round, and waits with the bundled `greptile-wait.mjs`, not a hand-rolled loop.
+- Every Greptile finding gets a recorded disposition, even on a 5/5 score.
+- Accepted findings go to the builder as test-first repair work orders; the foreman fixes nothing itself.
+- Tests, base-vs-head and the acceptance ledger are green at the new head before any push, and pushes are never forced.
+- It stops after round 3 at the latest and hands over with each round's score, the open findings and the commits added.
+- The PR body is checked against the final diff before it tells you the PR is ready, and it never merges.
+
+## Common questions
+
+### What does "greploop" let it do?
+
+For this PR only and at most three rounds: post the review request and push reviewed repair commits to the PR's branch. Nothing else: no merge, no other branch, no other comment. A fourth round needs your word again. Inside an autonomous run you started for this job, the goal's own words grant this instead.
+
+### Does it resolve Greptile's threads?
+
+No. Threads stay as they are; each round's record says which findings are fixed and by which commit. A finding is never dismissed as noise without saying so.
+
+### Why re-run the tests if Greptile gives 5/5?
+
+Greptile reads the code but runs nothing. A fix made to please it can still break a test or undo a requirement, so every round that changes code re-runs the mechanical checks before the push.
+
+### What if Greptile never answers?
+
+The waiter gives up after 10 minutes and the skill halts and tells you. A failed read is reported as an error, and a score is never invented.
+
+### What if a finding needs a locked decision changed?
+
+That is a halt. It shows you the conflict instead of changing a locked decision, the constitution or a requirement to satisfy Greptile.
+
+### Does it merge when it reaches 5/5?
+
+No. It ends with "5/5, ready for your merge" or "stopped after round N: your call". The merge stays a separate step: your word, or covered by an autonomous run you started for this job.
+
+## Connections
+
+- Comes after: f-inspect
+- Uses: adjudicate
+
+
+---
+
+Source: https://toppingout.dev/skills/f-inspect.md
+
+# f-inspect
+
+Have specialist reviewers check the finished job's changes and report only problems.
+
+Command: `/f-inspect` (old name `/f-lens`)
+
+Stage: Inspect · The end game · step 7 of 11 in the order of works (Inspect)
+Source: `skills/f-inspect/SKILL.md`
+
+## On site
+
+Near the end of a job, the first of two reviews: the foreman runs it once the build is finished, before any pull request. Small, low-risk jobs skip it. It reviews only this job's changes, makes no fixes and gives no verdict, just findings. The record goes in templates/LENS-INSPECTION.md.
+
+## Say it
+
+- "run the lens inspection"
+
+## When to use it
+
+When a job's build is finished and its tests pass, before the pull request is opened.
+
+## Not for
+
+The independent inspection (pack-review → xreview → adjudicate), not a review of an open PR (f-greploop).
+
+## It's working if
+
+- It stops and says so when `foreman/jobs/` holds no job file for the slug, instead of reviewing anyway.
+- It stops and reports a wrong HEAD or an unexpected dirty file, and never checks out, stashes or resets anything.
+- It lists which lenses ran and which were skipped, each with a reason, and `lens-simplify` ran last as report-only.
+- Every finding carries severity, confidence, file:line, the scenario, why it matters and a concrete remedy.
+- Each lens is asked whether, where a test proves something is absent (no raw amount, no secret), another test pins the exact value shown.
+- A lens that halted, errored or returned `BLOCK` is reported as such, not as a clean lens with zero findings.
+- The findings are written to `<day folder>/JOB-<N>-LENS-INSPECTION.md`.
+- It gave no SHIP or BLOCK verdict, fixed nothing, and made no commit, push or PR.
+
+## How it pins the scope
+
+These are the checks it runs before any lens reads the work, shown exactly as the skill lists them.
+
+```
+WT="<worktree>"; BASE="<base sha>"; HEAD_SHA="<final head sha>"
+git -C "$WT" rev-parse HEAD                      # must equal $HEAD_SHA: stop if not
+git -C "$WT" status --short                      # only the profile's dirty-file allowlist
+git -C "$WT" diff --name-status "$BASE..$HEAD_SHA"   # the manifest the lenses review
+git -C "$WT" diff "$BASE..$HEAD_SHA" > "<day folder>/lens/<ticket>.diff"
+```
+
+## Common questions
+
+### Why is there no PR yet?
+
+This inspection runs after gate 2 and before the PR is prepared. The PR comes only after both inspections, the final re-run and the acceptance ledger.
+
+### Does every job get it?
+
+No. QUICK jobs skip it, and the record says `lens inspection: SKIP (QUICK)`. STANDARD and FULL jobs get it.
+
+### Who fixes what it finds?
+
+Not this skill. The findings go to adjudication, where each is reproduced against the code and accepted, rejected or partly accepted. Accepted findings become the builder's test-first repair work orders.
+
+### Why does each lens start fresh?
+
+Each triggered lens runs as a new subagent with no context from the job, so it reads the work cold. It is briefed with the range, the diff, the ticket's goal and constraints, and the settled decisions it must not relitigate.
+
+### How is it different from the independent inspection?
+
+This is the first of a job's two inspections, run by the foreman in its own session. The independent inspection (`/pack-review`, `/xreview`, `/adjudicate`) comes after, with a reviewer in another session.
+
+### It used to be called something else?
+
+Yes: `/f-lens` still works.
+
+## Connections
+
+- Leads to: f-greploop, pack-review
+- Uses: lens-code, lens-comments, lens-errors, lens-instructions, lens-migrations, lens-simplify, lens-tests, lens-types
+
+
+---
+
+Source: https://toppingout.dev/skills/f-night-shift.md
+
+# f-night-shift
+
+Run several jobs one after another without you: a shift boss opens a fresh foreman for each.
+
+Command: `/f-night-shift`
+
+Stage: Kit · Several jobs in a row
+Source: `skills/f-night-shift/SKILL.md`
+
+## On site
+
+When you type /goal night shift with a list of jobs, or a number of jobs to pick: usually before you sleep. Each job is its own autonomous run; the boss only starts it and checks the repo. Any stop ends the shift, and so does a completed topping out (the next head is yours to pick); the morning summary is one file.
+
+## Say it
+
+- "/goal night shift: jobs 13, 17, until done or stopped"
+- "/goal night shift: 2 jobs, auto-pick, until done or stopped"
+
+## When to use it
+
+Before you sleep, when the next jobs are on the board and you want them built one after another without you.
+
+## Not for
+
+One job (that is "/goal autonomous run: <opener>"), and never inside a job's own foreman session.
+
+## It's working if
+
+- It copies your exact /goal words into the shift record before doing anything else.
+- It refuses to start unless main matches the remote, the last job's end game is finished and no job worktree is open.
+- It never plans, builds, reviews or merges: each job runs in its own fresh foreman session.
+- It decides a job is done from the repo (merged, end game clear, next opener written), never from what the chat says.
+- The first stop ends the whole shift, with the foreman's stop line quoted in the shift record.
+- In planned mode it stops if a job's end game picks a job that is not next on your list.
+
+## Common questions
+
+### How do I start one?
+
+In a fresh session, type `/goal night shift: jobs 13, 14` to run a list you chose, or `/goal night shift: 2 jobs, auto-pick` to let each job's end game pick the next. Add `, spend up to 5 USD` to allow paid checks, one cap for the whole shift. Only your own typed line starts a shift.
+
+### What does the shift boss do?
+
+It opens a fresh foreman for each job, types that job's autonomous run, and checks the repo until the job is merged and closed. Then it starts the next. It never answers a job's questions or types into its session after the start line.
+
+### What happens when a job stops?
+
+The shift ends. The boss writes the reason into the shift record, quoting the foreman's own stop line, and tells you in one short reply. Nothing after the stop runs.
+
+### What if the builder hits its usage limit?
+
+The job pauses, it doesn't stop: the foreman waits for the limit to reset and carries on, and the shift waits with it. It never switches to a paid seat or another builder. A reset more than six hours away, or unknown, stops the job. If the foreman's own session hits its limit, the boss sends it one fixed line after the reset and it carries on.
+
+### How is it different from one autonomous run?
+
+`/goal autonomous run: <opener>` runs one job without you. A night shift runs several in a row, each one its own autonomous run in a fresh session.
+
+### What does it need from my repo?
+
+The foreman launch command in your repo profile (for example `claude`, with the flags you use), the first job's opener in `foreman/handovers/`, and Orca to open each foreman in its own tab. If the launch command is missing, it stops and asks rather than guessing.
+
+### How long can a shift run?
+
+Until the list is done, a job stops, a board tops out, the spend cap is reached, or a single job runs past 16 hours.
+
+## Connections
+
+- Comes after: f-signoff
+
+
+---
+
+Source: https://toppingout.dev/skills/f-plancheck.md
+
+# f-plancheck
+
+Have AI models from other companies read the plan fresh and point out problems.
+
+Command: `/f-plancheck` (old name `/plan-read`)
+
+Stage: Plan · Before a job · step 3 of 11 in the order of works (Check the plan)
+Source: `skills/f-plancheck/SKILL.md`
+
+## On site
+
+Before a job, step 3, between f-blueprint and f-schedule: the plan has to pass this check before it's split into jobs. One to five AI models from other companies read the plan side by side, all with the same checklist, and their findings are combined, never voted on.
+
+## When to use it
+
+After a plan is written and before it's split into jobs; also on a job's own plan before its second work order.
+
+## It's working if
+
+- Before picking seats, it prints who wrote the plan and which model family is excluded, so no seat comes from the author's own family.
+- On an attended run, it opens a one-shot picker in your browser and posts the picker's link in chat; nothing is dispatched until you have picked 1 to 5 seats.
+- Each seat gets the ticket's own words and checks every decision against them as well as against the code.
+- It reports the findings of the mechanical checks (paths, `file:line` citations, CLI flags, measurements, the Done-when block) as findings, without fixing them.
+- It writes `findings.md` in a fresh scratch folder: one block per defect, each with where, which seats raised it, the evidence, and an empty Disposition line.
+- Findings that change what is built sit in their own section, marked DO NOT ACT and left for your decision, with no suggested fix, and the report shows each of them to you in full.
+- The plan is untouched apart from one `gate: plancheck` line, which a plan in or headed for `foreman/blueprints/ready/` always gets.
+- It staged, committed and pushed nothing.
+
+## Common questions
+
+### Why can't the model that wrote the plan check it?
+
+That would be self-review. Seats come only from model families other than the plan's author and the session host; the picker greys those out and its server refuses them.
+
+### Do the seats vote?
+
+No. Identical defects at the same place are merged and credited to every seat that raised it. A finding from one seat reaches you exactly as one from every seat, and none is averaged away.
+
+### Will it fix the plan for me?
+
+No. It reports defects and evidence, and carries a seat's suggested fix only as a suggestion. Applying findings is a separate step, done by the plan's author after you have seen them.
+
+### When does it say the plan needs rewriting?
+
+When three or more verified critical findings land, or any finding goes against the plan's premise. It then says to rewrite from the intent, rather than listing patches.
+
+### Does it cost money?
+
+The codex, Claude and Grok CLI seats run on subscriptions. OpenRouter seats are pay-per-token and need `OPENROUTER_API_KEY`. An unattended run uses only the subscription seats.
+
+### It used to be called something else?
+
+Yes: `/plan-read` still works, and `/cv` is an alias. Older plans may carry `gate: plan-read`, the same gate under its old name.
+
+## Connections
+
+- Comes after: f-blueprint
+- Leads to: f-schedule
+- Uses: plan-validator
+- Used by: f-shift
+
+
+---
+
+Source: https://toppingout.dev/skills/f-schedule.md
+
+# f-schedule
+
+Split a big plan into jobs, in order, and draw the project board.
+
+Command: `/f-schedule` (old name `/f-decompose`)
+
+Stage: Plan · Before a job · step 4 of 11 in the order of works (Cut into tickets)
+Source: `skills/f-schedule/SKILL.md`
+
+## On site
+
+Before a job, step 4: it won't start on a plan that hasn't passed the plan check, and it waits for your go before writing anything. Anything that needs research or your decision becomes its own job, every requirement belongs to a job, and the ticket wording is copied exactly. It writes the project's folder and its board.
+
+## Say it
+
+- "break this plan into tickets"
+- "decompose this into jobs"
+- "turn this plan into a project"
+
+## When to use it
+
+When a plan has passed the plan check and is ready to be split into jobs.
+
+## Not for
+
+Writing the plan (f-blueprint), not for planning one ticket's job (the foreman's scoping + PLAN.md), not for board updates after that (f-board).
+
+## It's working if
+
+- On a plan without the `gate: plancheck` line, it stops and tells you to run `/f-plancheck` first. A findings row with a blank fate stops it too.
+- Before writing anything, it shows you the head, the job table, the decision jobs, any unmapped verification points or tasks, any disagreements, and the job it recommends first.
+- It writes nothing until you say "go" for the project.
+- Research and owner decisions are their own jobs, never hidden inside another: a question that ends in your answer is a decision job; research that produces a file is a build job and goes through a PR.
+- Every verification point is carried by at least one job, and every plan task maps to a job or to "not carried, on purpose" with its reason.
+- `foreman/projects/<slug>/` holds `PROJECT.md`, one ticket file per job with the acceptance quoted, and a `BOARD.json` that `render_board.py` validated and rendered.
+- It committed nothing, and never deleted or rewrote the source plan.
+
+## The two ways to run it
+
+The two forms of the command, exactly as the skill lists them.
+
+```
+/f-schedule <path to BLUEPRINT>            # propose the cut, then write on go
+/f-schedule --split <project-slug> <job-id>  # split one job that scoping found too big
+```
+
+## Common questions
+
+### How big is one job?
+
+One ticket, one PR, one module area, sized for roughly 8 to 9 work orders. A plan bigger than that becomes a project.
+
+### Does it publish the board page straight away?
+
+No. Publishing the board page and adding a note to the source plan are each a separate word from you, after the project is written.
+
+### What if scoping later finds a job is too big?
+
+Run `/f-schedule --split <project-slug> <job-id>`. The children replace the job, dependents are rewired, and every verification point is still carried. A merged or decision job can't be split.
+
+### We use a ticket tracker. Will it create tickets there?
+
+No. It maps each job to an existing key where one fits and never mints a new one. Where the tracker and the plan disagree, the difference goes on your list.
+
+### It used to be called something else?
+
+Yes: `/f-decompose` still works.
+
+## Connections
+
+- Comes after: f-plancheck
+- Uses: simplicity-critic, f-board
+
+
+---
+
+Source: https://toppingout.dev/skills/f-search.md
+
+# f-search
+
+Find Logbook cards about a topic.
+
+Command: `/f-search`
+
+Stage: Merge, close and Logbook · The Logbook
+Source: `skills/f-search/SKILL.md`
+
+## On site
+
+The Logbook: any time. f-shift uses it to load the lessons that apply to a job. Searches current cards only; older ones are in f-archive-search.
+
+## When to use it
+
+When you want to know what past jobs learned about a topic.
+
+## It's working if
+
+- It returns at most 10 cards, each with its id, type, cluster, tags, a short overview and its path.
+- Every hit is a live card under `foreman/logbook/entries/`, never one from `foreman/logbook/archived/`.
+- The card templates never show up as hits, even in an empty Logbook.
+- When nothing matches, it says so and points you to `/f-archive-search`, with no made-up list of cards.
+- There are no ranking scores or stats tables in the output.
+
+## Common questions
+
+### How do I write a query?
+
+Mix plain keywords, `#tag`, `@cluster` and `type:insight`, `type:method` or `type:build`. The filters combine with AND; a card matches the keywords if it contains any of them, ignoring case.
+
+### Where do the cluster names come from?
+
+From your own cards. The `## Clusters` section of `logbook_index.md` lists the ones in use. If a cluster search finds suspiciously few cards, it retries the same word as a keyword before saying they don't exist.
+
+### Why can't it find a lesson I know we learned?
+
+It reads live cards only. If the card was rotated out by `/f-archive`, search for it with `/f-archive-search`.
+
+### Does it look anywhere besides the Logbook files?
+
+No. It is told to read only the live Logbook files, even if the repo has its own card database or search service.
+
+## Connections
+
+- Leads to: f-archive-search
+- Used by: f-shift
+
+
+---
+
+Source: https://toppingout.dev/skills/f-setup.md
+
+# f-setup
+
+Install the method into a repo or upgrade it, write the repo profile, and prove the install.
+
+Command: `/f-setup`
+
+Stage: Kit · Setting up
+Source: `skills/f-setup/SKILL.md`
+
+## On site
+
+Before the first job, once per repo, and again for each upgrade (never while a job is open). The first time, the skill isn't in the repo yet: tell the session to read the package's skills/f-setup/SKILL.md and follow it. It reads the repo for the gates, remotes and keys before asking you anything, never overwrites a file the repo already has, and never commits.
+
+## Say it
+
+- "set up Topping Out here"
+- "install the method"
+- "upgrade Topping Out"
+
+## When to use it
+
+When a repo should start running the method, or a newer package should go over an existing install.
+
+## It's working if
+
+- It copies only what's missing and never overwrites a file the repo already has; only an upgrade replaces a file, and only one unchanged since the last install.
+- The repo profile is written from what the repo actually has, and you're asked only what it couldn't find, in one batch.
+- Every profile row is filled; a row nothing can answer yet says `not recorded` and why.
+- The names files exist, are git-ignored and never empty, and the names check proves itself on this machine.
+- The test adapter is proved on two fixtures: only the test failing at head alone is reported.
+- It never stages, commits or pushes: it ends with the list of files for your commit.
+- It ends with one line: `F-SETUP: READY <profile path>` or `F-SETUP: HALTED <reason>`.
+
+## Common questions
+
+### How do I run it the first time?
+
+In the repo that will hold your records, start a session and say `Read <path to the package>/skills/f-setup/SKILL.md and follow it`. The install copies the skill too, so every later run is just `/f-setup`.
+
+### How do I update later?
+
+Run `/f-setup` again. With a receipt in the repo it upgrades: files you didn't adapt are replaced, files you did are listed for a merge by hand. It refuses while a job is open or an end game is owed.
+
+### What does it ask me?
+
+Only what the repo can't answer: typically the product name, ticket mode, board publish mode, the budgets and the builders' names. Each question offers the answer it found as the default.
+
+### What is the first question?
+
+Whether the product is an AI agent built on LangChain, LangGraph or Deep Agents. A yes adds the Deep Agents add-on: `/deep`, a reference checked against the real `deepagents` code, and LangChain's docs server. A no skips it, and nothing else changes.
+
+### Does it touch my secrets?
+
+It reads the names of keys in `.env` files, never their values, and never prints a value.
+
+### How do I remove Topping Out?
+
+The receipt, `foreman/INSTALL-RECEIPT.txt`, lists every file the package installed. Delete those you haven't adapted, then the receipt. Your records stay yours.
+
+## Connections
+
+- Uses: f-board, f-signoff
+
+
+---
+
+Source: https://toppingout.dev/skills/f-shift.md
+
+# f-shift
+
+Start a session as the foreman: read the role, the rules and the playbook first.
+
+Command: `/f-shift`
+
+Stage: Run a job · Starting and running a job · step 5 of 11 in the order of works (Start the shift)
+Source: `skills/f-shift/SKILL.md`
+
+## On site
+
+Job start: the first command of every new session. It loads the lessons from past jobs that apply to this one. It reads the method, the rules, the playbook and the builder's notes, checks the job's facts for itself, then looks over the repo before any work starts.
+
+## Say it
+
+- "you are the foreman"
+- "be the foreman"
+- "set up as foreman"
+
+## When to use it
+
+At the start of every foreman session, before looking at any ticket.
+
+## Not for
+
+The builder's side (the builder gets work orders, never this skill), not for cutting a plan into tickets (f-schedule), not for updating the board (f-board).
+
+## It's working if
+
+- If the last job's close-out isn't finished, it stops at the end-game lock and names the missing steps.
+- It reads the method files in full: `README.md`, `RULES.md` with its "Foreman rules" section, `METHOD.md`, `OVERRIDES.md`, `Foreman-Playbook.md` and `BUILDER-PROFILES.md`, then the job's own handover and ticket.
+- Its first reply confirms the job's facts: the ticket and project, the builder, form A or B, the delivery, the repos and day folder, the gates, and what needs your word this job (and, if you started an autonomous run, which of those acts its goal covers).
+- Anything unclear is measured or listed as an owed question, not assumed.
+- It lists the Logbook cards in force for the job's area, CRITICAL and HIGH first.
+- It runs the site walk, then stops and waits for your "go".
+- Every reply ends with the 5-line status block.
+
+## Common questions
+
+### When do I run it?
+
+At the start of every job, before scoping a ticket. It is what makes the session the foreman.
+
+### Does the builder use it?
+
+No. The builder only gets work orders, never this skill.
+
+### What if this is the first Topping Out job in the repo?
+
+There is no shift handover yet. It reads the repo profile instead, measures every fact itself, and marks the handover rows "not applicable: first job".
+
+### Why does it read everything in full instead of summarising?
+
+The foreman makes every design decision and writes every work order, and the builder's discipline can't rescue a wrong decision. Loading the role line by line keeps any of it from being skimmed.
+
+### What if there are a lot of Logbook cards?
+
+More than 250 live cards means it runs `/f-archive` first.
+
+## Connections
+
+- Uses: f-archive, f-board, f-search, f-plancheck
+
+
+---
+
+Source: https://toppingout.dev/skills/f-signoff.md
+
+# f-signoff
+
+Close a merged job: check every requirement passed, save the lessons, file the job away.
+
+Command: `/f-signoff` (old name `/f-close`)
+
+Stage: Merge, close and Logbook · Close · step 11 of 11 in the order of works (Close)
+Source: `skills/f-signoff/SKILL.md`
+
+## On site
+
+After the merge: closes the job only when every requirement has passed, with nothing put off for later. Then come the dev report, the choice of the next job, the board update and the handover, in that order. At the board's head it tops the project out instead: a topping out report, the frozen board, and candidate next heads for you to pick from.
+
+## Say it
+
+- "close this job"
+- "we're done, wrap it up"
+
+## When to use it
+
+Right after a job's pull request is merged and the merge is confirmed.
+
+## Not for
+
+Committing or pushing (the owner's word).
+
+## It's working if
+
+- On a build job that isn't merged, it refuses and points to the PR instead.
+- Every row of the acceptance ledger is PASS. A row that isn't stops the close: there is no "close anyway".
+- It shows a drift audit, planned but not built against built but not planned. An empty table is the normal result.
+- The job file has moved to `foreman/completed-jobs/<YYYY-MM>/` and is gone from `foreman/jobs/`.
+- The last line reads `F-SIGNOFF: SIGNED OFF <archive path>`, followed by the end-game checklist.
+- It staged, committed and pushed nothing, and the blueprint is untouched.
+
+## How every close ends
+
+The close report ends with this checklist, exactly as the skill prints it, so the next steps are read, not remembered.
+
+```
+END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md), in this order:
+1. dev report            -> endgame.mjs tick dev-report --file <path>
+2. next-ticket decision  -> endgame.mjs tick next-ticket-decision --file <path>
+   then the owner confirms (or, under a /goal, the foreman records the goal): the file's
+   "Owner confirmed:" line must be filled before step 2b
+2b. ground investigation -> endgame.mjs tick ground-investigation --file <day folder>/JOB-<next>-GROUND-INVESTIGATION.md
+   (METHOD.md §10 step 7b: four read-only research agents, one per angle, plus the profile's framework check;
+   the handover and the opener point to it)
+3. board close event     -> endgame.mjs tick board --file <project>/BOARD.json   (every project has one; none yet: render_board.py … init)
+4. shift handover + opener -> endgame.mjs tick handover --file <handover> --opener foreman/handovers/OPENER-JOB-<next>.txt, then endgame.mjs clear
+   (then give the owner the opener's path and **three ways to start the next job, each ready to paste**:
+    normal: paste the opener's text into a fresh session;
+    autonomous run: /goal autonomous run: <absolute opener path>, until done or stopped;
+    night shift: /goal night shift: jobs <next board id>, <the one after, from the board>, until done or stopped;
+    adding ", spend up to <n> USD (read, or a ceiling under it)" to the last two when the next job has a paid seat or a live-key walkthrough, and
+    listing the questions its survey will answer itself under a goal (its ground investigation's starred picks))
+5. records push         -> names check over everything staged (names-check.mjs --staged, METHOD.md §10 step 9; a hit is rewritten first), merge <remote>/<main> into
+                           the records branch (never a rebase), check only records differ, push; then check CI on main
+                           (gh run list -R <target repo> -b <main> -L 1): red is reported, never called green
+
+TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved, or the owner's words; METHOD.md §11b):
+    first the board events (not locked): an in-progress build job: close <job> --pr ... --merge <M> [--no-next --reason "topping out"];
+    a decision job: decided <job> --note "<the owner's decision>"; already merged or resolved: nothing; then
+    render_board.py <project>/BOARD.json topout --report <day folder>/TOPPING-OUT-REPORT.md [--quote "<the owner's words>"]
+2b. topping out report  -> write it from the topped-out board's check output, then
+                           endgame.mjs tick ground-investigation --file <day folder>/TOPPING-OUT-REPORT.md
+3.  board               -> endgame.mjs tick board --file <project>/BOARD.json   (must be topped out)
+4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
+    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts)
+```
+
+## Common questions
+
+### Can I close a job that isn't quite finished?
+
+No. Finish it, or record your own scope decision in the acceptance ledger. A job that can't finish is halted on the board, not closed.
+
+### What if the close is interrupted halfway?
+
+Each stage is recorded in the job file with the hash of what it wrote. A retry resumes from the first unfinished stage and never repeats a completed write. If a file doesn't match its recorded hash, it stops and reports every stage's state.
+
+### Does it commit or push?
+
+No. File moves are plain moves; you commit them when you choose.
+
+### Why doesn't it retire the blueprint?
+
+A job builds one ticket of a project. The blueprint is archived only after its board tops out, and only on your word. If you top out with jobs carried over, the carried work lives on in the topping out report.
+
+### What comes after it?
+
+The dev report, then the next-ticket decision, which you confirm. Then the board's close event, and the shift handover with the next session's opener beside it (`foreman/handovers/OPENER-JOB-<N>.txt`, which you get to paste). Nothing new starts until those are done; then the records are pushed.
+
+### What happens at the board's head?
+
+The last job closes with no next job, the board tops out (`topout`), and in place of the handover you get a topping out report and three to five candidate next heads. There is no opener: you pick the next head when you're ready.
+
+### It used to be called something else?
+
+Yes: `/f-close` still works.
+
+## Connections
+
+- Leads to: f-board, f-night-shift
+- Uses: spec-validator-fixer
+- Used by: f-setup
+
+
+---
+
+Source: https://toppingout.dev/skills/f-sketch.md
+
+# f-sketch
+
+Write down a rough idea and its open questions, before anything is decided.
+
+Command: `/f-sketch` (old name `/f-idea`)
+
+Stage: Plan · Before a job · step 1 of 11 in the order of works (Shape the idea)
+Source: `skills/f-sketch/SKILL.md`
+
+## On site
+
+Before a job, the very first step: when an idea is worth keeping but not ready to decide. A notes file, not a plan: what's agreed so far, the open questions and the options turned down. When it's ready it moves on to f-survey.
+
+## Say it
+
+- "capture this idea"
+- "spec this concept out"
+
+## When to use it
+
+When you have an idea worth writing down but you're not ready to decide anything about it yet.
+
+## Not for
+
+Decision-complete work (f-blueprint), settling decisions (f-survey), a job's own plan (the foreman's PLAN.md), or single Logbook cards (f-card).
+
+## It's working if
+
+- It wrote exactly one file, `foreman/ideas/IDEA-YYYY-MM-DD_<short-slug>.md`, or placed it inside an existing idea directory and said so.
+- The file opens with a title, a date, a status saying the discussion is open, a banner saying it is not a plan of record and not executable, and one line on where it came from.
+- Settled points appear as `A0…` agreements and open questions as `Q0…`, with the options as they were discussed, not resolved.
+- Nothing in it was invented: no locked decision tables, no ordered tasks, no answers to questions you never answered.
+- `foreman/blueprints/README.md` has one new bullet for it in the **Ideas** section, naming what blocks promotion.
+- The report gives the path, a one-line summary, the counts of agreements, open questions and rejected options, and the blocking questions.
+- It opened no job, wrote no plan or code, and staged, committed and pushed nothing.
+
+## Where it sits
+
+The path an idea takes from a brainstorm to jobs, exactly as the skill draws it.
+
+```
+brainstorm → /f-sketch → more discussion → /f-survey → /f-blueprint → /f-plancheck
+  → foreman/blueprints/ready/ (plan carries its `gate: plancheck` line) → /f-schedule → jobs
+```
+
+## Common questions
+
+### Why does it keep my open questions instead of answering them?
+
+Its rule is fidelity over closure. An idea file with honest open questions is complete; one with invented answers is treated as corrupt.
+
+### What if we have actually settled everything?
+
+It says so and points you to `/f-blueprint` instead, so a finished decision doesn't end up as a weaker thinking file.
+
+### How does an idea become a job?
+
+Once its open questions close, it goes through `/f-survey`, then `/f-blueprint`, `/f-plancheck` and `/f-schedule`. The idea file itself is never executed.
+
+### We talked about two ideas. Can it capture both?
+
+One spec per run. If several distinct concepts came up, it asks which one to capture.
+
+### It used to be called something else?
+
+Yes: `/f-idea` still works.
+
+## Connections
+
+- Leads to: f-survey
+
+
+---
+
+Source: https://toppingout.dev/skills/f-status.md
+
+# f-status
+
+Tell you in plain words where things stand and what's next.
+
+Command: `/f-status`
+
+Stage: Kit · Catch-up
+Source: `skills/f-status/SKILL.md`
+
+## On site
+
+Only when you ask. Different from the short status lines at the end of every reply. It only uses what's in the current session and runs no tools.
+
+## Say it
+
+- "catch me up"
+- "where are we"
+- "I'm lost"
+- "refresh me"
+
+## When to use it
+
+When you want a plain summary of where things stand.
+
+## Not for
+
+The 5-line status block every reply ends with (templates/J-STATUS.md).
+
+## It's working if
+
+- It answers at once, without running any tool: no git, no file reads, no subagents.
+- The reply uses up to five blocks in order (where we are, done this session, right now, next, watch out) and skips any that would be empty.
+- It stays around 200 words or fewer.
+- The body has no file paths, command names or commit hashes.
+- "Right now" is a health line naming the scope checked: `Healthy`, `Blocked`, `Waiting` or `Unknown`.
+- "Next" is one action and says who does it, or reads `nothing from you`, and the reply ends there.
+
+## How to call it
+
+The two forms it takes, shown exactly as the skill lists them.
+
+```
+/f-status              # refresh on the whole session
+/f-status <topic>      # narrow to one thread
+```
+
+## Common questions
+
+### Why won't it check the code or the repo?
+
+It reads only what is already in the session, so it can answer instantly. If it reaches for a tool, the skill has failed.
+
+### What if the session was compacted?
+
+It works from the summary and says so in one clause. It never invents details to fill a gap.
+
+### Can I narrow it to one thread?
+
+Yes: `/f-status <topic>` refreshes you on that thread only.
+
+### Is it the same as the status block at the end of every reply?
+
+No. That 5-line block comes from `templates/J-STATUS.md`. This is a fuller catch-up you ask for when you step back or come back lost.
+
+### Will it reopen decisions?
+
+No. A choice you already made is stated as a fact, not an option, and a settled caveat isn't repeated.
+
+
+---
+
+Source: https://toppingout.dev/skills/f-survey.md
+
+# f-survey
+
+Turn a rough request into clear decisions, one round of questions at a time.
+
+Command: `/f-survey` (old name `/f-groom`)
+
+Stage: Plan · Before a job · step 1 of 11 in the order of works (Shape the idea)
+Source: `skills/f-survey/SKILL.md`
+
+## On site
+
+Before a job, step 1: turning an idea into decisions. It settles each choice by checking the actual code, so the plan written next has no open questions.
+
+## Say it
+
+- "survey this"
+- "groom this"
+- "this is still vague"
+- "tighten this before we build"
+- "what am I missing"
+- "survey this out loud"
+
+## When to use it
+
+When a request is still vague or has open choices, before anyone writes the plan.
+
+## Not for
+
+The site walk (the machine check at the start of a job, METHOD §2). Not for writing the plan (f-blueprint) or cutting it into tickets (f-schedule).
+
+## It's working if
+
+- Each round opens with the survey layout: your call, settled by the foreman, on site, next round.
+- "Your call" holds at most three questions, each with the recommended option first and starred.
+- Anything the code or the evidence can answer sits under "Settled by the foreman", with the evidence named, not as a question to you.
+- No question in a round depends on another question still open in the same round.
+- It stops asking once another answer would only tune implementation detail.
+- It ends with one self-contained commission block: in scope, out of scope, acceptance criteria, decisions with their reasons, the likely lane and the exact next action (`/f-blueprint <topic>`, or park it).
+- It created no job, plan, code or commit along the way.
+
+## What a round looks like
+
+Every round uses this layout, exactly as the skill prints it. The markers are the skill's own.
+
+```
+👷 SURVEY · <topic> · round <n> of <expected>
+
+🚧 YOUR CALL (<count>)
+ 1. <the question, one line>
+    ★ A  <option, one line>   ← recommended
+      B  <option, one line>
+      C  <option, one line>
+    Why A: <one line>
+
+✅ SETTLED BY THE FOREMAN (no answer needed)
+ · <a choice made on evidence, one line, with the evidence named>
+
+📐 ON SITE (facts that shape the ticket)
+ · <a measured fact, one line>
+
+🔜 NEXT ROUND: <what comes after the owner answers, one line>
+```
+
+## Common questions
+
+### Will it decide things for me?
+
+It settles what the code and the evidence can answer, and says what it found. It asks you only the questions whose answers change the architecture, the scope or the acceptance. It hands a fork to a council only when you authorise it to settle questions on its own.
+
+### Can I run it out loud?
+
+Yes: `/f-survey --voice` runs it as a spoken conversation, one short turn at a time. It needs the voice add-on (`/speak`, an OpenRouter key and `npx tsx`). Without them, survey in text.
+
+### Why did it stop before asking anything?
+
+Its first step checks the end-game lock. If the last job's close-out isn't finished, it stops and names the missing steps, so new work never starts on top of an unfinished one.
+
+### Can I survey while a job is running?
+
+No. If a job is active it declines: questions about that job belong to its own scoping.
+
+### What happens in an autonomous run?
+
+There is no one to ask, so it answers each question itself with its recommended option, marks each answer as decided under the autonomous run in the ticket, and goes on. It stops instead when a question has no clear recommendation, or when an answer would take the job beyond its board entry.
+
+### How is it different from the site walk?
+
+The site walk is the check at the start of a job. The survey comes before any job exists, and settles what the work should be.
+
+## Connections
+
+- Comes after: f-sketch
+- Leads to: f-blueprint
+- Uses: model-council, agent-council, speak
+
+
+---
+
+Source: https://toppingout.dev/skills/model-council.md
+
+# model-council
+
+Ask a panel of AI models, each answering on its own, to help settle a design choice.
+
+Command: `/model-council`
+
+Stage: Plan · Settling a fork
+Source: `skills/model-council/SKILL.md`
+
+## On site
+
+Before a job, when you allow it: f-survey can ask it to settle a design choice that doesn't need the code. The panel only sees a written brief, never the code. It needs an OpenRouter key.
+
+## When to use it
+
+When a design choice is stuck between options and you've agreed to let AI models weigh in.
+
+## Not for
+
+Panels that must inspect the codebase (agent-council). Not for what tests or an evaluation should decide.
+
+## It's working if
+
+- Before any spending, it frames one neutral brief: a single decision question, two to four options, the constraints, and a request to choose and name the strongest argument against the choice. Its own lean is not in it.
+- It opens a one-shot picker for every run, where you choose 2 to 5 panel seats from different vendors and one auditor. It does not run without your pick.
+- The host's own model family never sits on the panel or as auditor, and when a Player is declared, that vendor's seat is dropped and the reduced count is stated.
+- Every seat gets the same scrubbed brief and sees nothing from the other seats, the chair or the repository in the first round.
+- The result is a decision the chair owns, with every first-round position, the convergence, the surviving dissent, and the auditor's verdict with the chair's answers.
+- It does not hand the decision back to you as a question, unless it needs an authority it does not hold, such as spending, publishing or deleting.
+
+## Common questions
+
+### When should I use it instead of agent-council?
+
+When a written brief can carry the decision. The panel never sees the code. If the models need to inspect or test the repository, use `/agent-council`.
+
+### Is it a vote?
+
+No. It resolves arguments, not votes: agreement counts only when it comes with shared reasoning, and a principled dissent ships unchanged.
+
+### What does it need to run?
+
+An `OPENROUTER_API_KEY` in the repo-root `.env`, and at least two working panel seats. With fewer than two, it stops and reports that no council was formed.
+
+### Does anything private leave my machine?
+
+The agent is told to keep the outbound prompts clean: no methodology bodies, user identities, private data, credentials or repository details, and to scan every payload for known confidential names before each send.
+
+### When shouldn't I use it?
+
+For empirical thresholds, tuning, or anything a test or an evaluation can decide. Those go to the evaluation.
+
+## Connections
+
+- Used by: f-survey
+
+
+---
+
+Source: https://toppingout.dev/skills/orca-pi-connect.md
+
+# orca-pi-connect
+
+Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes.
+
+Command: `/orca-pi-connect` (old name `/pi`)
+
+Stage: Run a job · Starting and running a job
+Source: `skills/orca-pi-connect/SKILL.md`
+
+## On site
+
+Handing work to the builder in Orca: the foreman sends each work order itself and is woken up when the builder finishes. Comes with Pi's finish signal, starts Pi inside the job's folder without the trust question, and binds a pane it opened itself without asking.
+
+## Say it
+
+- "connect to pi"
+- "set up the builder pane"
+
+## When to use it
+
+When the builder runs in an Orca pane next to the foreman.
+
+## It's working if
+
+- The builder pane is split to the right of the foreman, in the same tab, and started in the job's worktree with an assigned session ID.
+- It puts the pane handle and session ID to you and waits for an explicit yes before sending anything.
+- Round 1 gets back the job worktree's absolute path and READY, with the Stop log growing by at least one line for that session.
+- Round 2 runs three separate `echo` commands, prints the matching `ORCA_TERMINAL_HANDLE`, replies `DONE`, and the Stop log grows by exactly one line.
+- The session file for that ID exists on disk, written during the handshake.
+- The report says whether the link is proven, with the handle, the session ID, both rounds, the log counts and the model in the footer.
+- During a job it sends only a one-line pointer to each work order, and checks the disk before reading the builder's report.
+
+## The five proofs
+
+The five things the link must prove before any work is sent, exactly as the skill lists them.
+
+```
+1 binding   the foreman opened the pane itself (exactly one new pane, on its right, fresh SID, or the old SID in a §1b resume), or the owner confirmed the handle + SID
+2 pane      Orca can target that binding and submit prompts
+3 hook      Pi's global agent_settled extension logs ONCE per genuine turn end
+4 replies   Pi answers, runs tools, and the reply is readable
+5 session   the on-disk session file records the turn under the bound id
+```
+
+## Common questions
+
+### Why not just watch for the pane to go quiet?
+
+A long tool call looks the same as a finished turn. The Stop log is the only completion signal it trusts.
+
+### Why does it assign the session ID instead of asking Pi?
+
+Asking Pi for its own ID is not proof of identity. The ID is chosen when Pi starts, or worked out from the session files and a fresh Stop-log line.
+
+### Will it approve Pi's prompts for me?
+
+No. A trust or tool-approval prompt is surfaced to you, never approved with keystrokes. Starting Pi with `--approve` in the job's own worktree is the one deliberate, up-front trust.
+
+### Where are the stop extension and watcher?
+
+In this skill's own folder: `pi-extension/foreman-stop.ts` and `stop-watch.mjs`. Copy `foreman-stop.ts` to `~/.pi/agent/extensions/` on a new machine and restart Pi.
+
+### What if the split reports an error?
+
+An error or timeout from the split means unknown, not failed: the pane often opened anyway. It counts the panes in the foreman's tab again over about 10 seconds. If there is still no new pane, it stops and asks you to look at the tab, and splits again, with a fresh session ID, only after you say there is no new pane. It never opens the builder in another tab.
+
+### Does the link make any decisions?
+
+No. It only carries pointers. Merges, pushes and deletions stay with you.
+
+### It used to be called something else?
+
+Yes: `/pi` still works.
+
+
+---
+
+Source: https://toppingout.dev/skills/pack-review.md
+
+# pack-review
+
+Bundle the goal, the rules and the changes into one brief for an outside reviewer.
+
+Command: `/pack-review`
+
+Stage: Inspect · The end game · step 7 of 11 in the order of works (Inspect)
+Source: `skills/pack-review/SKILL.md`
+
+## On site
+
+Near the end, the second review: the foreman writes one brief for an outside reviewer once the first review's fixes are in, and checks it before it goes out (templates/PACK-REVIEW.md). It removes anything that names a model or an AI company, so the reviewer judges the work, not who wrote it.
+
+## When to use it
+
+Once the first review's fixes are in, to prepare the brief for the outside reviewer.
+
+## Not for
+
+Not a planning or build pack, and not a review (f-inspect, xreview).
+
+## It's working if
+
+- The output is one fenced block you can copy as it stands, with no commentary before or after it.
+- The brief has its sections in order: goal, hard constraints, non-goals, what to review, the diff or artifact, tests or repro, and what not to relitigate.
+- Nothing in the brief names a model or vendor: commit trailers and vendor-identifying paths are replaced, not summarised around.
+- Paths are absolute wherever the reviewer may run in a different checkout.
+- On a huge diff, it packs the file list and the riskiest hunks, and says what it left out.
+- It did not review the work, rewrite it, or edit any file.
+
+## Common questions
+
+### Does it review the work?
+
+No. It only builds the brief. The review happens in another session with `/xreview`, and the result comes back here for `/adjudicate`.
+
+### How does the brief reach the reviewer?
+
+Either you copy the block and paste it into the other session by hand, or an unattended run passes it to `scripts/cross-review-dispatch.mjs`, which seats a reviewer from another model family and runs it headless.
+
+### Why strip model and vendor names?
+
+The reviewer must not learn which model did the work, so it judges the claims, not the author.
+
+### Can the same session review its own brief?
+
+No. Running `/xreview` on work this same session produced is never valid. Independence comes from a different session, or a different process on another vendor's CLI.
+
+### Where does it fit in a job?
+
+In the end game: the foreman runs it for the independent inspection, after the lens inspection's fixes, and checks the brief before it goes out.
+
+## Connections
+
+- Comes after: f-inspect
+- Leads to: xreview
+
+
+---
+
+Source: https://toppingout.dev/skills/speak.md
+
+# speak
+
+Read one reply out loud as a short spoken summary.
+
+Command: `/speak`
+
+Stage: Kit · Voice
+Source: `skills/speak/SKILL.md`
+
+## On site
+
+Any time: the voice add-on. It can also read f-survey rounds aloud. Needs scripts/speak.ts, an OpenRouter key and Node.
+
+## Say it
+
+- "say that out loud"
+- "read that back"
+- "explain that aloud"
+
+## When to use it
+
+When you'd rather hear a reply than read it.
+
+## It's working if
+
+- You hear a short plain-language explainer, not the reply read out word for word.
+- The spoken version has no code, file paths, headings or bullet points, and runs about 20 to 60 seconds.
+- The rewritten text is saved to `scratch/speak-input.txt` and played with `npx tsx scripts/speak.ts scratch/speak-input.txt`.
+- The chat reply is only a speaker symbol, plus a one-line note if the script printed an error.
+- It speaks that one reply only, and later replies stay silent.
+
+## How to call it
+
+The two forms it takes, shown exactly as the skill lists them.
+
+```
+/speak            # explain my previous message aloud
+/speak <text>     # explain/voice the given text instead
+```
+
+## Common questions
+
+### What does it read out?
+
+Your previous assistant reply, or the text you pass after `/speak`. It rewrites it as a short spoken explainer rather than reading it verbatim.
+
+### What do I need to set it up?
+
+Node with `npx tsx`, the bundled `scripts/speak.ts` and `scripts/bootstrap-env.ts`, Windows audio playback, and the repo's `.env`. The default engine is Grok Voice through OpenRouter, so it needs `OPENROUTER_API_KEY`.
+
+### Can I change the voice?
+
+Yes. Set `SPEAK_GROK_VOICE` to `eve`, `ara`, `rex`, `sal` or `leo` (the default). Setting `SPEAK_PROVIDER=hume` uses a saved Hume voice from `SPEAK_VOICE_ID` instead.
+
+### Does it fall back to another engine if one fails?
+
+No. It uses only the engine named in `.env`.
+
+### How do I keep it on for every reply?
+
+Use `/converse`. `/speak` is one reply at a time.
+
+### Can I see the text it spoke?
+
+Not by default. Ask and it will show it.
+
+## Connections
+
+- Used by: converse, f-survey
+
+
+---
+
+Source: https://toppingout.dev/skills/xreview.md
+
+# xreview
+
+Review another session's work with fresh eyes: list each claim, never rewrite it.
+
+Command: `/xreview`
+
+Stage: Inspect · The end game · step 7 of 11 in the order of works (Inspect)
+Source: `skills/xreview/SKILL.md`
+
+## On site
+
+The second review: run in a new session from a different AI company (codex when the foreman is Claude), by hand or with scripts/cross-review-dispatch.mjs. It starts by confirming it hasn't seen the work before, and it never counts on work the same session wrote.
+
+## When to use it
+
+When the brief is ready and a session from a different AI company can review the work.
+
+## Not for
+
+Ordinary in-session code review (f-inspect, lens-code) and not for work this session wrote.
+
+## It's working if
+
+- It opens with an Independence statement: automated dispatch or hand-carried, and if hand-carried, whether it already knows the author or has seen the work.
+- It states the goal it reviewed against and says whether that goal was stated or inferred.
+- Every finding is a numbered row in the claim table (C1, C2 and so on), with a bucket, a severity, evidence and the smallest suggested change.
+- Anything it could not check is marked UNKNOWN, not promoted to a defect.
+- A clean review is a single `C0 | No findings` row naming what it actually read.
+- It ends after the six sections, with no essay, no rewrite and no file edits.
+- It refuses, and says why, when asked to review work this same session wrote or supervised.
+
+## Common questions
+
+### Who should run it?
+
+A fresh session of a different model family from the one that did the work. You can paste a `/pack-review` brief into it by hand, or `scripts/cross-review-dispatch.mjs` can run it headless.
+
+### Will it guess who wrote the work?
+
+No. It is told never to guess the author, vendor or model, and not to mention model names even if the artifact leaks one.
+
+### What does it judge against?
+
+Only the stated goal and constraints in the brief. Items on the non-goals or do-not-relitigate lists are settled: it files no claims against them, and if one looks unsafe it says so once under Unknowns.
+
+### What if the brief has no goal?
+
+It asks one short question first. If you tell it to go ahead, it infers the goal in one sentence and labels it as inferred.
+
+### Does it comment on style?
+
+Only when style causes a real defect. It doesn't praise by default or invent nits to look useful.
+
+### What happens to its output?
+
+It goes back to the session that did the work, where `/adjudicate` judges each claim.
+
+## Connections
+
+- Comes after: pack-review
+- Leads to: adjudicate

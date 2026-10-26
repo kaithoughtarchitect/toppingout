@@ -1,0 +1,5 @@
+# every crawler is welcome, AI crawlers included
+User-agent: *
+Allow: /
+
+Sitemap: https://toppingout.dev/sitemap.xml

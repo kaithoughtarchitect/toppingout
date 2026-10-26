@@ -1,0 +1,69 @@
+# Topping Out
+
+> Let AI coding agents work through your tickets for hours, even overnight, without drifting: every job starts fresh from files, a cheap model does the heavy coding, and your Claude Code limit lasts far longer. Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
+
+Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/toppingout. Every skill and agent page has a Markdown twin, linked below.
+
+## Pages
+
+- [Topping Out](https://toppingout.dev/): Topping Out, a software factory methodology for AI coding agents: a foreman plans, a cheap builder builds, two inspections check, and you give the word. Runs in your own repo.
+- [Order of works](https://toppingout.dev/route.html): Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.
+- [Your repo](https://toppingout.dev/repo.html): A site plan of every folder Topping Out adds to your repo, and where one job's files appear.
+- [Logbook](https://toppingout.dev/logbook.html): The Logbook: the cards Topping Out keeps, how a lesson becomes a card and then a rule, its skills and its files.
+- [Skills and agents](https://toppingout.dev/skills.html): Every Topping Out skill and agent: 30 skills and 13 agents.
+- [Skill Atlas](https://toppingout.dev/atlas.html): Every Topping Out skill and agent as a map, with the links between them.
+- [Playbooks](https://toppingout.dev/playbooks.html): Who does what: the foreman's, the builder's and your job, and the playbook each role follows.
+- [Example board](https://toppingout.dev/board.html): What a Topping Out project board looks like, and how to read it: a made-up project with synthetic data.
+- [Requirements](https://toppingout.dev/requirements.html): The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.
+- [About](https://toppingout.dev/about.html): Kai Thought Architect, who drew Topping Out, and the systems it grew from.
+
+## Skills and agents (Markdown)
+
+- [All skills and agents](https://toppingout.dev/skills.md): the full list, one line each
+- [code-explorer](https://toppingout.dev/agents/code-explorer.md): Trace how an existing feature works through the code.
+- [handoff-builder](https://toppingout.dev/agents/handoff-builder.md): Write the handover notes so the next session can pick up the work.
+- [lens-code](https://toppingout.dev/agents/lens-code.md): Look for bugs and broken project rules in the changed code.
+- [lens-comments](https://toppingout.dev/agents/lens-comments.md): Check that comments and docs still match the code.
+- [lens-errors](https://toppingout.dev/agents/lens-errors.md): Find errors that get silently ignored, and risky fallbacks.
+- [lens-instructions](https://toppingout.dev/agents/lens-instructions.md): Check prompts, skills and templates for contradictions and broken references.
+- [lens-migrations](https://toppingout.dev/agents/lens-migrations.md): Review database changes: migrations, queries and access rules.
+- [lens-simplify](https://toppingout.dev/agents/lens-simplify.md): Spot code that could be simpler, without changing what it does.
+- [lens-tests](https://toppingout.dev/agents/lens-tests.md): Find changes that aren't properly tested.
+- [lens-types](https://toppingout.dev/agents/lens-types.md): Check that the data types can't hold invalid values.
+- [plan-validator](https://toppingout.dev/agents/plan-validator.md): Check a plan against the real code before it's built (used inside f-plancheck).
+- [simplicity-critic](https://toppingout.dev/agents/simplicity-critic.md): Find the overbuilt parts of a plan and suggest the simplest version.
+- [spec-validator-fixer](https://toppingout.dev/agents/spec-validator-fixer.md): Correct statements in a plan that are provably wrong.
+- [adjudicate](https://toppingout.dev/skills/adjudicate.md): Go through a review point by point: accept, reject, partly accept, or can't verify.
+- [agent-council](https://toppingout.dev/skills/agent-council.md): Ask AI agents that can read the code to help settle a design choice.
+- [converse](https://toppingout.dev/skills/converse.md): Read every reply out loud until you turn it off.
+- [f-archive-search](https://toppingout.dev/skills/f-archive-search.md): Search the archived Logbook cards.
+- [f-archive](https://toppingout.dev/skills/f-archive.md): Move old Logbook cards to the archive when there are too many, keeping a summary set.
+- [f-blueprint](https://toppingout.dev/skills/f-blueprint.md): Write the full plan once every decision is made.
+- [f-board](https://toppingout.dev/skills/f-board.md): Update the project board when a job starts, merges, gets stuck or is added.
+- [f-card](https://toppingout.dev/skills/f-card.md): Save one lesson worth keeping as a Logbook card.
+- [f-catchup](https://toppingout.dev/skills/f-catchup.md): Write Logbook cards for past jobs that never got any.
+- [f-comply](https://toppingout.dev/skills/f-comply.md): Check whether the agent really follows a rule when it's tempted to break it.
+- [f-context](https://toppingout.dev/skills/f-context.md): Get a quick, complete picture of a repo before working in it.
+- [f-distill](https://toppingout.dev/skills/f-distill.md): Turn the most important lessons into firm rules, with your approval.
+- [f-dream](https://toppingout.dev/skills/f-dream.md): Look back over past jobs: merge repeated lessons and spot mistakes that keep happening.
+- [f-greploop](https://toppingout.dev/skills/f-greploop.md): Run an open pull request through Greptile's review, up to three rounds.
+- [f-inspect](https://toppingout.dev/skills/f-inspect.md): Have specialist reviewers check the finished job's changes and report only problems.
+- [f-night-shift](https://toppingout.dev/skills/f-night-shift.md): Run several jobs one after another without you: a shift boss opens a fresh foreman for each.
+- [f-plancheck](https://toppingout.dev/skills/f-plancheck.md): Have AI models from other companies read the plan fresh and point out problems.
+- [f-schedule](https://toppingout.dev/skills/f-schedule.md): Split a big plan into jobs, in order, and draw the project board.
+- [f-search](https://toppingout.dev/skills/f-search.md): Find Logbook cards about a topic.
+- [f-setup](https://toppingout.dev/skills/f-setup.md): Install the method into a repo or upgrade it, write the repo profile, and prove the install.
+- [f-shift](https://toppingout.dev/skills/f-shift.md): Start a session as the foreman: read the role, the rules and the playbook first.
+- [f-signoff](https://toppingout.dev/skills/f-signoff.md): Close a merged job: check every requirement passed, save the lessons, file the job away.
+- [f-sketch](https://toppingout.dev/skills/f-sketch.md): Write down a rough idea and its open questions, before anything is decided.
+- [f-status](https://toppingout.dev/skills/f-status.md): Tell you in plain words where things stand and what's next.
+- [f-survey](https://toppingout.dev/skills/f-survey.md): Turn a rough request into clear decisions, one round of questions at a time.
+- [model-council](https://toppingout.dev/skills/model-council.md): Ask a panel of AI models, each answering on its own, to help settle a design choice.
+- [orca-pi-connect](https://toppingout.dev/skills/orca-pi-connect.md): Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes.
+- [pack-review](https://toppingout.dev/skills/pack-review.md): Bundle the goal, the rules and the changes into one brief for an outside reviewer.
+- [speak](https://toppingout.dev/skills/speak.md): Read one reply out loud as a short spoken summary.
+- [xreview](https://toppingout.dev/skills/xreview.md): Review another session's work with fresh eyes: list each claim, never rewrite it.
+
+## Optional
+
+- [Every skill and agent page in one file](https://toppingout.dev/llms-full.txt): the Markdown twins above, concatenated

@@ -51,6 +51,7 @@ export function dest(p, { addons = new Set(), starter = false } = {}) {
     if (r.startsWith("starter/")) return starter ? r.slice("starter/".length) : null;
     return null; // the add-on's own README
   }
+  if (p === "AGENTS.md") return null; // the package's own note for agents reading this repo, never the project's
   if (p.startsWith("skills/") || p.startsWith("agents/")) return ".claude/" + p;
   if (SCRIPTS.has(p)) return p;
   if (p.startsWith("foreman/templates/") || p.startsWith("foreman/blueprints/") || p.startsWith("foreman/logbook/")) return p;
@@ -232,7 +233,7 @@ function selfTest() {
     const files = {
       "METHOD.md": "method v1\n", "RULES.md": "rules v1\n", "templates/WORK-ORDER.txt": "wo v1\n",
       "skills/f-a/SKILL.md": "a v1\n", "skills/f-b/SKILL.md": "b v1\n", "agents/x.md": "x v1\n",
-      "scripts/speak.ts": "speak\n", "scripts/build_site.py": "not installed\n", "docs/index.html": "not installed\n",
+      "scripts/speak.ts": "speak\n", "scripts/build_site.py": "not installed\n", "docs/index.html": "not installed\n", "AGENTS.md": "not installed\n",
       "foreman/templates/JOB-QUICK.md": "job v1\n", "foreman/logbook/logbook_index.md": "pkg index\n",
       "foreman/logbook/ARCHIVE-SYSTEM.md": "archive v1\n", "skills/f-a/__pycache__/c.pyc": "junk",
       "foreman/logbook/entries/insights/INSIGHT-TEMPLATE.md": "card template v1\n", "foreman/logbook/entries/insights/INSIGHT_a.md": "a card\n",
@@ -250,6 +251,7 @@ function selfTest() {
     const first = install(pkg, repo, { log: quiet });
     check("install copies what's missing", first.includes("foreman/method/METHOD.md") && first.includes(".claude/skills/f-a/SKILL.md") && first.includes("scripts/speak.ts") && first.includes("foreman/logbook/logbook_index.md"));
     check("install skips the site, generators and caches", !first.some((d) => /build_site|docs\/|pycache/.test(d)));
+    check("install skips the package's own AGENTS.md", !first.includes("AGENTS.md") && !first.includes("foreman/method/AGENTS.md"));
     check("install never overwrites", readFileSync(join(repo, ".claude/skills/f-b/SKILL.md"), "utf8") === "b adapted\n");
     check("install writes the receipt and ignores scratch", readFileSync(join(repo, "foreman/INSTALL-RECEIPT.txt"), "utf8").includes(`revision: ${v1}`) && readFileSync(join(repo, ".gitignore"), "utf8").includes("scratch/"));
     check("a second install adds nothing", install(pkg, repo, { log: quiet }).length === 0 && readFileSync(join(repo, ".gitignore"), "utf8").match(/scratch\//g).length === 1);

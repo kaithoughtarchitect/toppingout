@@ -4593,6 +4593,50 @@ RAW_SHARE = {"raw/route.html": "route.html", "raw/atlas.html": "atlas.html", "ra
              "raw/foreman-playbook.html": "playbooks.html", "raw/builder-playbook.html": "playbooks.html"}
 
 
+def readme_lead() -> str:
+    """The README's opening: its bold lead line and the evidence line under it, as plain text for llms.txt."""
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    m = re.search(r"^\*\*(.+?)\*\*\s*\n\s*\n([^\n]+)", text, re.M)
+    if not m:
+        raise SystemExit("build_site: README.md no longer opens with a bold lead and an evidence line (llms.txt reads them)")
+    return m.group(1).strip() + " " + m.group(2).strip()
+
+
+def site_json_ld() -> str:
+    """schema.org SoftwareSourceCode for the front page."""
+    data = {"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "Topping Out",
+            "description": FRONT["description"], "url": SITE_URL.rstrip("/"),
+            "codeRepository": "https://github.com/" + INSTALL["repo"], "license": "https://opensource.org/licenses/MIT",
+            "programmingLanguage": ["JavaScript", "Python"], "author": {"@type": "Person", "name": "Kai Thought Architect"}}
+    return '<script type="application/ld+json">' + json.dumps(data, ensure_ascii=False).replace("</", "<\\/") + "</script>"
+
+
+def find_files(pages: dict) -> dict:
+    """llms.txt, llms-full.txt, sitemap.xml and robots.txt from the pages written. `pages` maps each html path to (title, description)."""
+    def name(rel: str) -> str:
+        return pages[rel][0].removesuffix(" · Topping Out")
+
+    def url(rel: str) -> str:
+        return SITE_URL + ("" if rel == "index.html" else rel)
+
+    main_pages = [rel for rel, _ in SHEETS] + ["about.html"]
+    twins = sorted(rel for rel in pages if rel.startswith(("skills/", "agents/")))
+    llms = ["# Topping Out", "", "> " + readme_lead(), "",
+            f"Topping Out is open source (MIT): https://github.com/{INSTALL['repo']}. Every skill and agent page has a Markdown twin, linked below.", "",
+            "## Pages", ""]
+    llms += [f"- [{name(rel)}]({url(rel)}): {pages[rel][1]}" for rel in main_pages]
+    llms += ["", "## Skills and agents (Markdown)", "", f"- [All skills and agents]({SITE_URL}skills.md): the full list, one line each"]
+    llms += [f"- [{name(rel)}]({SITE_URL}{rel[:-5]}.md): {pages[rel][1]}" for rel in twins]
+    llms += ["", "## Optional", "", f"- [Every skill and agent page in one file]({SITE_URL}llms-full.txt): the Markdown twins above, concatenated", ""]
+    full = ["# Topping Out: every skill and agent page", "", "> " + readme_lead(), ""]
+    for rel in twins:
+        full += ["", "---", "", f"Source: {SITE_URL}{rel[:-5]}.md", "", (OUT / (rel[:-5] + ".md")).read_text(encoding="utf-8").strip(), ""]
+    urls = "".join(f"<url><loc>{esc(url(rel))}</loc></url>\n" for rel in main_pages + twins)
+    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + "</urlset>\n"
+    robots = f"# every crawler is welcome, AI crawlers included\nUser-agent: *\nAllow: /\n\nSitemap: {SITE_URL}sitemap.xml\n"
+    return {"llms.txt": "\n".join(llms), "llms-full.txt": "\n".join(full), "sitemap.xml": sitemap, "robots.txt": robots}
+
+
 class Site:
     def __init__(self):
         self.data = build_data(ROOT / "skills-wiki")
@@ -5690,13 +5734,15 @@ def main() -> int:
     (OUT / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8", newline="\n")
 
     written = []
+    pages = {}
 
     def write(rel: str, text: str) -> None:
         if rel.endswith(".html"):
             m = re.search(r'<title>(.*?)</title><meta name="description" content="(.*?)">' + SHARE_MARK, text)
             if not m:
                 raise SystemExit(f"build_site: {rel} has no title and description to share")
-            text = text.replace(SHARE_MARK, share_tags(rel, html.unescape(m.group(1)), html.unescape(m.group(2))), 1)
+            pages[rel] = (html.unescape(m.group(1)), html.unescape(m.group(2)))
+            text = text.replace(SHARE_MARK, share_tags(rel, *pages[rel]) + (site_json_ld() if rel == "index.html" else ""), 1)
         (OUT / rel).write_text(text, encoding="utf-8", newline="\n")
         written.append(OUT / rel)
 
@@ -5732,6 +5778,8 @@ def main() -> int:
         page, md = site.skill(pid)
         write(f"{page_path(pid)}.html", page)
         write(f"{page_path(pid)}.md", md)
+    for rel, text in find_files(pages).items():
+        write(rel, text)
 
     missing = sorted(set(site.by) - site.built)
     print(f"wrote {OUT.relative_to(ROOT).as_posix()}/: {len(SHEETS)} sheets, {len(site.built)} skill and agent pages with their Markdown twins, {len(RAW)} generated pages in raw/")
