@@ -2,6 +2,8 @@
 
 Thanks for looking. Topping Out is small and run by one person, so the most useful help is specific.
 
+By taking part you agree to the [code of conduct](.github/CODE_OF_CONDUCT.md).
+
 ## Most wanted
 
 - **Reports from macOS and Linux.** It's tested on Windows 11 with Claude Code as the foreman. CI runs the scripts' self-tests on all three systems, but a full job hasn't been run on macOS or Linux yet. If you try one, open an issue with what happened, good or bad.
