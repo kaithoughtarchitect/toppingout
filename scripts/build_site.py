@@ -2195,7 +2195,15 @@ FRONT = {
         ("inspectors", "Inspectors", "Never fix: findings go back to the foreman."),
         ("you", "Owner: you", "Gives the word: on each merge, or once for the whole night."),
     ],
-    "subline": "Each job: planned, built by a cheap model, checked, signed off. Until the project tops out.",
+    # the owner's angle (requests file, 2026-10-26): long runs without drift, a cheap builder, a Claude Code limit that lasts.
+    # The link preview (foreman-site-tools/og-card.mjs) carries this same line, read from the built page.
+    "subline": "Runs for hours, even overnight, without drifting: every job starts fresh from files. A cheap model does the heavy coding, so your Claude Code limit lasts far longer.",
+    # the strip under the hero: (point, its one line). No numbers until one is confirmed
+    "edge": [
+        ("No drift", "A fresh session for every job. The plan, work orders, reviews and handover are files, not chat memory."),
+        ("Cheaper", "The builder does the token-heavy work. The foreman only plans, checks and decides."),
+        ("Proof", "Every job ends with what was asked, what was built, what was tested and what was found."),
+    ],
     "shift_cmd": "/goal night shift: 3 jobs, auto-pick",
     # why Topping Out, in four pillars: (title, the one line); the sign each one is posted as is in SIGNS, same order
     "pillars": [
@@ -3010,6 +3018,13 @@ FRONT_CSS = r"""
 .jcap .pips{grid-column:1/-1;display:flex;gap:4px}.jcap .pips i{flex:1;height:4px;background:var(--line)}.jcap .pips i.on{background:var(--hivis)}
 .board .sub{margin:16px 0 0;max-width:44ch;font-size:16px;line-height:1.45;color:var(--ink-3)}
 .board .bb{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+/* D26: three plain points under the hero, one line each */
+.edge{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:3px solid var(--ink)}
+.edge li{padding:16px 20px 18px;border-left:3px solid var(--ink)}
+.edge li:first-child{border-left:0}
+.edge b{display:block;margin-bottom:6px;padding-left:10px;border-left:4px solid var(--hivis);font:800 21px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
+.edge span{display:block;font-size:15px;line-height:1.45;color:var(--ink-2)}
+@media (max-width:720px){.edge{grid-template-columns:1fr}.edge li{border-left:0;border-top:3px solid var(--ink);padding:14px 16px 15px}.edge li:first-child{border-top:0}}
 .roster{margin:0;padding:0;display:flex;flex-direction:column}
 .roster>div{flex:1 1 auto}
 .roster>div{display:grid;grid-template-columns:40px 132px minmax(0,1fr);gap:14px;padding:11px 28px;border-bottom:1px dashed var(--line);align-items:center}
@@ -5248,6 +5263,8 @@ class Site:
         roster = "".join(f'<div class="{"you" if k == "you" else ""}">{ROLE_ICONS[k]}<dt>{esc(r)}</dt><dd>{inline(line)}</dd></div>' for k, r, line in F["roles"])
         first, then = INSTALL["steps"][0][2], INSTALL["steps"][1][2]
         repo = INSTALL["repo"]
+        # D26: three plain points straight under the headline, inside the board
+        edge = '<ul class="edge" aria-label="What sets it apart">' + "".join(f'<li><b>{esc(k)}</b><span>{esc(line)}</span></li>' for k, line in F["edge"]) + '</ul>'
         out.append(f'<section class="board" id="access" aria-labelledby="h"><div class="haz" role="presentation"></div>'
                    f'<div class="bh">{self.mark}<div><div class="kick">{esc(F["board_kicker"])}</div>'
                    f'<h1 id="h">{"".join(f"<span>{esc(x)}</span>" for x in F["headline"])}</h1><p class="sub">{esc(F["subline"])}</p><a class="toinst" href="#install">Install &darr;</a></div>'
@@ -5255,7 +5272,7 @@ class Site:
                    '<div class="jcap" id="jcap" aria-hidden="true"><b class="clk">09:00</b><span class="cap"><b>You plan</b> settle each job\'s ticket by day</span>'
                    '<span class="pips"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></div>'
                    '</div></div>'
-                   f'{one_job_html()}'
+                   f'{edge}{one_job_html()}'
                    f'<div class="bb"><dl class="roster">{roster}</dl>'
                    f'<div class="access" id="install"><span class="al">Install</span><p>Get the package. Needs git, Node and Python.</p>{cmd(first)}'
                    f'<p class="then">Then, in Claude Code, in your repo:</p>{cmd(then)}'
