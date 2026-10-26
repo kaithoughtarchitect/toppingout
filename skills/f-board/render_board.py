@@ -24,6 +24,7 @@ summaries), then run `render`.
   render_board.py BOARD.json split   <job> --into "a=Title A,b=Title B" [--chain] [--active a]   (a suffix or the full child id)
   render_board.py BOARD.json covered <job> --by <job> --quote "<the owner's words>"   (an open job made redundant: it leaves the board)
   render_board.py BOARD.json set-next <job>
+  render_board.py BOARD.json summary <job> --text "..."   (what the job builds, in plain words; check warns on a summary of plan references only)
   render_board.py BOARD.json topout --report <path to the topping out report> [--quote "<the owner's words>"] [--head yes|partly|no]
   render_board.py BOARD.json report                    a topped-out board: print the mechanical part of the topping out
                                                         report (jobs, PRs, merges, carried over, owed) as Markdown
@@ -81,6 +82,16 @@ class Usage(Exception):
 
 def kind(b):
     return b.get("kind", "build")
+
+
+REF = re.compile(r"\b(?:plan|task|tasks|carries|carry|vp|t|d)[-\s]?\d*\b|[;,.:()+&/]|\band\b", re.I)
+
+
+def refs_only(summary):
+    """True when a summary holds nothing but plan references, e.g. 'Plan task T2; carries VP-6.'"""
+    if not summary or not summary.strip():
+        return False
+    return len(REF.sub(" ", summary).split()) < 2
 
 
 def stored(b):
@@ -306,6 +317,13 @@ def validate(board):
         said = m.group(1).rstrip(".")
         if said in by_id and stored(by_id[said]) == "merged":
             WARNINGS.append(f"the standfirst still names job {said} as next, but it is merged; update it with --standfirst")
+    for b in board["jobs"]:
+        if stored(b) in DONE:
+            continue
+        if not refs_only(b.get("summary")):
+            continue
+        WARNINGS.append(f"job {b['id']}: the summary is only plan references ({b['summary']!r}); "
+                        f"say in plain words what the job builds: summary {b['id']} --text \"...\"")
 
 
 # ---------------------------------------------------------------- argument parsing
@@ -596,6 +614,16 @@ def ev_topout(board, args):
     bump(board, vals.get("--standfirst") or f"Topped out on {today}: {jobs_done}, {len(carried)} carried over to the next head.")
 
 
+def ev_summary(board, args):
+    pos, vals, _ = parse(args, ("--text",))
+    b = job(board, one_job(pos, "summary"))
+    text = need(vals, "--text").strip()
+    if not text:
+        raise Usage("--text must say what the job builds")
+    b["summary"] = text
+    bump(board, None)
+
+
 def ev_set_next(board, args):
     pos, vals, _ = parse(args, ("--standfirst",))
     board["next"] = one_job(pos, "set-next")
@@ -603,7 +631,7 @@ def ev_set_next(board, args):
 
 
 EVENTS = {"start": ev_start, "close": ev_close, "halt": ev_halt, "decided": ev_decided,
-          "add": ev_add, "split": ev_split, "covered": ev_covered, "set-next": ev_set_next, "topout": ev_topout}
+          "add": ev_add, "split": ev_split, "covered": ev_covered, "set-next": ev_set_next, "summary": ev_summary, "topout": ev_topout}
 
 
 # ---------------------------------------------------------------- render

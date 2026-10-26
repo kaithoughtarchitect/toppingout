@@ -222,6 +222,20 @@ class Board(unittest.TestCase):
         rc, out = self.run_tool("check")
         self.assertIn("names job 01 as next", out)
 
+    def test_summary_of_only_plan_references_warns_and_summary_fixes_it(self):
+        self.edit(lambda s: s["jobs"][1].__setitem__("summary", "Plan task T2; carries VP-6."))  # job 01, open
+        rc, out = self.run_tool("check")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("the summary is only plan references", out)
+        v = self.data()["version"]
+        self.ok("summary", "01", "--text", "Loads the catalogue as a runtime block. (T2, VP-6)")
+        d = self.data()
+        self.assertEqual(d["jobs"][1]["summary"], "Loads the catalogue as a runtime block. (T2, VP-6)")
+        self.assertEqual(d["version"], v + 1)
+        rc, out = self.run_tool("check")
+        self.assertNotIn("only plan references", out)
+        self.refused(2, "summary", "01", "--text", "  ")
+
     def test_covered_removes_an_open_job_and_repoints_its_dependents(self):
         self.refused(2, "covered", "02", "--by", "00")                      # the owner's words are required
         self.refused(2, "covered", "02", "--by", "02", "--quote", "x")      # not by itself
