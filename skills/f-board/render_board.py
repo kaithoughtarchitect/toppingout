@@ -962,7 +962,10 @@ svg.fish{display:block;width:100%;height:100%}
 /* the dimension line: a surveyor's measure over the built part of the tape */
 .dim{grid-row:1;position:relative;height:16px;margin-bottom:3px;border-inline:1.5px solid var(--ink-3);display:flex;align-items:center;justify-content:center}
 .dim::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--ink-3)}
-.dim span{position:relative;background:var(--panel);padding:0 8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.dim span{position:relative;background:var(--panel);padding:0 8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+/* under 3 chips the measure is too short for its label: the label sits just past its right end */
+.dim.short{justify-content:flex-start}
+.dim.short span{position:absolute;left:100%;margin-left:6px;padding-left:0}
 .chips.has-dim .jc{grid-row:2}
 @media (max-width:900px){
  .jobmain{border-right:0;border-bottom:2px dashed var(--line)}
@@ -1134,7 +1137,7 @@ def render(board, standalone=False):
     else:
         status.append(f'<span class="nx">next: <b>{esc(nxt + " · " + one_line(nb["title"], 34)) if nb else "not chosen"}</b></span>')
     built_to = max((i for i, b in enumerate(jobs) if shown_state(b, by_id) in DONE), default=-1)
-    dim = (f'<div class="dim" style="grid-column:1 / span {built_to + 1}" aria-hidden="true"><span>{done} of {len(jobs)} built</span></div>'
+    dim = (f'<div class="dim{" short" if built_to + 1 < 3 else ""}" style="grid-column:1 / span {built_to + 1}" aria-hidden="true"><span>{done} of {len(jobs)} built</span></div>'
            if built_to >= 0 else "")
     chips = "".join(f'<button type="button" class="jc {shown_state(b, by_id)}{" isnext" if b["id"] == nxt else ""}" id="jc-{esc(b["id"])}" '
                     f'aria-pressed="{str(i == start).lower()}">{esc(b["id"])}</button>' for i, b in enumerate(jobs))
