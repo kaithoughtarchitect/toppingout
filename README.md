@@ -90,6 +90,15 @@ The name comes from the building site: the ceremony held when the last beam goes
 
 ## The flow at a glance
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/flow-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="assets/readme/flow-light.webp">
+  <img alt="One job from ticket to merge, drawn as a fishbone spine: 01 plan (once per project), 02 start in a fresh session from the handover file, 03 build (the foreman writes work orders, a cheaper builder builds test-first), 04 check (tests before and after, a lens inspection, a reviewer from another model family, the acceptance ledger), 05 ship (the PR, up to three outside review rounds on your word, the merge checked), 06 close (lessons saved, the next job proposed, a handover written). Your words go, open the PR and merge sit on the spine. Then the next job starts in a fresh session, or the board tops out and you pick the next head. Three ways to run it: with you, an autonomous run, or a night shift." src="assets/readme/flow-dark.webp">
+</picture>
+
+<details>
+<summary><b>Full detail: every step</b></summary>
+
 **Before any job**, a big plan is cut into tickets: `/f-survey` → `/f-blueprint` → **`/f-plancheck`** (cold cross-family read) → **`/f-schedule`** (project, one ticket per job, the project board). Each job below builds **one** ticket (`METHOD.md` §13).
 
 ```
@@ -129,6 +138,8 @@ The name comes from the building site: the ceremony held when the last beam goes
                                           │
  [owner picks a head] ──> /f-survey ──> /f-blueprint ──> /f-plancheck ──> /f-schedule ──> a new board, and the loop starts again
 ```
+
+</details>
 
 **Topping out** is where the name comes from: when a board reaches its head (every job merged or resolved), the end game freezes it as the project's record, writes what was built and what's carried over, and offers three to five candidate next heads. You pick one, whenever you're ready, and the cycle starts again on a new board (`METHOD.md` §11b). Work found while testing a product goes on an **iteration board** instead: no blueprint, small jobs added as you find them.
 
