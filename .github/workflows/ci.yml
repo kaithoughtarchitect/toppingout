@@ -1,0 +1,39 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer self-test
+        run: node skills/f-setup/install.mjs --self-test
+      - name: End-game lock self-test
+        run: node skills/f-signoff/endgame.mjs --self-test
+      - name: Names check self-test
+        run: node skills/f-signoff/names-check.mjs --self-test
+      - name: Greptile waiter self-test
+        run: node skills/f-greploop/greptile-wait.mjs --self-test
+      - name: Comply tests
+        run: node skills/f-comply/comply.test.mjs
+      - name: Board renderer tests
+        run: python skills/f-board/test_render_board.py
+      - name: Logbook archive tests
+        run: python foreman/logbook/test_archive_cards.py
+      - name: Import scan tests
+        run: python snippets/test_import_scan.py

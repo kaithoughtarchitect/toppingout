@@ -1,8 +1,14 @@
 # Topping Out
 
+[![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+
 **Let AI coding agents work through your tickets for hours, even overnight, without drifting: every job starts fresh from files, a cheap model does the heavy coding, and your Claude Code limit lasts far longer.**
 
 Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
+
+> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and the expensive model burns your usage on typing.
+>
+> **What Topping Out does:** splits the work. A foreman plans each job in a fresh session and never writes code, a cheaper builder does the typing, inspectors from another model family check it, and you give the word for what matters.
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 
@@ -15,6 +21,24 @@ Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtar
 1. `git clone https://github.com/kaithoughtarchitect/toppingout`
 2. In Claude Code, in the repo that will hold your records, say: `Read <path to toppingout>/skills/f-setup/SKILL.md and follow it`
 3. Give the foreman one small ticket. It walks the site, then asks for your "go".
+
+### What a finished job looks like
+
+One real job, run on its own from ticket to merge (an autonomous run; the project's name and feature are left out):
+
+```text
+ticket      one feature, one branch, one PR
+plan check  5 findings from a cross-family reader, 4 applied before building
+build       work orders written by the foreman, built test-first by a cheaper model
+inspect 1   lens inspection: 18 fixes found and accepted
+inspect 2   independent review (another model family): no findings
+review      Greptile 5/5
+tests       831 -> 848 passing; no test red at head that was green at base
+probes      18 of 18 mutation probes caught (each removes a guard; the tests must fail)
+merge       merged tree identical to the reviewed tree
+spend       at most 1.34 USD in paid calls, against a 3 USD cap
+record      acceptance ledger, both inspections, base-vs-head runs, lessons saved as cards
+```
 
 The smallest loop:
 
