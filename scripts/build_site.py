@@ -35,6 +35,9 @@ DOMAIN = "toppingout.dev"
 SITE_URL = "https://" + DOMAIN + "/"
 # the link preview (1200x630, dark), drawn from the front page's own headline by foreman-site-tools/og-card.mjs
 OG_CARD = "assets/brand/og-card.png"
+# Google Search Console ownership and the IndexNow key for Bing: permanent, written exactly as given on every build
+SITE_KEYS = {"google720c4958b3eb3b19.html": "google-site-verification: google720c4958b3eb3b19.html",
+             "eac87baadb45d8bbb1b9e41a06ef542f.txt": "eac87baadb45d8bbb1b9e41a06ef542f"}
 CONTENT = OUT / "content"  # skills/<name>.md and agents/<name>.md
 
 # the generated pages, copied unchanged into docs/raw/: (raw name, source)
@@ -5732,6 +5735,9 @@ def main() -> int:
         (OUT / d).mkdir()
     (OUT / ".nojekyll").write_text("", encoding="utf-8")
     (OUT / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8", newline="\n")
+    # search engine ownership files at the site root, kept forever; not pages, so never in sitemap.xml or llms.txt
+    for name, text in SITE_KEYS.items():
+        (OUT / name).write_text(text, encoding="utf-8", newline="\n")
 
     written = []
     pages = {}
