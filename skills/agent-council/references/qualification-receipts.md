@@ -23,6 +23,40 @@ without adding a row here is not a re-qualification, it is a guess.**
 
 ## Receipts
 
+### pi-headless 1.4.0: 2026-10-28
+
+- `pi --version` → `1.4.0`; the runner's own `parsePiModelCatalog` over `pi --list-models openrouter`
+  → 375 models, every roster slug present (`grok-4.7`, `deepseek-v4-pro-0813`, `gemini-4-argon`,
+  `glm-5.3`, `gpt-6-astra`, `kimi-k3.1-pro`, `qwen3.8-max-0902`, `minimax-m3`).
+- **Changed: pi 1.x has a built-in MCP client, and `--tools` keeps MCP tools unless an entry names
+  `mcp__`.** On 0.84.4 the allowlist alone kept a seat to its six tools; on 1.4.0 it would not.
+  `--no-mcp` is now in `PI_ISOLATION_ARGS`. Every other flag the runner sends is still in `--help`.
+- Seat contract exercised: the runner's own `buildPiSeatArgs` + `piInvocation` + `piChildEnvironment`
+  on `openrouter/deepseek/deepseek-v4.1-flash-1017`, `--no-mcp` in the argv → exit 0 in 5.5 s,
+  `stopReason: "stop"`, 6 tool calls (`grep`, `ls`, `read`, `write`), 0 MCP tools, and a valid
+  response file. The three event types the runner retains (`session`, `tool_execution_start`,
+  `message_end`) are all still emitted; 1.4.0 also emits `agent_settled`, which the runner ignores.
+- Roster bump on the same date: Grok 4.6 → 4.7, Gemini 3.8 Flash → Gemini 4 Argon, Kimi K3 → K3.1 Pro,
+  DeepSeek V4 Pro → the GA slug `deepseek-v4-pro-0813`, and Qwen 3.8 Max → `qwen3.8-max-0902` (the
+  undated `qwen/qwen3.8-max` slug is no longer on OpenRouter).
+
+### claude-cli 2.1.312: 2026-10-28
+
+- `claude --version` → `2.1.312 (Claude Code)`; `claude auth status --json` → `loggedIn: true`,
+  `authMethod: "claude.ai"`.
+- All nine flags from the 2.1.259 receipt are still in `--help`.
+- Contract exercised: `buildClaudeModelPreflightArgs("claude-opus-5-5")`, spawned against the resolved
+  `claude.exe` → exit 0 in 3.5 s, `{"status":"available"}` through `parseNativeStructuredResponse`.
+  The Claude seat and host move from Opus 5 to Opus 5.5.
+
+### grok-cli: not re-qualified 2026-10-28
+
+- Installed `grok 1.0.41`, but `grok models` answered "You are not authenticated", so the contract
+  could not be exercised. The pin stays at 1.0.13, which means a 1.0.41 install is reported as an
+  unavailable transport and the resolver seats `grok-openrouter` (pay-per-token) instead. The CLI
+  still lists only `grok-4.6`, so the `grok` row keeps that model. `--no-memory` is still absent
+  from `--help`, as in the 1.0.13 receipt.
+
 ### claude-cli 2.1.259: 2026-09-03
 
 - `claude --version` → `2.1.259 (Claude Code)`.

@@ -20,8 +20,8 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-03T00:00:00.000Z",
-        "expiresAt": "2026-12-02T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "host-runtime",
           "version": "registered-v1"
@@ -29,7 +29,7 @@
         "capabilities": {
           "structuredChairRecord": true
         },
-        "evidenceRef": "host-requalification-2026-09-03"
+        "evidenceRef": "host-requalification-2026-10-28"
       }
     },
     {
@@ -37,21 +37,21 @@
       "allowedRoles": [
         "decision"
       ],
-      "runtimeDescriptor": "Anthropic Claude Opus 5 host/chair",
+      "runtimeDescriptor": "Anthropic Claude Opus 5.5 host/chair",
       "lineage": {
         "providerId": "host-runtime",
         "vendorId": "anthropic",
-        "familyId": "anthropic-claude-opus-5",
-        "baseModelId": "claude-opus-5",
+        "familyId": "anthropic-claude-opus-5-5",
+        "baseModelId": "claude-opus-5-5",
         "correlationGroupIds": [
-          "anthropic-claude-opus-5-lineage"
+          "anthropic-claude-opus-5-5-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-03T00:00:00.000Z",
-        "expiresAt": "2026-12-02T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "host-runtime",
           "version": "registered-v1"
@@ -59,7 +59,7 @@
         "capabilities": {
           "structuredChairRecord": true
         },
-        "evidenceRef": "host-requalification-2026-09-03"
+        "evidenceRef": "host-requalification-2026-10-28"
       }
     },
     {
@@ -67,21 +67,21 @@
       "allowedRoles": [
         "decision"
       ],
-      "runtimeDescriptor": "Google Gemini 3.8 host/chair",
+      "runtimeDescriptor": "Google Gemini 4 Argon host/chair",
       "lineage": {
         "providerId": "host-runtime",
         "vendorId": "google",
-        "familyId": "google-gemini-3-8",
-        "baseModelId": "gemini-3-8",
+        "familyId": "google-gemini-4",
+        "baseModelId": "gemini-4-argon",
         "correlationGroupIds": [
-          "google-gemini-3-8-lineage"
+          "google-gemini-4-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-03T00:00:00.000Z",
-        "expiresAt": "2026-12-02T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "host-runtime",
           "version": "registered-v1"
@@ -89,7 +89,7 @@
         "capabilities": {
           "structuredChairRecord": true
         },
-        "evidenceRef": "host-requalification-2026-09-03"
+        "evidenceRef": "host-requalification-2026-10-28"
       }
     },
     {
@@ -110,8 +110,8 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-03T00:00:00.000Z",
-        "expiresAt": "2026-12-02T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "host-runtime",
           "version": "registered-v1"
@@ -119,7 +119,7 @@
         "capabilities": {
           "structuredChairRecord": true
         },
-        "evidenceRef": "host-requalification-2026-09-03"
+        "evidenceRef": "host-requalification-2026-10-28"
       }
     }
   ],
@@ -164,25 +164,25 @@
       "allowedRoles": [
         "decision"
       ],
-      "model": "openrouter/x-ai/grok-4.6",
+      "model": "openrouter/x-ai/grok-4.7",
       "variant": "high",
       "lineage": {
         "providerId": "openrouter",
         "vendorId": "xai",
-        "familyId": "xai-grok-4-6",
-        "baseModelId": "grok-4-6",
+        "familyId": "xai-grok-4-7",
+        "baseModelId": "grok-4-7",
         "correlationGroupIds": [
-          "xai-grok-4-6-lineage"
+          "xai-grok-4-7-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -191,7 +191,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -199,7 +199,7 @@
       "allowedRoles": [
         "decision"
       ],
-      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "model": "openrouter/deepseek/deepseek-v4-pro-0813",
       "variant": "high",
       "lineage": {
         "providerId": "openrouter",
@@ -213,11 +213,11 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -226,7 +226,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -234,25 +234,25 @@
       "allowedRoles": [
         "decision"
       ],
-      "model": "openrouter/google/gemini-3.8-flash",
+      "model": "openrouter/google/gemini-4-argon",
       "variant": "high",
       "lineage": {
         "providerId": "openrouter",
         "vendorId": "google",
-        "familyId": "google-gemini-3-8",
-        "baseModelId": "gemini-3-8-flash",
+        "familyId": "google-gemini-4",
+        "baseModelId": "gemini-4-argon",
         "correlationGroupIds": [
-          "google-gemini-3-8-lineage"
+          "google-gemini-4-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -261,7 +261,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -283,11 +283,11 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -296,7 +296,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -318,11 +318,11 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -331,7 +331,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -339,25 +339,25 @@
       "allowedRoles": [
         "decision"
       ],
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "variant": "high",
       "lineage": {
         "providerId": "claude-subscription",
         "vendorId": "anthropic",
-        "familyId": "anthropic-claude-opus-5",
-        "baseModelId": "claude-opus-5",
+        "familyId": "anthropic-claude-opus-5-5",
+        "baseModelId": "claude-opus-5-5",
         "correlationGroupIds": [
-          "anthropic-claude-opus-5-lineage"
+          "anthropic-claude-opus-5-5-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-03T00:00:00.000Z",
-        "expiresAt": "2026-12-02T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "claude-cli",
-          "version": "2.1.259"
+          "version": "2.1.312"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -366,7 +366,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "native-requalification-2026-09-03"
+        "evidenceRef": "native-requalification-2026-10-28"
       }
     },
     {
@@ -374,25 +374,25 @@
       "allowedRoles": [
         "decision"
       ],
-      "model": "openrouter/moonshotai/kimi-k3",
+      "model": "openrouter/moonshotai/kimi-k3.1-pro",
       "variant": "high",
       "lineage": {
         "providerId": "openrouter",
         "vendorId": "moonshot",
-        "familyId": "moonshot-kimi-k3",
-        "baseModelId": "kimi-k3",
+        "familyId": "moonshot-kimi-k3-1",
+        "baseModelId": "kimi-k3-1-pro",
         "correlationGroupIds": [
-          "moonshot-kimi-k3-lineage"
+          "moonshot-kimi-k3-1-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -401,7 +401,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     }
   ],
@@ -411,7 +411,7 @@
       "allowedRoles": [
         "audit"
       ],
-      "model": "openrouter/qwen/qwen3.8-max",
+      "model": "openrouter/qwen/qwen3.8-max-0902",
       "variant": "high",
       "lineage": {
         "providerId": "openrouter",
@@ -425,11 +425,11 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -438,7 +438,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -460,11 +460,11 @@
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -473,7 +473,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     },
     {
@@ -481,25 +481,25 @@
       "allowedRoles": [
         "audit"
       ],
-      "model": "openrouter/moonshotai/kimi-k3",
+      "model": "openrouter/moonshotai/kimi-k3.1-pro",
       "variant": "high",
       "lineage": {
         "providerId": "openrouter",
         "vendorId": "moonshot",
-        "familyId": "moonshot-kimi-k3",
-        "baseModelId": "kimi-k3",
+        "familyId": "moonshot-kimi-k3-1",
+        "baseModelId": "kimi-k3-1-pro",
         "correlationGroupIds": [
-          "moonshot-kimi-k3-lineage"
+          "moonshot-kimi-k3-1-lineage"
         ]
       },
       "qualification": {
         "status": "qualified",
         "method": "manual-static",
-        "checkedAt": "2026-09-02T00:00:00.000Z",
-        "expiresAt": "2026-12-01T00:00:00.000Z",
+        "checkedAt": "2026-10-28T00:00:00.000Z",
+        "expiresAt": "2027-01-26T00:00:00.000Z",
         "adapter": {
           "name": "pi-headless",
-          "version": "0.84.4"
+          "version": "1.4.0"
         },
         "capabilities": {
           "repositoryRead": true,
@@ -508,7 +508,7 @@
           "structuredResponseFile": true,
           "statelessRoundContext": true
         },
-        "evidenceRef": "pi-headless-probe-2026-09-02"
+        "evidenceRef": "pi-headless-probe-2026-10-28"
       }
     }
   ]

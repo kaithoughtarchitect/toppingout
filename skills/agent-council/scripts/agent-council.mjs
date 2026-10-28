@@ -393,7 +393,7 @@ function nativeAuthEnvironment(environment) {
   return output;
 }
 
-export function buildClaudeModelPreflightArgs(model = "claude-opus-5") {
+export function buildClaudeModelPreflightArgs(model = "claude-opus-5-5") {
   const modelSchema = JSON.stringify({
     type: "object",
     properties: { status: { type: "string", const: "available" } },
@@ -455,7 +455,7 @@ function preflightNativeAdapter(io, adapterName) {
       runnerFail("CLAUDE_AUTH_SCHEMA_INVALID", { adapterName });
     }
     if (status?.loggedIn !== true || status?.authMethod !== "claude.ai") runnerFail("CLAUDE_SUBSCRIPTION_AUTH_REQUIRED");
-    const model = "claude-opus-5";
+    const model = "claude-opus-5-5";
     return { adapterName, version, models: [model] };
   }
   const invocation = nativeCliInvocation(adapterName, ["models"], io.hostEnvironment);
@@ -1096,18 +1096,21 @@ export function parseNativeStructuredResponse(adapterName, output) {
 
 // pi built-in tool allowlist for a council seat. `bash` and `powershell` are
 // pi built-ins and are deliberately absent; pi has no `glob` tool (`find` is
-// the glob equivalent). `--tools` is a strict allowlist, so anything not
-// named here — including extension and custom tools — stays off.
+// the glob equivalent). `--tools` allowlists built-in, extension and custom
+// tools, but since pi 1.x it keeps MCP tools unless an entry names `mcp__`, so
+// MCP is switched off separately by `--no-mcp` below.
 const PI_SEAT_TOOLS = "read,grep,find,ls,edit,write";
 
 // Every discovery surface pi would otherwise load from the seat's cwd or the
 // host profile. `--no-approve` refuses project-local trust for the run.
+// `--no-mcp` stops pi's built-in MCP client connecting the host's servers.
 const PI_ISOLATION_ARGS = Object.freeze([
   "--no-session",
   "--no-context-files",
   "--no-extensions",
   "--no-skills",
   "--no-prompt-templates",
+  "--no-mcp",
   "--no-approve",
 ]);
 
@@ -3745,7 +3748,7 @@ function selfTestCommand(io) {
   const availableModelIds = [...pool.participants, ...pool.auditors].map((profile) => profile.model);
   for (const [profile, contract] of Object.entries(AGENT_COUNCIL_PANEL_PROFILES)) {
     for (const host of pool.hosts) {
-      const roster = validateRoster({ pool, hostId: host.id, profile, availableModelIds, now: "2026-09-03T12:00:00.000Z" });
+      const roster = validateRoster({ pool, hostId: host.id, profile, availableModelIds, now: "2026-10-28T12:00:00.000Z" });
       if (roster.decisionSeats.length !== contract.externalSeatCount + 1 || roster.externalDecisionSeats.length !== contract.externalSeatCount || roster.auditor.role !== "auditor") {
         runnerFail("SELF_TEST_ROSTER_FAILURE");
       }
@@ -3756,6 +3759,8 @@ function selfTestCommand(io) {
   if (!migrationRejected) runnerFail("SELF_TEST_V1_MIGRATION_FAILURE");
   const filtered = filterEnvironment({ PATH: "fixture", OPENROUTER_API_KEY: "fixture-secret", PRODUCT_DATABASE_URL: "must-not-pass" }, { credentialKey: "OPENROUTER_API_KEY" });
   if (filtered.PRODUCT_DATABASE_URL || filtered.OPENROUTER_API_KEY !== "fixture-secret") runnerFail("SELF_TEST_ENVIRONMENT_FAILURE");
+  const piArgs = buildPiSeatArgs({ model: "openrouter/fixture", variant: "high" });
+  if (!PI_ISOLATION_ARGS.every((flag) => piArgs.includes(flag)) || !piArgs.includes("--no-mcp")) runnerFail("SELF_TEST_PI_ISOLATION_FAILURE");
   return { status: "PASS", hosts: pool.hosts.length, profiles: Object.keys(AGENT_COUNCIL_PANEL_PROFILES).length, coreMilestones: AGENT_COUNCIL_MILESTONES.length, brokerGates: Object.keys(BROKER_GATE_CATALOG).length };
 }
 

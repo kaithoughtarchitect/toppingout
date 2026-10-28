@@ -125,8 +125,8 @@ manifest digest.
 Map the actual chair runtime to its registered host profile:
 
 - Codex/GPT-6 Astra → `host-openai-gpt-5-6`
-- Claude Opus 5 → `host-anthropic-claude-opus-5`
-- Gemini 3.8 → `host-google-gemini-3-6`
+- Claude Opus 5.5 → `host-anthropic-claude-opus-5`
+- Gemini 4 Argon → `host-google-gemini-3-6`
 - Grok 4.6 → `host-xai-grok-4-5`
 
 Pass the actual host profile and an explicit assurance profile. Prefer automatic selection unless
@@ -336,8 +336,8 @@ from state that never validated, so confirm those PIDs are gone yourself.
 - Every qualified transport declares its facts once in the core's `QUALIFIED_EXTERNAL_ADAPTERS`
   table, exact version, whether it writes its own response file, whether it may audit, and whether
   it is a subscription door, and every version check, auditor gate, response-file decision, and
-  `subscription-first` ranking reads that row. Pins are `claude-cli` 2.1.259, `grok-cli` 1.0.13, and
-  `pi-headless` 0.84.4, re-qualified against live probes; `references/qualification-receipts.md`
+  `subscription-first` ranking reads that row. Pins are `claude-cli` 2.1.312, `grok-cli` 1.0.13, and
+  `pi-headless` 1.4.0, re-qualified against live probes; `references/qualification-receipts.md`
   holds the receipts and the procedure for the next bump. An unknown adapter name resolves to
   nothing and fails closed.
 - A failed command prints its failure code plus the structural details naming which boundary failed

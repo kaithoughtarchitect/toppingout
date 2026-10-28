@@ -49,9 +49,9 @@ export const STOP_REASON_MAX_CHARS = 32;
  * value and be treated as a qualified transport.
  */
 export const QUALIFIED_EXTERNAL_ADAPTERS = deepFreeze({
-  "claude-cli": { version: "2.1.259", writesResponseFile: false, auditCapable: false, subscriptionTransport: true },
+  "claude-cli": { version: "2.1.312", writesResponseFile: false, auditCapable: false, subscriptionTransport: true },
   "grok-cli": { version: "1.0.13", writesResponseFile: false, auditCapable: false, subscriptionTransport: true },
-  "pi-headless": { version: "0.84.4", writesResponseFile: true, auditCapable: true, subscriptionTransport: false },
+  "pi-headless": { version: "1.4.0", writesResponseFile: true, auditCapable: true, subscriptionTransport: false },
 });
 
 /**

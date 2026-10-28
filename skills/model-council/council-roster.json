@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "snapshot_date": "2026-09-07",
+  "snapshot_date": "2026-10-28",
   "source": "Single home for model-council seats. Edit this file to swap a model. SKILL.md (both trees) and model-council-console.html read it. Do not copy slugs back into the skill. Chair is always the live session host and is never picked.",
   "picker": {
     "chair": false,
@@ -11,31 +11,31 @@
   "models": [
     {
       "key": "claude",
-      "name": "Claude Opus 5",
-      "model": "Opus 5",
+      "name": "Claude Opus 5.5",
+      "model": "Opus 5.5",
       "vendor": "Anthropic",
       "role": "orchestrator",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "anthropic/claude-opus-5",
+      "slug": "anthropic/claude-opus-5.5",
       "door": "OpenRouter",
       "effort": "max",
       "cost": "or",
-      "intel": 63,
+      "intel": 64,
       "ctx": 1000000,
       "maxOut": 128000,
-      "priceIn": 5.0,
-      "priceOut": 25.0,
+      "priceIn": 4.0,
+      "priceOut": 20.0,
       "mods": [
         "text",
         "image",
         "file"
       ],
-      "released": "2026-07-24",
-      "blurb": "Anthropic's flagship. Default chair when Claude is the session host (this engine). Pickable as an OpenRouter panel/auditor door when someone else hosts \u2014 greyed out of picks while it IS the host.",
-      "note": "OpenRouter id <code>anthropic/claude-opus-5</code>. When this engine is host: door is THIS ENGINE, not a pick. Confirm <b>Opus 5 + max</b> on the live session. The console greys the host family."
+      "released": "2026-09-22",
+      "blurb": "Anthropic's flagship, succeeding Opus 5. Default chair when Claude is the session host (this engine). Pickable as an OpenRouter panel/auditor door when someone else hosts \u2014 greyed out of picks while it IS the host.",
+      "note": "OpenRouter id <code>anthropic/claude-opus-5.5</code>. When this engine is host: door is THIS ENGINE, not a pick. Confirm <b>Opus 5.5 + max</b> on the live session. The console greys the host family. Intelligence 64 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     },
     {
       "key": "sol",
@@ -67,42 +67,43 @@
     },
     {
       "key": "kimi",
-      "name": "Kimi K3",
-      "model": "Kimi K3",
+      "name": "Kimi K3.1 Pro",
+      "model": "Kimi K3.1 Pro",
       "vendor": "Moonshot AI",
       "role": "panel",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "moonshotai/kimi-k3",
+      "slug": "moonshotai/kimi-k3.1-pro",
       "door": "OpenRouter",
       "effort": "max",
       "cost": "or",
-      "intel": 60,
+      "intel": 61,
       "ctx": 1000000,
-      "maxOut": null,
-      "priceIn": 2.6,
-      "priceOut": 13.0,
+      "maxOut": 943718,
+      "priceIn": 2.0,
+      "priceOut": 10.0,
       "mods": [
         "text",
-        "image"
+        "image",
+        "video"
       ],
-      "released": "2026-07-16",
-      "blurb": "Moonshot AI's 2.8T-parameter open-weight multimodal reasoner \u2014 coding, knowledge work, and long-horizon agentic workflows over large repositories.",
-      "note": "Runs at <b>max</b> (operator-set). OpenRouter id is <code>moonshotai/kimi-k3</code> \u2014 one word, not <code>moonshot/</code>. Intelligence 60 is AA Intelligence Index 59.7, rounded."
+      "released": "2026-10-23",
+      "blurb": "Moonshot AI's flagship open-weight multimodal reasoner, post-trained successor to Kimi K3 \u2014 long-horizon coding and agentic work.",
+      "note": "Runs at <b>max</b> (operator-set). OpenRouter id is <code>moonshotai/kimi-k3.1-pro</code>. Intelligence 61 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     },
     {
       "key": "qwen",
-      "name": "Qwen3.8 Max",
-      "model": "Qwen3.8 Max",
+      "name": "Qwen3.8 Max 0902",
+      "model": "Qwen3.8 Max 0902",
       "vendor": "Alibaba",
       "role": "panel",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "qwen/qwen3.8-max",
+      "slug": "qwen/qwen3.8-max-0902",
       "door": "OpenRouter",
       "effort": "xhigh",
       "cost": "or",
@@ -116,29 +117,29 @@
         "image",
         "video"
       ],
-      "released": "2026-08-03",
-      "blurb": "Alibaba's Qwen3.8 flagship \u2014 multimodal reasoning for coding, visual understanding, and agentic workflows. Moved onto the panel in this roster; it is no longer the auditor.",
-      "note": "<b>Max</b> is the product name. Native reasoning ceiling is <b>xhigh</b> (low / medium / xhigh), not <code>max</code>. Intelligence 58 is a hand estimate \u2014 no AA Intelligence Index on the model page at write time."
+      "released": "2026-09-03",
+      "blurb": "Alibaba's Qwen3.8 Max, the 0902 snapshot \u2014 multimodal reasoning for coding, visual understanding, and agentic workflows.",
+      "note": "<b>Max</b> is the product name. Native reasoning ceiling is <b>xhigh</b>. The undated <code>qwen/qwen3.8-max</code> slug is gone from OpenRouter; use the dated one. Intelligence 58 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     },
     {
       "key": "muse",
-      "name": "Muse Spark 1.3",
-      "model": "Muse Spark 1.3",
+      "name": "Muse Wonder",
+      "model": "Muse Wonder",
       "vendor": "Meta",
       "role": "panel",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "meta/muse-spark-1.3",
+      "slug": "meta/muse-wonder",
       "door": "OpenRouter",
       "effort": "xhigh",
       "cost": "or",
-      "intel": 57,
+      "intel": 60,
       "ctx": 1048576,
-      "maxOut": null,
-      "priceIn": 1.25,
-      "priceOut": 4.25,
+      "maxOut": 943718,
+      "priceIn": 4.0,
+      "priceOut": 20.0,
       "mods": [
         "text",
         "image",
@@ -146,29 +147,29 @@
         "file",
         "audio"
       ],
-      "released": "2026-09-02",
-      "blurb": "Meta's agentic reasoner \u2014 long-running multi-agent and coding workflows. Configurable reasoning effort; this seat is pinned to xhigh.",
-      "note": "Runs at <b>xhigh</b> (operator-set). Succeeds Muse Spark 1.2."
+      "released": "2026-10-12",
+      "blurb": "Meta's frontier reasoning model for complex agentic work. Succeeds Muse Spark 1.3 on this panel.",
+      "note": "Runs at <b>xhigh</b> (operator-set). Muse Spark 1.3 is still on OpenRouter if you want the cheaper seat back. Intelligence 60 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     },
     {
       "key": "gemini",
-      "name": "Gemini 3.8 Flash",
-      "model": "Gemini 3.8 Flash",
+      "name": "Gemini 4 Argon",
+      "model": "Gemini 4 Argon",
       "vendor": "Google",
       "role": "panel",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "google/gemini-3.8-flash",
+      "slug": "google/gemini-4-argon",
       "door": "OpenRouter",
       "effort": "high",
       "cost": "or",
-      "intel": 47,
+      "intel": 62,
       "ctx": 1048576,
-      "maxOut": 65536,
-      "priceIn": 0.375,
-      "priceOut": 1.875,
+      "maxOut": 943718,
+      "priceIn": 2.0,
+      "priceOut": 10.0,
       "mods": [
         "text",
         "image",
@@ -176,9 +177,9 @@
         "file",
         "audio"
       ],
-      "released": "2026-09-02",
-      "blurb": "Google's most intelligent Flash for software engineering, agentic tasks, and multi-step reasoning. Succeeds 3.7 Flash.",
-      "note": "Runs at <b>high</b>. Listed OpenRouter price at write time was the 50% intro discount ($0.375 / $1.875). Intelligence 47 is AA Intelligence Index 47.1, rounded."
+      "released": "2026-10-13",
+      "blurb": "Google's flagship reasoning model for complex software engineering and autonomous multi-step agents. Replaces Gemini 3.8 Flash on this panel.",
+      "note": "Runs at <b>high</b>. Gemini 3.8 Flash is still on OpenRouter if you want the cheap seat back. Intelligence 62 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     },
     {
       "key": "dspro",
@@ -234,47 +235,48 @@
     },
     {
       "key": "dsflash",
-      "name": "DeepSeek V4 Flash 0731",
-      "model": "DeepSeek V4 Flash 0731",
+      "name": "DeepSeek V4.1 Flash 1017",
+      "model": "DeepSeek V4.1 Flash 1017",
       "vendor": "DeepSeek",
       "role": "shortlist",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "deepseek/deepseek-v4-flash-0731",
+      "slug": "deepseek/deepseek-v4.1-flash-1017",
       "door": "OpenRouter",
       "effort": "max",
       "cost": "or",
-      "intel": 49,
+      "intel": 50,
       "ctx": 1310720,
-      "maxOut": 262144,
-      "priceIn": 0.065,
-      "priceOut": 0.14,
+      "maxOut": 393216,
+      "priceIn": 0.15,
+      "priceOut": 0.6,
       "mods": [
-        "text"
+        "text",
+        "image"
       ],
-      "released": "2026-07-31",
-      "blurb": "GA release of DeepSeek V4 Flash \u2014 13B active / 284B total MoE. Cheap, fast, on the bench until seated.",
-      "note": "OpenRouter id is the dated slug <code>deepseek/deepseek-v4-flash-0731</code>. Effort <b>max</b> until you set another. Two DeepSeek rows in the pool is fine; a run should not seat both if vendor diversity is the point. Not a live panel seat."
+      "released": "2026-10-17",
+      "blurb": "DeepSeek V4.1 Flash, the 17 October snapshot \u2014 sparse MoE, cheap and fast. On the bench until seated.",
+      "note": "OpenRouter id is the dated slug <code>deepseek/deepseek-v4.1-flash-1017</code>. Effort <b>max</b> until you set another. Two DeepSeek rows in the pool is fine; a run should not seat both if vendor diversity is the point. Not a live panel seat. Intelligence 50 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     },
     {
       "key": "grok",
-      "name": "Grok 4.6",
-      "model": "Grok 4.6",
+      "name": "Grok 4.7",
+      "model": "Grok 4.7",
       "vendor": "xAI",
       "role": "auditor",
       "pickableAs": [
         "panel",
         "auditor"
       ],
-      "slug": "x-ai/grok-4.6",
+      "slug": "x-ai/grok-4.7",
       "door": "OpenRouter",
       "effort": "high",
       "cost": "or",
-      "intel": 61,
+      "intel": 62,
       "ctx": 500000,
-      "maxOut": null,
+      "maxOut": 450000,
       "priceIn": 2.0,
       "priceOut": 6.0,
       "mods": [
@@ -282,9 +284,9 @@
         "image",
         "file"
       ],
-      "released": "2026-08-12",
+      "released": "2026-09-21",
       "blurb": "Catalog auditor label only. This run's auditor is whoever the picker names. Took no part in the debate: a cold read of the chair's synthesis. Pickable as panel or auditor.",
-      "note": "OpenRouter id is <code>x-ai/grok-4.6</code> \u2014 Grok 4.7 is announced, not shipped (no API id as of 2026-09-07). Effort <b>high</b>. Not locked: the picker chooses the auditor from any model with auditor in <code>pickableAs</code>. Default only."
+      "note": "OpenRouter id is <code>x-ai/grok-4.7</code>. Effort <b>high</b>. Not locked: the picker chooses the auditor from any model with auditor in <code>pickableAs</code>. Default only. Intelligence 62 is a hand estimate on the old AA v4.1 scale; AA moved to v4.2 in October, so newer published scores are not comparable."
     }
   ]
 }

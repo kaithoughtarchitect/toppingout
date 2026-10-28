@@ -27,7 +27,7 @@ The roster pool is schema/version 2 and contains `hosts`, `participants`, and `a
   `statelessRoundContext`. No transport continues a session in any form: every later-round input is
   rematerialized for every seat, in the prompt or in the bounded context files the prompt names.
   Adapter qualification is exact and each adapter declares its facts once, in the core's
-  `QUALIFIED_EXTERNAL_ADAPTERS` table: `claude-cli` 2.1.259, `grok-cli` 1.0.13, and pi 0.84.4 as
+  `QUALIFIED_EXTERNAL_ADAPTERS` table: `claude-cli` 2.1.312, `grok-cli` 1.0.13, and pi 1.4.0 as
   `pi-headless`, each row carrying `version`, `writesResponseFile`, `auditCapable`, and
   `subscriptionTransport`. Every decision that once compared the adapter name against a literal,
   the version check, the auditor gate, response-file materialization on the seat and audit paths,
@@ -51,7 +51,7 @@ independence. Qualification expiry, missing capability, unavailable exact model,
 fails before any panel seat receives repository material. Temporary one-off substitutions are not
 durable roster defaults.
 The ordered pool prefers qualified native subscription profiles and retains separately identified
-`pi-headless` OpenRouter profiles; Gemini 3.8 Flash with the `high` variant is served by such a
+`pi-headless` OpenRouter profiles; Gemini 4 Argon with the `high` variant is served by such a
 profile. Claude-family models are never routed through OpenRouter, so the Claude seat is
 `claude-cli` or nothing. Grok is not symmetric with that: the pool carries both a `grok-cli` row
 and a distinct `grok-openrouter` `pi-headless` row, so a Grok CLI that fails preflight does not

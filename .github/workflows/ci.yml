@@ -29,6 +29,8 @@ jobs:
         run: node skills/f-signoff/names-check.mjs --self-test
       - name: Greptile waiter self-test
         run: node skills/f-greploop/greptile-wait.mjs --self-test
+      - name: Agent council self-test
+        run: node skills/agent-council/scripts/agent-council.mjs self-test
       - name: Comply tests
         run: node skills/f-comply/comply.test.mjs
       - name: Board renderer tests
