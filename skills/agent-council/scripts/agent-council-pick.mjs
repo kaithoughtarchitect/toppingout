@@ -16,7 +16,7 @@
  *     accepts therefore passes `prepare`'s collision, auditor-separation and
  *     qualification checks. It does NOT pre-check live transport availability:
  *     `prepare` resolves against a pi model catalog plus whichever native CLIs
- *     preflight, so an uninstalled `grok-cli` still leaves `grok` seatable here
+ *     preflight, so a logged-out `claude-cli` still leaves `claude` seatable here
  *     and rejected there. Availability is the one refusal this tab cannot
  *     predict.
  *  2. The auditor is a separate, non-participating choice — not the runner-up

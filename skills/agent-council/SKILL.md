@@ -92,8 +92,8 @@ the skill's file inventory is kept exact (a repo's readiness check may assert it
 to delete a file it did not write. The tab refuses what the resolver refuses, it imports the
 resolver's own `profileCollisions`, so a pick it accepts passes `prepare`'s collision,
 auditor-separation and qualification checks. **Availability is the exception:** `prepare` resolves
-against a live pi model catalog plus whichever native CLIs preflight, so an uninstalled `grok-cli`
-leaves `grok` seatable in the tab and refused at `prepare` with `SELECTED_MODEL_UNAVAILABLE`. Treat
+against a live pi model catalog plus whichever native CLIs preflight, so a logged-out `claude-cli`
+leaves `claude` seatable in the tab and refused at `prepare` with `SELECTED_MODEL_UNAVAILABLE`. Treat
 that as the one refusal the tab cannot predict, not as a bad pick.
 
 `AGENT_COUNCIL_PICK_ARGS=` is a complete flag set including `--host-id`, so the chair every
@@ -110,12 +110,11 @@ and a strongest-self-counter requirement. Do not include the chair's lean.
 
 Tell the user which resolved seats use native subscription CLIs and which are pi-headless
 OpenRouter seats, reading `seatTransports` from the `prepare` output rather than inferring it from
-model names. Grok 4.6 and Claude Opus 5.5 are native when their qualified transports pass
-preflight; every other seat, Gemini 4 Argon with the `high` variant included, is served by a
-`pi-headless` OpenRouter profile. Claude-family models are never routed through OpenRouter, so the
-Claude seat is native or absent. Grok is not the same case: the pool also carries a separate
-`grok-openrouter` row, so a `grok-cli` preflight failure reseats Grok as a **pay-per-token**
-`pi-headless` OpenRouter seat instead of removing it. Say so explicitly when it happens.
+model names. Claude Opus 5.5 is native when its qualified transport passes preflight; every other
+seat, Grok 4.7 and Gemini 4 Argon included, is served by a **pay-per-token** `pi-headless`
+OpenRouter profile. Claude-family models are never routed through OpenRouter, so the Claude seat is
+native or absent. The shipped pool has no `grok-cli` row (removed 2026-10-28); the adapter code
+stays, so a re-qualified row can be added back.
 Approved repository material is sent to the resolved external decision models and the auditor.
 Preparing locally is not disclosure. No model call occurs until the user approves the returned
 manifest digest.
@@ -336,7 +335,7 @@ from state that never validated, so confirm those PIDs are gone yourself.
 - Every qualified transport declares its facts once in the core's `QUALIFIED_EXTERNAL_ADAPTERS`
   table, exact version, whether it writes its own response file, whether it may audit, and whether
   it is a subscription door, and every version check, auditor gate, response-file decision, and
-  `subscription-first` ranking reads that row. Pins are `claude-cli` 2.1.312, `grok-cli` 1.0.13, and
+  `subscription-first` ranking reads that row. Pins are `claude-cli` 2.1.312, `grok-cli` 1.0.13 (no shipped row), and
   `pi-headless` 1.4.0, re-qualified against live probes; `references/qualification-receipts.md`
   holds the receipts and the procedure for the next bump. An unknown adapter name resolves to
   nothing and fails closed.

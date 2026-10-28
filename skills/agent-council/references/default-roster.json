@@ -125,41 +125,6 @@
   ],
   "participants": [
     {
-      "id": "grok",
-      "allowedRoles": [
-        "decision"
-      ],
-      "model": "grok-4.6",
-      "variant": "high",
-      "lineage": {
-        "providerId": "grok-subscription",
-        "vendorId": "xai",
-        "familyId": "xai-grok-4-6",
-        "baseModelId": "grok-4-6",
-        "correlationGroupIds": [
-          "xai-grok-4-6-lineage"
-        ]
-      },
-      "qualification": {
-        "status": "qualified",
-        "method": "manual-static",
-        "checkedAt": "2026-09-03T00:00:00.000Z",
-        "expiresAt": "2026-12-02T00:00:00.000Z",
-        "adapter": {
-          "name": "grok-cli",
-          "version": "1.0.13"
-        },
-        "capabilities": {
-          "repositoryRead": true,
-          "repositorySearch": true,
-          "snapshotEdit": true,
-          "structuredResponseFile": true,
-          "statelessRoundContext": true
-        },
-        "evidenceRef": "native-requalification-2026-09-03"
-      }
-    },
-    {
       "id": "grok-openrouter",
       "allowedRoles": [
         "decision"

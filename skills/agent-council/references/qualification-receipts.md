@@ -53,9 +53,12 @@ without adding a row here is not a re-qualification, it is a guess.**
 
 - Installed `grok 1.0.41`, but `grok models` answered "You are not authenticated", so the contract
   could not be exercised. The pin stays at 1.0.13, which means a 1.0.41 install is reported as an
-  unavailable transport and the resolver seats `grok-openrouter` (pay-per-token) instead. The CLI
-  still lists only `grok-4.6`, so the `grok` row keeps that model. `--no-memory` is still absent
-  from `--help`, as in the 1.0.13 receipt.
+  unavailable transport. The CLI still lists only `grok-4.6`. `--no-memory` is still absent from
+  `--help`, as in the 1.0.13 receipt.
+- **Same day, the `grok` (grok-cli) row was removed from the shipped pool.** Its September window
+  ran out on 2026-12-02, and one expired row fails the whole pool at `prepare`. Grok is now seated
+  only through `grok-openrouter` (Grok 4.7, pay-per-token). The adapter code and its 1.0.13 pin
+  stay, so a row can be added back after a fresh receipt here.
 
 ### claude-cli 2.1.259: 2026-09-03
 
