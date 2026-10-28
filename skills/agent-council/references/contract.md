@@ -187,8 +187,8 @@ Native CLI and pi permissions are application policy, not operating-system isola
 may read, search, and edit only their isolated snapshot. They receive no shell/Bash, web, LSP,
 nested agent, skill, command, MCP, plugin, package-install, automatic download/update/share, or
 external-directory path. A pi seat is one non-interactive headless run per attempt with the child
-cwd at the seat root: `-p --mode json`, the six isolation flags
-`--no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-approve`,
+cwd at the seat root: `-p --mode json`, the seven isolation flags
+`--no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-mcp --no-approve`,
 the strict tool allowlist `--tools read,grep,find,ls,edit,write` (pi's `bash` and `powershell`
 built-ins are deliberately absent and pi has no `glob`), `--model <openrouter slug>`,
 `--thinking <level>` from the profile variant, and an appended isolation system prompt. No

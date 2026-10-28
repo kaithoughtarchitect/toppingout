@@ -331,7 +331,7 @@ export function buildArgvForSeat(seat, ctx) {
     case "openrouter":
       return [
         "-p", "--no-session", "--no-context-files", "--no-extensions", "--no-skills",
-        "--no-prompt-templates", "--no-approve", "--tools", "read,grep,find,ls",
+        "--no-prompt-templates", "--no-mcp", "--no-approve", "--tools", "read,grep,find,ls",
         "--model", `openrouter/${seat.model}`, "--thinking", "high", `@${assignmentPathArg}`,
         "Execute the attached cold-seat f-plancheck assignment exactly as written. Output findings only, in the shape it specifies.",
       ];

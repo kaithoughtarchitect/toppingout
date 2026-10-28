@@ -60,7 +60,7 @@ resolved with confidence, ask**, a wrong Player turns the read into self-review.
 The host is the session running this skill: `--host claude` for Claude Code, `codex` for
 Codex, `grok` for Grok Build; a pi-hosted session passes the model pi is running, any
 roster id, `cliModel`, slug, or family keyword the roster can resolve (e.g. `--host
-gemini-3.8-flash`). Both families are greyed in the picker and refused by its server,
+gemini-4-argon`). Both families are greyed in the picker and refused by its server,
 because a seat from either would be self-review.
 
 Print the resolution before picking: `player: claude-opus-5 → Anthropic · host: claude →
@@ -189,7 +189,7 @@ node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment {scratch}/as
 | codex CLI | `codex exec -m <cliModel> -c model_reasoning_effort="high" --sandbox read-only --skip-git-repo-check -o {scratch}/read-codex-<model>.attempt<n>.last.md -` (assignment on stdin; codex streams its transcript to stderr and writes the final message to the per-attempt `-o` file, the winner is copied to `read-codex-<model>.last.md` and becomes the `.log`) | `read-codex-<model>.log` (+ `.last.md`) |
 | claude CLI | `claude -p --model <cliModel> --effort high --permission-mode plan --tools Read,Grep,Glob,Bash --disallowedTools Edit,Write,NotebookEdit --no-session-persistence --output-format text` (stdin; plan mode blocks writes, probed 2026-09-02) | `read-claude-<model>.log` |
 | grok CLI | `grok --prompt-file <assignment> --output-format json --cwd <repo> --permission-mode plan --disallowed-tools Edit,Write,MultiEdit,NotebookEdit --allow "Bash(<exact read-only command>)" … --reasoning-effort high --no-subagents -m <cliModel>`, plan mode supplies the built-in read-only shell set and blocks writes; the `--allow` rules (`GROK_READ_ONLY_ALLOW_RULES` in the dispatcher: node/npm version, codex/claude/grok/pi help+version, `grok models`, `pi --list-models:*`) admit the extra read-only commands a cold read needs; headless grok cancels the whole turn on any command outside that set, so an attempt counts only when `stopReason` is `end_turn` | `read-grok-<model>.log` (+ raw `read-grok-<model>.json`) |
-| OpenRouter | `pi -p --no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-approve --tools read,grep,find,ls --model openrouter/<slug> --thinking high @<assignment> "<one-line instruction>"`, pi's read-only tool allowlist; `OPENROUTER_API_KEY` inherited from the environment, never printed; `pi -p` prints only when the model finishes, so a long silence is not a hang | `read-openrouter-<sanitized slug>.log` |
+| OpenRouter | `pi -p --no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-mcp --no-approve --tools read,grep,find,ls --model openrouter/<slug> --thinking high @<assignment> "<one-line instruction>"`, pi's read-only tool allowlist (`--no-mcp` because pi 1.x keeps MCP tools through `--tools`); `OPENROUTER_API_KEY` inherited from the environment, never printed; `pi -p` prints only when the model finishes, so a long silence is not a hang | `read-openrouter-<sanitized slug>.log` |
 
 **2026-09-23, codex door lost `--ignore-user-config`.** A live cold read failed: the
 seat could reach the network but read nothing, refusing `blocked by policy`. Cause, proven

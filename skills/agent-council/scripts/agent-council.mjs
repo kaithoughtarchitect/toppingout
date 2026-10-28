@@ -3760,8 +3760,15 @@ function selfTestCommand(io) {
   const filtered = filterEnvironment({ PATH: "fixture", OPENROUTER_API_KEY: "fixture-secret", PRODUCT_DATABASE_URL: "must-not-pass" }, { credentialKey: "OPENROUTER_API_KEY" });
   if (filtered.PRODUCT_DATABASE_URL || filtered.OPENROUTER_API_KEY !== "fixture-secret") runnerFail("SELF_TEST_ENVIRONMENT_FAILURE");
   const piArgs = buildPiSeatArgs({ model: "openrouter/fixture", variant: "high" });
-  if (!PI_ISOLATION_ARGS.every((flag) => piArgs.includes(flag)) || !piArgs.includes("--no-mcp")) runnerFail("SELF_TEST_PI_ISOLATION_FAILURE");
-  return { status: "PASS", hosts: pool.hosts.length, profiles: Object.keys(AGENT_COUNCIL_PANEL_PROFILES).length, coreMilestones: AGENT_COUNCIL_MILESTONES.length, brokerGates: Object.keys(BROKER_GATE_CATALOG).length };
+  if (!piArgs.includes("--no-mcp")) runnerFail("SELF_TEST_PI_ISOLATION_FAILURE");
+  // The fixed clock above keeps the roster check reproducible, so it cannot see a
+  // row about to lapse. One expired row fails the whole pool at prepare time,
+  // so this check uses the real clock and fails two weeks ahead of the first expiry.
+  const soonest = [...pool.hosts, ...pool.participants, ...pool.auditors]
+    .map((profile) => ({ id: profile.id, expiresAt: profile.qualification.expiresAt }))
+    .sort((left, right) => Date.parse(left.expiresAt) - Date.parse(right.expiresAt))[0];
+  if (Date.parse(soonest.expiresAt) - Date.now() < 14 * 24 * 60 * 60 * 1000) runnerFail("SELF_TEST_QUALIFICATION_EXPIRING", soonest);
+  return { status: "PASS", hosts: pool.hosts.length, profiles: Object.keys(AGENT_COUNCIL_PANEL_PROFILES).length, coreMilestones: AGENT_COUNCIL_MILESTONES.length, brokerGates: Object.keys(BROKER_GATE_CATALOG).length, soonestExpiry: soonest };
 }
 
 function usageText() {

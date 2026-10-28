@@ -110,8 +110,8 @@ and a strongest-self-counter requirement. Do not include the chair's lean.
 
 Tell the user which resolved seats use native subscription CLIs and which are pi-headless
 OpenRouter seats, reading `seatTransports` from the `prepare` output rather than inferring it from
-model names. Grok 4.6 and Claude Opus 5 are native when their qualified transports pass
-preflight; every other seat, Gemini 3.8 Flash with the `high` variant included, is served by a
+model names. Grok 4.6 and Claude Opus 5.5 are native when their qualified transports pass
+preflight; every other seat, Gemini 4 Argon with the `high` variant included, is served by a
 `pi-headless` OpenRouter profile. Claude-family models are never routed through OpenRouter, so the
 Claude seat is native or absent. Grok is not the same case: the pool also carries a separate
 `grok-openrouter` row, so a `grok-cli` preflight failure reseats Grok as a **pay-per-token**
