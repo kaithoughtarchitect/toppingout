@@ -52,7 +52,7 @@ The root session is the sole orchestrator. Council seats are external API or iso
 5. Extract `choices[0].message.content`. If that path is missing, surface `.error.message` (or the raw body) for that door, do not invent a reply.
 6. Retry a failed door once, then omit it and name it in the result. Do not replace it with a repository-aware session.
 
-If a picked row has `door: "codex CLI"`, run it with `codex exec --sandbox read-only --ignore-user-config --skip-git-repo-check` in a newly created empty temporary directory outside the repository. Pass only the scrubbed brief on stdin.
+If a picked row has `door: "codex CLI"`, run it with `codex exec --sandbox read-only --skip-git-repo-check` in a newly created empty temporary directory outside the repository. Pass only the scrubbed brief on stdin. Do not add `--ignore-user-config`: on Windows it discards the `~/.codex/config.toml` sandbox setting that lets the seat start processes, so it reads nothing (the same fix f-plancheck made on 2026-09-23). The seat therefore inherits the operator's Codex config, MCP servers included, so it is less hermetic than an OpenRouter door.
 
 Keep council artifacts isolated. Remove only artifacts created by this run, including `council-this-run.json`.
 
