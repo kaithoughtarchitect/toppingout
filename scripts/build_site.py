@@ -63,6 +63,7 @@ SHEETS = [
 # Brand marks for the requirements sheet, from Simple Icons (CC0): one 24x24 path each.
 BRAND_PI = ('M420 280H280V140H0V0H420V280Z', 'M560 560H420V280H560V560Z', 'M140 560H0V140H140V280H280V420H140V560Z')
 BRAND_MARKS = {
+    'openai': 'M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z',
     'windows': 'M0,0H11.377V11.372H0ZM12.623,0H24V11.372H12.623ZM0,12.623H11.377V24H0Zm12.623,0H24V24H12.623',
     'claude': 'm4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z',
     'git': 'M13.09 23.549a1.54 1.54 0 0 1-2.18 0L.451 13.089a1.54 1.54 0 0 1 0-2.179l7.191-7.19 2.733 2.733a1.85 1.85 0 0 0 .964 2.326v6.66a1.849 1.849 0 1 0 1.54 0V8.957l2.508 2.508a1.85 1.85 0 1 0 1.09-1.09l-2.634-2.634a1.85 1.85 0 0 0-2.378-2.377L8.73 2.63 10.91.451a1.54 1.54 0 0 1 2.179 0l10.459 10.46a1.54 1.54 0 0 1 0 2.179z',
@@ -2312,7 +2313,7 @@ FRONT = {
         ("Pi, in Orca", "The builder's agent, in the pane beside the foreman."),
         ("Greptile", "Review rounds on each pull request."),
         ("OpenRouter", "Voice, and the councils."),
-        ("A builder", "Any agent that can read a file, run a shell and write a report. I use GLM 5.3."),
+        ("A builder", "Any agent that can read a file, run a shell and write a report. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra."),
     ],
     # the requirements sheet: (logo, brand colour, name, its job here, why); logo None draws its initials
     "req_core": [
@@ -2331,6 +2332,8 @@ FRONT = {
     ],
     "req_builders": [
         ("img:zai.svg", "", "GLM 5.3", "Z.ai, on subscription", "Builds each work order."),
+        ("openai", "", "GPT-6.1 Sol", "OpenAI", "Builds each work order."),
+        ("openai", "", "GPT-6.1 Terra", "OpenAI", "Builds each work order."),
     ],
     "needs_opt": [
         ("Greptile", "Review rounds on the pull request, when you say greploop."),
@@ -3585,7 +3588,7 @@ FRONT_CSS = r"""
 .ptag .lg.img{overflow:hidden}.ptag .lg.img img{display:block;width:100%;height:100%}.ptag .lg .pi{fill:#111}
 .ptag b{align-self:end;font:800 17px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;padding-right:8px}
 .ptag>span:not(.lg){align-self:start;font:600 9.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding-right:8px}
-.ptag.pb{grid-column:1/-1;background:#FBB401;color:#101316}.ptag.pb span{color:#3A3000}.ptag.pb::before{background:#FBB401}
+.ptag.pb{background:#FBB401;color:#101316}.ptag.pb span{color:#3A3000}.ptag.pb::before{background:#FBB401}
 .rmine.js:not(.live) .ptag{opacity:0;transform:translateY(-14px) rotate(-7deg)}
 .rmine.js .ptag{transition:transform .5s cubic-bezier(.3,1.6,.5,1) calc(var(--i) * 45ms),opacity .3s calc(var(--i) * 45ms)}
 @media (max-width:1100px){.ptags{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -5105,7 +5108,7 @@ class Site:
                 builders = "".join(tile(b, "builder") for b in F["req_builders"])
                 builders += tile((None, "", "Another builder", "your pick", "Any agent that reads files, runs a shell, writes a report."), "builder")
                 extra = ('<div class="bpick"><h4>And one builder <small>pick one</small></h4>'
-                         '<p>It only builds what the foreman settled, so a cheap model will do. I use GLM 5.3.</p>'
+                         '<p>It only builds what the foreman settled, so a cheap model will do. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra.</p>'
                          f'<ul class="kits">{builders}</ul></div>')
             blocks.append(f'<section class="lvl" id="{lid}"><div class="lvh"><span class="lvn">Level {len(blocks) + 1:02d}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
                           f'<ul class="kits">{rows}</ul>{extra}</section>')
@@ -5448,10 +5451,13 @@ class Site:
         by_req = {r[2]: r for r in F["req_core"]}
         tag_order = ["Windows 11", "Git Bash", "PowerShell", "Claude Code", "Pi", "Orca", "Greptile", "OpenRouter", "Git", "GitHub and gh", "Node", "Python 3"]
         assert sorted(tag_order) == sorted(by_req), "build_site: every requirement has a tag on the front page"
-        bm, _bc, bname, _bwho, _bwhy = F["req_builders"][0]
+        # the builders I use sit together, one amber row after the workspace
+        bnames = [b[2] for b in F["req_builders"]]
         tag_rows = [by_req[n][:4] for n in tag_order]
-        tag_rows.insert(tag_order.index("Pi") + 1, (bm, "", bname, "the builder, by Z.ai"))
-        req = "".join(f'<li class="ptag{" pb" if nm == bname else ""}" style="--i:{k}">{brand_mark(m, c)}<b>{esc(nm)}</b><span>{esc(role)}</span></li>'
+        at = tag_order.index("Orca") + 1
+        for k, (bm, _bc, bname, bwho, _bwhy) in enumerate(F["req_builders"]):
+            tag_rows.insert(at + k, (bm, "", bname, "the builder, by " + bwho.split(",")[0]))
+        req = "".join(f'<li class="ptag{" pb" if nm in bnames else ""}" style="--i:{k}">{brand_mark(m, c)}<b>{esc(nm)}</b><span>{esc(role)}</span></li>'
                       for k, (m, c, nm, role) in enumerate(tag_rows))
         opt = "".join(f'<li><b>{esc(k)}</b><span>{inline(v)}</span></li>' for k, v in F["needs_opt"])
         repo = INSTALL["repo"]
