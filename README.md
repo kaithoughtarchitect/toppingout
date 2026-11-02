@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Let AI coding agents work through your tickets for hours, even overnight, without drifting: every job starts fresh from files, a cheap model does the heavy coding, and your Claude Code limit lasts far longer.**
+**A spec-driven planner/executor workflow for Claude Code that runs for hours, even overnight: a planner writes each ticket's spec in a fresh session, a cheaper model does the coding, another model family reviews it, and your Claude Code limit lasts far longer.**
 
 Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
 
