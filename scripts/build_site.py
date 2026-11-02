@@ -139,7 +139,7 @@ ABOUT = {
     # (name, when, what it changed, why it was needed, placeholder?, link)
     "floors": [
         ("Topping Out", "now, first called Foreman", "Split the work by trust: a foreman decides, a cheap model builds, another model family checks.", "Specialist teams were costly, and still checked by one model family.", False, ""),
-        ("Journeyman", "2026", "Turned one agent into a team of specialists, and had every plan read cold before building.", "A single agent was marking its own homework.", False, ""),
+        ("Journeyman", "2026", "Broke each job into stages, requirements, design, task list, build, review, with a specialist agent for each, and had a separate agent score the plan before any code.", "A single agent was marking its own homework.", False, ""),
         ("Noderr", "summer 2025", "Handed the bookkeeping to the AI, and traced every change through everything it touched.", "Maps and trackers kept by hand drifted away from the code.", False, "https://github.com/kaithoughtarchitect/noderr"),
         ("Pathfinder", "spring 2025", "Drew the whole app as a map, gave each part a spec, and marked nothing done until verified.", "So the AI could build fast without the app losing its shape.", False, ""),
     ],
