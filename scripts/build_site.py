@@ -3231,7 +3231,14 @@ FRONT_CSS = r"""
 .memmap{--sky:#E6EDF0;--soil:#B9A58A;--grit:#9C8869;--ground:#5F6B4F;--tg:#101316;--wr:#8A5A00;--rd:#1F5FA8;--wl:#E3A300}
 :root[data-theme="dark"] .memmap{--sky:#1B2733;--soil:#4A3E31;--grit:#5C4E3E;--ground:#3D4A35;--tg:#E7EAE5;--wr:#FBB401;--rd:#7DB8F5;--wl:#FBB401}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .memmap{--sky:#1B2733;--soil:#4A3E31;--grit:#5C4E3E;--ground:#3D4A35;--tg:#E7EAE5;--wr:#FBB401;--rd:#7DB8F5;--wl:#FBB401}}
-.cutw{border-bottom:3px solid var(--ink);display:flex;flex-direction:column;min-width:0}
+.cutw{border-bottom:3px solid var(--ink);display:flex;flex-direction:column;min-width:0;position:relative}
+.taphint{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:8px;margin:0;padding:8px 12px;background:#FBB401;color:#101316;border:2px solid #101316;box-shadow:3px 3px 0 #101316;font:700 11px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;pointer-events:none;animation:taphint 2.4s ease-in-out infinite}
+.taphint svg{width:18px;height:18px;flex:none}
+.memmap.js .taphint{display:flex}.memmap.js:has(.cut.picked) .taphint,.memmap.js:has(.cut.touring) .taphint{display:none}
+@keyframes taphint{0%,100%{transform:translateX(-50%)}50%{transform:translate(-50%,3px)}}
+@media (prefers-reduced-motion:reduce){.taphint{animation:none}}
+.taphint .thm{display:none}
+@media (max-width:640px){.taphint{position:static;transform:none;order:-1;justify-content:center;font-size:10.5px;padding:8px 10px;border-width:0 0 2px;box-shadow:none;animation:none}.taphint .thd{display:none}.taphint .thm{display:inline}}
 .cutsc{overflow-x:auto}
 .cut{display:block;width:100%;height:auto}
 @media (max-width:720px){.cut{min-width:660px}}
@@ -5420,7 +5427,7 @@ class Site:
         tourcard = ('<article class="mem tour" hidden><div class="mh"><span class="chip b-job">Follow one lesson</span><span class="tn"></span></div><h3></h3><p></p>'
                     '<div class="mnav"><button type="button" data-next>Next &rarr;</button></div></article>')
         out.append(sec(4, "lost", "Nothing is lost", F["lost_lede"])
-                   + f'<div class="memmap" id="memmap"><div class="cutw"><div class="cutsc">{CUTAWAY}</div><div class="hint"><button type="button" data-tour aria-pressed="false">&#9654; Follow one lesson</button><span>or tap any outlined part to see what it keeps and who reads it</span></div></div>'
+                   + f'<div class="memmap" id="memmap"><div class="cutw"><div class="cutsc">{CUTAWAY}</div><p class="taphint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V10m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.4-2L9 15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="thd">Click any outlined part to see inside</span><span class="thm">Tap a part to see inside</span></p><div class="hint"><button type="button" data-tour aria-pressed="false">&#9654; Follow one lesson</button><span>or tap any outlined part to see what it keeps and who reads it</span></div></div>'
                    f'<div class="mems"><div class="mstack">{cards}{tourcard}</div><div class="mnav"><button type="button" data-go="-1">&larr; Previous</button><button type="button" data-go="1">Next &rarr;</button></div></div></div>'
                    + '<a class="treelink" href="logbook.html">The Logbook in full: the cards, their life, the tools, the files &rarr;</a>'
                    + MEMORY_JS.replace("__TOUR__", json.dumps(MEMORY_TOUR)) + CALLOUT_JS + '</section>')
