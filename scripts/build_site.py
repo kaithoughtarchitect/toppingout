@@ -2332,8 +2332,8 @@ FRONT = {
     ],
     "req_builders": [
         ("img:zai.svg", "", "GLM 5.3", "Z.ai, on subscription", "Builds each work order."),
-        ("openai", "", "GPT-6.1 Sol", "OpenAI", "Builds each work order."),
-        ("openai", "", "GPT-6.1 Terra", "OpenAI", "Builds each work order."),
+        ("openai", "", "GPT-6.1 Sol", "OpenAI, on subscription", "Builds each work order."),
+        ("openai", "", "GPT-6.1 Terra", "OpenAI, on subscription", "Builds each work order."),
     ],
     "needs_opt": [
         ("Greptile", "Review rounds on the pull request, when you say greploop."),
