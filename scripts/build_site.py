@@ -348,7 +348,7 @@ STEP_SHORT = {
     'Cut into tickets': ('The plan becomes jobs, in order.', 'Nothing written until you say go.'),
     'Start the shift': ('A fresh foreman reads the notes, then the code.', 'Where they disagree, the code wins.'),
     'Build': ('One small task at a time, test first.', 'A test that breaks stops the work.'),
-    'Inspect': ('Two reviews: fresh eyes, then another AI.', 'Both run, always.'),
+    'Inspect': ('Two reviews: a fresh AI session, then an AI from another company.', 'Both run, always.'),
     'Open the PR': ('The work goes up as a pull request.', 'Only on your word, or your /goal.'),
     'Review the PR': ('Greptile reviews it; findings get fixed.', 'Three rounds at most.'),
     'Merge': ('Merged, then checked against what was reviewed.', 'Only on your word, or your /goal.'),
@@ -373,7 +373,7 @@ ORDER_JS = '<script>(function(){var sec=document.getElementById("route"),strip=d
 
 CONVEYOR = '<svg class="conv" aria-hidden="true" focusable="false"><path class="cvl"/><text class="cvt">the tickets, one at a time</text><g class="cvk"></g></svg>\n<script>(function(){var sec=document.getElementById("route");if(!sec)return;var svg=sec.querySelector("svg.conv"),path=svg.querySelector(".cvl"),txt=svg.querySelector(".cvt"),kg=svg.querySelector(".cvk"),\n track=sec.querySelector(".once .track"),loop=sec.querySelector(".shiftbox .loop"),box=sec.querySelector(".shiftbox");if(!track||!loop||!box)return;\nvar still=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches),on=true,L=0,toks=[];\nfor(var i=0;i<3;i++){var g=document.createElementNS("http://www.w3.org/2000/svg","g");g.innerHTML=\'<rect x="-9" y="-6" width="18" height="12" fill="#FBB401" stroke="#101316" stroke-width="1.6"/><path d="M-5 -1.5h10M-5 2h6" stroke="#101316" stroke-width="1.2"/>\';kg.appendChild(g);toks.push(g)}\nfunction draw(){var s=sec.getBoundingClientRect(),tr=track.getBoundingClientRect(),lp=loop.getBoundingClientRect(),bx=box.getBoundingClientRect();\n svg.setAttribute("width",s.width);svg.setAttribute("height",s.height);\n var vert=parseFloat(getComputedStyle(track).borderLeftWidth)>0,sx,sy;\n if(vert){sx=tr.left-s.left+1.5;sy=tr.bottom-s.top}else{sx=tr.right-s.left-1.5;sy=tr.top-s.top+1.5}\n var ex=lp.left-s.left+1.5,ey=lp.top-s.top+(vert?20:0),ob=sec.querySelector(".once").getBoundingClientRect().bottom-s.top,cy=(ob+bx.top-s.top)/2;\n path.setAttribute("d","M"+sx+" "+sy+"V"+cy+"H"+ex+"V"+ey);L=path.getTotalLength();\n txt.setAttribute("x",vert?ex+14:(sx+ex)/2);txt.setAttribute("y",cy-9);txt.setAttribute("text-anchor",vert?"start":"middle")}\nfunction frame(now){if(!on)return;toks.forEach(function(g,i){var u=((now/1000)/9+i/3)%1,pt=path.getPointAtLength(L*u);g.setAttribute("transform","translate("+pt.x+" "+pt.y+")")});requestAnimationFrame(frame)}\ndraw();if(window.ResizeObserver)new ResizeObserver(draw).observe(sec);\nif(still){toks.forEach(function(g){g.style.display="none"});return}\nif(window.IntersectionObserver)new IntersectionObserver(function(es){var v=es[0].isIntersecting;if(v&&!on){on=true;requestAnimationFrame(frame)}else if(!v)on=false}).observe(sec);\nrequestAnimationFrame(frame)})()</script>'
 
-NIGHT_STRIP = '<div class="nstrip" id="nstrip" style="--t:1"><span class="nstars" aria-hidden="true"></span><span class="nmoon" aria-hidden="true"></span><span class="nsun" aria-hidden="true"></span>\n<div class="nrow">\n<div class="ntype"><span class="nt">22:30 &middot; Before bed</span><b>You type one line</b><code><span class="nty">/goal night shift: jobs 11, 12, 13</span><span class="ncar" aria-hidden="true"></span></code></div>\n<div class="nline" role="img" aria-label="An example night: boards 11, 12 and 13 each built, checked and merged, one after another, between 22:40 and 05:50">\n<div class="nclock" aria-hidden="true"><span>Night shift</span><b class="nck">06:30</b></div>\n<div class="ntrack" aria-hidden="true">\n<div class="njob" style="--a:.02;--b:.33"><i class="nfill"></i><b>Board 11</b><span>built, checked</span><em>Merged</em></div>\n<div class="njob" style="--a:.345;--b:.65"><i class="nfill"></i><b>Board 12</b><span>on top of 11</span><em>Merged</em></div>\n<div class="njob" style="--a:.665;--b:.92"><i class="nfill"></i><b>Board 13</b><span>last on the list</span><em>Merged</em></div>\n<span class="ncur"></span></div>\n<div class="nticks" aria-hidden="true"><span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span></div>\n</div>\n<div class="nmorn"><span class="nt">07:00 &middot; Morning</span><b>3 jobs merged</b><span>The links, and anything only you can decide.</span></div>\n</div><button type="button" class="nreplay" hidden>&#8635; Replay the night</button></div>\n<p class="nextra"><b>A failed check stops the shift,</b> so nothing broken merges. <code>3 jobs, auto-pick</code> lets it choose. <a href="skills/f-night-shift.html">How it works &rarr;</a></p>\n<script>(function(){var n=document.getElementById("nstrip");if(!n)return;\nvar jobs=[].slice.call(n.querySelectorAll(".njob")),ck=n.querySelector(".nck"),ty=n.querySelector(".nty"),rb=n.querySelector(".nreplay"),cmd=ty.textContent,raf=0;\nfunction set(t){n.style.setProperty("--t",t.toFixed(4));var h=22.5+8*t,hh=Math.floor(h)%24,mm=Math.floor((h%1)*60);ck.textContent=(hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;\n jobs.forEach(function(j){var a=+j.style.getPropertyValue("--a"),b=+j.style.getPropertyValue("--b"),f=Math.max(0,Math.min(1,(t-a)/(b-a)));j.style.setProperty("--f",f.toFixed(3));j.classList.toggle("on",f>0&&f<1);j.classList.toggle("done",f>=1)});\n n.classList.toggle("dawn",t>=1)}\nfunction play(){cancelAnimationFrame(raf);n.classList.add("live");set(0);ty.textContent="";var i=0,t0=0;\n (function type(){ty.textContent=cmd.slice(0,++i);if(i<cmd.length)raf=setTimeout(type,38);else{n.classList.add("typed");raf=requestAnimationFrame(function go(now){if(!t0)t0=now;var t=Math.min(1,(now-t0)/7000);set(t);if(t<1)raf=requestAnimationFrame(go)})}})()}\nset(1);\nif(!window.IntersectionObserver||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;\nrb.hidden=false;rb.addEventListener("click",function(){clearTimeout(raf);n.classList.remove("typed");play()});\nnew IntersectionObserver(function(es,o){if(!es[0].isIntersecting)return;o.disconnect();play()},{threshold:.4}).observe(n)})()</script>'
+NIGHT_STRIP = '<div class="nstrip" id="nstrip" style="--t:1"><span class="nstars" aria-hidden="true"></span><span class="nmoon" aria-hidden="true"></span><span class="nsun" aria-hidden="true"></span>\n<div class="nrow">\n<div class="ntype"><span class="nt">22:30 &middot; Before bed</span><b>You type one line</b><code><span class="nty">/goal night shift: jobs 11, 12, 13</span><span class="ncar" aria-hidden="true"></span></code></div>\n<div class="nline" role="img" aria-label="An example night: boards 11, 12 and 13 each built, checked and merged, one after another, between 22:40 and 05:50">\n<div class="nclock" aria-hidden="true"><span>Night shift</span><b class="nck">06:30</b></div>\n<div class="ntrack" aria-hidden="true">\n<div class="njob" style="--a:.02;--b:.33"><i class="nfill"></i><b>Board 11</b><span>built, checked</span><em>Merged</em></div>\n<div class="njob" style="--a:.345;--b:.65"><i class="nfill"></i><b>Board 12</b><span>on top of 11</span><em>Merged</em></div>\n<div class="njob" style="--a:.665;--b:.92"><i class="nfill"></i><b>Board 13</b><span>last on the list</span><em>Merged</em></div>\n<span class="ncur"></span></div>\n<div class="nticks" aria-hidden="true"><span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span></div>\n</div>\n<div class="nmorn"><span class="nt">07:00 &middot; Morning</span><b>3 jobs merged</b><span>The links, and anything only you can decide.</span></div>\n</div><button type="button" class="nreplay" hidden>&#8635; Replay the night</button></div>\n<p class="nextra"><b>A failed check stops the shift,</b> so nothing broken merges. Name the jobs, or say <code>3 jobs, auto-pick</code> and it picks them. <a href="skills/f-night-shift.html">How it works &rarr;</a></p>\n<script>(function(){var n=document.getElementById("nstrip");if(!n)return;\nvar jobs=[].slice.call(n.querySelectorAll(".njob")),ck=n.querySelector(".nck"),ty=n.querySelector(".nty"),rb=n.querySelector(".nreplay"),cmd=ty.textContent,raf=0;\nfunction set(t){n.style.setProperty("--t",t.toFixed(4));var h=22.5+8*t,hh=Math.floor(h)%24,mm=Math.floor((h%1)*60);ck.textContent=(hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;\n jobs.forEach(function(j){var a=+j.style.getPropertyValue("--a"),b=+j.style.getPropertyValue("--b"),f=Math.max(0,Math.min(1,(t-a)/(b-a)));j.style.setProperty("--f",f.toFixed(3));j.classList.toggle("on",f>0&&f<1);j.classList.toggle("done",f>=1)});\n n.classList.toggle("dawn",t>=1)}\nfunction play(){cancelAnimationFrame(raf);n.classList.add("live");set(0);ty.textContent="";var i=0,t0=0;\n (function type(){ty.textContent=cmd.slice(0,++i);if(i<cmd.length)raf=setTimeout(type,38);else{n.classList.add("typed");raf=requestAnimationFrame(function go(now){if(!t0)t0=now;var t=Math.min(1,(now-t0)/7000);set(t);if(t<1)raf=requestAnimationFrame(go)})}})()}\nset(1);\nif(!window.IntersectionObserver||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;\nrb.hidden=false;rb.addEventListener("click",function(){clearTimeout(raf);n.classList.remove("typed");play()});\nnew IntersectionObserver(function(es,o){if(!es[0].isIntersecting)return;o.disconnect();play()},{threshold:.4}).observe(n)})()</script>'
 
 
 CLOSER = '<section class="closer" aria-labelledby="closer-h"><div class="haz" role="presentation"></div><div class="cl">__MARK__<div><h2 id="closer-h">Top out your first job.</h2>\n<p>Two lines: install, then set up.</p>__CMD__<a class="gh" href="https://github.com/__REPO__"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="__GH__"/></svg><span><b>__REPOB__</b><small>Open source on GitHub · MIT</small></span><i aria-hidden="true">&#8599;</i></a>\n<a class="clnext" href="#needs">What it runs on &uarr;</a></div></div></section>'
@@ -2194,17 +2194,17 @@ FRONT = {
     "headline": ["Stop babysitting agents.", "Hire a foreman."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
-        ("foreman", "Foreman", "Never writes product code."),
-        ("builder", "Builder", "Never makes design decisions."),
-        ("inspectors", "Inspectors", "Never fix: findings go back to the foreman."),
-        ("you", "Owner: you", "Gives the word: on each merge, or once for the whole night."),
+        ("foreman", "Foreman", "Claude Code. Plans and checks; never writes product code."),
+        ("builder", "Builder", "A cheaper model. Builds; never makes design decisions."),
+        ("inspectors", "Inspectors", "Other AI models. Find problems; never fix them."),
+        ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
     # the owner's angle (requests file, 2026-10-26): long runs without drift, a cheap builder, a Claude Code limit that lasts.
     # The link preview (foreman-site-tools/og-card.mjs) carries this same line, read from the built page.
-    "subline": "Runs for hours, even overnight, without drifting: every job starts fresh from files. A cheap model does the heavy coding, so your Claude Code limit lasts far longer.",
+    "subline": "Works through your tickets overnight without drifting: every job starts fresh from files. A cheap model does the heavy coding, so your Claude Code limit lasts far longer.",
     # the strip under the hero: (point, its one line). No numbers until one is confirmed
     "edge": [
-        ("No drift", "A fresh session for every job. The plan, work orders, reviews and handover are files, not chat memory."),
+        ("No drift", "A fresh session for every job. The plan, the steps, the reviews and the notes for next time are files, not chat memory."),
         ("Cheaper", "The builder does the token-heavy work. The foreman only plans, checks and decides."),
         ("Proof", "Every job ends with what was asked, what was built, what was tested and what was found."),
     ],
@@ -2212,13 +2212,13 @@ FRONT = {
     # why Topping Out, in four pillars: (title, the one line); the sign each one is posted as is in SIGNS, same order
     "pillars": [
         ("Cheaper", "The foreman decides, so a cheap model can build."),
-        ("Checked end to end", "Two inspections and a checklist. “Done” has to be proven."),
+        ("Checked end to end", "Two separate reviews and a checklist. “Done” has to be proven."),
         ("Runs the night shift", "Hand it a list at night. Wake up to merged jobs."),
         ("Nothing forgotten", "A new session picks up where the last one stopped."),
     ],
     # the hero's night, one caption per step: (clock from, clock to, step, what happens), hours past midnight of the first day
     "night_caps": [
-        (9, 17.5, "You plan", "settle each job's ticket by day"),
+        (9, 17.5, "You plan", "get each ticket ready by day"),
         (19, 22.5, "One line starts the shift", "/goal night shift: jobs 11, 12, 13"),
         (23, 25.5, "Board 11", "built, inspected, merged"),
         (25.5, 27.5, "Board 12", "on top of board 11's merged code"),
@@ -2228,7 +2228,7 @@ FRONT = {
     "shift_lede": "List the jobs before bed. Wake up to merged work.",
     # the shift clock: (when, title, text, command, kind)
     "shift": [
-        ("By day", "You plan", "Settle each job's ticket and its open questions, so nothing stalls at night.", "", "you"),
+        ("By day", "You plan", "Get each ticket ready and answer its open questions, so nothing stalls at night.", "", "you"),
         ("Evening", "One line starts the shift", "Name the jobs, or let it pick them. Add a spend cap if a walkthrough needs a live key.", "/goal night shift: jobs 11, 12, 13", "you"),
         ("Night", "Board 11", "A fresh foreman takes it from its opener to the merge, closes it, and writes the next opener.", "", "job"),
         ("Night", "Board 12", "Starts from the opener board 11 left, on top of its merged code.", "", "job"),
@@ -2288,8 +2288,8 @@ FRONT = {
         ("Merge", "foreman", True, []),
         ("Close", "foreman", True, ["f-signoff", "f-board"]),
     ],
-    "route_notes": {"Build": "one work order at a time, test-first; the foreman reviews each one",
-                    "Inspect": "gate 2 first, then two inspections",
+    "route_notes": {"Build": "one small step at a time, test first; the foreman checks each one",
+                    "Inspect": "automated checks first, then two reviews",
                     "Review the PR": "Greptile reviews it, three rounds at most",
                     "Close": "a day report, the next job picked and researched, the handover written"},
     # the six skills to start with, in the route's own words: (skill, route step, who, what it does, what you get)
@@ -2344,7 +2344,7 @@ FRONT = {
     "skeptic": [
         ("Why not one agent for everything?",
          "The agent that made a mistake would be the one judging it.",
-         "So an AI from another company checks the work cold. It once caught a race the foreman had passed.",
+         "So an AI from another company checks the work cold. It once caught a race condition the foreman had passed.",
          "Foreman Playbook, \"The one idea\""),
         ("Why not just write better prompts?",
          "A prompt asks. A check proves.",
@@ -2461,11 +2461,11 @@ ONE_JOB_RULES = ["**What goes red is repaired, not a stop.**", "Ask only where t
                  "Greptile under 5/5 after three rounds", "spend reaching the cap", "**It never covers:**", "a fourth Greptile round", "or starting the next job",
                  "**Any stop in a job ends the shift, and so does a topping out**", "a job past 16 hours", "Every survey answer it gave itself",
                  "shift boss"]
-ONE_JOB_STOPS = ("<b>It still stops and waits</b>, one line saying why, on: the same failure red after two repair rounds; a security finding or an "
-                 "unresolved critical one; Greptile under 5/5 after three rounds; spend reaching your cap.")
+ONE_JOB_STOPS = ("<b>It still stops and waits</b>, one line saying why, on: the same check still failing after two fixes; a security problem or an "
+                 "unresolved critical finding; the automated review under 5/5 after three rounds; spend reaching your cap.")
 ONE_JOB_NEVER = ("<b>Your goal never covers</b> tracker moves, messages, edits outside the ticket&rsquo;s files, migrations, a force push, "
-                 "a fourth Greptile round, spend over the cap, or starting the next job.")
-ONE_JOB_NIGHT = "<b>The shift ends</b> at any stop in a job, at a topping out, at the cap, or when a job passes 16 hours."
+                 "a fourth automated review, spend over the cap, or starting the next job.")
+ONE_JOB_NIGHT = "<b>The shift ends</b> at any stop in a job, when the whole goal is built, at the spend cap, or when a job passes 16 hours."
 
 
 def one_job_check_rules() -> None:
@@ -5318,7 +5318,7 @@ class Site:
                    f'<div class="bh">{self.mark}<div><div class="kick">{esc(F["board_kicker"])}</div>'
                    f'<h1 id="h">{"".join(f"<span>{esc(x)}</span>" for x in F["headline"])}</h1><p class="sub">{esc(F["subline"])}</p><a class="toinst" href="#install">Install &darr;</a></div>'
                    '<div class="jhw"><div class="jh" id="jh" role="img" aria-label="One night on site: by day you plan the floors; in the evening one line starts the shift; through the night a crane builds one floor per job, an inspection rejects a bad block and it is replaced, and each floor is merged; at dawn the tower is topped out with a flag"></div>'
-                   '<div class="jcap" id="jcap" aria-hidden="true"><b class="clk">09:00</b><span class="cap"><b>You plan</b> settle each job\'s ticket by day</span>'
+                   '<div class="jcap" id="jcap" aria-hidden="true"><b class="clk">09:00</b><span class="cap"><b>You plan</b> get each ticket ready by day</span>'
                    '<span class="pips"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></div>'
                    '</div></div>'
                    f'{edge}{one_job_html()}'
