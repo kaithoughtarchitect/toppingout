@@ -1,12 +1,12 @@
 # Topping Out
 
-> A spec-driven planner/executor workflow for Claude Code that runs for hours, even overnight: a planner writes each ticket's spec in a fresh session, a cheaper model does the coding, another model family reviews it, and your Claude Code limit lasts far longer. Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
+> A spec-driven software factory for Claude Code that runs for hours, even overnight, with a planner/executor split: a planner writes each ticket's spec in a fresh session, a cheaper model does the coding, another model family reviews it, and your Claude Code limit lasts far longer. Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
 
 Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/toppingout. Every skill and agent page has a Markdown twin, linked below.
 
 ## Pages
 
-- [Topping Out](https://toppingout.dev/): Open-source planner/executor workflow for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.
+- [Topping Out](https://toppingout.dev/): Open-source software factory for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.
 - [Order of works](https://toppingout.dev/route.html): Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.
 - [Your repo](https://toppingout.dev/repo.html): A site plan of every folder Topping Out adds to your repo, and where one job's files appear.
 - [Logbook](https://toppingout.dev/logbook.html): The Logbook: the cards Topping Out keeps, how a lesson becomes a card and then a rule, its skills and its files.

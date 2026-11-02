@@ -2188,8 +2188,8 @@ FRONT_SUBS = [("#access", "Install"), ("#pillars", "Why Topping Out"), ("#route"
 
 FRONT = {
     "title": "Topping Out",
-    "description": "Open-source planner/executor workflow for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.",
-    "board_kicker": "A planner/executor workflow",
+    "description": "Open-source software factory for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.",
+    "board_kicker": "A software factory methodology",
     "headline": ["Stop babysitting agents.", "Hire a foreman."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
