@@ -5724,7 +5724,27 @@ def stale_previews() -> list:
     return out
 
 
+# Search terms the owner chose on purpose (2026-11-02). Each must stay in every place listed, so a
+# wording pass cannot quietly drop one. To change this list, ask the owner first (DESIGN.md, Writing).
+LOCKED_TERMS = {
+    "software factory": ("README lead", "front description", "board kicker"),
+    "planner/executor": ("README lead",),
+    "Claude Code": ("README lead", "front description"),
+}
+
+
+def check_locked_terms() -> None:
+    """Stop the build before it touches docs/ if a locked search term went missing."""
+    places = {"README lead": readme_lead(), "front description": FRONT["description"], "board kicker": FRONT["board_kicker"]}
+    missing = [f"'{term}' in the {place}" for term, where in LOCKED_TERMS.items() for place in where
+               if term.lower() not in places[place].lower()]
+    if missing:
+        raise SystemExit("build_site: locked search term missing: " + "; ".join(missing)
+                         + ". These were chosen on purpose; ask the owner before changing LOCKED_TERMS.")
+
+
 def main() -> int:
+    check_locked_terms()
     site = Site()
     # the build owns everything in docs/ but docs/content/ and docs/assets/ (the preview images): clear the rest, then write it all again
     OUT.mkdir(exist_ok=True)

@@ -75,6 +75,7 @@ Every element borrows something real from a building site and still does a job o
 
 - Plain words, no marketing voice.
 - **No em dashes.** Use a comma, a colon or a full stop. This includes text the foreman writes into `BOARD.json` (`/f-signoff` step 3.2b).
+- **Locked search terms.** "software factory" stays in the README's bold lead, the front page description and the board kicker ("A software factory methodology"); "planner/executor" stays in the README lead; "Claude Code" in both the lead and the description. They are trending search terms, chosen on purpose. A wording or SEO pass can add words around them but never drop one: `build_site.py` (`LOCKED_TERMS`) refuses to build without them, and changing that list needs the owner's word first.
 - Picker titles follow one pattern: **Seat the council / Seat the panel / Seat the cold read**.
 
 ## Every page, every screen
