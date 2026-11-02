@@ -2945,6 +2945,8 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojlim a{font:700 11px/1 "Martian Mono",ui-monospace,monospace;color:var(--ink);white-space:nowrap}
 @media (max-width:640px){.ojways{grid-template-columns:1fr}.ojmode label{padding:8px 7px}.ojmode label b{font-size:9.5px}.ojmode label small{font-size:11px}}
 
+.board .tobtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.board .tobtns .toinst{margin-top:0}
+.board .toinst.togh{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:var(--ground)}.board .toinst.togh:hover{background:#FBB401;color:#101316}.board .togh svg{width:13px;height:13px}
 .board .toinst{display:inline-block;margin-top:14px;padding:7px 10px;font:700 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:2px solid var(--ink);text-decoration:none}
 .board .toinst:hover{background:#FBB401;color:#101316;border-color:#101316}
 #install{scroll-margin-top:16px}
@@ -5316,7 +5318,8 @@ class Site:
         edge = '<ul class="edge" aria-label="What sets it apart">' + "".join(f'<li><b>{esc(k)}</b><span>{esc(line)}</span></li>' for k, line in F["edge"]) + '</ul>'
         out.append(f'<section class="board" id="access" aria-labelledby="h"><div class="haz" role="presentation"></div>'
                    f'<div class="bh">{self.mark}<div><div class="kick">{esc(F["board_kicker"])}</div>'
-                   f'<h1 id="h">{"".join(f"<span>{esc(x)}</span>" for x in F["headline"])}</h1><p class="sub">{esc(F["subline"])}</p><a class="toinst" href="#install">Install &darr;</a></div>'
+                   f'<h1 id="h">{"".join(f"<span>{esc(x)}</span>" for x in F["headline"])}</h1><p class="sub">{esc(F["subline"])}</p><div class="tobtns"><a class="toinst" href="#install">Install &darr;</a>'
+                   f'<a class="toinst togh" href="https://github.com/{INSTALL["repo"]}" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{BRAND_MARKS["github"]}" fill="currentColor"/></svg>View on GitHub &#8599;</a></div></div>'
                    '<div class="jhw"><div class="jh" id="jh" role="img" aria-label="One night on site: by day you plan the floors; in the evening one line starts the shift; through the night a crane builds one floor per job, an inspection rejects a bad block and it is replaced, and each floor is merged; at dawn the tower is topped out with a flag"></div>'
                    '<div class="jcap" id="jcap" aria-hidden="true"><b class="clk">09:00</b><span class="cap"><b>You plan</b> get each ticket ready by day</span>'
                    '<span class="pips"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></div>'
