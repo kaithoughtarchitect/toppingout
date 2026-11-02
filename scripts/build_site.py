@@ -2424,16 +2424,16 @@ ADDON_SHORT = {
 # for README "One job, from your side"; each station names the README steps it comes from and the phrases those steps must
 # still hold, so the build stops when the README changes. (role icon, station, README steps, phrases, you, it)
 ONE_JOB = [
-    ("foreman", "Site walk", [1, 2], ["Give the foreman a ticket", "It walks the site", '"go"'],
-     'Give it a ticket, then say <q>go</q>.', "Walks the site: reads the ticket and the code."),
+    ("foreman", "Plan", [1, 2], ["Give the foreman a ticket", "It walks the site", '"go"'],
+     'Pick a ticket, then say <q>go</q>.', "Reads the ticket and your code, and writes a plan."),
     ("builder", "Build", [3], ["It writes work orders", "you paste each pointer into the builder", "or the pane link does it"],
-     "Paste each work order&rsquo;s pointer, or the pane link does.", "Writes the work orders; the builder builds them, test-first."),
-    ("inspectors", "Inspect", [3], ["the two inspections and the acceptance ledger"],
-     "", "Two inspections, then the acceptance ledger."),
-    ("you", "Your word", [4], ['("open the PR")', 'on "greploop"', "up to three Greptile rounds", '**"merge"** when the evidence satisfies you'],
-     '<q>Open the PR</q>, then <q>merge</q> when the evidence satisfies you.', 'Opens the PR; on <q>greploop</q>, up to three Greptile rounds.'),
+     "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Splits the plan into small steps. A cheaper model builds each one, tests first."),
+    ("inspectors", "Check", [3], ["the two inspections and the acceptance ledger"],
+     "", "Two separate reviews, then checks every requirement has proof."),
+    ("you", "Your OK", [4], ['("open the PR")', 'on "greploop"', "up to three Greptile rounds", '**"merge"** when the evidence satisfies you'],
+     '<q>Open the PR</q>, then <q>merge</q> when you&rsquo;re happy with the proof.', 'Opens the pull request. Say <q>greploop</q> and it runs up to three automated reviews.'),
     (None, "Merged", [5], ["It closes the job, saves the lessons", "proposes the next ticket for you to confirm"],
-     "Confirm the next ticket.", "Closes the job, saves the lessons, proposes the next ticket."),
+     "OK the next ticket.", "Closes the job, saves what it learned, suggests the next ticket."),
 ]
 
 
@@ -2443,18 +2443,18 @@ GOAL_AUTO = "/goal autonomous run: <opener>, until done or stopped"
 GOAL_NIGHT = "/goal night shift: jobs 13, 17, until done or stopped"
 ONE_JOB_MODES = {
     "auto": [
-        (f"In a fresh session, one line: <code>{GOAL_AUTO.replace("<", "&lt;").replace(">", "&gt;")}</code>", "Walks the site, and answers its own survey questions with its starred pick."),
-        ("Nothing: the pane link carries the pointers.", None),
-        ("", "Two inspections, then the ledger. What goes red is repaired, not a stop."),
-        ("Nothing to say: your goal covers the PR, up to three Greptile rounds, and the merge.", "Opens the PR, runs the rounds, merges."),
-        ("Read the PR body and the dev report: every answer it gave itself is listed, for you to reverse.", "Closes the job, pushes the records, and stops. It never starts the next job."),
+        (f"In a fresh session, one line: <code>{GOAL_AUTO.replace("<", "&lt;").replace(">", "&gt;")}</code>", "Plans, and answers its own planning questions with its recommended pick."),
+        ("Nothing: Orca passes each step to the builder.", None),
+        ("", "Two reviews, then the proof check. Anything that fails gets fixed, not a stop."),
+        ("Nothing to say: your goal covers the PR, up to three automated reviews, and the merge.", "Opens the PR, runs the reviews, merges."),
+        ("Read the PR and the report: every answer it gave itself is listed, so you can reverse it.", "Closes the job, saves the records, and stops. It never starts the next job."),
     ],
     "night": [
-        (f"Before bed, one line: <code>{GOAL_NIGHT}</code>", "The shift boss opens a fresh foreman per job and types its goal for you."),
-        ("Nothing: the pane link carries the pointers.", None),
-        ("", "Two inspections, then the ledger. What goes red is repaired, not a stop."),
-        ("Covered by each job&rsquo;s goal.", "Opens the PR, runs the rounds, merges."),
-        ("Read the morning report.", "Closes the job; the boss starts the next. Several floors by morning."),
+        (f"Before bed, one line: <code>{GOAL_NIGHT}</code>", "A shift manager opens a fresh AI session for each job and starts it for you."),
+        ("Nothing: Orca passes each step to the builder.", None),
+        ("", "Two reviews, then the proof check. Anything that fails gets fixed, not a stop."),
+        ("Covered by each job&rsquo;s goal.", "Opens the PR, runs the reviews, merges."),
+        ("Read the morning report.", "Closes the job, and the next one starts. Several jobs done by morning."),
     ],
 }
 ONE_JOB_RULES = ["**What goes red is repaired, not a stop.**", "Ask only where these rules or `METHOD.md` name an owner step", "**two repair rounds**", "a security-class finding or an unresolved critical one",
@@ -2482,17 +2482,16 @@ def one_job_check_rules() -> None:
 # D22: what comes after topping out, the same in every mode (README "Topping out", METHOD.md section 11b)
 ONE_JOB_NEXT = (
     '<div class="ojnext"><span class="ojnl" aria-hidden="true">Then</span>'
-    '<div class="ojb2 ojrep" data-b="0"><span class="ojtag i">It</span><b>The report</b>'
-    '<p>The board is frozen as the record: what was built, what&rsquo;s carried over, and three to five next <em>heads</em>. '
-    'A head is the next goal: what a new board will build toward.</p>'
-    '<ul class="ojheads" aria-label="Candidate next heads">' + "".join(f'<li style="--h:{k}"{" class=\"pick\"" if k == 1 else ""}>Head {k + 1}</li>' for k in range(4)) + '</ul></div>'
+    '<div class="ojb2 ojrep" data-b="0"><span class="ojtag i">AI</span><b>The report</b>'
+    '<p>When the whole goal is built: a record of what was done and what&rsquo;s left, plus three to five ideas for the <em>next goal</em>.</p>'
+    '<ul class="ojheads" aria-label="Ideas for the next goal">' + "".join(f'<li style="--h:{k}"{" class=\"pick\"" if k == 1 else ""}>Idea {k + 1}</li>' for k in range(4)) + '</ul></div>'
     '<div class="ojb2 ojpick" data-b="1"><span class="ojtag y">You</span><b>You pick one</b>'
-    '<p>Whenever you&rsquo;re ready. In every mode: an autonomous run or a night shift tops out and stops; the next head is always yours.</p></div>'
-    '<div class="ojb2 ojnew" data-b="2"><span class="ojtag i">It</span><b>A new board</b>'
+    '<p>Whenever you&rsquo;re ready. In every mode, the AI stops when the goal is built and never picks the next one itself.</p></div>'
+    '<div class="ojb2 ojnew" data-b="2"><span class="ojtag i">AI</span><b>A new board</b>'
     '<svg viewBox="0 0 160 34" aria-hidden="true"><path d="M2 30h86" stroke="currentColor" stroke-width="3"/>'
     '<rect class="ojplot" x="12" y="6" width="64" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/>'
     '<text x="96" y="26" font-family="Martian Mono,monospace" font-weight="700" font-size="10" fill="currentColor">floor 0</text></svg>'
-    '<p>An empty plot for the new head, and the job loop starts again.</p></div></div>')
+    '<p>A fresh board for the new goal, and the job loop starts again.</p></div></div>')
 
 
 def one_job_steps() -> list:
@@ -2560,20 +2559,20 @@ def one_job_html() -> str:
            '<path d="M98 50V20" stroke="currentColor" stroke-width="2.6"/><path d="M98 21h18l-5 6 5 6H98Z" fill="#E0442F" stroke="#101316" stroke-width="2"/></g>'
            '<g class="ojfz" transform="rotate(-8 60 140)"><rect x="18" y="131" width="84" height="18" fill="var(--panel)" stroke="#E0442F" stroke-width="2.2"/>'
            '<text x="60" y="143.5" text-anchor="middle" font-family="Martian Mono,monospace" font-weight="800" font-size="7.6" fill="#E0442F" textLength="76" lengthAdjust="spacingAndGlyphs">FROZEN: THE RECORD</text></g></svg>'
-           '<p class="ojcap"><b>Topped out</b><span>Each merged job adds a floor; the last one gets the beam and the flag.</span></p></div>')
+           '<p class="ojcap"><b>Topped out</b><span>Each merged job adds a floor. When the whole goal is built, the building tops out.</span></p></div>')
     modes = "".join(f'<input type="radio" name="ojm" id="ojm-{m}" value="{m}"{" checked" if m == "you" else ""}><label for="ojm-{m}"><b>{t}</b><small>{c}</small></label>'
                     for m, t, c in (("you", "With you", "You give each word: go, open the PR, merge."),
                                     ("auto", "Autonomous run", "One /goal line takes one job to the merge."),
                                     ("night", "Night shift", "One line before bed: several jobs in a row.")))
     lim = (f'<div class="ojlim mvb m-auto m-night"><p>{ONE_JOB_STOPS} After a stop it goes on only on your word.</p><p>{ONE_JOB_NEVER}</p>'
            f'<p class="mvb m-night">{ONE_JOB_NIGHT} <a href="#shift">The night shift, in full &darr;</a></p></div>')
-    return ('<div class="oj" id="oj"><div class="ojk"><b>Watch one job</b><span>Your part, and its part, from ticket to merge.</span></div>'
+    return ('<div class="oj" id="oj"><div class="ojk"><b>Watch one job</b><span>Your part, and the AI&rsquo;s part, from ticket to merge.</span></div>'
             f'<div class="ojways"><span class="ojwl" id="ojwl">Three ways to run a job:</span><div class="ojmode" role="radiogroup" aria-labelledby="ojwl">{modes}</div></div>'
-            '<div class="ojg"><div class="ojlab" aria-hidden="true"><span></span><span class="y">You</span><span class="i">It</span></div>'
+            '<div class="ojg"><div class="ojlab" aria-hidden="true"><span></span><span class="y">You</span><span class="i">The AI</span></div>'
             + "".join(cols) + bld + ONE_JOB_NEXT + '</div>'
             '<div class="ojfoot"><div class="ojlim ojyou mvb m-you"><p><b>Every word is yours.</b> Nothing passes <q>go</q>, <q>open the PR</q>, <q>greploop</q> or <q>merge</q> without you, and the next ticket waits for your yes.</p>'
             '<p><b>It moves on without you only on an explicit grant:</b> an autonomous run for one job, or a night shift. Any other standing goal grants nothing.</p>'
-            '<p><b>It asks you only where a step is yours:</b> the acts <code>RULES.md</code> lists, a deferral, the next ticket. Technical choices it makes on evidence, and writes down what it turned down.</p></div>'
+            '<p><b>It asks you only where a step is yours:</b> the ones listed in <code>RULES.md</code>, putting something off, the next ticket. Technical choices it makes itself, on evidence, and writes down what it turned down.</p></div>'
             + lim + '</div></div>'
             + ONE_JOB_JS)
 
@@ -2966,7 +2965,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojnew svg{display:block;width:160px;height:34px;margin:2px 0 6px;color:var(--ink)}
 .ojfz{transform-box:fill-box}
 .oj.play .ojfz{opacity:0;transition:opacity .3s}.oj.play.topped .ojfz{opacity:1}
-.oj.play .ojb2{opacity:.45}.oj.play .ojb2.hit{opacity:1}
+.oj.play .ojb2{opacity:.75}.oj.play .ojb2.hit{opacity:1}
 .oj.play .ojb2.now{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
 .oj.play .ojheads li{opacity:.25;transition:opacity .3s calc(var(--h)*.25s)}.oj.play .ojrep.hit .ojheads li{opacity:1}
 .oj.play .ojheads li.pick{background:var(--panel);color:var(--ink);border-color:var(--ink);box-shadow:none;transition:opacity .3s,background .2s,box-shadow .2s}
