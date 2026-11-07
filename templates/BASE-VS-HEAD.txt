@@ -29,13 +29,28 @@ RUN 1 - THE TESTS THAT DEPEND ON WHAT CHANGED
      this job adds isn't there, and naming it makes the base run a collection error):
        for f in <set>; do git -C "$BASE" cat-file -e HEAD:"$f" 2>/dev/null && echo "$f"; done
      The head set is the whole set. Paste both counts.
-1.2  Run that set at base and at head, same flags<, once per database arm if the repo has them>:
-       ( cd "$BASE" && run_tests "$B/base.txt" "$B/base.exit" <base set> )
+1.2  SAVED BASE. The base doesn't move inside a job, so each base run is
+     done once and reused while nothing it depends on has changed. Your saved
+     base is your own: the builder never reads the foreman's, the foreman
+     never reads the builder's.
+       S="$DAY/bvh-<ticket>-saved-base-<builder|foreman>"; mkdir -p "$S"
+     The key of a base run is the base tree, its exact file list, the
+     adapter and the installed environment<, and the database arm>:
+       { git -C "$BASE" rev-parse 'HEAD^{tree}'; printf '%s\n' <base set> | sort; sha256sum "$REC/test-adapter.sh" | cut -d' ' -f1; ( cd "$BASE" && <environment listing, e.g. python -m pip freeze> ) | sha256sum | cut -d' ' -f1; } | sha256sum | cut -d' ' -f1 > "$B/base.key"
+       The same with <suite paths> in place of <base set>, into "$B/base-wide.key".
+     Then:
+       for r in base base-wide; do if cmp -s "$B/$r.key" "$S/$r.key" && [ -f "$S/$r.txt" ] && [ -f "$S/$r.exit" ]; then cp "$S/$r.txt" "$S/$r.exit" "$B/" && echo "$r REUSED"; else echo "$r RUN"; fi; done
+     A changed key (the target moved, the set grew, a dependency changed)
+     means RUN. Never edit a key or a saved file by hand.
+1.3  Run that set at head, and at base only if 1.2 said "base RUN", same flags<, once per database arm if the repo has them>:
        ( cd "$WT"   && run_tests "$B/head.txt" "$B/head.exit" <set> )
+       ( cd "$BASE" && run_tests "$B/base.txt" "$B/base.exit" <base set> )
      Each run_tests line is its own tool call, never chained: a call past the tool limit loses the exit file.
-1.3  WIDENED: the same for the whole affected suites, into base-wide.* and head-wide.* (again one call per run):
+1.4  WIDENED: the same for the whole affected suites, into base-wide.* and head-wide.* (again one call per run; base-wide only if 1.2 said "base-wide RUN"):
        <suite paths>
-1.4  First ran_ok on every output (a run that collected nothing or crashed is a
+     Save each base run you made, once ran_ok passes on it (1.5):
+       cp "$B/<r>.txt" "$B/<r>.exit" "$B/<r>.key" "$S/"
+1.5  First ran_ok on every output (a run that collected nothing or crashed is a
      PROCESS FAILURE: report it, don't compare it):
        for r in base head base-wide head-wide; do ran_ok "$B/$r.txt" "$B/$r.exit" && echo "$r ok" || echo "$r PROCESS FAILURE"; done
      Then compare failing-test IDs:
@@ -50,7 +65,7 @@ RUN 2 - THE TESTS THAT CANNOT NORMALLY BE COLLECTED <omit if the repo has none>
      (Python example: a stub module first on PYTHONPATH replacing a
      platform-only import such as fcntl on Windows):
        <stubbed run command> <module>
-     Compare as in 1.4.
+     Compare as in 1.5.
      If none failed to load, write "run 2 empty" with the command that shows it.
 
 IF red_at_head_only IS NOT EMPTY: do NOT re-run anything, do NOT
@@ -60,7 +75,8 @@ test, and STOP. The foreman characterises it.
 Every output is already under $B (base, head, the exit files, red_at_head_only.txt).
 
 REPORT - ONE FILE, LF ENDINGS: $DAY/JOB-<N>-WORK-ORDER-<m>-REPORT.md
-  1. The base-equality check. 2. Run 1: the set, COUNT, both summaries,
+  1. The base-equality check. 2. Run 1: the set, COUNT, each base run
+  REUSED or RUN with its key, both summaries,
   the widened summaries, each RAN_OK result and exit code, the comm
   command and red_at_head_only (quoted, or "empty"). 3. Run 2 as above.
   4. <Database roles restored after each arm, if the repo has arms.> 5. CR-byte count (0). 6. Final line: "WORK ORDER <m> DONE" or
