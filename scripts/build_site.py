@@ -2860,8 +2860,11 @@ def enforced_html() -> str:
     lis = []
     for promise, by, rest, gap in enforced_rows():
         kind = "ins" if by.startswith("instruction") else "chk"
-        lis.append(f'<li class="{kind}"><b>{inline(promise)}</b><span class="eby">{esc(by)}</span>'
-                   f'<details><summary>What it doesn&rsquo;t stop</summary><p>{inline(rest[:1].upper() + rest[1:]) + " " if rest else ""}</p><p class="egap">{inline(gap[:1].upper() + gap[1:])}.</p></details></li>')
+        # the README cell is "**by** rest": a rest that opens with a bracket carries on the same sentence
+        tail = rest.rstrip(".")
+        how = inline(cap(by)) + ((" " + inline(tail) if tail[:1] in "(," else ". " + inline(tail[:1].upper() + tail[1:])) if tail else "") + "."
+        lis.append(f'<li class="{kind}"><details><summary><b>{inline(promise)}</b><span class="eby">{"Instruction" if kind == "ins" else "Enforced"}</span><i aria-hidden="true"></i></summary>'
+                   f'<p><span class="elb">How</span>{how}</p><p class="egap"><span class="elb">What it doesn&rsquo;t stop</span>{inline(gap[:1].upper() + gap[1:])}.</p></details></li>')
     return ('<div class="enf"><h3>Enforced, or only instructed <small>from the README</small></h3>'
             '<p>Most of the method is instructions the agents follow; a few checks are scripts that refuse.</p>'
             f'<ul>{"".join(lis)}</ul></div>')
@@ -3038,17 +3041,22 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .enf h3 small{margin-left:8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:none;color:var(--ink-3)}
 .enf>p{margin:0 0 12px;color:var(--ink-2);font-size:14.5px}
 .enf ul{list-style:none;margin:0;padding:0;border:2px solid var(--ink)}
-.enf li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.enf li{border-bottom:1px solid var(--line);background:var(--panel)}
+.enf summary{display:grid;grid-template-columns:minmax(0,1fr) auto 16px;gap:6px 14px;align-items:center;padding:11px 14px;cursor:pointer;list-style:none}
+.enf summary::-webkit-details-marker{display:none}
+.enf summary:hover{background:var(--panel-2)}
+.enf summary i{font:700 16px/1 "Martian Mono",ui-monospace,monospace;font-style:normal;color:var(--ink-3);text-align:center}
+.enf summary i::before{content:"+"}.enf details[open] summary i::before{content:"\2212"}
+.enf .elb{display:block;margin-bottom:2px;font:700 9.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.enf details>p{margin:0 14px 10px}
 .enf li:last-child{border-bottom:0}
-.enf li>b{font-weight:600;font-size:14.5px;line-height:1.4}
+.enf summary>b{font-weight:600;font-size:14.5px;line-height:1.4}
 .enf .eby{justify-self:end;padding:5px 8px;font:700 10.5px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid #101316;text-align:right}
 .enf li.chk .eby{background:#1E7B4A;color:#F4F4EF}
 .enf li.ins .eby{background:repeating-linear-gradient(-45deg,#FBB401 0 6px,#F4D47A 6px 12px);color:#101316}
-.enf details{grid-column:1/-1}
-.enf summary{cursor:pointer;font:600 11px/1.4 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;color:var(--ink-3)}
-.enf details p{margin:6px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+.enf details p{font-size:13.5px;line-height:1.5;color:var(--ink-2)}
 .enf details p.egap{padding-left:10px;border-left:3px solid #C42B1C}
-@media (max-width:560px){.enf li{grid-template-columns:1fr}.enf .eby{justify-self:start;text-align:left}}
+@media (max-width:560px){.enf summary{grid-template-columns:minmax(0,1fr) 16px}.enf .eby{grid-row:2;justify-self:start;text-align:left}}
 
 /* the add-on's kit: needs, installed for you, optional; LangChain's logos, light or dark file by theme, with clear space */
 .addon .adkit{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr) minmax(0,1fr);border-bottom:2px solid var(--ink)}
@@ -3273,7 +3281,7 @@ FRONT_CSS = r"""
 .pil::before{left:7px}.pil::after{right:7px}
 .pil .sgn{background:#F4F4EF;border-bottom:3px solid var(--ink)}
 .pic{display:block;width:100%;height:auto;aspect-ratio:200/130}
-.pil .cap{font:800 19px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.03em;padding:9px 12px 8px;text-align:center}
+.pil .cap{height:14px}
 .s-blue .cap{background:#1F5FA8;color:#fff}.s-yellow .cap{background:#FBB401;color:#101316}
 .s-night .cap{background:#14233B;color:#FBB401}.s-green .cap{background:#1E7B4A;color:#fff}
 .pil .pt{padding:14px 16px 18px}
@@ -5624,7 +5632,7 @@ class Site:
         # 01 why Topping Out: four pillars
         out.append(sec(1, "pillars", "Why Topping Out", "Named for the day a building's last beam goes on. Here, it's the day every job on a board is done: the project tops out, and the next one starts from it.") + '<div class="hoard" id="hoard"><div class="haz" role="presentation"></div><div class="pillars">' + "".join(
             f'<article class="pil s-{kind}"><div class="sgn"><svg class="pic" viewBox="0 0 200 130" role="img" aria-label="{esc(sign)}">{svg}</svg>'
-            f'<div class="cap">{esc(sign)}</div></div>'
+            '<div class="cap" aria-hidden="true"></div></div>'
             f'<div class="pt"><h3>{esc(ti)}</h3><p class="pw">{inline(w)}</p></div></article>'
             for (ti, w), (kind, sign, svg) in zip(F["pillars"], SIGNS)) + "</div></div>"
             + '<script>(function(){var h=document.getElementById("hoard");if(!h)return;if(!window.IntersectionObserver){h.classList.add("live");return}'

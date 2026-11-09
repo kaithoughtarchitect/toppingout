@@ -170,17 +170,22 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .enf h3 small{margin-left:8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:none;color:var(--ink-3)}
 .enf>p{margin:0 0 12px;color:var(--ink-2);font-size:14.5px}
 .enf ul{list-style:none;margin:0;padding:0;border:2px solid var(--ink)}
-.enf li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.enf li{border-bottom:1px solid var(--line);background:var(--panel)}
+.enf summary{display:grid;grid-template-columns:minmax(0,1fr) auto 16px;gap:6px 14px;align-items:center;padding:11px 14px;cursor:pointer;list-style:none}
+.enf summary::-webkit-details-marker{display:none}
+.enf summary:hover{background:var(--panel-2)}
+.enf summary i{font:700 16px/1 "Martian Mono",ui-monospace,monospace;font-style:normal;color:var(--ink-3);text-align:center}
+.enf summary i::before{content:"+"}.enf details[open] summary i::before{content:"\2212"}
+.enf .elb{display:block;margin-bottom:2px;font:700 9.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.enf details>p{margin:0 14px 10px}
 .enf li:last-child{border-bottom:0}
-.enf li>b{font-weight:600;font-size:14.5px;line-height:1.4}
+.enf summary>b{font-weight:600;font-size:14.5px;line-height:1.4}
 .enf .eby{justify-self:end;padding:5px 8px;font:700 10.5px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid #101316;text-align:right}
 .enf li.chk .eby{background:#1E7B4A;color:#F4F4EF}
 .enf li.ins .eby{background:repeating-linear-gradient(-45deg,#FBB401 0 6px,#F4D47A 6px 12px);color:#101316}
-.enf details{grid-column:1/-1}
-.enf summary{cursor:pointer;font:600 11px/1.4 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;color:var(--ink-3)}
-.enf details p{margin:6px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+.enf details p{font-size:13.5px;line-height:1.5;color:var(--ink-2)}
 .enf details p.egap{padding-left:10px;border-left:3px solid #C42B1C}
-@media (max-width:560px){.enf li{grid-template-columns:1fr}.enf .eby{justify-self:start;text-align:left}}
+@media (max-width:560px){.enf summary{grid-template-columns:minmax(0,1fr) 16px}.enf .eby{grid-row:2;justify-self:start;text-align:left}}
 
 /* the add-on's kit: needs, installed for you, optional; LangChain's logos, light or dark file by theme, with clear space */
 .addon .adkit{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr) minmax(0,1fr);border-bottom:2px solid var(--ink)}
