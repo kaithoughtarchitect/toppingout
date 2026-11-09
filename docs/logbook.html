@@ -367,6 +367,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .idea1 em{font-style:normal;color:var(--brand)}
 .dn{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:2px solid var(--line)}
 .dn>div{padding:14px 18px}.dn>div+div{border-left:2px solid var(--line);background:rgba(196,43,28,.06)}
+.dn:has(.no li:only-child){grid-template-columns:minmax(0,1fr)}.dn:has(.no li:only-child)>div+div{border-left:0;border-top:2px solid var(--line)}
 .dn h3{margin:0 0 10px;font:700 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase}
 .dn .no h3{color:#C42B1C}
 :root[data-theme="dark"] .dn .no h3{color:#FF7A6E}

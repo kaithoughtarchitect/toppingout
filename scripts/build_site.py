@@ -2193,6 +2193,7 @@ ROLES_CSS = r"""
 .idea1 em{font-style:normal;color:var(--brand)}
 .dn{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:2px solid var(--line)}
 .dn>div{padding:14px 18px}.dn>div+div{border-left:2px solid var(--line);background:rgba(196,43,28,.06)}
+.dn:has(.no li:only-child){grid-template-columns:minmax(0,1fr)}.dn:has(.no li:only-child)>div+div{border-left:0;border-top:2px solid var(--line)}
 .dn h3{margin:0 0 10px;font:700 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase}
 .dn .no h3{color:#C42B1C}
 :root[data-theme="dark"] .dn .no h3{color:#FF7A6E}
@@ -5030,7 +5031,9 @@ class Site:
             i = [o[2] for o in mine].index(pid)
             first = i == 0
             head = (idea({"f": "F", "b": "B"}[key]) if key != "y" else "You <em>decide.</em>") if first else esc(short)
-            label = f"{title} · job description" if first else (f"{title} · your part" if key == "y" else f"{title} · playbook" + (f" · {esc(kicker)}" if kicker else ""))
+            lead0 = next((e[1] for e in PLAIN.get(pid, []) if e[0] == "p"), "")
+            said = kicker and re.sub(r"[^a-z0-9 ]", "", lead0.lower()).startswith(re.sub(r"[^a-z0-9 ]", "", kicker.lower()))
+            label = f"{title} · job description" if first else (f"{title} · your part" if key == "y" else f"{title} · playbook" + (f" · {esc(kicker)}" if kicker and not said else ""))
             prev_ = nav_btn(j - 1, True) if j > 0 else "<span></span>"
             next_ = nav_btn(j + 1, False) if j + 1 < len(order) else "<span></span>"
             pages[key].append(f'<section class="spage" id="{pid}"{"" if first else " hidden"}><div class="sbar"><span>{label}</span>'
