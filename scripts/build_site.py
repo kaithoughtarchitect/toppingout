@@ -2133,14 +2133,14 @@ def reader_html(blocks):
     return "".join(out), total
 
 REQ_JS = r"""<script>(function(){var r=document.getElementById("req"),pass=document.getElementById("pass");if(!r||!pass)return;r.classList.add("js");
-var kits=[].slice.call(r.querySelectorAll(".kit")),keys=[],K="to-kit",have={};kits.forEach(function(k){if(keys.indexOf(k.dataset.k)<0)keys.push(k.dataset.k)});
+var kits=[].slice.call(r.querySelectorAll(".kit")),keys=[],K="to-kit",have={};kits.forEach(function(k){if(!k.dataset.opt&&keys.indexOf(k.dataset.k)<0)keys.push(k.dataset.k)});
 try{have=JSON.parse(localStorage.getItem(K)||"{}")||{}}catch(e){have={}}
 var n=pass.querySelector(".pn"),bar=pass.querySelector(".pbar i"),msg=pass.querySelector(".pmsg"),was=-1;
 function save(){try{localStorage.setItem(K,JSON.stringify(have))}catch(e){}}
 function paint(){var got=keys.filter(function(k){return have[k]}).length,all=got===keys.length;
  kits.forEach(function(k){var on=k.dataset.k==="builder"?have.builder===k.querySelector("b").textContent:!!have[k.dataset.k];k.classList.toggle("on",on);k.querySelector("button").setAttribute("aria-pressed",on?"true":"false")});
  n.textContent=got;bar.style.width=(100*got/keys.length)+"%";
- msg.textContent=all?"Every piece of kit is on site.":got?(keys.length-got)+" to go.":"Tap each piece of kit you already have.";
+ msg.textContent=all?"Everything the method needs is on site.":got?(keys.length-got)+" to go.":"Tap each piece of kit you already have.";
  pass.classList.toggle("done",all);if(all&&was>=0&&was<keys.length)pass.classList.add("fresh");was=got}
 kits.forEach(function(k){k.querySelector("button").addEventListener("click",function(){var key=k.dataset.k,name=k.querySelector("b").textContent;
  if(key==="builder")have.builder=have.builder===name?"":name;else have[key]=!have[key];save();paint()})});
@@ -2148,6 +2148,12 @@ pass.querySelector(".preset").addEventListener("click",function(){have={};save()
 paint()})()</script>"""
 
 REQ_CSS = r"""
+.kit0{list-style:none}.kit0 .kb0{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;align-items:center;padding:10px 12px;border:2px dashed var(--line);opacity:.9}
+.kit0 .kb0 .lg{grid-row:1/span 3}.kit0 .kb0 b{font:800 18px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.kit0 .kb0 .role{font:600 9.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.kit0 .kb0 p{margin:0;font-size:13px;color:var(--ink-2)}
+.lvl0{border-style:dashed!important}
+.kit.opt .role{color:var(--ink-3)}
 .rq{padding-bottom:40px}
 .rq .rhead2{padding-bottom:6px}
 .rq h2{margin:34px 0 6px;font:800 30px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;display:flex;align-items:center;gap:12px}
@@ -2218,7 +2224,7 @@ REQ_CSS = r"""
 .pass.done .pstamp{opacity:1;transform:rotate(-12deg) scale(1)}
 .pass.fresh .pstamp{animation:stamp .45s cubic-bezier(.3,1.5,.5,1)}
 @keyframes stamp{0%{transform:rotate(-12deg) scale(2.4);opacity:0}100%{transform:rotate(-12deg) scale(1);opacity:1}}
-.pass .pgo{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #9AA29C}.pass.done .pgo{display:block}
+.pass .pgo{display:block;margin-top:12px;padding-top:12px;border-top:1px dashed #9AA29C}.pass.done .pgo{display:block}
 .pass .pgo p{margin:0 0 8px;font-size:13px;font-weight:600}.pass .pgo .pthen{margin:10px 0 6px;font-weight:500}
 .pass .pgo .cmdline{display:block;max-width:100%}.pass .pgo .cmdline code{display:block;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.45}
 .pass .preset{margin-top:12px;background:none;border:0;padding:0;font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#5B6368;cursor:pointer;text-decoration:underline}
@@ -5371,26 +5377,35 @@ class Site:
 
     def requirements(self) -> str:
         """The requirements as a site induction: the kit sits in four levels (the ground, the crew, the site, the paperwork),
-        you tap what you have, and your pass fills; a full pass is cleared for site and hands you the two install lines.
+        you tap what you have, and your pass fills; a full pass is stamped cleared for site. The install lines are always on the pass.
         Without JavaScript it is a plain list of the kit."""
         F = FRONT
         by = {r[2]: r for r in F["req_core"]}
-        levels = [("ground", "The ground", "The machine and its shells.", ["Windows 11", "Git Bash", "PowerShell"]),
-                  ("crew", "The crew", "Who plans and who builds.", ["Claude Code", "Pi"]),
-                  ("site", "The site", "Where they work, and who checks it.", ["Orca", "Greptile", "OpenRouter"]),
-                  ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"])]
+        levels = [("ground", "Tested on", "Windows 11, with Git Bash and PowerShell. macOS and Linux are expected to work, not yet verified. Coming: a cloud option.",
+                   ["Windows 11", "Git Bash", "PowerShell"]),
+                  ("crew", "The crew", "Who plans and who builds.", ["Claude Code"]),
+                  ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"]),
+                  ("site", "Optional", "Useful, not needed. Tap them if you have them; they don't count.", ["Pi", "Orca", "Greptile", "OpenRouter"])]
+        # what each extra adds (README and SETUP.md: Orca and Pi carry the pointers, the night shift needs Orca; Greptile is the greploop rounds)
+        opt_why = {"Pi": "The builder's agent I use, in the pane beside the foreman. Any agent that reads files, runs a shell and writes a report will do.",
+                   "Orca": "Foreman and builder side by side. Without it you carry one-line pointers; the night shift needs it.",
+                   "Greptile": "Up to three review rounds per PR, when you say greploop.",
+                   "OpenRouter": "Voice, and the councils. Paid calls only when you allow them."}
         assert sorted(n for *_, ns in levels for n in ns) == sorted(by), "build_site: every requirement sits in one level"
 
         mark = brand_mark
 
-        def tile(row, key):
+        def tile(row, key, lid=""):
             m, colour, name, role, why = row
-            return (f'<li class="kit" data-k="{esc(key)}"><button type="button" aria-pressed="false">{mark(m, colour)}<b>{esc(name)}</b>'
-                    f'<span class="role">{esc(role)}</span><p>{inline(why)}</p><i class="got" aria-hidden="true">Got it</i></button></li>')
+            if lid == "ground":  # the tested machine: shown, not tapped
+                return (f'<li class="kit0"><div class="kb0">{mark(m, colour)}<b>{esc(name)}</b><span class="role">{esc(role)}</span><p>{inline(why)}</p></div></li>')
+            opt = lid == "site"
+            return (f'<li class="kit{" opt" if opt else ""}" data-k="{esc(key)}"{" data-opt=1" if opt else ""}><button type="button" aria-pressed="false">{mark(m, colour)}<b>{esc(name)}</b>'
+                    f'<span class="role">{esc(role)}{" &middot; optional" if opt else ""}</span><p>{inline(opt_why[name] if opt else why)}</p><i class="got" aria-hidden="true">Got it</i></button></li>')
 
         blocks = []
         for lid, title, sub, names in levels:
-            rows = "".join(tile(by[n], n) for n in names)
+            rows = "".join(tile(by[n], n, lid) for n in names)
             extra = ""
             if lid == "crew":
                 builders = "".join(tile(b, "builder") for b in F["req_builders"])
@@ -5398,23 +5413,23 @@ class Site:
                 extra = ('<div class="bpick"><h4>And one builder <small>pick one</small></h4>'
                          '<p>It only builds what the foreman settled, so a cheap model will do. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra.</p>'
                          f'<ul class="kits">{builders}</ul></div>')
-            blocks.append(f'<section class="lvl" id="{lid}"><div class="lvh"><span class="lvn">Level {len(blocks) + 1:02d}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
+            lvn = "Record" if lid == "ground" else ("Extras" if lid == "site" else f"Level {len(blocks):02d}")
+            blocks.append(f'<section class="lvl{" lvl0" if lid == "ground" else ""}" id="{lid}"><div class="lvh"><span class="lvn">{lvn}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
                           f'<ul class="kits">{rows}</ul>{extra}</section>')
-        total = len(by) + 1
+        total = sum(len(ns) for lid, _t, _s, ns in levels if lid in ("crew", "paper")) + 1  # + the one builder
         repo = INSTALL["repo"]
         install = cmd(INSTALL["steps"][0][2]) + '<p class="pthen">Then, in Claude Code, in your repo:</p>' + cmd(INSTALL["steps"][1][2])
         pass_card = (f'<aside class="pass" id="pass" aria-live="polite"><div class="clip" aria-hidden="true"></div><div class="ph">Site induction <span>Topping Out</span></div>'
                      f'<div class="pb"><div class="pname">Kit check</div><div class="pcount"><b class="pn">0</b> / {total}</div>'
                      f'<div class="pbar" aria-hidden="true"><i></i></div><p class="pmsg">Tap each piece of kit you already have.</p>'
                      '<div class="pstamp" aria-hidden="true">Cleared<br>for site</div>'
-                     f'<div class="pgo"><p>You&rsquo;re cleared. Two lines and you&rsquo;re on site:</p>{install}</div>'
+                     f'<div class="pgo"><p>Two lines and you&rsquo;re on site:</p>{install}</div>'
                      '<button type="button" class="preset">Start again</button></div></aside>')
         body = (f'<main id="req" class="rq"><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("requirements.html")} · Requirements</span>'
                 f'<h1>Requirements</h1><p class="lede">{inline(F["install_lede"])}</p></header>'
                 '<p class="intro"><b>Site induction.</b> Tap the kit you already have.</p>'
                 f'<div class="ind"><div class="levels">{"".join(blocks)}</div>{pass_card}</div>'
-                '<div class="two"><div class="rno rtest"><h3>Tested on</h3><p><b>Windows 11, with Claude Code as the foreman.</b> macOS and Linux are expected to work, not yet verified.</p><p class="rcloud"><b>Coming</b>A cloud option.</p></div>'
-                '<div class="ryours"><h3>Make it yours</h3><p>It&rsquo;s all plain text. Fork it, swap any part, and it&rsquo;s your setup.</p>'
+                '<div class="two"><div class="ryours"><h3>Make it yours</h3><p>It&rsquo;s all plain text. Fork it, swap any part, and it&rsquo;s your setup.</p>'
                 f'<a class="rfork" href="https://github.com/{esc(repo)}/fork">Fork it on GitHub &#8599;</a></div></div>'
                 f'<section id="addon">{addon_html(parts=True)}</section>'
                 '<div class="wn" id="windows"><h3>Windows notes</h3><ul>'
@@ -5424,7 +5439,7 @@ class Site:
                 '</div></main>' + REQ_JS + self.foot())
         return self.page("Requirements · Topping Out", "The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.",
                          ROLES_CSS + REQ_CSS, "requirements.html", body,
-                         subs=[("#ground", "The ground"), ("#crew", "The crew"), ("#site", "The site"), ("#paper", "The paperwork"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
+                         subs=[("#ground", "Tested on"), ("#crew", "The crew"), ("#paper", "The paperwork"), ("#site", "Optional"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
 
     def logbook(self) -> str:
         """The Logbook on one screen, like the other sheets: the three card types (sections read from their templates), a card's
