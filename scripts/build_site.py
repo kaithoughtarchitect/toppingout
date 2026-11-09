@@ -3003,6 +3003,9 @@ pre.cmd code{background:none;padding:0;font:inherit;color:inherit;overflow-wrap:
 .tblock .tt .mark{height:22px;width:auto;flex:none}
 .tblock .tt span b{display:inline;margin:0;font:inherit;color:inherit;letter-spacing:inherit}.tblock .tt span b.out{color:var(--brand)}
 .tblock .tt{display:flex;align-items:flex-end;gap:8px;grid-column:1/-1;border-right:0;font:800 18px/1 "Big Shoulders Display","Arial Narrow",sans-serif;letter-spacing:.06em;color:var(--ink)}
+/* the title block: only what nothing else on the page gives, the theme and who drew it */
+.tblock{display:block}
+.tblock .ttog{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-right:0}
 .theme-toggle{font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;padding:7px 10px;border:1px solid var(--line);border-radius:0;background:var(--ground);color:var(--ink);cursor:pointer}
 .theme-toggle:hover{border-color:var(--ink)}
 .mbar{display:none}
@@ -4939,8 +4942,7 @@ class Site:
         plan = (f'<nav class="plan" aria-label="Site plan"><div class="ph"><a class="brand" href="{prefix}index.html">{self.mark}<span class="wm" role="img" aria-label="Topping Out"><b aria-hidden="true">Topping</b><b class="out" aria-hidden="true">Out</b></span></a>'
                 f'<button type="button" class="planx" data-plan aria-expanded="false">Close</button></div><div class="haz" role="presentation"></div>'
                 f'<div class="pl">Site plan</div><ol>{"".join(items)}</ol>'
-                f'<div class="tblock"><div class="tt">{self.mark}<span role="img" aria-label="Topping Out"><b aria-hidden="true">Topping</b> <b class="out" aria-hidden="true">Out</b></span></div><div>Sheet<b>{f"{n:02d} of {len(SHEETS):02d}" if n else "About"}</b></div><div>Licence<b>MIT</b></div>'
-                f'<div>{n_skill} skills<b>{n_agent} agents</b></div><div><button type="button" class="theme-toggle" data-theme-toggle>Light</button></div>'
+                '<div class="tblock"><div class="ttog"><span>Theme</span><button type="button" class="theme-toggle" data-theme-toggle>Light</button></div>'
                 f'<a class="drawn" href="{prefix}about.html"><img src="{prefix}assets/brand/kai-badge-160.png" alt="" width="34" height="34"><span><small>Drawn by</small><b>Kai Thought Architect</b></span><em>About me &rarr;</em></a></div></nav>')
         mbar = (f'<header class="mbar"><a class="brand" href="{prefix}index.html">{self.mark}<span class="wm" role="img" aria-label="Topping Out"><b aria-hidden="true">Topping</b><b class="out" aria-hidden="true">Out</b></span></a>'
                 f'<span class="where">{esc(here)}</span><button type="button" data-plan aria-expanded="false">Site plan</button></header>')
