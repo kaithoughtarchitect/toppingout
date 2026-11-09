@@ -2592,7 +2592,7 @@ FRONT = {
     # the sheets, each with its preview image (docs/assets/see/<preview>-<light|dark>.webp, made by the site tools' previews.mjs)
     # and the page it was taken from, so the build can say when a preview is older than its page
     "see": [
-        ("playbooks.html", "Who does what", "Three roles: what each one does, and never does.", "", "playbooks", "raw/foreman-playbook.html"),
+        ("playbooks.html", "Who does what", "Three roles: what each one does, and never does.", "", "playbooks", "playbooks.html"),
         ("route.html", "Order of works", "Every step, who does it, where you say OK.", "", "route", "route.html"),
         ("repo.html", "Your repo", "Every folder it adds, and what writes it.", "", "repo", "repo.html"),
         ("logbook.html", "Logbook", "Every lesson a job learned, kept as a card.", "", "logbook", "logbook.html"),
