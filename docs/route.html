@@ -502,6 +502,8 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .spage.ovw{max-width:none}
 .ovw .lead{max-width:760px}
 @media (min-width:1001px) and (min-height:620px){[data-desk].js .wrap:has(.pane[data-role="overview"]:not([hidden])){height:auto}}
+/* the overview grows to its full height, so the wheel scrolls the page, not a reader with nothing to scroll */
+.pane[data-role="overview"] .reader{overscroll-behavior:auto}
 .olane{margin:18px 0 0;padding:12px;border:2px solid var(--ink);background:var(--panel)}
 .olane.loop{border-style:solid;border-left:8px solid var(--brand)}
 .olh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 10px}
