@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: memory, long-term memory, remember across sessions, cross-thread memory, persistent memory, AGENTS.md, MemoryMiddleware, memory=, /memories/, StoreBackend, per-user memory, user preferences, short-term memory, agent memory, store namespace
 read_when: Read when the agent should remember things across threads or users, when a UI seeds or reads memory files, when memory edits do not show up mid-thread, or when scoping memory per user or org.
-updated: 2026-10-21
+updated: 2026-11-09
 sources_hash: be966d58b687
 ---
 
@@ -23,7 +23,7 @@ One-line truth: memory in Deep Agents is just Markdown files the agent reads (in
 - The route prefix is stripped: `/memories/AGENTS.md` is stored as key `/AGENTS.md`; seeding with the prefixed key yields `(No memory loaded)`.
 - With a checkpointer memory loads once per thread and is frozen; agent or UI edits appear only in new threads.
 - Store value shape: `{content, encoding, created_at, modified_at}`; build with `create_file_data`.
-- Read-only shared memory: route `/policies/` and deny writes with `FilesystemPermission`; approval via `mode="interrupt"`.
+- Read-only shared memory: route `/policies/` and deny writes with `FilesystemPermission`; approval via `mode="interrupt"`. The deny misses hidden paths such as `/policies/.x`: [[permissions]], Gotchas.
 - Default and declarative subagents do not get `MemoryMiddleware` (only `mode="fork"`), but share the backend.
 - Memory files are injected in full every call; keep them short and move procedures to skills.
 
@@ -157,6 +157,8 @@ This relies on `_apply_custom_middleware` in `graph.py`: custom middleware whose
 from deepagents import FilesystemPermission
 permissions=[FilesystemPermission(operations=["write"], paths=["/policies/**"], mode="deny")]
 ```
+
+This deny misses hidden paths such as `/policies/.x` ([[permissions]], Gotchas): guard the write tools in code if the agent must never write.
 
 - Approval before writing: `FilesystemPermission(operations=["write"], paths=["/memories/**"], mode="interrupt")` (needs a checkpointer; `deepagents>=0.6.8`) or `interrupt_on={"edit_file": True, "write_file": True}`. See [[human-in-the-loop]].
 - Validation before commit (e.g. frontmatter, JSON schema): use backend policy hooks (see [[backends]]) and return the error to the model instead of writing.

@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: decision, which to use, choose, SDK vs dcode vs managed, StateBackend vs StoreBackend, sandbox vs interpreter, subagent vs skill, tradeoff, recommendation, default choice, when to use
 read_when: Read when choosing between products, backends, subagent kinds or memory options before recommending a design.
-updated: 2026-09-29
+updated: 2026-11-09
 ---
 
 # Decisions — which piece to reach for
@@ -58,7 +58,7 @@ Yes/no tests before recommending a design. Each row names the default and when t
 
 ## Worked case: your agent
 
-The full checked setup (model, backend, the allow-then-deny permissions, the Memory tab service, workspaces and threads, the leakage test plan) is on [[agent-setup]]. Edit history for memory: [[memory-history]]. Tests: [[testing]].
+The full checked setup (model, backend, the allow-then-deny permissions, the Memory tab service, workspaces and threads, the leakage test plan) is on [[agent-setup]]; for a read-only agent, read the hidden-path gotcha in [[permissions]]. Edit history for memory: [[memory-history]]. Tests: [[testing]].
 
 ## See also
 

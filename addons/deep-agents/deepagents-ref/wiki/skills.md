@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools
 read_when: Read when adding task-specific procedures the agent loads on demand, when skills load zero, a new or edited skill does not appear, or a subagent lacks skills.
-updated: 2026-10-21
+updated: 2026-11-09
 sources_hash: 6c4d247ae301
 ---
 
@@ -26,7 +26,7 @@ One-line truth: a skill is a directory with a `SKILL.md` (YAML frontmatter + ins
 - Pin a skill the user named: pass `pinned_skills=["name"]` in the input (`>=0.7.23`).
 - Skill-only tools: list them under `metadata.include_tools` and pass them as `SkillsMiddleware(tools=...)` (`>=0.7.22`); the model sees them only after reading the skill.
 - Running `scripts/*.py` needs a sandbox backend; StoreBackend skill files are not inside the sandbox.
-- Make a library read-only with `FilesystemPermission(operations=["write"], paths=["/skills/**"], mode="deny")`.
+- Make a library read-only with `FilesystemPermission(operations=["write"], paths=["/skills/**"], mode="deny")`; hidden paths under `/skills/` stay writable ([[permissions]], Gotchas).
 
 ## Layout and format
 
@@ -174,7 +174,7 @@ agent = create_deep_agent(
 
 ## Permissions
 
-- Read-only library: `FilesystemPermission(operations=["write"], paths=["/skills/**"], mode="deny")`.
+- Read-only library: `FilesystemPermission(operations=["write"], paths=["/skills/**"], mode="deny")` (hidden paths stay writable: [[permissions]], Gotchas).
 - Mixed: route `/skills/approved/` (org, denied) and `/skills/editable/` (user, writable), pass both in `skills=`; put specific rules before broad ones (first match wins).
 - Approve writes: `mode="interrupt"` (`deepagents>=0.6.8`, needs checkpointer) or `interrupt_on={"write_file": True, "edit_file": True}`. See [[permissions]], [[human-in-the-loop]].
 - Agents can author their own skills with `write_file` under writable paths; this is "progressive-disclosure memory". Pair with the reload pattern or the new skill only appears in the next thread.

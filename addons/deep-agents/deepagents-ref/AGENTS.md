@@ -64,7 +64,8 @@ Start at the **Symptom → cause** table in `wiki/anti.md`. Check the store and 
 - [ ] UI, seed or migration code uses the store key without the route prefix (`/memories/AGENTS.md` is stored as `/AGENTS.md`).
 - [ ] Nothing expects a memory edit to show up in the prompt mid-thread (unless `FreshMemory` is used).
 - [ ] Namespace ids are slugs, not display names: parts match `^[A-Za-z0-9\-_.@+:~]+$`.
-- [ ] A write deny on `/**` comes **after** an allow on `/memories/**`, or memory writes fail.
+- [ ] Writable memory: the allow on `/memories/**` comes **before** the write deny on `/**`, or memory writes fail.
+- [ ] Read-only agent: a write deny on `/**` is not enough, because `**` skips hidden path segments (`wiki/permissions.md`, Gotchas): also refuse `write_file`, `edit_file` and `delete` in a `wrap_tool_call` / `awrap_tool_call` middleware on the agent and on every subagent.
 - [ ] `permissions=` isn't relied on as a sandbox. It covers file tools only.
 - [ ] `write_todos` is only expected if `TodoListMiddleware()` was added.
 - [ ] Every middleware class used is imported (`ModelRetryMiddleware`, `TodoListMiddleware` come from `langchain.agents.middleware`).

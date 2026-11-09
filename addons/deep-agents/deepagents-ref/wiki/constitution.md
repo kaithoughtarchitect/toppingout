@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: rules, must know, mental model, core rules, gotchas, deepagents basics
 read_when: Read first, every time — before planning, building or reviewing anything that uses deepagents.
-updated: 2026-10-21
+updated: 2026-11-09
 ---
 
 # Constitution (one screen)
@@ -19,7 +19,7 @@ updated: 2026-10-21
 4. **`memory=` loads once per thread, then freezes in state.** Edits reach the prompt on a new thread; no reload knob — [[memory]].
 5. **Planning is opt-in since 0.7.0.** No `write_todos` unless you add `TodoListMiddleware()` (Codex profiles excepted). README and tutorials still say otherwise — [[planning]].
 6. **Subagents are isolated.** One `ToolMessage` comes back. Declarative subagents inherit model, tools, permissions, `interrupt_on` — not system prompt, middleware, or memory. Repeat retries/limits per subagent — [[subagents]].
-7. **Permissions guard file tools only.** First match wins, default allow; on `FilesystemBackend` the symlink target is checked too. Not `execute`, custom or MCP tools; with an execute-capable backend they raise `NotImplementedError` unless route-scoped — [[permissions]].
+7. **Permissions guard file tools only.** First match wins, default allow; `**` skips hidden path segments; on `FilesystemBackend` the symlink target is checked too. Not `execute`, custom or MCP tools; with an execute-capable backend they raise `NotImplementedError` unless route-scoped — [[permissions]].
 8. **HITL needs a checkpointer and the same `thread_id`.** Resume with `Command(resume={"decisions": […]})` — [[human-in-the-loop]].
 9. **`tools=` only adds.** Hide built-ins with `HarnessProfile(excluded_tools=…)` or a `FilesystemMiddleware(tools=[…])` allowlist. Middleware with a built-in's `.name` replaces it in place — [[tools]], [[middleware]].
 10. **Use `provider:model` strings.** Harness profiles key on the string; instances skip provider profiles — [[models]].

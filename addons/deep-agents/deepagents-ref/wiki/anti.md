@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: anti-patterns, wrong mental model, stale docs, doesn't work, TypeError, StoreBackend namespace, backend lambda, write_todos missing, virtual_mode, task args, pre-0.7 docs, common mistakes, breaking changes
 read_when: Read when a doc example raises an error or an answer feels off, before recommending any 0.7 API from memory.
-updated: 2026-10-21
+updated: 2026-11-09
 ---
 
 # Anti — wrong mental models and stale doc examples
@@ -67,7 +67,8 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | `TypeError` at build: backend factories removed | `backend=lambda rt: …` or `StateBackend(rt)`. Pass instances. | [[backends]] |
 | `ValueError: Namespace component … disallowed characters` | A display name (spaces) used as an id. Slugify. | [[agent-setup]] |
 | `NotImplementedError` at build with `permissions=` | Execute-capable backend with non-route-scoped permission paths | [[permissions]] |
-| `permission denied for write on /memories/...` | A blanket `deny write /**` without `allow /memories/**` before it | [[agent-setup]] |
+| `permission denied for write on /memories/...` | 1. A blanket `deny write /**` without `allow /memories/**` before it (writable memory wanted). 2. None: the agent is read-only on purpose. | [[agent-setup]] |
+| A "read-only" agent still writes `/memories/.x.md`, `/a/.b/c` or `/.x` | `**` and `*` skip path segments that start with `.`, and an unmatched path is allowed. No pattern list covers every hidden path: refuse `write_file`, `edit_file` and `delete` in a `wrap_tool_call` / `awrap_tool_call` middleware on the agent and on every subagent | [[permissions]] |
 | Model never plans / "write_todos not found" | No `TodoListMiddleware()` | [[planning]] |
 | Subagent ignores retries/limits | Middleware isn't inherited; add it to the subagent spec | [[subagents]] |
 | Stream dies with the tool's exception; Trace shows nothing | Raising tools kill the stream; add a `wrap_tool_call` catcher | [[streaming]] |

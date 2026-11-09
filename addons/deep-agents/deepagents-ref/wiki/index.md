@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: index, map, table of contents, where to start, catalog
 read_when: Read after the constitution to pick the one page for your question.
-updated: 2026-10-21
+updated: 2026-11-09
 ---
 
 # Map
@@ -56,7 +56,7 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[filesystem-tools]] — exact tools, args, limits (read_file 100 lines, literal grep), result eviction
   _filesystem tools, file tools, grep_exclude_dirs, offload_binary_content, ls, read_file, write_file, edit_file, delete, glob, grep, execute, FilesystemMiddleware, tool_token_limit_before_evict, large_tool_results, grep regex, read file limit, tool eviction, big tool output_
 - [[permissions]] — `FilesystemPermission`, first-match-wins, default allow, interrupt mode, sandbox clash
-  _permissions, FilesystemPermission, read-only agent, deny write, allow deny, path restrictions, restrict paths, approval, interrupt mode, HITL, human in the loop, first match wins, access control, guardrails_
+  _permissions, FilesystemPermission, read-only agent, hidden paths, dotfiles, DOTGLOB, deny write, allow deny, path restrictions, restrict paths, approval, interrupt mode, HITL, human in the loop, first match wins, access control, guardrails_
 - [[sandboxes]] — `execute`, LangSmithSandbox, providers, custom `BaseSandbox`, lifecycle, security
   _grep_exclude_dirs, sandbox, sandboxes, execute tool, run code, shell access, BaseSandbox, LangSmithSandbox, DaytonaSandbox, ModalSandbox, E2BSandbox, RunloopSandbox, isolated environment, run shell commands, install packages, SandboxBackendProtocol_
 - [[interpreters]] — QuickJS `eval`: tools from code, `task()`, persistence, bypasses `interrupt_on` (docs only)

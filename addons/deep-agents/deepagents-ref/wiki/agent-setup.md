@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: agent setup, reference setup, workspace, workspace_id, per-workspace memory, Memory tab, MemoryService, UI reads memory, read-only except memory, allow then deny, thread per workspace, workspace switch, leakage test, FreshMemory, GPT-6 Luna
 read_when: Read when building, reviewing or debugging your agent, its per-workspace memory, its Memory tab, or workspace switching.
-updated: 2026-10-21
+updated: 2026-11-09
 sources_hash: 8a9fe5e89fb5
 ---
 
 # Agent setup — the checked reference setup
 
-The whole agent wiring in one place: per-workspace Markdown memory, a durable store and checkpointer, no shell, writes only under `/memories/`, read-only data tools, and a UI that reads the exact files.
+The whole agent wiring in one place: per-workspace Markdown memory, a durable store and checkpointer, no shell, writes only under `/memories/` (and to paths with a hidden segment, which no `**` deny covers: [[permissions]], Gotchas), read-only data tools, and a UI that reads the exact files.
 
 **In code:** this page is implemented in `../../src/agent/` and tested in `../../tests/` (6 tests, including a real restart).
 
@@ -24,7 +24,7 @@ Everything below marked **ran** was executed against `deepagents` 0.7.29, `langg
 
 - Model (starter default): `"openrouter:openai/gpt-6-luna"` + `OPENROUTER_API_KEY` ([[models]]).
 - Backend: `CompositeBackend(default=StateBackend(), routes={"/memories/": StoreBackend(namespace=ns, store=store)})`. With no sandbox default there's no `execute` tool (**ran**).
-- Permissions, in order: allow write `/memories/**`, then deny write `/**`. Memory writes succeed; other writes return `permission denied` (**ran**). Large-result offload still works (**ran**).
+- Permissions, in order: allow write `/memories/**`, then deny write `/**`. Memory writes succeed; other writes return `permission denied` (**ran**). Paths with a hidden segment, such as `/.x`, are the exception: no `**` rule matches them (checked in the source and with `wcmatch`: [[permissions]], Gotchas). Large-result offload still works (**ran**). A read-only agent needs more than a deny ([[permissions]], Gotchas).
 - Namespace: `("app", "mem", workspace_id)`. `workspace_id` must be a slug or UUID. `"My Workspace 1"` raises `ValueError` on the first turn, even for "hi" (**ran**).
 - The UI reads store key `/AGENTS.md`, not `/memories/AGENTS.md` (**ran**).
 - Durable persistence: `AsyncSqliteSaver` + `AsyncSqliteStore` locally, `AsyncPostgres*` in production. Both ran through a restart on 0.7.20 (2026-09-30); SQLite ran again on 0.7.29 (2026-10-21), Postgres not re-run on 0.7.29. On Windows, async Postgres needs `WindowsSelectorEventLoopPolicy` ([[persistence]]).
@@ -157,7 +157,7 @@ class MemoryService:
 
 ## Gotchas
 
-- A plain `deny write /**` with no `allow /memories/**` before it also blocks memory writes.
+- A plain `deny write /**` with no `allow /memories/**` before it also blocks memory writes. A read-only agent wants exactly that, plus a write-tool guard: `**` misses hidden paths ([[permissions]], Gotchas).
 - Permissions don't cover your custom tools. Keep the data tools read-only in code.
 - Don't use `FilesystemBackend` or `LocalShellBackend`. They give the model real disk and a shell, and combining them with permissions raises `NotImplementedError` ([[permissions]]).
 - GPT-6 Luna on OpenRouter doesn't list `temperature` among its supported parameters (OpenRouter models API, 2026-09-29). Don't rely on it.

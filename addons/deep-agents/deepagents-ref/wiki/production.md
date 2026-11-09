@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted
 read_when: Read when moving an agent to production, setting up thread_id/context/multi-tenancy, or choosing where the checkpointer and store come from.
-updated: 2026-10-21
+updated: 2026-11-09
 sources_hash: 7a60770614b5
 ---
 
@@ -120,7 +120,7 @@ backend = CompositeBackend(
 | Assistant | `(assistant_id,)` | shared instructions for one assistant |
 | Global / org | `(org_id,)` | read-only policies; write only from app code |
 
-Shared (non-user) memory is a prompt-injection vector: make it read-only with [[permissions]] or backend policy hooks. Full detail: [[memory]], [[backends]], [[persistence]].
+Shared (non-user) memory is a prompt-injection vector: make it read-only with [[permissions]] or backend policy hooks (a `**` deny misses hidden paths: [[permissions]], Gotchas). Full detail: [[memory]], [[backends]], [[persistence]].
 
 ## Execution environment
 
@@ -159,7 +159,7 @@ async def agent(config: RunnableConfig):
 - [ ] Durable checkpointer (platform, or Postgres/SQLite self-hosted) and durable store; prove it with a restart test ([[persistence]]).
 - [ ] Stable `thread_id` per conversation; `context` per run; `context_schema` set.
 - [ ] Every `StoreBackend` has an explicit namespace that includes the user (or tenant) id.
-- [ ] Shared memory paths read-only via [[permissions]].
+- [ ] Shared memory paths read-only via [[permissions]], plus a write-tool guard (a `**` deny misses hidden paths).
 - [ ] Sandbox (not local shell) for code; secrets via auth proxy; sandbox TTL set.
 - [ ] Retries, fallback model, call limits, tool error handling ([[fault-tolerance]]); add them to subagent specs too.
 - [ ] `interrupt_on` / permission `mode="interrupt"` for irreversible tools (requires checkpointer).

@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__
 read_when: Read when a tool needs human approval before running, when a resume fails, or when subagent interrupts do not fire.
-updated: 2026-10-21
+updated: 2026-11-09
 sources_hash: 2cb255e41dec
 ---
 
@@ -119,6 +119,8 @@ create_deep_agent(model=..., permissions=[
   - write: `write_file`, `edit_file`, `delete`
 - These generated entries are merged with your `interrupt_on`. **Your entry wins per tool name**, which replaces the generated path predicate.
 - Bulk tools (`ls`, `glob`, `grep`, `delete`) fire when the searched subtree overlaps a rule. A pathless call (for example `grep(path=None)`) always fires. `path="."` is treated as `/`, and a `glob` `pattern` that is absolute or contains `..` is also checked.
+- Hidden paths: a rule only makes entries for the tools whose operation it covers. Of those, the exact tools (`read_file` for `"read"`; `write_file`, `edit_file` for `"write"`) match with `**` skipping hidden segments, so a `/secrets/**` rule doesn't pause them on `/secrets/.key`. The bulk tools it covers (`ls`, `glob`, `grep` for `"read"`; `delete` for `"write"`) still pause there, because their subtree overlaps the rule: under the write-only example above, only `delete` pauses on `/secrets/.key` (checked on 0.7.20, 2026-10-23).
+- When every call of a tool must pause, list the tool itself in `interrupt_on` ([[permissions]], Interrupt mode).
 - An edited call still goes back through the tool's deny check. A preceding `deny` rule beats `interrupt` (first match wins) ([[permissions]]).
 - With `FilesystemBackend` (0.7.25+), the `when` predicate also checks the symlink-resolved target: it fires if either path hits an interrupt rule and neither hits a deny (a denied call fails in the tool instead of pausing). A path the backend can't resolve doesn't pause on that path (a `glob` pattern can still fire); the tool then returns `Error: cannot resolve <path>`.
 
