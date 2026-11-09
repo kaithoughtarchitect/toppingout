@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode, deepagents-code, Deep Agents Code, terminal coding agent, CLI coding agent, TUI, headless mode, non-interactive, dcode -n, ACP server, slash commands, --model, --resume, --sandbox, install dcode
 read_when: Read when choosing between dcode and the SDK, installing or running dcode, scripting it headless in CI, or looking up a dcode flag or slash command.
-updated: 2026-10-21
-sources_hash: 19b662bf25ad
+updated: 2026-11-09
+sources_hash: f5b3131a8404
 ---
 
 # Deep Agents Code (dcode)
@@ -16,22 +16,22 @@ sources_hash: 19b662bf25ad
 
 ## Quick reference
 
-- Package `deepagents-code`, binary `dcode`; needs Python >= 3.12 and WSL on Windows. Install with `curl -LsSf https://langch.in/dcode | bash`.
+- Package `deepagents-code`, binary `dcode`; needs Python 3.14 since 0.2.0 (was >= 3.12) and WSL on Windows. Install with `curl -LsSf https://langch.in/dcode | bash`.
 - Modes: interactive TUI (`dcode`), headless (`dcode -n "task"` or piped stdin), ACP server (`dcode --acp`).
 - Headless has no shell unless `-S` is given; `-y` and `--yolo` are ignored. `--max-turns`, `--timeout`, `-q`, `--no-stream` and `--rubric*` need `-n` or stdin, else exit code 2. Timeout exit is 124.
-- Model resolution: `-M provider:model` > `[models].default` > `[models].recent` > first env key among OPENAI, ANTHROPIC, GOOGLE_API_KEY, GOOGLE_CLOUD_PROJECT.
+- Model resolution: `-M provider:model` > `[models].default` > `[models].recent` > first env key among OPENAI, ANTHROPIC, GOOGLE_API_KEY, GOOGLE_CLOUD_PROJECT (docs). The 0.2.3 changelog says dcode now requires an explicit or saved model selection, so the env-key fallback may be gone.
 - `-a NAME` selects an agent profile under `~/.deepagents/<name>/`; `-r` resumes a thread. Threads are checkpointed to `~/.deepagents/.state/sessions.db`.
 - `--allow-fs-tools` must include `read_file`; `-S` without `execute` does nothing, and `execute` without `-S` pre-approves nothing.
 - `--sandbox` takes an optional value, so keep the bare form last on the command line.
 - Gotcha: dcode is not in the SDK source, so there are no `deepagents_code` imports to find there.
 - Gotcha: `--startup-cmd` output is not visible to the model; pipe content in instead.
-- SDK version (0.7.29 here) and dcode version (0.1.x) are separate; `dcode doctor` shows both.
+- SDK version (0.7.34 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
 
 ## What it is, relative to the SDK
 
 - dcode wraps the SDK [[harness]]: planning, filesystem tools, `task` subagents, [[summarization]] and compaction, [[memory]] (`AGENTS.md`) and [[skills]]. You configure it with files and flags. You do not write Python, except for the optional experimental extensions (see [[dcode-extending]]).
 - Architecture: the TUI talks to a local LangGraph agent server (`/restart` restarts it). Threads are checkpointed to SQLite at `~/.deepagents/.state/sessions.db`.
-- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.29; see [[versions]]) separate from the dcode version (0.1.x).
+- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.34; see [[versions]]) separate from the dcode version (0.2.x).
 - The SDK source has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
 - SDK features that dcode exposes: the JS [[interpreters]] (`js_eval`, QuickJS, on by default), which make [[dynamic-subagents]] work out of the box; `RubricMiddleware`, which backs goals and rubrics ([[rubric]], [[dcode-goals]]); forked `general-purpose` subagents; and the sandbox-as-tool pattern for [[sandboxes]].
 - For the product landscape (SDK vs dcode vs Managed), see [[products]]. To build the same thing yourself, see [[create-deep-agent]].
@@ -43,7 +43,7 @@ curl -LsSf https://langch.in/dcode | bash    # installs via uv as a uv tool
 dcode                                         # interactive TUI
 ```
 
-- Requires Python >= 3.12 (breaking change in 0.1.58). The install script's `DEEPAGENTS_CODE_PYTHON` defaults to `3.13`.
+- Requires Python 3.14 (`>=3.14,<3.15`, breaking change in 0.2.0; auto-upgrade migrates, otherwise re-run the installer). From 0.1.58 to 0.1.88 it was >= 3.12. The old docs said the install script's `DEEPAGENTS_CODE_PYTHON` defaults to `3.13`; the 2026-11-09 docs no longer mention that variable.
 - Windows is not officially supported. Use WSL.
 - Uninstall with `uv tool uninstall deepagents-code`. This leaves `~/.deepagents/` in place.
 - Provider and sandbox extras: `dcode --install groq`, `/install fireworks`, `dcode uninstall groq`. For an arbitrary package: `dcode --install my_pkg --package`.
@@ -133,11 +133,18 @@ Store a LangSmith key via `/auth`, or set `LANGSMITH_TRACING=true` and `LANGSMIT
 - 0.1.84: invoked skills are resolved on the server and checked for trust; provider-visible reasoning shown by default in the TUI; Daytona snapshots.
 - 0.1.86: NVIDIA OpenShell sandbox provider; `/resume` alias.
 - 0.1.87 (2026-10-20): resume threads in non-interactive mode; large idle sessions are compacted before the prompt cache expires.
+- 0.1.88 (2026-10-22): async subagents pass `webhook` through.
+- 0.2.0 (2026-10-22): breaking, Python 3.14 required.
+- 0.2.1: skill-scoped MCP tools; the Anthropic Auto classifier defaults to Claude Sonnet 5.5.
+- 0.2.2: GPT-6.1 Terra; project `.env` files can no longer set extension, shell, plugin or skill trust; many startup and rendering speedups.
+- 0.2.3: MCP tool schemas deferred via provider-native tool search; official marketplace included by default; explicit or saved model selection required; `DEEPAGENTS_CODE_LANGSMITH_PROJECT_URL`.
+- 0.2.4: interrupt cancellation messages marked with `lc_source`.
+- 0.2.5 (2026-11-05): compaction input budget sized to the selected model; cut-off reply handling kept when the SDK's `ModelRefusalMiddleware` raises.
 
 ## Gotchas
 
 - dcode is not in `sources/package`. Do not look for `deepagents_code` imports in the SDK. `deepagents_code.extensions.ExtensionAPI` and `deepagents_code.integrations.sandbox_provider` exist only in the dcode package.
-- Startup model auto-detection checks only 4 env vars. Groq, Fireworks and others need `--model` or a saved default.
+- Startup model auto-detection checks only 4 env vars (docs). Groq, Fireworks and others need `--model` or a saved default. Since 0.2.3 (changelog) a model must be passed or saved; the docs still describe auto-detection.
 - `--sandbox` takes an optional value. Keep the bare form last, or the next argument is consumed as the provider name.
 - `-S` without `execute` in `--allow-fs-tools` does nothing. `execute` without `-S` means no command is pre-approved.
 - `--startup-cmd` output is not visible to the model.

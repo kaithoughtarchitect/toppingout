@@ -11,9 +11,9 @@ updated: 2026-11-09
 
 # Anti — wrong mental models and stale doc examples
 
-If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, the README, or training memory. Checked against 0.7.29 source; code wins.
+If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, the README, or training memory. Checked against 0.7.34 source; code wins.
 
-## Things the docs still show that break in 0.7.29
+## Things the docs still show that break in 0.7.34
 
 | Doc shows | Reality | Page |
 |---|---|---|
@@ -28,6 +28,9 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | Prompt order: memory then skills | Your prompt, then your middleware's text, then the skills index, then memory (Skills sits after your middleware since 0.7.29) | [[middleware]] |
 | `LangSmithSandbox.create()` | Does not exist; wrap an existing sandbox | [[sandboxes]] |
 | Blob offload: "set `artifacts_root` on the middleware" | `FilesystemMiddleware` has no such argument; the `blobs/` root follows `CompositeBackend(artifacts_root=...)` | [[backends]] |
+| Reading async subagent notifications with `message.additional_kwargs.get("deepagents_notification")` | Deprecated key, still written in 0.7.34. Read `get_notification_metadata(message)` (`langchain_core.messages`): `source == "async_subagent"`, the `TaskEvent` is in `.get("data")`. Code wins | [[async-subagents]] |
+| Rubric page: "`RubricMiddleware` ... is in beta" | Not beta since 0.7.33 (`@beta` removed from `middleware/rubric.py`). Code wins | [[rubric]] |
+| Customization: a `FilesystemMiddleware` in `middleware=` "won't inherit the ... `permissions=` passed to `create_deep_agent()`" | Since 0.7.31 an unconfigured replacement inherits them, and different non-empty rules raise `ValueError` (it still does not inherit `backend=`). Code wins | [[middleware]] |
 | Content-builder pin `deepagents>=0.3.5,<0.4.0` | Stale | [[tutorials]] |
 | `deepagents deploy`, `deepagents.toml`, `agent.json` (upstream `examples/deploy-*`) | **Deprecated.** They come from `deepagents-cli` (last release 0.3.0, 2026-08-24; PyPI: "DEPRECATED … Use Managed Deep Agents"). Use `mda` ([[managed]]) or self-host ([[production]]). Checked 2026-09-30 | [[managed]] |
 
@@ -46,7 +49,8 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 - **"My middleware sees the skills."** Since 0.7.29 `SkillsMiddleware` runs after your middleware and profile extras, so your `before_model` / `wrap_model_call` doesn't see freshly loaded `skills_metadata` or the skills prompt section. Replace `SkillsMiddleware` by name instead. See [[middleware]], [[skills]].
 - **"`include_tools: [a, b]` works."** It must be a space-separated string; a YAML list matches no tool. See [[skills]].
 - **"Swap in my own `SummarizationMiddleware()`." Loses model-aware defaults (trigger `None`) — [[summarization]].
-- **"A replacement `FilesystemMiddleware` keeps my `backend=` / `permissions=`."** Overrides replace, not merge — [[middleware]].
+- **"A replacement `FilesystemMiddleware` keeps my `backend=`."** Overrides replace, not merge. Only `permissions` carry over (0.7.31+): an unconfigured replacement inherits the agent's rules, and different non-empty rules raise `ValueError`. See [[middleware]].
+- **"A refusal is just the final answer."** Since 0.7.33 `ModelRefusalMiddleware` raises `ModelRefusalError` on a `refusal` block; a subagent refusal comes back to the parent as a `task` notice. Catch it, add `ModelFallbackMiddleware`, or exclude `"ModelRefusalMiddleware"`. See [[middleware]].
 - **"`interrupt_on={'task': True}` gates all delegation."** Interpreter `task()` bypasses it; gate `eval` — [[dynamic-subagents]].
 - **"Stream shows subagents."** Only with `subgraphs=True` — [[streaming]].
 - **"Use `langchain-mcp-adapters`."** Docs now use `langchain.mcp.MCPAdapter` — [[mcp]].
@@ -79,8 +83,10 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | `permission denied ... (resolves to X)` or `Error: cannot resolve <path>` | A symlink target is denied, or the path loops or escapes the root (0.7.25, `FilesystemBackend`) | [[permissions]] |
 | Sandbox `grep` finds nothing under `.git` | `BaseSandbox.grep_exclude_dirs` defaults to `(".git",)` (0.7.25) | [[sandboxes]] |
 | `InvalidUpdateError` after parallel `task` calls | Subagents changed the same custom state key, which has no reducer | [[subagents]] |
-| `permissions=` silently not applied | A custom `FilesystemMiddleware` replaced the default; it doesn't receive `create_deep_agent(permissions=...)` | [[backends]] |
-| Main agent sees unexpected user-role messages | Async subagent task notifications (`additional_kwargs["deepagents_notification"]`, 0.7.27); they only arrive on the async path | [[async-subagents]] |
+| `ValueError: FilesystemMiddleware permissions conflict with the agent permissions` | Your replacement `FilesystemMiddleware(permissions=...)` differs from `create_deep_agent(permissions=...)`; use the same rules or omit them on the middleware (0.7.34; before 0.7.31 the agent's rules were silently dropped) | [[middleware]] |
+| Main agent sees unexpected user-role messages | Async subagent task notifications (notification metadata `lc_source == "async_subagent"`, read with `get_notification_metadata`; the old `additional_kwargs["deepagents_notification"]` is deprecated); they only arrive on the async path | [[async-subagents]] |
+| `ModelRefusalError` from `invoke` | The model returned a `refusal` block; since 0.7.33 that raises instead of ending the run | [[middleware]] |
+| `compact_conversation` result has `status="error"` | Summary generation failed (`Compaction failed: ...`, 0.7.33+); history is unchanged | [[summarization]] |
 | Model string works but profile behaviour is missing | No `provider:` prefix, or a model instance was passed | [[models]] |
 
 ## Deep Agents Code

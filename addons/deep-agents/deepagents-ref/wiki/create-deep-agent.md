@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: create_deep_agent, create deep agent, signature, parameters, kwargs, system_prompt, interrupt_on, response_format, structured output, state_schema, context_schema, checkpointer, store, backend, subagents, recursion_limit
 read_when: Read when you need the exact create_deep_agent signature, a parameter default, or the middleware/prompt assembly order.
-updated: 2026-10-21
-sources_hash: a170c2cc95ed
+updated: 2026-11-09
+sources_hash: 6a2805d1f187
 ---
 
 # create_deep_agent
@@ -27,7 +27,7 @@ sources_hash: a170c2cc95ed
 - Gotcha: `model_provider=` / `temperature=` are not params; build the model with `init_chat_model`.
 - Gotcha: seeding `files` in input works only with `StateBackend`.
 
-## Signature (0.7.29, verified in graph.py)
+## Signature (0.7.34, verified in graph.py)
 
 ```python
 from deepagents import create_deep_agent
@@ -84,7 +84,7 @@ Raises `ImportError` (missing/old provider package, e.g. `langchain-openrouter<0
 
 ## Return value
 
-A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.29"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
+A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.34"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
 
 ## Invoke / stream basics
 
@@ -128,7 +128,7 @@ for msg in stream.messages:
 3. Build final system prompt (USER, BASE, SUFFIX).
 4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack.
 5. Auto-add `general-purpose` subagent (index 0) unless disabled or overridden.
-6. Build main stack (core, then profile extras, Skills, caching, Memory, HITL, UnsupportedContent), merge `middleware`, apply profile exclusions, append tool-exclusion middleware.
+6. Build main stack (core, then profile extras, Skills, caching, Memory, HITL, UnsupportedContent, `ModelRefusalMiddleware`), merge `middleware`, apply profile exclusions, append tool-exclusion middleware. `ModelRefusalMiddleware` (from `langchain.agents.middleware`) raises `ModelRefusalError` when the model refuses; it sits in the tail so a `ModelFallbackMiddleware` you pass retries on the next model first. Subagent stacks get it too.
 7. Call `create_agent(...)` and `.with_config(...)`.
 
 Full stack order: [[middleware]].

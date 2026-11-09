@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: customize agent, system prompt, prompt composition, custom middleware, override middleware, SummarizationMiddleware, SkillsMiddleware, structured output, response_format, subagents, backends, human in the loop, HITL, interrupt_on, going fully custom, tools, memory, skills
 read_when: Read when deciding which create_deep_agent knob changes a behaviour, overriding a default middleware, or composing the system prompt.
-updated: 2026-10-21
-sources_hash: 6b4df49fa021
+updated: 2026-11-09
+sources_hash: 588eae42c704
 ---
 
 # Customizing a deep agent
@@ -47,7 +47,7 @@ agent = create_deep_agent(
 - Each `create_deep_agent` param maps to one knob: `model`, `system_prompt`, `tools`, `memory`, `skills`, `backend`, `permissions`, `subagents`, `middleware`, `interrupt_on`, `response_format`.
 - Prompt = your `system_prompt` -> profile BASE -> profile SUFFIX; no authored base prompt since 0.7.0 (`BASE_AGENT_PROMPT` deprecated).
 - Middleware with the same `.name` as a built-in replaces it; keep counters in graph state, not on `self`.
-- A replacement middleware is not merged with defaults; an overriding `SummarizationMiddleware(...)` loses model-aware defaults.
+- A replacement middleware is not merged with defaults; an overriding `SummarizationMiddleware(...)` loses model-aware defaults. One exception (0.7.31+): an overriding `FilesystemMiddleware` built without `permissions=` inherits the agent's `permissions=`.
 - Hide built-ins with profile `excluded_tools` or allowlist via `FilesystemMiddleware(tools=[...])` (`read_file` mandatory).
 - Declarative subagents inherit parent `tools` only if the spec omits `"tools"`; they never inherit parent `middleware=`.
 - Default `StateBackend`; `StoreBackend` needs `store=` and an explicit `namespace`; `FilesystemBackend` has `virtual_mode=True`.
@@ -179,7 +179,7 @@ Compose `langchain.agents.create_agent` with `deepagents.middleware` pieces your
 
 ## Gotchas
 
-- A replacement middleware is **not merged** with the default: an overriding `FilesystemMiddleware` does not inherit `backend=`/`permissions=` from `create_deep_agent`. Docs say pass permissions to it, but the public constructor has only a private `_permissions` kwarg.
+- A replacement middleware is **not merged** with the default: an overriding `FilesystemMiddleware` does not inherit `backend=` from `create_deep_agent`, so pass it yourself. Permissions are the exception since 0.7.31: built without `permissions=`, the replacement gets a copy bound to the agent's `permissions=` (`_apply_custom_middleware` in `graph.py`), and different non-empty rules raise `ValueError` ([[permissions]]). The constructor now takes a public `permissions=` (`_permissions=` is deprecated, removal 0.9.0). The docs still say the override won't inherit `permissions=`; code wins.
 - An overriding `SummarizationMiddleware(...)` constructed directly loses the model-aware defaults (`trigger=None`, `keep=("messages", 20)`, `trim_tokens_to_summarize=4000`, arg truncation off) unless you set them ([[summarization]]). Its new `summarizer=` (0.7.26) writes summaries with another model while `model` still sets thresholds and token counting.
 - Custom middleware now runs before `SkillsMiddleware` (0.7.29), so it can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section. Replace `SkillsMiddleware` by name if you need to.
 - Overrides propagate to the auto GP subagent only for middleware whose name matches a GP default slot; declarative subagents never inherit parent `middleware=` (except forks). Put overrides in the spec's `middleware`.

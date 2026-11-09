@@ -6,7 +6,7 @@ Needs the repo venv (requirements.txt). No API calls (scripted fake model).
 Postgres (e.g. docker run -d --rm --name pg -e POSTGRES_PASSWORD=test -p 55499:5432 postgres:17):
     set AGENT_TEST_PG=postgresql://postgres:test@localhost:55499/postgres, then the same with "postgres".
 
-Expected in pass 2 (ran on 0.7.20, 2026-09-30, both SQLite and Postgres 17; re-run on 0.7.29, 2026-10-21, SQLite only, Postgres not re-run on 0.7.29):
+Expected in pass 2 (ran on 0.7.20, 2026-09-30, both SQLite and Postgres 17; re-run on 0.7.29, 2026-10-21, SQLite only; re-run on 0.7.34, 2026-11-09, SQLite and Postgres 17):
     live: - I prefer short answers, with sources
     history: [('write', None), ('edit', '- I prefer detailed answers')]
     messages in thread: 8     (6 from pass 1 + 2 new -> the conversation survived)

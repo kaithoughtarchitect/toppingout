@@ -4,10 +4,10 @@ id: subagents
 type: api
 status: code
 product: sdk
-keywords: subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out
-read_when: Read when a subagent can't see parent middleware/memory, when adding a specialist agent, or when a task call is rejected.
-updated: 2026-10-21
-sources_hash: f48c95a22748
+keywords: subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out, model refusal, ModelRefusalError, lc_subagent_tool_call_id
+read_when: Read when a subagent can't see parent middleware/memory, when adding a specialist agent, when a task call is rejected, or when a subagent's model refuses.
+updated: 2026-11-09
+sources_hash: 55d90228aa82
 ---
 
 # Subagents (task tool, SubAgent, CompiledSubAgent)
@@ -26,6 +26,7 @@ One-line truth: synchronous subagents are child agents that the main agent calls
 - `CompiledSubAgent(name, description, runnable)` inherits nothing and its state must have `messages`.
 - `mode="fork"` (beta, >=0.7.13) inherits parent history; `skills` on a fork raises `ValueError`.
 - Subagent HITL interrupts need a checkpointer on the parent.
+- A child's model refusal comes back as a short refusal notice string, not an error (since 0.7.33).
 
 ## Mental model
 
@@ -48,13 +49,27 @@ class TaskToolSchema(BaseModel):
 
 - Unknown keys are **rejected** with a validation error: "Unexpected argument 'prompt'; put all instructions for the subagent in `description`." This stops models from hiding the real instructions under an invented key.
 - An unknown `subagent_type` returns a string error that lists the allowed types. It does not raise.
-- The tool has both a sync and an async implementation (`task` / `atask`). The child runs via `invoke`/`ainvoke` with config `{"configurable": {"ls_agent_type": "subagent"}}`. The parent's callbacks, tags, configurable and metadata propagate through LangGraph config merging.
+- The tool has both a sync and an async implementation (`task` / `atask`). The child runs via `invoke`/`ainvoke` with config `{"configurable": {"ls_agent_type": "subagent"}, "metadata": {"lc_subagent_tool_call_id": <task call id>}}`. The metadata key is new in 0.7.33: checkpointers copy config metadata into each checkpoint, so a subagent's stored checkpoints name the `task` call that ran them. The parent's callbacks, tags, configurable and metadata propagate through LangGraph config merging.
 - Result extraction (`_return_command_with_state_update`):
   1. If the child state has a non-None `structured_response`, it is JSON-serialized (`model_dump_json`, `dataclasses.asdict`, or `json.dumps`).
-  2. Otherwise the content is the text of the **last `AIMessage` with non-empty text**. It walks backwards, which skips Anthropic's trailing empty `end_turn` messages.
-  3. Other child state keys flow back as a `Command(update=...)`, **except** `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `_skill_tools_disclosed`, `rubric`, the fork marker, and private (`PrivateStateAttr`) keys. Since 0.7.27, a key the child returns exactly as it received it is also dropped, so an untouched key without a reducer no longer conflicts across parallel `task` calls and an additive reducer doesn't add the inherited value twice.
-  4. A key the children really change, in parallel `task` calls, still needs a reducer in your `state_schema`, or the step fails with `InvalidUpdateError`.
+  2. Otherwise, if the child's last message holds a `refusal` content block, the content is the refusal notice (see Model refusals below; since 0.7.33).
+  3. Otherwise the content is the text of the **last `AIMessage` with non-empty text**. It walks backwards, which skips Anthropic's trailing empty `end_turn` messages.
+  4. Other child state keys flow back as a `Command(update=...)`, **except** `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `_skill_tools_disclosed`, `rubric`, the fork marker, and private (`PrivateStateAttr`) keys. Since 0.7.27, a key the child returns exactly as it received it is also dropped, so an untouched key without a reducer no longer conflicts across parallel `task` calls and an additive reducer doesn't add the inherited value twice.
+  5. A key the children really change, in parallel `task` calls, still needs a reducer in your `state_schema`, or the step fails with `InvalidUpdateError`.
 - A `CompiledSubAgent` whose output lacks a `messages` key raises `ValueError`.
+
+### Model refusals (since 0.7.33)
+
+- `create_deep_agent` appends LangChain's `ModelRefusalMiddleware` to the main agent's tail (after `UnsupportedContentMiddleware`), to every declarative child and to GP. It raises `ModelRefusalError` when a model response has a `refusal` content block, so a refusal no longer ends a run as if it succeeded. Because it sits after your `middleware=`, a `ModelFallbackMiddleware` you pass catches the refusal first ([[fault-tolerance]]).
+- `task`/`atask` catch `ModelRefusalError`, and a `StructuredOutputValidationError` whose AI message holds a refusal, and return a plain string instead of a `Command`:
+
+```txt
+The subagent stopped because a model refused the request. Category: <category>. Explanation: "<text>" Retrying the same request is unlikely to succeed; rephrase it or continue without it.
+```
+
+- `Category:` appears only when the refusal block has `extras["category"]` (the docs say Anthropic sets it); `Explanation:` only when the block has `refusal` text. Other errors still raise.
+- When the child raises, none of its state changes reach the parent (the tool returns a string, not a state update).
+- Async subagents report the same notice in `check_async_task` and notifications ([[async-subagents]]).
 
 ## Declarative `SubAgent` (TypedDict, `from deepagents import SubAgent`)
 
@@ -70,10 +85,10 @@ class TaskToolSchema(BaseModel):
 | `skills` | no | none (unless the spec's own `middleware` holds a `SkillsMiddleware`). Only GP inherits the parent's `skills` |
 | `permissions` | no | inherits the parent's `permissions`. If set, it **replaces** them |
 | `response_format` | no | none. Accepts a Pydantic model, dataclass, TypedDict, JSON-schema dict, `ToolStrategy`, `ProviderStrategy` or `AutoStrategy` |
-| `mode` | no | `"isolated"`. Can be `"fork"` (beta, >=0.7.13). `"handoff"` is accepted as a legacy alias for `"isolated"` |
+| `mode` | no | `"isolated"`. Can be `"fork"` (beta, >=0.7.13). Any other value raises `ValueError`; the legacy alias `"handoff"` is no longer accepted in 0.7.34 (it was in 0.7.29; the changelog does not mention it) |
 
 The default child middleware stack (for `create_deep_agent`) is built in `graph.py`:
-`FilesystemMiddleware(backend, permissions)` → `SummarizationMiddleware` → `PatchToolCallsMiddleware` → *spec `middleware` (new names)* → profile `extra_middleware` → `SkillsMiddleware` (only if the spec has `skills`) → prompt caching → `_ToolExclusionMiddleware` (if the profile excludes tools) → `HumanInTheLoopMiddleware` (if `interrupt_on`) → `UnsupportedContentMiddleware`. (0.7.29 moved Skills from right after Patch to just before caching.)
+`FilesystemMiddleware(backend, permissions)` → `SummarizationMiddleware` → `PatchToolCallsMiddleware` → *spec `middleware` (new names)* → profile `extra_middleware` → `SkillsMiddleware` (only if the spec has `skills`) → prompt caching → `MemoryMiddleware` (forks only, if `memory`) → `ModelRefusalMiddleware` (since 0.7.33) → `_ToolExclusionMiddleware` (if the profile excludes tools) → `HumanInTheLoopMiddleware` (if `interrupt_on`) → `UnsupportedContentMiddleware`. (0.7.29 moved Skills from right after Patch to just before caching.)
 - Spec `middleware` entries whose `.name` matches a default **replace it in place**. For example, `FilesystemMiddleware(backend=..., tools=["read_file","ls"])` restricts the child's file tools. New entries land after the core entries and before the profile, Skills, caching and memory tail.
 - The child **does not inherit** the parent's `middleware=`. That includes `TodoListMiddleware` ([[planning]]) and `RubricMiddleware`.
 - The child gets **no** `SubAgentMiddleware`. An isolated declarative child therefore has no `task` tool and cannot delegate further.

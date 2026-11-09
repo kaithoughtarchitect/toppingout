@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA Slack, channels.slack, channels.http, webhook, HTTP channel, define_identity, identity.py, Supabase, define_schedule, cron, schedules, runtime.schedules, reminders, scheduled agent, Slack reactions, MCP endpoint, /mcp, interrupt_on Slack, attach_file, user_prompt_response, INTERRUPT_CORRELATION_KEY
 read_when: Read when wiring a Managed Deep Agent to Slack or a webhook, controlling who can call it, adding a cron schedule, or exposing it over MCP.
-updated: 2026-10-21
-sources_hash: 78878a317948
+updated: 2026-11-09
+sources_hash: 54a1e7b16f2c
 ---
 
 # MDA channels, identity, schedules and MCP endpoint
@@ -21,7 +21,8 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 - Slack file transfer (>=0.8.0) needs a sandbox; incoming files land in `/workspace/attachments/`, send back with `attach_file(path)`, and say so in `instructions.md`.
 - HTTP channel (>=0.8.0): `channels.http(provider=..., verify=..., parse=...)` serves `POST /channels/<name>/events`; `verify` is the only auth, so check a signature on `raw_body`.
 - HTTP `thread_id` must be a UUID (map external IDs with `uuid.uuid5`); 202 means accepted, not finished.
-- Identity: `define_identity(auth=...)` with `auth.langsmith_api_key()` (default), `auth.supabase(...)`, or 'backend' plus `MDA_INGRESS_SECRET`. API-key callers are services with no private threads.
+- Identity: `define_identity(auth=...)` with `auth.langsmith_api_key()` (default), `auth.supabase(...)`, a JWT provider dict (`issuer`, `audience`, `discover` or `jwks`, `claims`), or 'backend' plus `MDA_INGRESS_SECRET`. Service API-key callers have no private threads; a personal access token counts as a person (0.10.2).
+- Channel delivery data: read `runtime.thread.origin.channel` (0.10.0); `runtime.channel` is deprecated and goes away in 0.11.
 - Schedules: `define_schedule(cron=..., timezone=..., prompt=...)`; 5-field cron only, static literals only, exactly one of `prompt` or `input`.
 - Since 0.9.3 `mda dev` creates the schedules on the local server, so they fire locally (`--no-schedules` stops that); on deploy, crons are created only after `DEPLOYED` and recreated on every deploy.
 - Runtime schedules (>=0.9.0): tools you write call `runtime.schedules.create(owner=..., cron=... or at=..., prompt=...)`; max 20 per owner per agent by default.
@@ -32,7 +33,7 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 
 - One module per channel, module-level `channel`; file stem = channel name (unique; `channels/channel.py` forbidden). Only direct children of `channels/` count.
 - Flow: provider event -> verify/normalize -> resolve identity + thread -> run -> post final reply.
-- Runs carry `runtime.channel` (name, `provider`, normalized `event`, optional `raw_event`, optional `post`). Since 0.9.0 (breaking) that is the only place for delivery data: on channel runs `runtime.context` is `None`, and the reply target is private (no code can read or change it). Replace `runtime.context.channel["event"]` with `runtime.channel.event`. Direct API runs keep `context` validated against your `context_schema`; check `runtime.channel` to tell the two apart.
+- Runs on a channel thread carry `runtime.thread.origin` (0.10.0): `origin.channel` (name, `provider`, normalized `event`, optional `raw_event`, optional `post`) plus the `sender` of the latest message; `runtime.thread` also has `id` and `participants`. `runtime.channel` (the 0.9.x location) is deprecated and will be removed in 0.11. The origin is now set in every run on a channel thread (Studio resumes, scheduled runs, async subagent wake-ups), but `event` and `raw_event` are set only in the run the message started, so they can be `None`. On channel runs `runtime.context` is `None` (since 0.9.0), and the reply target is private (no code can read or change it). Direct API runs keep `context` validated against your `context_schema`; check `runtime.thread.origin` to tell the two apart (a `channel` key in direct-call context does not create an origin).
 - `post({"type": "content", "content": "..."})` or `post({"type": "native", "native": {...}})` sends an *additional* message; the final agent reply is still automatic.
 - A channel thread is owned by its source conversation (`mda:source-thread:{provider}:{key}`), not by the first sender (0.7.0).
 - Channel vs MCP connector: channels start runs; connectors give tools ([[managed-capabilities]]).
@@ -53,12 +54,13 @@ channel = channels.slack(
     description="Answers order questions", # <=139 chars
     icon="support-agent.png",              # relative to channels/, 512x512 PNG <=1MB; auto-generated if omitted
     background_color="#1d4ed8",
-    trigger_on_all_messages=False,         # False: channel msgs need an @mention; DMs always trigger
+    trigger_on_all_messages=False,         # False: channel msgs need an @mention; DMs always trigger (deprecated, see trigger mode below)
     allow_bot_triggers=False,
 )
 ```
 
 - Reactions (0.9.0): the bot reacts to the message that starts a run with `eyes` by default. `channels.slack(..., reactions=False)` turns it off; a short name picks another emoji; a sync or async callable gets `{"text": ...}` and returns a short name (errors, or more than five seconds, fall back to the default).
+- Trigger mode (0.10.0 changelog): Slack channels take a trigger mode, `"mention"` (default for new apps), `"thread"` (keep replying in a thread after one mention) or `"all"`; `trigger_on_all_messages` is deprecated in favor of `"all"`. The changelog spells it `triggerMode`; the fetched Python Slack page still shows only `trigger_on_all_messages`, so the Python keyword name is unverified.
 - One Slack channel per deployment. `mda deploy` provisions the Slack app; if LangSmith is not yet authorized it prints an HTTPS link, you approve, press Enter. After first deploy the bot DMs you. Cannot use `--no-wait`. Redeploy to apply name/icon changes.
 - HITL from `interrupt_on` renders in Slack with **only `approve` and `reject`** ([[human-in-the-loop]]).
 - File transfer (>=0.8.0, requires a sandbox): incoming files land in `/workspace/attachments/`; agent sends files via the `attach_file(path)` tool (path under `/workspace`). Never automatic, so say it in `instructions.md`. 200 MiB each way; files scoped to the Slack thread's sandbox; everyone in the thread can reach them.
@@ -97,6 +99,8 @@ channel = channels.http(provider="orders", verify=verify, parse=parse)  # option
 - `post(input: HttpChannelPostInput) -> HttpPostedMessage` (async): `input["type"]` is `"content"` or `"native"`, `input["target"]`; return `{"id": ..., "url"?: ...}`. No reply if the run paused on an interrupt or already delivered its final message. `on_error(error, target)` replaces the default error reply.
 - Responses: `202 accepted` (with `deliveryId`) / `202 ignored`; `400` bad payload/shape/message; `401` bad signature; `500` verify raised / runtime not configured / run failed to start. 202 means accepted, not finished.
 - Use env vars for channel secrets; `connections.get` needs a run.
+- A message to a thread that waits on an interrupt starts nothing (0.10.0; it used to start a new run).
+- Reusable adapters: a package can export a factory returning `HttpChannel` (`from managed_deepagents import HttpChannel, channels`; `return channels.http(provider=..., verify=..., parse=..., post=...)`), and a project uses it as `channel = orders_channel()` in `channels/orders.py`. Keep `provider` stable across releases, since it namespaces caller identities.
 
 ### Agent-owned interrupts (Slack forms, >=0.8.0)
 
@@ -115,11 +119,12 @@ async def request_approval(amount: str, runtime: ManagedDeepAgentRuntime) -> str
     Args:
         amount: The spend, e.g. "$1,200".
     """
-    ch = runtime.channel
-    if ch is None or ch.provider != "slack":
+    origin = runtime.thread.origin
+    if origin is None or origin.channel.provider != "slack":
         return "Approval forms are available only in Slack."
+    ch = origin.channel
     cid = str(uuid7())
-    if ch.event["type"] != "user_prompt_response":     # tool re-runs on resume: post once
+    if ch.event is not None and ch.event["type"] == "message":   # tool re-runs on resume: post only in the run the message started
         token = await connections.get("mda/slack-bot-token", {"type": "agent"})
         ...  # chat.postMessage into raw_event thread; button value = json.dumps({INTERRUPT_CORRELATION_KEY: cid})
     response = interrupt({INTERRUPT_CORRELATION_KEY: cid, "amount": amount})
@@ -127,10 +132,10 @@ async def request_approval(amount: str, runtime: ManagedDeepAgentRuntime) -> str
 ```
 
 - Response fields: `provider`, `action` (button `action_id` / modal `callback_id`), `value`, `correlation_id` (`INTERRUPT_CORRELATION_KEY == "mda_correlation_id"`).
-- Matching: one parked + no id -> resumes it; id matches exactly one -> resumes it; several parked + no id, or id matches none/several -> nothing runs; none parked -> fresh run, answer only on `runtime.channel.event`.
+- Matching: one parked + no id -> resumes it; id matches exactly one -> resumes it; several parked + no id, or id matches none/several -> nothing runs; none parked -> fresh run, answer only on `runtime.thread.origin.channel.event`.
 - Modal: button `action_id` starting `mda_modal::` with the full view JSON as `value` (<=2000 chars); platform sets `callback_id` and `private_metadata` (setting it yourself blocks the modal). Modals never carry a correlation id.
 - Failure modes: dismissed modal leaves interrupt parked forever; replying in thread abandons the checkpoint; double-press = resume + fresh turn.
-- `runtime.channel.post` for built-in Slack is text-only; use the Web API for blocks. Studio shows the raw interrupt value.
+- The built-in Slack channel `post` is text-only; use the Web API for blocks. Studio shows the raw interrupt value.
 
 ## Identity (`identity.py`)
 
@@ -140,6 +145,7 @@ async def request_approval(amount: str, runtime: ManagedDeepAgentRuntime) -> str
 | - | - | - | - |
 | LangSmith API key (default) | `define_identity(auth=auth.langsmith_api_key())` | `x-api-key` | No (service principal) |
 | Supabase | `define_identity(auth=auth.supabase(project_ref="..."))` (or `url=`) | `Authorization: Bearer <access_token>` | Yes |
+| Another JWT provider (Auth0, Okta, Clerk, Entra ID) | `define_identity(auth={"issuer": ..., "audience": ..., "discover": True, "claims": {"user": "sub"}})` | `Authorization: Bearer <access_token>` | Yes |
 | Your backend | `define_identity(auth="backend")` + `MDA_INGRESS_SECRET` in `.env` | `x-mda-ingress-secret` + `x-mda-user-id` | Yes |
 
 ```python
@@ -147,12 +153,14 @@ from managed_deepagents import auth, define_identity
 identity = define_identity(auth=auth.supabase(project_ref="your-project-ref"))
 ```
 
+- JWT provider: `issuer` must match `iss`, `audience` must match `aud`; `discover: True` reads `/.well-known/openid-configuration`, otherwise drop it and set `jwks` to the key URL; `claims.user` names the user-ID claim (threads and stored credentials key on it), `claims.groups` and `claims.email` are optional. Tools read verified claims from `principal.claims`.
+- No custom LangGraph auth handler is accepted. To scope by organization, pick the user ID: the org ID if the org should share threads and credentials, or the person's ID and check the org in your backend or from `principal.claims`.
 - No `identity.py` = no managed auth (`mda dev` shows `Identity none`).
 - Backend mode: deploy preflight fails if `MDA_INGRESS_SECRET` is missing; any secret holder can act as any user, so never ship it to clients. Keep `x-mda-user-id` stable.
 - Workspace members with LangSmith API access can read/search every thread regardless of mode; privacy is against end users only.
 - Adding Supabase to an existing deployment does not back-fill owner metadata on old threads.
 - Errors: 401 missing/invalid credential; 403 cross-user thread access.
-- Only persons get user memory ([[memory]]) and user-owned connections; API-key callers are services.
+- Only persons get user memory ([[memory]]) and user-owned connections. Service API keys are services; since 0.10.2 a personal access token through `auth.langsmith_api_key()` resolves to that person.
 
 ## Schedules (`schedules/<name>.py`)
 
@@ -170,7 +178,7 @@ schedule = define_schedule(
 ```
 
 - Values must be static literals or top-level literal constants: no env reads, function calls, `**kwargs`.
-- Default threads are ephemeral (new thread, deleted after run). Persistent mode needs a UUID of a thread that already exists (create it in Studio; MDA will not).
+- Default threads are ephemeral (new thread, deleted after run). Persistent mode: the fetched schedules page says the `id` must be the UUID of a thread that already exists (create it in Studio). The 0.10.2 changelog (2026-11-06, newer) says `thread={"mode": "persistent"}` with no `id` now works (MDA derives a stable ID from agent and schedule name and creates the thread on deploy), deploy also creates a missing thread for an explicit `id`, and an explicit `id` must be a UUID (checked at compile time). There is no MDA package code here to settle it; trust the changelog for >=0.10.2.
 - Provisioned as LangSmith crons only after `DEPLOYED`; each deploy deletes the crons that earlier `schedules/` files created and recreates them from current files (runtime schedules are untouched). `--no-wait` skips this.
 - `mda dev` (>=0.9.3) creates a local cron for each schedule and recreates them when `schedules/` changes; pass `--no-schedules` while iterating. Before 0.9.3 schedules were listed in the banner but never fired locally.
 - Errors: `Schedule limit reached`, `must export a named schedule declaration`, `must define exactly one of prompt or input`, `cron must be a standard 5-field expression`, `schedule is not static`, `Invalid thread ID: must be a UUID (HTTP 422)`.
@@ -216,7 +224,7 @@ Any MCP client that can send a custom header works the same way: Streamable HTTP
 
 - Auth follows identity mode. Use the API-key default for MCP clients (they cannot mint Supabase tokens). Key must belong to the deployment's workspace. Errors: 401 `missing x-api-key`, 403 `API key is forbidden`, 403 `API key tenant mismatch`.
 - A URL-only client falls back to OAuth and reports a misleading Dynamic Client Registration failure; set the header.
-- Stateless: calls share no thread state; use agent memory for cross-call knowledge.
+- No sessions: separate tool calls share no thread state (use agent memory for cross-call knowledge), but a tool call that pauses for input keeps its own state until the client answers (Agent Server MCP elicitation).
 - `mda dev` serves `/mcp` with no auth (unscoped local service principal).
 
 ## Gotchas
@@ -225,7 +233,7 @@ Any MCP client that can send a custom header works the same way: Streamable HTTP
 - HTTP `thread_id` must be a UUID (400 otherwise); map external IDs with `uuid.uuid5`.
 - Agent-owned interrupt tools re-execute from the top on resume; guard side effects.
 - Upgrading to 0.7.0 orphaned in-flight Slack conversations (thread ownership change).
-- Supabase is the only validated-token provider (auth0/okta/etc. removed in 0.5.0).
+- Supabase is no longer the only validated-token provider: the current identity page adds a generic JWT provider (Auth0, Okta, Clerk, Entra ID). Older notes that auth0/okta were removed in 0.5.0 are stale.
 - The HTTP channel docs' `parse` example imports `uuid7` from `langsmith` but calls `uuid.UUID` and `uuid.uuid5` without `import uuid`, so it fails with `NameError`. Import `uuid` as the example above does.
 
 ## Sources

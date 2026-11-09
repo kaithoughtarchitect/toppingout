@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: summarizer, summarization, SummarizationMiddleware, context compression, compact_conversation, conversation history, large_tool_results, context overflow, ContextOverflowError, trim history, offload, compaction, artifacts_root, context window full, summarize old messages
 read_when: Read when the context fills up, history is summarized or lost, tuning summarization triggers, finding offloaded conversation files, or hitting ContextOverflowError.
-updated: 2026-10-21
-sources_hash: f387ea905a70
+updated: 2026-11-09
+sources_hash: 531a1d27a4ce
 ---
 
 # Summarization and offloading (context compression)
@@ -27,6 +27,7 @@ One-line truth: every deep agent (main, general-purpose and declarative subagent
 - `artifacts_root` on `CompositeBackend` relocates archives; `history_path_prefix` was removed (`TypeError`).
 - Gotcha: models without a profile use the 170k trigger, which may exceed a small window; set `profile` or your own trigger.
 - Gotcha: summarization never touches memory files; save durable facts to memory first.
+- 0.7.34: the cutoff is also stored as `cutoff_message_id` and resolved by message id, so it stays right when earlier messages are removed; Claude reasoning blocks in messages kept from before the summary are dropped from what the model sees.
 
 ## Pieces and where they live
 
@@ -57,12 +58,12 @@ No profile:
 
 ## What happens on a model call (`wrap_model_call`)
 
-1. Rebuild effective messages: if `_summarization_event` exists, `[summary_msg] + messages[cutoff_index:]`.
+1. Rebuild effective messages: if `_summarization_event` exists, `[summary_msg] + messages[cutoff:]`. Since 0.7.34 the cutoff comes from `_resolve_cutoff_index`: the index of the message whose id is `cutoff_message_id`, falling back to the stored `cutoff_index` when the id is missing or no longer in state. Messages from the cutoff up to `created_at_index` (those kept verbatim from before the summary) pass through `_drop_bound_reasoning` (see below).
 2. Count tokens once; clip large string args of tool calls before the truncation keep window.
 3. Summarize if the trigger is met or the request exceeds the input budget (`0.95 * max_input_tokens - max output tokens`).
 4. Otherwise call the model; on a recognised context-overflow error (`ContextOverflowError`, or HTTP 400/413/422 with messages like "prompt is too long", "maximum context length") fall through to summarization.
 5. Summarize: partition at cutoff, upload inline media, append the evicted messages (XML buffer string, filtered of previous summaries) under `## Summarized at <iso>` to the history file, generate the summary with the same model, or with `summarizer` when set (async path runs these concurrently).
-6. Summary message is a `HumanMessage(additional_kwargs={"lc_source": "summarization"})`:
+6. Summary message is a `HumanMessage` marked with `add_notification_metadata(..., source="summarization")` (0.7.34; it still sets `additional_kwargs["lc_source"] = "summarization"`):
 
 ```
 You are in the middle of a conversation that has been summarized.
@@ -77,10 +78,20 @@ A condensed summary follows:
 ```
 
    If the archive write failed: `Here is a summary of the conversation to date:` and a Python warning ("Older messages will not be recoverable").
-7. State update: private `_summarization_event` (`cutoff_index`, `summary_message`, `file_path`) and `_summarization_session_id`. `state["messages"]` is untouched, unlike LangChain's middleware which `RemoveMessage`s everything. A UI reading thread state still sees the full raw transcript.
+7. State update: private `_summarization_event` (`cutoff_index`, `cutoff_message_id`, `summary_message`, `file_path`, `created_at_index`) and `_summarization_session_id`. `cutoff_message_id` (id of the message at `cutoff_index`, or `None`) and `created_at_index` (message count when the summary was made) are new in 0.7.34 and `NotRequired`; older events without them still work. `state["messages"]` is untouched, unlike LangChain's middleware which `RemoveMessage`s everything. A UI reading thread state still sees the full raw transcript.
 8. If still over budget, trailing big tool results are clipped/offloaded once (`_clip_overflow_tail`); if that cannot shrink the request, `ContextOverflowError("Model input still does not fit after recovery...")`.
 
 The session id is reused for the whole thread, so one history file per thread (and per subagent invocation).
+
+### Reasoning blocks after a summary (0.7.34)
+
+Claude binds each reasoning block to the conversation before it and can reject a request once that history changes. So `_drop_bound_reasoning` removes those blocks from `AIMessage` list content in the preserved messages of the summarizing call and in messages kept from before the summary on later calls. Which block types go (`_bound_reasoning_types`):
+
+- `response_metadata["model_provider"] == "anthropic"`, or `bedrock` / `bedrock_converse` with `claude` or `anthropic` in `model_name`: `thinking`, `redacted_thinking`, `reasoning_content` and `reasoning`.
+- No `model_provider` set: `thinking`, `redacted_thinking`, `reasoning_content`.
+- Any other provider (OpenAI, Gemini, non-Claude Bedrock): nothing is dropped.
+
+Only the model request changes; `state["messages"]` keeps the original blocks. Messages added after the summary keep their reasoning.
 
 ## Large tool result stub
 
@@ -144,7 +155,7 @@ from deepagents.middleware.summarization import create_summarization_tool_middle
 agent = create_deep_agent(model=model, middleware=[create_summarization_tool_middleware(model, StateBackend())])
 ```
 
-`compact_conversation` takes no args; it refuses until usage is >= ~50% of the auto trigger; shares `_summarization_event` with auto-summarization. `system_prompt=` adds a nudge (default none). Deep Agents Code wires this tool to a user command ([[dcode]]).
+`compact_conversation` takes no args; it refuses until usage is >= ~50% of the auto trigger; shares `_summarization_event` with auto-summarization. If generating the summary raises, it returns `Compaction failed: ...` as a `ToolMessage` with `status="error"` (since 0.7.33; before, the status was the default `success`) and leaves history unchanged. `system_prompt=` adds a nudge (default none). Deep Agents Code wires this tool to a user command ([[dcode]]).
 
 ## Gotchas
 - `max_input_tokens` comes from the model profile; custom/unknown models fall back to the 170k-token trigger, which can exceed small context windows. Set `profile` or pass your own trigger. See [[models]].

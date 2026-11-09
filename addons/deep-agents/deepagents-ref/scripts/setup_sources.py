@@ -21,7 +21,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-VERSION = "0.7.29"  # the version wiki/versions.md and the recipes were checked against
+VERSION = "0.7.34"  # the version wiki/versions.md and the recipes were checked against
 ROOT = Path(__file__).resolve().parent.parent
 PKG = ROOT / "sources" / "package"
 DOCS = ROOT / "sources" / "docs"

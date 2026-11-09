@@ -7,7 +7,7 @@ product: all
 keywords: openwiki, open wiki, repo wiki, repository wiki, AGENTS.md generator, CLAUDE.md, codebase documentation, repo context for coding agents, personal knowledge base, personal brain, npm openwiki, wiki generator
 read_when: Read when you want durable repo docs generated for coding agents (Deep Agents Code, Claude Code, Codex, Cursor), or are asking whether OpenWiki is part of the SDK.
 updated: 2026-10-21
-sources_hash: 32ae6bf25aa1
+sources_hash: daa3f77eced7
 ---
 
 # OpenWiki

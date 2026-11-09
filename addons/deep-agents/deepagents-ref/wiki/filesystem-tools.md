@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: filesystem tools, file tools, grep_exclude_dirs, offload_binary_content, ls, read_file, write_file, edit_file, delete, glob, grep, execute, FilesystemMiddleware, tool_token_limit_before_evict, large_tool_results, grep regex, read file limit, tool eviction, big tool output
 read_when: Read when the agent's file tools behave unexpectedly, grep regex finds nothing, read_file truncates, a large tool result is evicted, or execute is missing or reports success on failure.
-updated: 2026-10-21
-sources_hash: d9c3a1f83b45
+updated: 2026-11-09
+sources_hash: ad9f40584861
 ---
 
 # Filesystem tools (ls, read_file, write_file, edit_file, delete, glob, grep, execute)
@@ -21,6 +21,7 @@ The exact tools `FilesystemMiddleware` gives every deep agent, their arguments, 
 - `grep` is literal substring, never regex; `output_mode` is `files_with_matches` (default), `content` or `count`; cap `grep_max_count=1000`.
 - `write_file` overwrites silently; `edit_file` needs exact unique `old_string` unless `replace_all=True`; read-before-edit is prompt text only.
 - `execute` is hidden unless the backend (or Composite `default`) is a sandbox; `status` stays `success`, check `artifact["exit_code"]`.
+- `grep` `content` lines over 2,000 chars (`GREP_LINE_CHAR_LIMIT`) show only a window around the match (0.7.33+).
 - Tool results over `4 * tool_token_limit_before_evict` chars (80,000 default) go to `/large_tool_results/<tool_call_id>` with a head/tail preview.
 - Eviction skips `ls, glob, grep, read_file, edit_file, write_file, delete`; latest HumanMessage over 200,000 chars is offloaded too.
 - `**/*.ext` skips dot-directories; bare `*.ext` matches at any depth.
@@ -29,7 +30,7 @@ The exact tools `FilesystemMiddleware` gives every deep agent, their arguments, 
 
 ## Where they come from
 
-`create_deep_agent` always adds `FilesystemMiddleware(backend=backend, custom_tool_descriptions=<profile overrides>, _permissions=permissions)` to the main agent, the general-purpose subagent and each declarative subagent (see [[harness]], [[middleware]]). Tools act on the [[backends]] instance. Standalone use with `langchain.agents.create_agent`:
+`create_deep_agent` always adds `FilesystemMiddleware(backend=backend, custom_tool_descriptions=<profile overrides>, permissions=permissions)` to the main agent, the general-purpose subagent and each declarative subagent (see [[harness]], [[middleware]]). Tools act on the [[backends]] instance. Standalone use with `langchain.agents.create_agent`:
 
 ```python
 from deepagents import FilesystemMiddleware  # also: deepagents.middleware.filesystem
@@ -43,6 +44,7 @@ FilesystemMiddleware(
     grep_max_count=1000,                           # default match cap; None = unlimited
     tools=None,                                    # None/"all" or list[FsToolName]; must include "read_file"
     offload_binary_content=False,                  # 0.7.21+: keep binary payloads out of history (see backends)
+    permissions=None,                              # 0.7.31+: list[FilesystemPermission] (see permissions)
 )
 ```
 
@@ -66,7 +68,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 ### read_file
 
 - Default window is **100 lines** (tool schema); the backend protocol default of 2000 only applies to direct backend calls.
-- Text output: optional notices, then a status header `@@ lines 1-100 of 350 | next offset 100 @@`, then the source lines **verbatim** (no line-number gutter in 0.7.29). The model must not copy the header into `edit_file`.
+- Text output: optional notices, then a status header `@@ lines 1-100 of 350 | next offset 100 @@`, then the source lines **verbatim** (no line-number gutter in 0.7.34). The model must not copy the header into `edit_file`.
 - Empty file returns `System reminder: File exists but has empty contents`. `limit <= 0` returns a distinct "no lines were read" reminder. Negative `offset` reads from line 1 with a notice.
 - Size cap: if the page exceeds `4 * tool_token_limit_before_evict` chars (80,000 by default) it is truncated with a message suggesting e.g. `execute(command='jq . /file')`. `read_file` results are never evicted to a file.
 - Images (`.png .jpg .jpeg .gif .webp`), audio, PDFs return multimodal content blocks (base64); `offset/limit` ignored. Video is supported when the `deepagents[video]` extra (`av`, `pillow`) is installed: `offset/limit` become seconds, frames sampled every 0.5 s. Any `encoding == "base64"` result is sent as a file block, never as text. See [[multimodal]].
@@ -76,8 +78,8 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 ### write_file / edit_file / delete
 
 - `write_file` overwrites silently (description tells the model it need not read first).
-- `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing; this tool errors otherwise" - that read-before-edit check is **not enforced** in the 0.7.29 middleware.
-- `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29).
+- `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing; this tool errors otherwise" - that read-before-edit check is **not enforced** in the 0.7.34 middleware.
+- `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.34).
 - Two mutations (`write_file`/`edit_file`/`delete`) of the same path in one model response: the later ones return `Error: parallel file mutations to the same path are not allowed.`
 - `delete` is hidden from the model when the backend does not override `BackendProtocol.delete`.
 
@@ -95,15 +97,17 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 - `output_mode`: `files_with_matches` (paths), `content` (grouped under `<path>:` header, `<line>: <text>`), `count` (`<path>: <n>`).
 - Effective cap = `max_count` or `grep_max_count` (1000). On truncation a note says so. Backend sync grep timeout 15 s; async wrapper 35 s.
 - `FilesystemBackend.grep` also has `context_lines`, but it is backend-only (not exposed to the model).
-- The in-memory grep (`StateBackend`, `StoreBackend`) skips binary files (0.7.29).
+- Long lines (0.7.33+): a match or context line over `GREP_LINE_CHAR_LIMIT` (2,000) chars is cut to a 2,000-char window centred on the first occurrence of the pattern (the head of the line when the pattern is not in it, as for context lines), with `[N chars clipped]` markers at the cut ends (`_clip_grep_line`). Only `content` mode shows line text.
+- `FilesystemBackend`'s Python fallback (used when `rg` is missing) searches only the named file when `path` is a file (0.7.33+); before, it walked the file's whole parent directory.
+- The in-memory grep (`StateBackend`, `StoreBackend`) skips binary files (0.7.34).
 - `BaseSandbox.grep` (0.7.25+) runs `rg` when it is installed in the sandbox and the search root is a directory, else GNU `grep`; patterns or globs that `rg` would read differently (newlines, `[`, `\`, `**`) stay on GNU `grep`. Directories named in the class attribute `grep_exclude_dirs` (default `(".git",)`) are skipped at any depth; subclass to add `node_modules` or set `()` to search everything. A search rooted at an excluded directory still searches it.
 
 ### execute
 
 - Created always; **filtered out of the model request** unless the backend (or a `CompositeBackend`'s `default`) is a `SandboxBackendProtocol`. Called anyway, it returns an error.
 - `timeout < 0` or `> max_execute_timeout` returns an error; a backend whose `execute` lacks a `timeout` kwarg rejects per-call timeouts.
-- Output: combined stdout/stderr + `\n[Command succeeded with exit code 0]` / `failed with exit code N`, + `[Output was truncated due to size limits]` if the backend truncated. `ToolMessage.status` is `"success"` even for non-zero exit; `ToolMessage.artifact = {"exit_code": N}` (`ExecuteArtifact`) - use that to detect failure.
-- Large output: for a `BaseSandbox` with `enable_capture_offload=True` (e.g. `LangSmithSandbox`), output over 80,000 chars is captured to `/large_tool_results/<id>` inside the sandbox and only a head/tail preview is returned (capture capped at 10 MiB). Otherwise generic eviction applies.
+- Output: combined stdout/stderr + `\n[Command succeeded with exit code 0]` / `failed with exit code N`, + `[Output was truncated due to size limits]` if the backend truncated. `ToolMessage.status` is `"success"` even for non-zero exit; `ToolMessage.artifact` is an `ExecuteArtifact`: `{"truncated": bool, "exit_code": N}`, with `exit_code` omitted when unknown - use it to detect failure. `truncated` (always set since 0.7.31) means backend limits discarded output; `artifact` is `None` when no command ran (validation error, `status="error"`).
+- Large output: for a `BaseSandbox` with `enable_capture_offload=True` (e.g. `LangSmithSandbox`), output over 80,000 chars is captured to `/large_tool_results/<id>` inside the sandbox and only a head/tail preview is returned (capture capped at 10 MiB); the artifact then also carries `output_file` with that path (0.7.31+; may be incomplete when `truncated`). Otherwise generic eviction applies.
 - Description steers the model away from shell `find`/`grep`/`cat` toward `glob`/`grep`/`read_file`.
 
 ## Large result eviction
@@ -138,6 +142,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 - `../sources/package/deepagents/backends/protocol.py`
 - `../sources/package/deepagents/backends/utils.py`
 - `../sources/package/deepagents/backends/sandbox.py`
+- `../sources/package/deepagents/backends/filesystem.py`
 - `../sources/package/deepagents/graph.py`
 
 ## See also

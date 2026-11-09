@@ -7,7 +7,7 @@ product: sdk
 keywords: production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted
 read_when: Read when moving an agent to production, setting up thread_id/context/multi-tenancy, or choosing where the checkpointer and store come from.
 updated: 2026-11-09
-sources_hash: 7a60770614b5
+sources_hash: 803d48312130
 ---
 
 # Going to production
@@ -162,13 +162,14 @@ async def agent(config: RunnableConfig):
 - [ ] Shared memory paths read-only via [[permissions]], plus a write-tool guard (a `**` deny misses hidden paths).
 - [ ] Sandbox (not local shell) for code; secrets via auth proxy; sandbox TTL set.
 - [ ] Retries, fallback model, call limits, tool error handling ([[fault-tolerance]]); add them to subagent specs too.
+- [ ] Handle `ModelRefusalError` (`langchain_core.exceptions`): since 0.7.33 a model refusal raises from `invoke` instead of returning as the final answer; a `ModelFallbackMiddleware` in `middleware=` sees it first. Subagent refusals come back to the parent as a `task` result notice, not an exception ([[middleware]]).
 - [ ] `interrupt_on` / permission `mode="interrupt"` for irreversible tools (requires checkpointer).
 - [ ] `PIIMiddleware("email", strategy="redact", apply_to_input=True)` etc. if user data may contain PII (strategies: `redact`, `mask`, `hash`, `block`).
-- [ ] LangSmith tracing on (`LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`).
+- [ ] LangSmith tracing on (`LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`). The `execute` tool's `ToolMessage.artifact` (`ExecuteArtifact`) carries `exit_code`, and since 0.7.31 `truncated` (backend limits discarded output) and `output_file` (backend path of offloaded output, possibly incomplete); alert on `exit_code`, not `status`, which is `"success"` for any command that ran.
 
 ## Gotchas
 
-- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt`. In 0.7.29 `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
+- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt`. In 0.7.34 (as in 0.7.29) `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
 - `rt.server_info` is only populated on LangGraph server. In a plain local `agent.invoke`, a namespace lambda reading `rt.server_info.user.identity` raises. For self-hosting read ids from `rt.context` instead.
 - `create_deep_agent` already applies `.with_config({"recursion_limit": 9_999, ...})` (graph.py). You only need a higher limit on the client side (the frontend docs suggest `recursionLimit: 10000`).
 - Deep Agents write internal artifacts (`/conversation_history/...`, `/large_tool_results/...`) to the default backend (the root of `CompositeBackend.artifacts_root`). Keep `StateBackend` as the default so these don't land in a durable store or on disk.
@@ -183,6 +184,9 @@ async def agent(config: RunnableConfig):
 - `../sources/package/deepagents/backends/store.py`
 - `../sources/package/deepagents/backends/langsmith.py`
 - `../sources/package/deepagents/middleware/summarization.py`
+- `../sources/package/deepagents/middleware/subagents.py` (refusal notice)
+- `../sources/package/deepagents/backends/protocol.py` (`ExecuteArtifact`)
+- `../sources/package/deepagents/middleware/filesystem.py` (`_execute_artifact`)
 
 ## See also
 

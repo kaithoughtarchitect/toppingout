@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: multimodal, image input, images, audio, video, PDF, file blocks, content blocks, read_file media, video frames, UnsupportedContentMiddleware, deepagents[video], screenshot, vision, unsupported content
 read_when: Read when passing images/audio/video/files to an agent, read_file media fails, or blocks are replaced by a text notice.
-updated: 2026-10-21
-sources_hash: 9a2af3b84d45
+updated: 2026-11-09
+sources_hash: f507293fa1a7
 ---
 
 # Multimodal input, read_file media, video frames
 
-One-line truth: Deep Agents pass LangChain standard content blocks (image/audio/video/file) through unchanged when the model supports them; `read_file` turns media files into content blocks (videos into sampled JPEG frames with the `[video]` extra), and `UnsupportedContentMiddleware` (auto-added, last in the stack) swaps blocks the active model can't accept for a text notice.
+One-line truth: Deep Agents pass LangChain standard content blocks (image/audio/video/file) through unchanged when the model supports them; `read_file` turns media files into content blocks (videos into sampled JPEG frames with the `[video]` extra), and `UnsupportedContentMiddleware` (auto-added near the end of the stack, before `ModelRefusalMiddleware`) swaps blocks the active model can't accept for a text notice.
 
 ## User input
 
@@ -54,11 +54,11 @@ Extension map (`backends/utils.py _EXTENSION_TO_FILE_TYPE`):
 - Non-text result = single block `{"type": <block>, "base64": ..., "mime_type": mimetypes.guess_type(...) or "application/octet-stream"}` in a `ToolMessage` with `additional_kwargs={"read_file_path", "read_file_media_type"}`.
 - Any backend result with `encoding == "base64"` is treated as binary even if the extension is unknown → generic `file` block.
 - `offset`/`limit` are ignored for images/PDFs (text-only pagination).
-- `edit_file` on a binary file stored in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29); `grep` there skips binary files.
+- `edit_file` on a binary file stored in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29, unchanged in 0.7.34); `grep` there skips binary files.
 
 ## Video: sampled frames (`middleware/_video.py`)
 
-Install: `pip install "deepagents[video]"` (PyAV `av>=18,<19` + `pillow>=12.3,<13`). Detection is `find_spec("av")` and `find_spec("PIL.Image")`; when present, `read_file` switches to a video-aware schema/description.
+Install: `pip install "deepagents[video]"` (PyAV `av>=18.0.0` + `pillow>=12.3.0`; the upper bounds `<19` / `<13` were dropped by 0.7.34). Detection is `find_spec("av")` and `find_spec("PIL.Image")`; when present, `read_file` switches to a video-aware schema/description.
 
 - `offset` = seconds to skip, `limit` = seconds to sample (default `limit=100` → first 100 s). `limit <= 0` → tool error.
 - Fixed sampling rate `0.5` fps (one frame every 2 s); not configurable by the agent.
@@ -72,10 +72,10 @@ Install: `pip install "deepagents[video]"` (PyAV `av>=18,<19` + `pillow>=12.3,<1
 
 Two layers:
 
-1. `UnsupportedContentMiddleware` (`deepagents.middleware`), appended last on the main agent **and** every declarative subagent. On each model call it inspects `HumanMessage`/`ToolMessage` blocks against `model.profile`:
+1. `UnsupportedContentMiddleware` (`deepagents.middleware`), appended at the end of the main agent's tail (only `ModelRefusalMiddleware` and tool exclusion follow it since 0.7.33) **and** of every declarative subagent. On each model call it inspects `HumanMessage`/`ToolMessage` blocks against `model.profile`:
    - `image`→`image_inputs`, `audio`→`audio_inputs`, `video`→`video_inputs`, `file`→`pdf_inputs`; inside a `ToolMessage` also `image_tool_message` / `pdf_tool_message`.
    - Missing profile field = supported; only an explicit `False` rejects.
-   - `file` blocks that are URL/ID-backed, or non-base64, are always passed. Base64 non-PDF documents (`.docx`, `.pptx`, ...) are passed only to `ChatOpenAI`/`AzureChatOpenAI` with `use_responses_api` truthy and a MIME in `_OPENAI_FILE_MIME_TYPES`; otherwise replaced.
+   - `file` blocks that are URL/ID-backed, or non-base64, are always passed. Base64 non-PDF documents (`.docx`, `.pptx`, ...) are passed only to `ChatOpenAI`/`AzureChatOpenAI` with `use_responses_api` truthy and a MIME in `_OPENAI_FILE_MIME_TYPES`; otherwise replaced. Since 0.7.32 the module no longer imports `langchain_openai`: `_openai_file_model_types()` reads `ChatOpenAI` / `AzureChatOpenAI` from `sys.modules` (an instance implies the module is loaded), so the behaviour is the same.
    - Replacement text: `[read_file: <path> was not attached because this model does not support <type> content (<mime>).]`. Request-only: the thread keeps the original, so switching to a capable model resends it.
 2. `FilesystemMiddleware.wrap_model_call` catches `ModelInvalidRequestError`; if the failing request contains `read_file` media added since the last AI message, it replaces those messages' content with "Unsupported content. The file may be invalid, too large, or of an unsupported mime-type." and retries once. This replacement **is written to state** (permanent).
 
@@ -116,7 +116,7 @@ agent = create_agent(model, middleware=[FilesystemMiddleware(), UnsupportedConte
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/_blob_offload.py`
 - `../sources/package/deepagents/backends/state.py`
-- `../sources/package/deepagents-0.7.29.dist-info/METADATA` (`video` extra)
+- `../sources/package/deepagents-0.7.34.dist-info/METADATA` (`video` extra)
 
 ## See also
 - [[index]]

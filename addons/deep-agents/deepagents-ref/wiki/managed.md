@@ -6,15 +6,15 @@ status: sourced
 product: managed
 keywords: managed deep agents, MDA, mda CLI, managed-deepagents, define_deep_agent, mda deploy, mda dev, mda init, LangSmith deployment, Agent Server, hosted agent, Context Hub, deploy agent to production, migrate from create_deep_agent
 read_when: Read when deciding between the OSS SDK and Managed Deep Agents, running mda init, build, dev or deploy, or migrating create_deep_agent code to define_deep_agent.
-updated: 2026-10-21
-sources_hash: a4efb216681f
+updated: 2026-11-09
+sources_hash: 7ddeecd9aa7a
 ---
 
 # Managed Deep Agents (MDA)
 
 LangSmith-hosted Deep Agents: you write a project folder (`agent.py` + `instructions.md` + optional `skills/`, `tools/`, `memory.py`, `sandbox/`, `channels/`, `schedules/` ...) and the `mda` CLI compiles it into a LangGraph app that runs on LangSmith Agent Server. Reach for it when you want the agent in production with Slack/webhooks, OAuth for end users, cron, a managed sandbox and durable memory, without running any of that yourself.
 
-Status: public beta on LangSmith Cloud. `LANGSMITH_ENDPOINT` picks the region: GCP US (default), GCP EU, GCP APAC or AWS US; LangSmith managed tools are GCP US only. Package `managed-deepagents` (PyPI and npm publish together at the same version; latest in sources 0.9.4, 2026-10-20). The `mda` binary is a Rust CLI shipped inside the package. None of this is in the `deepagents` 0.7.29 source; everything here is docs-only.
+Status: public beta on LangSmith Cloud. `LANGSMITH_ENDPOINT` picks the region: GCP US (default), GCP EU, GCP APAC or AWS US; LangSmith managed tools are GCP US only. Package `managed-deepagents` (PyPI and npm publish together at the same version; latest in sources 0.9.4, 2026-10-20). The `mda` binary is a Rust CLI shipped inside the package. None of this is in the `deepagents` 0.7.34 source; everything here is docs-only.
 
 ## Quick reference
 
@@ -25,7 +25,7 @@ Status: public beta on LangSmith Cloud. `LANGSMITH_ENDPOINT` picks the region: G
 - Quickstart: `uvx --from managed-deepagents mda init <name>`, then `uv run mda dev`, then `uv run mda deploy`.
 - Not accepted: `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer`, `state_schema`. Prompt goes to `instructions.md`, skills to `skills/`, memory to `memory.py`, backend to `sandbox/`.
 - Middleware must use async hooks; `permissions` is cleared when `sandbox/` exists.
-- `mda deploy` flags: `--name`, `--deployment-type dev|prod`, `--context-strategy overwrite|keep-hub`, `--no-wait` (not allowed with Slack).
+- `mda deploy` flags: `--name`, `--deployment-type serverless|dedicated` (0.10.0+: Serverless is the default, GCP SaaS only; `dev`/`prod` still accepted), `--context-strategy overwrite|keep-hub`, `--no-wait` (not allowed with Slack).
 - Put provider keys in `.env` or workspace secrets; `.env` is not archived but non-reserved values are forwarded as deployment secrets.
 - Gotcha: `mda build` does not validate the definition call; a forbidden param like `backend=` only fails under `mda dev`.
 - Stay on OSS for custom backends, own store or checkpointer, custom routes, `state_schema`, or stdio MCP.
@@ -94,7 +94,7 @@ Scaffold language follows the install channel: PyPI package always writes Python
 
 ### `mda deploy`
 
-Flags: `--name` (default: agent `name`), `--deployment-type dev|prod` (default `dev`, only on create), `--workspace-id` (overrides `LANGSMITH_WORKSPACE_ID`), `--context-strategy overwrite|keep-hub` (required in non-interactive shells when Hub copy changed), `--no-wait`. The 0.8.6 changelog also adds `--yes` (confirm first-deploy overwrites unattended) and `--agent-environment`; the docs don't list them yet.
+Flags: `--name` (default: agent `name`), `--deployment-type` (only on create; since 0.10.0 the default is a Serverless deployment that can scale to zero, and `dedicated` gives the old always-on behaviour; Serverless needs a supported GCP SaaS environment, others reject it; `dev` and `prod` still work; existing deployments don't change), `--workspace-id` (overrides `LANGSMITH_WORKSPACE_ID`), `--context-strategy overwrite|keep-hub` (required in non-interactive shells when Hub copy changed), `--no-wait`. The 0.8.6 changelog also adds `--yes` (confirm first-deploy overwrites unattended) and `--agent-environment`; the docs don't list them yet.
 
 Region: set `LANGSMITH_ENDPOINT` in `.env` or the shell before the first deploy (for example `https://eu.api.smith.langchain.com`). Credentials must belong to that region, and it also picks the region browser sign-in uses. In CI there is no browser sign-in, so set `LANGSMITH_API_KEY` for the target region.
 
@@ -201,7 +201,7 @@ Other migration rules:
 
 - Beta on LangSmith Cloud; LangSmith managed tools are GCP US only. The runtime page now documents direct Agent Server calls (`client.runs.create(thread_id, "<name>", input=..., context=...)`); treat the Agent Server API as the contract.
 - `define_deep_agent` has no `backend`/`store`/`checkpointer`/`system_prompt`/`skills`/`memory`/`state_schema`. Middleware must use **async** hooks: MDA always calls `ainvoke`/`astream`.
-- Declaring `sandbox/` clears `permissions`. OSS code agrees with the reason: in 0.7.29 `FilesystemMiddleware` raises `NotImplementedError` for permissions plus an execution-capable backend unless every rule is scoped to CompositeBackend routes.
+- Declaring `sandbox/` clears `permissions`. OSS code agrees with the reason: in 0.7.34 `FilesystemMiddleware` raises `NotImplementedError` for permissions plus an execution-capable backend unless every rule is scoped to CompositeBackend routes.
 - Doc contradiction on memory: migrate page shows `define_memory(scope="agent")`; memory page and 0.8.0 changelog use `MemoryLayer` and say string scopes are rejected. For >=0.8.0 use `define_memory(agent=MemoryLayer())`.
 - Doc contradiction on secrets: deploy/CLI pages say a provider key only in the shell is forwarded; 0.5.3 changelog says shell values are no longer read for deployment secrets. Put keys in `.env` or workspace secrets to be safe.
 - Doc contradiction on per-run memory: the agent-definition page says memory is not selected per run and access is controlled with an `allow` policy; the 0.9.0 changelog deprecates `allow` callbacks and says to select memory in the factory with `define_memory(...)`. Prefer the changelog, and check the memory page before relying on either.

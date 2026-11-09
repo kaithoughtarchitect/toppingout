@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: approval modes, manual mode, auto mode, YOLO, --yolo, auto-approve, human in the loop, HITL, approval, shell allow list, -S, allow-fs-tools, sandbox, remote sandbox, daytona, modal, runloop, untrusted repo, project trust, SandboxProvider
 read_when: Read when running dcode unattended or in an untrusted repo, choosing an approval mode, allowing shell commands, or setting up a remote sandbox.
-updated: 2026-10-21
-sources_hash: 0e6bbecc8fad
+updated: 2026-11-09
+sources_hash: f0cbf22ca837
 ---
 
 # dcode approval modes and remote sandboxes
@@ -114,7 +114,7 @@ supports_snapshot_name = false        # default false
 region = "us-east-1"
 ```
 
-A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProvider`. It implements `get_or_create(*, sandbox_id=None, **kw)`, which returns an SDK `SandboxBackendProtocol`, and `delete(*, sandbox_id, **kw)`. It can optionally define a `metadata` property returning `SandboxProviderMetadata`. `SandboxBackendProtocol` exists in SDK 0.7.29 `backends/protocol.py`. The `deepagents_code` classes are docs only.
+A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProvider`. It implements `get_or_create(*, sandbox_id=None, **kw)`, which returns an SDK `SandboxBackendProtocol`, and `delete(*, sandbox_id, **kw)`. It can optionally define a `metadata` property returning `SandboxProviderMetadata`. `SandboxBackendProtocol` exists in SDK 0.7.34 `backends/protocol.py`. The `deepagents_code` classes are docs only.
 
 ## Gotchas
 

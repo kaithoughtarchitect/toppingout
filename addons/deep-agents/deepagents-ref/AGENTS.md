@@ -1,27 +1,27 @@
 # Deep Agents reference
 
-A reference for LangChain **Deep Agents**, checked against the real package code. Use it before you plan, while you build, and when you review. Version: `deepagents` **0.7.29** (Python SDK).
+A reference for LangChain **Deep Agents**, checked against the real package code. Use it before you plan, while you build, and when you review. Version: `deepagents` **0.7.34** (Python SDK).
 
 ## Map
 
 ```
-Layer 1: this folder (deepagents-ref/). Read first. Checked against 0.7.29 code. Wins every conflict.
+Layer 1: this folder (deepagents-ref/). Read first. Checked against 0.7.34 code. Wins every conflict.
   wiki/constitution.md     13 rules, read every time
-  wiki/agent-setup.md         the full agent setup: model, backend, permissions, Memory tab, workspaces (run on 0.7.29)
+  wiki/agent-setup.md         the full agent setup: model, backend, permissions, Memory tab, workspaces (run on 0.7.34)
   wiki/index.md            one line per page (SDK first, dcode/Managed optional)
   wiki/lookup.md           term, class, function or parameter -> page
   wiki/decisions.md        which piece to use
-  wiki/anti.md             what breaks in 0.7.29 + symptom -> cause table for debugging
+  wiki/anti.md             what breaks in 0.7.34 + symptom -> cause table for debugging
   wiki/gaps.md             what layer 1 doesn't cover -> go to layer 2
   wiki/<topic>.md          topic pages: Quick reference, Gotchas, Sources
   scripts/check_imports.py static check of your file against the vendored package (no install needed)
-  sources/package/         deepagents 0.7.29 source (ground truth; open by explicit path)
+  sources/package/         deepagents 0.7.34 source (ground truth; open by explicit path)
   sources/docs/            raw Deep Agents docs (contain stale examples; open by explicit path)
 
 Layer 2: LangChain docs server, MCP "docs-langchain" (registered in the repo-root .mcp.json)
   search_docs_by_lang_chain                 semantic search over ALL LangChain docs
   query_docs_filesystem_docs_by_lang_chain  rg / cat / head over every doc page (.mdx paths)
-  Live and always the latest docs. Docs only: never checked against 0.7.29.
+  Live and always the latest docs. Docs only: never checked against 0.7.34.
 ```
 
 ## Find it
@@ -33,7 +33,7 @@ Layer 2: LangChain docs server, MCP "docs-langchain" (registered in the repo-roo
 5. If neither has it, check `wiki/gaps.md`, then use **layer 2**:
    - Search with `search_docs_by_lang_chain` and put **"python"** in the query, or you'll get JavaScript pages too.
    - Read the result with `query_docs_filesystem_docs_by_lang_chain`, command `head -200 /<path>.mdx`, using **exactly** the path the search returned. Guessed paths fail silently. `rg -il "term" /oss/python` finds pages by keyword.
-   - Label the answer "LangChain docs, not checked against 0.7.29". If it contradicts layer 1, layer 1 wins. Layer-2 examples can still be wrong for Deep Agents (e.g. the fake-model example in `wiki/testing.md`).
+   - Label the answer "LangChain docs, not checked against 0.7.34". If it contradicts layer 1, layer 1 wins. Layer-2 examples can still be wrong for Deep Agents (e.g. the fake-model example in `wiki/testing.md`).
 6. If neither layer has it, **say so. Don't answer from memory.**
 7. Only open `sources/` by explicit path, from a page's `## Sources`. Default searches skip it (`.ignore`).
 
@@ -52,7 +52,7 @@ Start at the **Symptom → cause** table in `wiki/anti.md`. Check the store and 
 ## After you write code: verify (mandatory)
 
 1. Run `python deepagents-ref/scripts/check_imports.py <your files>`. It flags nonexistent `deepagents` imports, bad keyword arguments, backend factories and other 0.7 breakers. Fix every error, and justify every warning.
-2. Version: `pip show deepagents`. If it isn't installed, the reference version is in `sources/package/deepagents/_version.py` (0.7.29); say the code is unverified against an install. If the installed version differs, say so before trusting any detail.
+2. Version: `pip show deepagents`. If it isn't installed, the reference version is in `sources/package/deepagents/_version.py` (0.7.34); say the code is unverified against an install. If the installed version differs, say so before trusting any detail.
 3. Go through the review checklist below.
 
 ## Review checklist

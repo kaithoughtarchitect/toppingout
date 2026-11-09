@@ -7,7 +7,7 @@ product: sdk
 keywords: ACP, Agent Client Protocol, deepagents-acp, AG-UI, @ag-ui/langgraph, A2A, Agent2Agent, editor integration, Zed, agent to agent, agent protocol, JSON-RPC, a2a assistant_id, IDE
 read_when: Read when exposing an agent to an editor (ACP), a frontend (AG-UI) or other agents (A2A), or asking which protocol does what.
 updated: 2026-10-21
-sources_hash: 1086e359ab45
+sources_hash: 851081ca31c4
 ---
 
 # Protocols (ACP, AG-UI, A2A)

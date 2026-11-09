@@ -5,9 +5,9 @@ type: reference
 status: code
 product: sdk
 keywords: tutorials, examples, data analysis agent, deep research agent, content builder, RAG agent, chunk-analyst, research-agent, sample agents, reference architecture, copy pattern, load_subagents, official tutorial
-read_when: Read when looking for an end-to-end pattern to copy (research, data analysis, content, RAG), or when a tutorial example fails on 0.7.29.
-updated: 2026-10-21
-sources_hash: f7034d138ae6
+read_when: Read when looking for an end-to-end pattern to copy (research, data analysis, content, RAG), or when a tutorial example fails on 0.7.34.
+updated: 2026-11-09
+sources_hash: f4267ef9001e
 ---
 
 # Official tutorials (patterns to copy)
@@ -18,6 +18,7 @@ One-line truth: four official end-to-end builds (data analysis, deep research, c
 
 - Four patterns: data analysis (sandbox + side-effect tool), deep research (orchestrator + parallel researchers), content builder (AGENTS.md + skills + YAML subagents), RAG (retrieve, offload to files, delegate per chunk).
 - Copy the pattern, not the model ids; ids change often.
+- Deep research and content builder now also show a Managed Deep Agents path (`uvx --from managed-deepagents mda init <name>`, `define_deep_agent(...)`, `instructions.md`, `uv run mda dev`, `uv run mda deploy`); the SDK code below is unchanged ([[managed-dev]]).
 - Planning is opt-in since 0.7.0; tutorial prompts that say use `write_todos` need `TodoListMiddleware()` added.
 - `TodoListMiddleware` on the main agent is not inherited by declarative subagents.
 - Only data analysis passes a checkpointer (`InMemorySaver`); others are single-turn even with a `thread_id`.
@@ -124,12 +125,27 @@ agent = create_deep_agent(
 
 `load_subagents` reads YAML (`description`, `system_prompt`, optional `model`, `tools` as names) and maps tool names to Python tool objects: deep agents do not load subagents from files natively. Copy: behavior lives in editable files (memory = voice, skills = procedures, YAML = delegation); skills tell the agent to call `task(subagent_type="researcher", description="Research X. Save findings to research/x.md")` and then read the file, so research is handed over by file path rather than pasted. In virtual mode `./AGENTS.md` resolves to `<root_dir>/AGENTS.md`.
 
+Managed variant (deep research and content builder, Nov 2026 docs): scaffold with `uvx --from managed-deepagents mda init content-builder` (or `deep-research`), put the brand voice or research workflow in `instructions.md` (the SDK `memory=` role; synced to Context Hub on deploy), keep skills under `skills/` (discovered automatically, no `skills=`), and declare the agent in code:
+
+```python
+from managed_deepagents import define_deep_agent
+
+agent = define_deep_agent(
+    name="content-builder",
+    model="anthropic:claude-sonnet-4-5-20250929",
+    tools=[generate_cover, generate_social_image],
+    subagents=[researcher],   # a plain dict spec, no YAML loader
+)
+```
+
+Deep research uses the same shape with `tools=[tavily_search]`, `subagents=[research_sub_agent]`, `middleware=[TodoListMiddleware()]`. Run with `uv run mda dev` (Studio) and `uv run mda deploy`.
+
 ## 4. RAG (retrieve, offload, delegate)
 
 Builds: docs Q&A. Index 14 docs pages (requests -> `RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)` -> `OpenAIEmbeddings("text-embedding-3-small")` -> `InMemoryVectorStore`), then at query time a tool writes each hit to the agent filesystem and returns only paths.
 
 ```python
-import uuid
+from langchain_core.utils.uuid import uuid7
 from deepagents import create_deep_agent
 from deepagents.backends import StateBackend
 from langchain.tools import tool
@@ -144,7 +160,7 @@ def search_documentation(query: str) -> str:
         query: Natural language search query.
     """
     docs = vector_store.similarity_search(query, k=4)
-    batch = uuid.uuid4().hex[:8]
+    batch = uuid7().hex[:8]
     uploads = [(f"/retrieved/{batch}/chunk_{i}.md",
                 f"# Source: {d.metadata.get('source', 'unknown')}\n\n{d.page_content}".encode())
                for i, d in enumerate(docs, start=1)]
@@ -169,7 +185,7 @@ Copy: the orchestrator never sees chunk text, only paths; one `task()` per chunk
 - Todo planning is opt-in since 0.7.0: `create_deep_agent` no longer adds `TodoListMiddleware`/`write_todos`. The RAG full-code prompt still says "Use write_todos" without adding the middleware, so that tool does not exist there. Add `middleware=[TodoListMiddleware()]` or drop the line.
 - `TodoListMiddleware` on the main agent is not inherited by declarative subagents; add it per spec if a subagent should plan.
 - Deep research, content builder and RAG pass no `checkpointer`; content builder even passes a `thread_id`, which does nothing without one. Add a durable checkpointer for multi-turn use ([[persistence]]).
-- Content builder: says to pin `deepagents>=0.3.5,<0.4.0` (stale vs 0.7.29); the skills tell the model to call `generate_image` while the tools are `generate_cover` / `generate_social_image`; image tools write to `EXAMPLE_DIR` directly, bypassing the backend and permissions; the "Output" section claims artifacts land in a system temp dir, contradicting `FilesystemBackend(root_dir=EXAMPLE_DIR)`. Code wins: files go under `root_dir`.
+- Content builder: says to pin `deepagents>=0.3.5,<0.4.0` (stale vs 0.7.34); the skills tell the model to call `generate_image` while the tools are `generate_cover` / `generate_social_image`; image tools write to `EXAMPLE_DIR` directly, bypassing the backend and permissions; the "Output" section claims artifacts land in a system temp dir, contradicting `FilesystemBackend(root_dir=EXAMPLE_DIR)`. Code wins: files go under `root_dir`.
 - `FilesystemBackend` can delete files under `root_dir` (0.7 adds a recursive `delete` tool). Run it in a dedicated directory.
 - In-memory vector store and `InMemorySaver` are demo choices; persist the index and state for production.
 - None of the tutorials add retries or call limits; research-style agents with web tools are the prime case for [[fault-tolerance]] middleware on the subagent specs.

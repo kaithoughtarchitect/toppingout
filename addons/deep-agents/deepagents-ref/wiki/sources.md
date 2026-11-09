@@ -4,18 +4,18 @@ id: sources
 type: reference
 status: sourced
 product: all
-keywords: sources, raw docs, ground truth, package source, deepagents 0.7.29, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs
+keywords: sources, raw docs, ground truth, package source, deepagents 0.7.34, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs
 read_when: Read when you need the raw doc or code path to cite, or to know which source wins when docs and code disagree.
-updated: 2026-10-21
+updated: 2026-11-09
 ---
 
 # Sources
 
-What this graph is distilled from. Raw is immutable between refreshes: read it, cite it, never hand-edit it. `sourced` 2026-09-29, docs re-fetched 2026-10-21.
+What this graph is distilled from. Raw is immutable between refreshes: read it, cite it, never hand-edit it. `sourced` 2026-09-29, docs re-fetched 2026-10-21 and 2026-11-09.
 
 ## Ground truth order
 
-1. `../sources/package/deepagents/` — the `deepagents` 0.7.29 wheel, extracted ([[versions]]). Signatures, defaults, behaviour.
+1. `../sources/package/deepagents/` — the `deepagents` 0.7.34 wheel, extracted ([[versions]]). Signatures, defaults, behaviour.
 2. `../sources/docs/oss/python/deepagents/` — official Python SDK docs.
 3. Everything else below.
 
@@ -25,10 +25,10 @@ Docs and code disagree → code wins, and the page's `## Gotchas` says so.
 
 | Folder | What | Pages |
 |---|---|---|
-| `oss/python/deepagents/` | SDK: overview, quickstart, customization, models, profiles, tools, backends, permissions, sandboxes, interpreters, subagents (sync/dynamic/async), HITL, rubric, memory, skills, context engineering, retrieval, RAG, streaming, event streaming, multimodal, protocols (ACP, AG-UI), production, fault tolerance, tutorials, comparison | 31 |
+| `oss/python/deepagents/` | SDK: overview, quickstart, customization, models, profiles, tools, backends, permissions, sandboxes, interpreters, subagents (sync/dynamic/async), HITL, rubric, memory, skills, context engineering, retrieval, RAG, streaming, event streaming, multimodal, browser use, protocols (ACP, AG-UI), production, fault tolerance, tutorials, comparison | 32 |
 | `oss/python/deepagents/frontend/` | UI patterns (JS side) over a Python agent | 4 |
 | `oss/deepagents/code/` | Deep Agents Code (`dcode`) | 16 |
-| `langsmith/python/managed-deep-agents*` | Managed Deep Agents | 28 |
+| `langsmith/python/managed-deep-agents*` | Managed Deep Agents | 33 |
 | `github/deepagents-CHANGELOG.md`, `github/deepagents-code-CHANGELOG.md`, `github/managed-deepagents-CHANGELOG.md` | Changelogs for the SDK, `dcode` and Managed (the docs pages now redirect to these GitHub files) | 3 |
 | `oss/python/langchain/mcp/` (`index.md`, `tools.md`) | LangChain's MCP docs; the old Deep Agents MCP page redirects here | 2 |
 | `langsmith/server-a2a.md` | A2A on Agent Server; the old Deep Agents A2A page redirects here | 1 |

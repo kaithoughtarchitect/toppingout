@@ -6,8 +6,8 @@ status: sourced
 product: sdk
 keywords: dynamic subagents, dynamic sub-agent, task() in interpreter, CodeInterpreterMiddleware, QuickJS, Promise.all, fan-out, RLM, recursive subagents, langchain_quickjs, responseSchema, eval, batch dispatch
 read_when: Read when fanning out over many files or tickets from interpreter code, or when gating dynamic task() dispatch.
-updated: 2026-10-21
-sources_hash: 0783310027b8
+updated: 2026-11-09
+sources_hash: 4cc85772bfa0
 ---
 
 # Dynamic subagents (task() from interpreter code)
@@ -16,9 +16,9 @@ One-line truth: when an agent has both sync subagents and `CodeInterpreterMiddle
 
 ## Requirements
 
-- `pip install -U "deepagents[quickjs]"` gives you `langchain-quickjs>=0.3.9` (0.7.29 METADATA; the docs say `>=0.3.0`). Python 3.11 or newer.
+- `pip install -U "deepagents[quickjs]"` gives you `langchain-quickjs>=0.3.11` (0.7.34 METADATA; the docs say `>=0.2.0` on this page and `>=0.3.0` on the interpreters page). Python 3.11 or newer.
 - At least one sync subagent. The auto-added `general-purpose` one counts, so basic fan-out needs no extra config ([[subagents]]).
-- `CodeInterpreterMiddleware` in `middleware=`. It lives in `langchain_quickjs`, **not** in the deepagents 0.7.29 package, so interpreter behaviour is docs-only here ([[interpreters]]).
+- `CodeInterpreterMiddleware` in `middleware=`. It lives in `langchain_quickjs`, **not** in the deepagents 0.7.34 package, so interpreter behaviour is docs-only here ([[interpreters]]).
 
 ```python
 from deepagents import create_deep_agent
@@ -50,7 +50,7 @@ const review = await task({
 
 - Inputs: `description`, `subagentType`, and an optional `responseSchema` (a JSON schema).
 - Each call runs a full agentic loop of that subagent and resolves to its result: text, or a typed object when `responseSchema` is given.
-- Python-side hook (verified in 0.7.29): `middleware/subagents.py` reads `config["configurable"]["__deepagents_subagent_response_format"]` (the `SUBAGENT_RESPONSE_FORMAT_CONFIG_KEY` constant) and **recompiles the declarative spec** with that response format for this call only. Compiled subagents reject it with `ValueError("response_schema cannot be used with compiled subagent ...")`.
+- Python-side hook (verified in 0.7.34): `middleware/subagents.py` reads `config["configurable"]["__deepagents_subagent_response_format"]` (the `SUBAGENT_RESPONSE_FORMAT_CONFIG_KEY` constant) and **recompiles the declarative spec** with that response format for this call only. Compiled subagents reject it with `ValueError("response_schema cannot be used with compiled subagent ...")`.
 - `tools.*` (programmatic tool calling, PTC) is off by default. Enable it with an allowlist, for example `CodeInterpreterMiddleware(ptc=["glob"])` so code can discover inputs.
 
 ## Triggering
@@ -90,7 +90,7 @@ Other `CodeInterpreterMiddleware` kwargs (docs): `memory_limit=64MB`, `timeout=5
 - JS uses `subagentType` and `responseSchema`. The Python `task` tool uses `subagent_type` and has no schema argument.
 - `responseSchema` only works for declarative `SubAgent` specs, not `CompiledSubAgent`.
 - Interpreter runtime and dynamic subagents are **beta**, so the APIs may change.
-- Everything about `CodeInterpreterMiddleware` itself is docs-only, not found in 0.7.29 deepagents source (it lives in `langchain_quickjs`).
+- Everything about `CodeInterpreterMiddleware` itself is docs-only, not found in 0.7.34 deepagents source (it lives in `langchain_quickjs`).
 
 ## Sources
 
@@ -98,7 +98,7 @@ Other `CodeInterpreterMiddleware` kwargs (docs): `memory_limit=64MB`, `timeout=5
 - `../sources/docs/oss/python/deepagents/subagents.md`
 - `../sources/docs/oss/python/deepagents/interpreters.md`
 - `../sources/package/deepagents/middleware/subagents.py`
-- `../sources/package/deepagents-0.7.29.dist-info/METADATA` (`quickjs` extra)
+- `../sources/package/deepagents-0.7.34.dist-info/METADATA` (`quickjs` extra)
 
 ## See also
 

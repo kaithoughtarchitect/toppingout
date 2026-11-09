@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: /goal, goal, /rubric, --rubric, rubric, acceptance criteria, grader, RubricMiddleware, keep iterating until done, self-grading, --rubric-max-iterations, --rubric-model, definition of done, CI quality gate
 read_when: Read when you want dcode to keep working until acceptance criteria pass, or need a rubric quality gate in headless or CI runs.
-updated: 2026-10-21
-sources_hash: c96383a4f4f4
+updated: 2026-11-09
+sources_hash: 256223b76ada
 ---
 
 # dcode goals and rubrics
@@ -17,7 +17,7 @@ Goals and rubrics make [[dcode]] grade its own work against acceptance criteria 
 ## How it works
 
 - Both are built on the SDK's `RubricMiddleware` (see [[rubric]]). When the agent would finish (a model response with no tool calls), a separate grader subagent judges the transcript. `needs_revision` injects feedback as a `HumanMessage` and the loop resumes. The loop ends on `satisfied`, on `failed`, or at `max_iterations`.
-- In SDK 0.7.29 (unchanged since 0.7.20) the constructor is `RubricMiddleware(*, model, system_prompt=None, tools=None, ..., max_iterations=3, on_evaluation=None)` (every argument is keyword-only). The SDK default of 3 iterations explains why the docs example uses `--rubric-max-iterations 3`. dcode's own default is not stated in the docs.
+- In SDK 0.7.34 (unchanged since 0.7.20) the constructor is `RubricMiddleware(*, model, system_prompt=None, tools=None, ..., max_iterations=3, on_evaluation=None)` (every argument is keyword-only). Since SDK 0.7.33 `RubricMiddleware` is out of beta (no `@beta` decorator; the docs still say beta). The SDK default of 3 iterations explains why the docs example uses `--rubric-max-iterations 3`. dcode's own default is not stated in the docs.
 - Since 0.1.61, goal and rubric context is injected directly into the prompt. The old `get_goal` and `get_rubric` tools were removed. Since 0.1.46 the grader can inspect working-directory files.
 - Grading calls are billed and appear in `/cost`. The grader model is subject to `[models].allowed`.
 

@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA project layout, agent.py, instructions.md, define_deep_agent, agent factory, per-run configuration, shared local package, project structure, system prompt, Context Hub, managed context, skills folder, tools folder, middleware folder, interrupt_on, agent name, assistant_id, .env, hatchling
 read_when: Read when unsure where a file goes in an MDA project, what define_deep_agent accepts, or when the name-is-required error appears.
-updated: 2026-10-21
-sources_hash: ead1f4101c43
+updated: 2026-11-09
+sources_hash: c579523c2e36
 ---
 
 # MDA project structure, agent definition and instructions
@@ -82,7 +82,7 @@ It returns a definition, not a graph. The runtime compiles it with `create_deep_
 | `response_format` | Structured output. |
 | `context_schema`, `cache`, `debug` | Accepted unchanged (migrate page; not in the agent-definition table). |
 
-Not accepted: `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer`, `state_schema` (Python). OSS `create_deep_agent` in 0.7.29 has all of these plus an optional `name`; MDA makes `name` required. A definition returned by an agent factory may also set `instructions`, `skills`, `mcp` and `sandbox` to override the project files for that run; static definitions can't ([[managed]]).
+Not accepted: `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer`, `state_schema` (Python). OSS `create_deep_agent` in 0.7.34 has all of these plus an optional `name`; MDA makes `name` required. A definition returned by an agent factory may also set `instructions`, `skills`, `mcp` and `sandbox` to override the project files for that run; static definitions can't ([[managed]]).
 
 ## `instructions.md`
 

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: custom tools, add tool, tools=, @tool, ToolRuntime, runtime.context, runtime.store, runtime.state, tool_call_id, Command update, large tool results, tool eviction, built-in tools, excluded_tools, get_stream_writer, tool returns image
 read_when: Read when adding a custom tool, a tool needs context/store/state via ToolRuntime, a tool returns Command or media, or a built-in tool is missing.
-updated: 2026-10-21
-sources_hash: 29d930e0cd46
+updated: 2026-11-09
+sources_hash: eea5bfccfd35
 ---
 
 # Tools (custom tools, ToolRuntime, built-ins)
@@ -27,7 +27,7 @@ One-line truth: `create_deep_agent(tools=[...])` accepts plain callables, LangCh
 - Gotcha: `permissions=` covers only built-in fs tools; use `interrupt_on` for custom tools.
 - Gotcha: `write_todos` is absent unless you add `TodoListMiddleware()`.
 
-## Signature (0.7.29)
+## Signature (0.7.34)
 
 ```python
 create_deep_agent(
@@ -39,7 +39,7 @@ create_deep_agent(
 
 - `tools` is positional-or-keyword (2nd arg); everything after is keyword-only. See [[create-deep-agent]].
 - `tools` is forwarded to LangChain `create_agent(model, tools=...)`. Schema is inferred from type hints + docstring (docstring is the description the model reads).
-- Passing tools is **additive**. To hide a built-in from the model use a `HarnessProfile(excluded_tools=...)`; to remove file tools entirely pass your own `FilesystemMiddleware(tools=[...])` in `middleware=` (same `.name` replaces the default in place). See [[harness]], [[middleware]].
+- Passing tools is **additive**. To hide a built-in from the model use a `HarnessProfile(excluded_tools=...)`; to remove file tools entirely pass your own `FilesystemMiddleware(tools=[...])` in `middleware=` (same `.name` replaces the default in place; since 0.7.31 it inherits the agent's `permissions=` when built without its own, [[permissions]]). See [[harness]], [[middleware]].
 
 ## Custom tools
 

@@ -4,7 +4,7 @@ Run after vendoring a new deepagents version, in an env with deepagents + langgr
     python scripts/check_recipes.py
 Every line should match the expected value in its comment; if one changes, update wiki/agent-setup.md.
 
-Expected on 0.7.29 (re-run 2026-10-21; unchanged from 0.7.20):
+Expected on 0.7.34 (re-run 2026-11-09; unchanged from 0.7.20):
     T4 execute bound? False
     T1 memory write: success      | T1 outside-memory write: error (permission denied)
     T2 eviction under write-deny: success (saved to filesystem)

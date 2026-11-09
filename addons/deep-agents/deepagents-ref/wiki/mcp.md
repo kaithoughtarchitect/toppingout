@@ -6,8 +6,8 @@ status: sourced
 product: sdk
 keywords: MCP, Model Context Protocol, MCPAdapter, langchain.mcp, langchain[mcp], FastMCP, MCP server tools, langchain-mcp-adapters, MultiServerMCPClient, list_tools, mcpServers, stdio, streamable http, connect MCP
 read_when: Read when connecting a deep agent to an MCP server or seeing old MultiServerMCPClient examples.
-updated: 2026-10-21
-sources_hash: 128ecea1a882
+updated: 2026-11-09
+sources_hash: 8d0f0d8a7ec7
 ---
 
 # MCP tools (MCPAdapter)
@@ -21,7 +21,7 @@ pip install "langchain[mcp]"      # or: uv add "langchain[mcp]"  (pulls in FastM
 ```
 
 - `langchain.mcp` requires `langchain[mcp]>=1.4.0`, is **beta**, and emits `LangChainBetaWarning` once per process on import. API may change.
-- `deepagents` 0.7.29 requires `langchain>=1.4.6,<2`, so the namespace is available once the `mcp` extra is installed.
+- `deepagents` 0.7.34 requires `langchain>=1.4.9,<2`, so the namespace is available once the `mcp` extra is installed.
 - Replaces the older `langchain-mcp-adapters` package (`MultiServerMCPClient`); migrate if you see that in old examples.
 
 ## Minimal pattern
@@ -77,13 +77,13 @@ The Deep Agents docs no longer have their own MCP page: the old URL redirects to
 - A `str` target must look like an `http(s)` URL. FastMCP would otherwise test a string as a filesystem path first and could launch a `.py`/`.js` file as a subprocess; `MCPAdapter` rejects non-URL strings. Use `Path(...)` for stdio.
 - `langchain.mcp` is beta; pin `langchain` and expect breaking changes (see [[versions]]).
 - The tools page example builds the agent inside the context manager; if you build the agent at import time (e.g. `langgraph.json` graph), you need an async graph factory or to load tools before the graph is constructed.
-- Nothing about MCP is in the `deepagents` 0.7.29 package source; all behavior here is LangChain's (docs-sourced).
+- Nothing about MCP is in the `deepagents` 0.7.34 package source; all behavior here is LangChain's (docs-sourced).
 
 ## Sources
 - `../sources/docs/oss/python/langchain/mcp/index.md` (the old Deep Agents MCP page redirects here)
 - `../sources/docs/oss/python/langchain/mcp/tools.md`
 - `../sources/docs/oss/python/deepagents/tools.md` (MCP tools section)
-- `../sources/package/deepagents-0.7.29.dist-info/METADATA` (langchain version pin)
+- `../sources/package/deepagents-0.7.34.dist-info/METADATA` (langchain version pin)
 
 ## See also
 - [[index]]

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: model, provider:model, init_chat_model, choose model, switch model, OpenRouter, Ollama, Bedrock, Azure OpenAI, harness profile, HarnessProfile, provider profile, ProviderProfile, register_harness_profile, register_provider_profile, use_responses_api, excluded_tools, runtime model switching
 read_when: Read when picking or configuring a model, tuning behaviour per model, excluding a tool or middleware for one model, or a profile does not apply.
-updated: 2026-10-21
-sources_hash: 898ffbacb6f7
+updated: 2026-11-09
+sources_hash: f58788fc4c4b
 ---
 
 # Models and profiles
@@ -120,7 +120,7 @@ register_harness_profile(
 | `extra_middleware` | sequence or zero-arg factory | Appended to main, GP and declarative subagent stacks (not compiled/async) | by concrete type |
 | `general_purpose_subagent` | `GeneralPurposeSubagentProfile or None` | `enabled` (None/True/False), `description`, `system_prompt` | field-wise |
 
-Built-in harness profiles in 0.7.29 (registered lazily on first registry access):
+Built-in harness profiles in 0.7.34 (unchanged since 0.7.29; registered lazily on first registry access):
 - `anthropic:claude-sonnet-4-6`, `anthropic:claude-haiku-4-5`: suffix with parallel-tool-calls, investigate-before-answering, tool-result-reflection blocks.
 - `anthropic:claude-opus-4-7`: same plus `<tool_usage>` and `<subagent_usage>` blocks.
 - `openai:gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.3-codex`: Codex behaviour suffix + `extra_middleware=[TodoListMiddleware()]` (so these models get `write_todos`, see [[planning]]).
@@ -171,6 +171,9 @@ Note: the harness profile, summarization thresholds and prompt are fixed at buil
 - `excluded_tools` in docs examples is sometimes a plain `set`; the field is typed `frozenset[str]`; use `frozenset(...)`.
 - Profiles docs say the "internal permission middleware" cannot be excluded; in code only `FilesystemMiddleware` and `SubAgentMiddleware` are protected (permissions live inside `FilesystemMiddleware`).
 - Chat models auto-retry transient API failures; tune `max_retries` / `timeout` on the model instance.
+- Since 0.7.32 `import deepagents` no longer imports `langchain_anthropic` or `langchain_openai` (faster import). `langchain_anthropic` is loaded only for the default model (`model=None` builds `ChatAnthropic(model_name="claude-sonnet-4-6")` inside `_build_default_model`) or when you use an Anthropic model; Anthropic checks use `is_anthropic_chat_model`, which looks the class up in `sys.modules`. `langchain-anthropic` is still a required dependency.
+- Since 0.7.33 a response with a `refusal` content block raises `ModelRefusalError` instead of ending the run as an answer (`ModelRefusalMiddleware` in every stack). Put a `ModelFallbackMiddleware` in `middleware=` to try another model first ([[middleware]]).
+- Claude reasoning blocks (`thinking`, `redacted_thinking`, `reasoning_content`, `reasoning`) in messages kept from before a summary are dropped from model requests (0.7.34); OpenAI, Gemini and non-Claude Bedrock reasoning is kept ([[summarization]]).
 
 ## Sources
 
@@ -178,6 +181,8 @@ Note: the harness profile, summarization thresholds and prompt are fixed at buil
 - `../sources/docs/oss/python/deepagents/profiles.md`
 - `../sources/docs/oss/python/deepagents/quickstart.md`
 - `../sources/package/deepagents/_models.py`
+- `../sources/package/deepagents/graph.py` (`_build_default_model`, `ModelRefusalMiddleware`)
+- `../sources/package/deepagents/middleware/_utils.py` (`is_anthropic_chat_model`)
 - `../sources/package/deepagents/middleware/summarization.py` (`summarizer` docstring example)
 - `../sources/package/deepagents/profiles/_builtin_profiles.py`
 - `../sources/package/deepagents/profiles/harness/harness_profiles.py`

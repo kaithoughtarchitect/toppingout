@@ -1,4 +1,4 @@
-"""Check a Python file's deepagents usage against the vendored 0.7.29 source (no install needed).
+"""Check a Python file's deepagents usage against the vendored 0.7.34 source (no install needed).
 
     python deepagents-ref/scripts/check_imports.py path/to/agent.py [more.py ...]
 
@@ -105,7 +105,7 @@ def check(path: Path) -> list[str]:
             params, var_kw = sig
             for kw in node.keywords:
                 if kw.arg and kw.arg not in params and not var_kw:
-                    problems.append(f"{path}:{node.lineno} BAD-KWARG {name}({kw.arg}=...) not accepted in 0.7.29")
+                    problems.append(f"{path}:{node.lineno} BAD-KWARG {name}({kw.arg}=...) not accepted in 0.7.34")
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             if node.func.id in {"InMemorySaver", "InMemoryStore", "MemorySaver"}:

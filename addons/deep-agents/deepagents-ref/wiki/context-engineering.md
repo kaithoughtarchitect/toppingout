@@ -6,8 +6,8 @@ status: code
 product: all
 keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context
 read_when: Read when deciding what goes in the prompt vs files vs state, passing per-run context, debugging how the system prompt is assembled, or context bloat.
-updated: 2026-10-21
-sources_hash: d59500c93853
+updated: 2026-11-09
+sources_hash: a6ca680e5c8a
 ---
 
 # Context engineering in Deep Agents
@@ -24,9 +24,9 @@ One-line truth: every `create_deep_agent` graph already manages five context lay
 | Isolation | [[subagents]] via `task` | per delegated task |
 | Long-term memory | files on a persistent route ([[memory]]) | across threads |
 
-## Input context: how the system prompt is assembled (0.7.29 code)
+## Input context: how the system prompt is assembled (0.7.34 code)
 
-Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotifier -> Summarization -> PatchToolCalls -> AsyncSubAgent (if any) -> your middleware -> harness-profile extras -> Skills (if `skills=`) -> prompt caching -> Memory (if `memory=`) -> HITL (if `interrupt_on`/interrupt permissions) -> UnsupportedContent. Each prompt-producing middleware appends to the system message, so the model sees roughly:
+Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotifier -> Summarization -> PatchToolCalls -> AsyncSubAgent (if any) -> your middleware -> harness-profile extras -> Skills (if `skills=`) -> prompt caching -> Memory (if `memory=`) -> HITL (if `interrupt_on`/interrupt permissions) -> UnsupportedContent -> ModelRefusal (0.7.33+, adds no prompt text). Each prompt-producing middleware appends to the system message, so the model sees roughly:
 
 1. your `system_prompt` + the profile base prompt (`base_system_prompt` / `system_prompt_suffix` from a harness profile)
 2. filesystem host-path routing note (only for composite/host backends; the long built-in tool prose was dropped in 0.7, tool schemas carry it)
@@ -34,7 +34,7 @@ Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotif
 4. skills index (`## Skills System ...`)
 5. `<agent_memory>` + `<memory_guidelines>` (last, with its own cache breakpoint so memory edits do not invalidate the cached prefix)
 
-Checked on 0.7.29 with a scripted model that records its input: `system_prompt`, then a custom `wrap_model_call` fragment, then the skills index, then memory. Before 0.7.29 the skills index came right after your `system_prompt`, ahead of your own fragments.
+Checked on 0.7.29 with a scripted model that records its input: `system_prompt`, then a custom `wrap_model_call` fragment, then the skills index, then memory. Before 0.7.29 the skills index came right after your `system_prompt`, ahead of your own fragments. Not re-run on 0.7.34; the 0.7.34 code keeps the same order (only prompt caching and memory's Anthropic check changed).
 
 The docs' list puts memory before skills and includes filesystem/subagent prompt sections; the code order above wins. A skill can also keep related tool schemas out of the prompt until the skill is read (`metadata.include_tools`, [[skills]]). See [[middleware]], [[customization]], [[harness]].
 
@@ -87,6 +87,7 @@ Always on; details in [[summarization]]. Summary of defaults:
 - Old tool-call args > 2,000 chars are clipped once the history hits the truncation trigger.
 - At 85% of the model's `max_input_tokens` (fallback 170k tokens) history is summarized; the evicted messages go to `/conversation_history/<session>.md`; 10% (fallback 6 messages) kept verbatim.
 - A provider context-overflow error triggers summarize-and-retry once.
+- After a summary, the cutoff is found by message id (`cutoff_message_id`, 0.7.34), and Claude reasoning blocks in messages kept from before the summary are left out of the model request; state keeps them ([[summarization]]).
 - Opt-in `compact_conversation` tool via `create_summarization_tool_middleware`.
 - Summaries can be written by a different, cheaper model: `SummarizationMiddleware(..., summarizer="provider:model")` (also a `Runnable` or function), passed in `middleware=` to replace the default. `model` still drives the profile and token counting ([[summarization]]).
 - Opt-in `FilesystemMiddleware(backend=..., offload_binary_content=True)` (in `middleware=`) writes binary `read_file` results and inline `HumanMessage` media to `blobs/` under the artifacts root, keeps a reference in history, and rehydrates it for each model call. It has no effect (and warns) when `blobs/` routes to a `StateBackend`.

@@ -1,6 +1,6 @@
 ---
 name: deep
-description: Load the Deep Agents reference before planning, writing, reviewing, testing or debugging anything that uses deepagents, create_deep_agent, LangChain agents, LangGraph (checkpointers, stores, threads, interrupts, streaming), backends, subagents, agent memory, skills or middleware. Use for any work on this repo's agent, and as the framework check in Topping Out's ground investigation. Layer 1 is deepagents-ref/ (checked against deepagents 0.7.29 code); layer 2 is the docs-langchain MCP server.
+description: Load the Deep Agents reference before planning, writing, reviewing, testing or debugging anything that uses deepagents, create_deep_agent, LangChain agents, LangGraph (checkpointers, stores, threads, interrupts, streaming), backends, subagents, agent memory, skills or middleware. Use for any work on this repo's agent, and as the framework check in Topping Out's ground investigation. Layer 1 is deepagents-ref/ (checked against deepagents 0.7.34 code); layer 2 is the docs-langchain MCP server.
 ---
 
 # Deep Agents reference
@@ -15,6 +15,6 @@ Never answer Deep Agents, LangChain or LangGraph questions from memory: this API
    - **Debug:** the Symptom → cause table in `wiki/anti.md`.
    - **Review:** the review checklist in `AGENTS.md`.
    - **Unknown term or symbol:** `wiki/lookup.md`.
-   - **Not in layer 1:** `wiki/gaps.md`, then layer 2, the `docs-langchain` MCP. Put "python" in the query, read the page by the exact path returned, and label the answer "not checked against 0.7.29".
+   - **Not in layer 1:** `wiki/gaps.md`, then layer 2, the `docs-langchain` MCP. Put "python" in the query, read the page by the exact path returned, and label the answer "not checked against 0.7.34".
 4. After writing code, run `python deepagents-ref/scripts/check_imports.py <files>` and do the rest of the verify step in `AGENTS.md`.
 5. Cite the wiki page or source path behind each claim. Where layer 2 and layer 1 disagree, layer 1 wins.

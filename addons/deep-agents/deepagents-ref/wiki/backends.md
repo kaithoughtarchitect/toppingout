@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: backend, backends, offload_binary_content, blobs, StateBackend, StoreBackend, CompositeBackend, FilesystemBackend, LocalShellBackend, ContextHubBackend, BackendProtocol, namespace, virtual_mode, long-term memory storage, persistent storage, where do files live, custom backend, route prefix, virtual filesystem
 read_when: Read when choosing where agent files are stored, persisting files across threads, routing /memories/ to a store, writing a custom backend, or hitting a backend factory TypeError or StoreBackend namespace error.
-updated: 2026-10-21
-sources_hash: b3aa041a1624
+updated: 2026-11-09
+sources_hash: cd64c220e012
 ---
 
 # Backends (pluggable filesystem storage)
@@ -33,17 +33,17 @@ A backend is the storage (and optionally shell) behind the agent's built-in file
 - `FilesystemMiddleware` owns the tools (see [[filesystem-tools]]); the backend only implements `ls/read/write/edit/delete/glob/grep` (+ `execute` for sandboxes). Paths the agent sees are always virtual, absolute, POSIX (`/notes.md`).
 - Same backend instance is shared by the main agent, subagents ([[subagents]]), `SkillsMiddleware`, `MemoryMiddleware` ([[memory]]) and summarization ([[summarization]]). Files a subagent writes remain visible to the parent.
 - Internal artifacts are written to the backend too: `/large_tool_results/<tool_call_id>` (evicted tool output) and `/conversation_history/` (summarization offload). See [[context-engineering]].
-- Pass an **instance**, not a factory (removal history in [[versions]]). In 0.7.29, `FilesystemMiddleware.__init__` raises `TypeError("... Backend factories were removed in deepagents 0.7 ...")` if `backend` is a callable that is not a `BackendProtocol`.
+- Pass an **instance**, not a factory (removal history in [[versions]]). In 0.7.34, `FilesystemMiddleware.__init__` raises `TypeError("... Backend factories were removed in deepagents 0.7 ...")` if `backend` is a callable that is not a `BackendProtocol`.
 
 ## Built-in backends (all importable from `deepagents.backends`)
 
 `__all__`: `BackendProtocol, CompositeBackend, ContextHubBackend, FilesystemBackend, LangSmithSandbox, LocalShellBackend, NamespaceFactory, StateBackend, StoreBackend, DEFAULT_EXECUTE_TIMEOUT` (=120). `SandboxBackendProtocol` lives in `deepagents.backends.protocol`, `BaseSandbox` in `deepagents.backends.sandbox`.
 
-| Backend | Constructor (0.7.29) | Scope / notes |
+| Backend | Constructor (0.7.34) | Scope / notes |
 | - | - | - |
 | `StateBackend` | `StateBackend()` (no args) | Files in the `files` state channel; persists per thread via checkpointer; not shared across threads. Only works inside a graph run (uses `CONFIG_KEY_READ/SEND`); outside raises `RuntimeError`. Pre-seed with `agent.invoke({"messages": [...], "files": {...}})`. |
 | `StoreBackend` | `StoreBackend(*, namespace: NamespaceFactory, store: BaseStore \| None = None)` | Cross-thread durable storage in a LangGraph `BaseStore`. `namespace` is **required**. If `store` is None, uses `get_store()` (the `store=` passed to `create_deep_agent`, or platform-provisioned on LangSmith Deployment). |
-| `FilesystemBackend` | `FilesystemBackend(root_dir=None, virtual_mode=True, max_file_size_mb=10)` | Real disk. `root_dir` defaults to cwd, resolved. Uses ripgrep for `grep` if `rg` on PATH, else Python fallback (skips files > `max_file_size_mb`). Writes use `O_NOFOLLOW`. |
+| `FilesystemBackend` | `FilesystemBackend(root_dir=None, virtual_mode=True, max_file_size_mb=10)` | Real disk. `root_dir` defaults to cwd, resolved. Uses ripgrep for `grep` if `rg` on PATH, else Python fallback (skips files > `max_file_size_mb`; since 0.7.33 a file `path` searches only that file, before it walked the file's whole parent directory). Writes use `O_NOFOLLOW`. |
 | `LocalShellBackend` | `LocalShellBackend(root_dir=None, *, virtual_mode=True, timeout=120, max_output_bytes=100_000, env=None, inherit_env=False)` | `FilesystemBackend` + `execute` via `subprocess.run(shell=True, cwd=root_dir)`. No isolation. |
 | `ContextHubBackend` | `ContextHubBackend(identifier: str, *, client: langsmith.Client \| None = None)` | Files in a LangSmith Context Hub agent repo; `identifier` is `"owner/name"` or `"-/name"`. Needs `LANGSMITH_API_KEY`. |
 | `CompositeBackend` | `CompositeBackend(default, routes: dict[str, BackendProtocol], *, artifacts_root="/")` | Prefix router. |
@@ -90,7 +90,7 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 ### LocalShellBackend specifics
 
 - `env=None, inherit_env=False` gives the shell an **empty environment** (no `PATH`); pass `env={"PATH": "/usr/bin:/bin"}` or `inherit_env=True`.
-- stderr lines are prefixed `[stderr] `; output over `max_output_bytes` is cut with `... Output truncated at N bytes.`; non-zero exit appends `Exit code: N`; timeout returns exit code 124. `timeout <= 0` raises `ValueError`. `id` is `local-<8 hex>`.
+- stderr lines are prefixed `[stderr] `; output over `max_output_bytes` UTF-8 bytes (0.7.30+; before, characters) is cut at that byte count, a split multi-byte character dropped, with `... Output truncated at N bytes.` and `ExecuteResponse.truncated=True`; non-zero exit appends `Exit code: N`; timeout returns exit code 124. `timeout <= 0` raises `ValueError`. `id` is `local-<8 hex>`.
 
 ### CompositeBackend routing rules (from `_route_for_path`)
 
@@ -127,7 +127,7 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 
 `FileInfo = {path, is_dir?, size?, modified_at?}`, `GrepMatch = {path, line, text, context_before?, context_after?}`, `FileData = {content: str, encoding: "utf-8"|"base64", created_at?, modified_at?}`.
 
-Rules: return result objects with `error=...`, never raise for expected failures. For `execute`, subclass `SandboxBackendProtocol` (adds `id` property and `execute(command, *, timeout=None) -> ExecuteResponse`) or better `BaseSandbox` ([[sandboxes]]).
+Rules: return result objects with `error=...`, never raise for expected failures. For `execute`, subclass `SandboxBackendProtocol` (adds `id` property and `execute(command, *, timeout=None) -> ExecuteResponse`) or better `BaseSandbox` ([[sandboxes]]). `ExecuteResponse(output, exit_code=None, truncated=False)` feeds the tool's `ExecuteArtifact` (`exit_code?`, `truncated?`, `output_file?`; the last two added after 0.7.29) on `ToolMessage.artifact` ([[filesystem-tools]]).
 
 ```python
 from deepagents.backends.protocol import BackendProtocol, WriteResult, EditResult
@@ -175,7 +175,7 @@ agent = create_deep_agent(
 - If `blobs/` routes to a `StateBackend` (directly or through a `CompositeBackend`), the constructor warns and turns offloading off: state is checkpointed anyway.
 - The blob root follows the `CompositeBackend`'s `artifacts_root`. The docs say "set `artifacts_root` on the middleware"; `FilesystemMiddleware` has no such argument. Code wins.
 - The original input still sits in earlier checkpoints. Keep the blob store available when resuming a thread; a missing blob becomes a "no longer available, re-read the file" note.
-- Your `FilesystemMiddleware` replaces the default one by name, so `create_deep_agent(permissions=...)` does not reach it (permissions travel through the private `_permissions` argument). Don't combine the two without checking.
+- Your `FilesystemMiddleware` replaces the default one by name. Since 0.7.31 a replacement built without `permissions=` inherits `create_deep_agent(permissions=...)` (`_apply_custom_middleware` in `graph.py` copies it with `_with_permissions`; the same merge runs in each subagent stack against that stack's rules); one with different non-empty rules raises `ValueError` (`FilesystemMiddleware permissions conflict with the agent permissions ...`). Before 0.7.31 the replacement silently dropped the agent's rules. The constructor argument is now public `permissions=`; `_permissions=` warns as deprecated (removal 0.9.0) and passing both raises `ValueError`.
 
 ## Choosing
 
@@ -185,7 +185,7 @@ agent = create_deep_agent(
 
 ## Gotchas
 
-- Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.29) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
+- Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.34) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
 - Docs say factories (`backend=lambda rt: StateBackend(rt)`) still work with a deprecation warning; code raises `TypeError` (factories removed in 0.7) and `StateBackend.__init__` takes no args.
 - Docs say omitting `StoreBackend(namespace=...)` falls back to `assistant_id`; code makes `namespace` a required keyword argument.
 - Docs protocol reference says `write` is create-only and mentions `files_update`; code: every built-in `write` overwrites, and `WriteResult`/`EditResult` have no `files_update` field.
@@ -194,7 +194,7 @@ agent = create_deep_agent(
 - `LocalShellBackend` with no `env` gives an empty environment: commands like `python` fail with "not found".
 - Store namespace components reject `/`, spaces, `*`; email-like ids with `@`/`.` are fine.
 - A custom `glob` returning relative paths silently bypasses [[permissions]] deny rules.
-- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.29). Overwrite it with `write_file` or upload a new file.
+- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.34). Overwrite it with `write_file` or upload a new file.
 
 ## Sources
 
@@ -210,6 +210,7 @@ agent = create_deep_agent(
 - `../sources/package/deepagents/backends/context_hub.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_blob_offload.py`
+- `../sources/package/deepagents/graph.py`
 
 ## See also
 

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: retrieval, RAG, retrieval augmented generation, vector store, vector search, retriever, agentic RAG, 2-step RAG, knowledge base, semantic search, embeddings, search tool, document search, RubricMiddleware
 read_when: Read when adding RAG or a vector store to a deep agent, deciding how to wire a retrieval tool, or offloading search hits to files and subagents.
-updated: 2026-10-21
-sources_hash: 40e82cd1c2a1
+updated: 2026-11-09
+sources_hash: 72cf6ab5b1db
 ---
 
 # Retrieval and RAG with Deep Agents
@@ -49,7 +49,7 @@ vector_store.add_documents(documents=splits)
 Search tool that writes hits to the agent filesystem (same backend instance goes to the agent):
 
 ```python
-import uuid
+from langchain_core.utils.uuid import uuid7
 from deepagents import create_deep_agent
 from deepagents.backends import StateBackend
 from langchain.tools import tool
@@ -64,7 +64,7 @@ def search_documentation(query: str) -> str:
         query: Natural language search query.
     """
     hits = vector_store.similarity_search(query, k=4)
-    batch = uuid.uuid4().hex[:8]
+    batch = uuid7().hex[:8]
     uploads, paths = [], []
     for i, d in enumerate(hits, start=1):
         p = f"/retrieved/{batch}/chunk_{i}.md"
@@ -95,7 +95,7 @@ Why it works: orchestrator context holds paths, not text; parallel `task` calls 
 - Retrieval results are an indirect prompt-injection channel: prompts saying "treat as data" help but are not protection; validate outputs and citations.
 
 ## Gotchas
-- The tutorial's full-code prompt says "Use write_todos", but `write_todos` is not in the 0.7.29 default stack; the model will reference a missing tool unless you add `TodoListMiddleware`.
+- The tutorial's full-code prompt says "Use write_todos", but `write_todos` is not in the 0.7.34 default stack; the model will reference a missing tool unless you add `TodoListMiddleware`.
 - Tutorial uses `StateBackend`, so `/retrieved/` files are per-thread and vanish with the thread. Route `/retrieved/` to a `StoreBackend` if you want reuse.
 - The in-memory vector store re-embeds at every process start; persist it in production.
 - `retrieval.md`'s agentic example uses LangChain `create_agent`, not `create_deep_agent`; the Deep Agents version is the tutorial above.

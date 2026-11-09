@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA tools, define_mcp, MCP connectors, connections, connections.get, OAuth, mda connections create, define_memory, MemoryLayer, durable memory, remember across sessions, define_sandbox, sandbox setup.sh, runtime.backend, Context Hub, async middleware, ManagedDeepAgentRuntime, ManagedToolRuntime, ManagedRuntime
 read_when: Read when adding tools, MCP servers, OAuth connections, memory or a sandbox to a Managed Deep Agent, or when memory or a connection does nothing.
-updated: 2026-10-21
-sources_hash: b3fe819d47b6
+updated: 2026-11-09
+sources_hash: ea827193d9f0
 ---
 
 # MDA capabilities (skills, tools, MCP, connections, middleware, memory, sandbox, Context Hub)
@@ -207,7 +207,7 @@ Everything else (tools, middleware, MCP, channels, schedules, sandbox, agent def
 - Sync-only middleware hooks will not run under MDA.
 - `connections.get` needs a run: do not call it in channel `verify`/`parse` (use env).
 - User memory and user-owned connections both need a *person* principal; the default LangSmith API-key identity is a service and gets neither.
-- `runtime.backend` method names match OSS 0.7.29 `BackendProtocol` (`ls`, `read`, `grep`, `glob`, `write`, `edit`, `delete`, `upload_files`, `download_files`, `execute`), verified in source.
+- `runtime.backend` method names match OSS 0.7.34 `BackendProtocol` (`ls`, `read`, `grep`, `glob`, `write`, `edit`, `delete`, `upload_files`, `download_files`, `execute`), verified in source.
 
 ## Sources
 

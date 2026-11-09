@@ -11,6 +11,9 @@ You're inside the raw material. It's unedited official docs plus the `deepagents
   - `task(name=…, task=…)`: the real arguments are `description` and `subagent_type`.
   - The content-builder tutorial pins `deepagents>=0.3.5,<0.4.0`, which is stale.
   - Blob offload docs say to set `artifacts_root` on the middleware; `FilesystemMiddleware` has no such argument (use `CompositeBackend(artifacts_root=...)`).
-  - Managed: the memory page's `allow` example reads `context.channel` (channel runs get `context = None` since 0.9.0; use `runtime.channel`), the HTTP channel `parse` example calls `uuid.UUID` without `import uuid`, and the local-development page says schedules never run under `mda dev` (they do since 0.9.3).
+  - `async-subagents.md` reads notification metadata from `additional_kwargs["deepagents_notification"]`; since 0.7.33 the code exposes it through `get_notification_metadata`, and the old key is deprecated.
+  - The rubric docs still call the rubric middleware beta; since 0.7.33 it is not (no `LangChainBetaWarning`).
+  - The customization docs say a `FilesystemMiddleware` you pass in `middleware=` won't inherit the agent's `permissions=`; since 0.7.31 it does, and different rules raise `ValueError`.
+  - Managed: the memory page's `allow` example reads `context.channel` (channel runs get `context = None` since 0.9.0; use `runtime.thread.origin.channel`; `runtime.channel` is deprecated), the HTTP channel `parse` example calls `uuid.UUID` without `import uuid`, and the local-development page says schedules never run under `mda dev` (they do since 0.9.3).
 - Before copying any doc example, check `../wiki/anti.md` and the matching wiki page's `## Gotchas`.
 - Don't edit anything here. Refresh with `python ../scripts/fetch_docs.py` (docs) or `python ../scripts/setup_sources.py --version <v>` (a new package).

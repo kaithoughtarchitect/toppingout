@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: testing, test, unit test, pytest, fake model, fake chat model, mock model, GenericFakeChatModel, FakeMessagesListChatModel, bind_tools, no API calls, offline tests, scripted model
 read_when: Read when writing tests for an agent that must not call the real model, or when a fake model raises NotImplementedError or StopIteration.
-updated: 2026-10-21
-sources_hash: a8b312e61597
+updated: 2026-11-09
+sources_hash: e92fdb3e0b74
 ---
 
 # Testing a deep agent (pytest, fake models)
 
-Script the model's replies with a LangChain fake chat model so tests make no API calls. Deep Agents binds tools to the model, and the stock fakes refuse that, so you need a one-line subclass. The pytest below **passed** on `deepagents` 0.7.20 / `langgraph` 1.2.12 on 2026-09-30, and again on `deepagents` 0.7.29 / `langgraph` 1.2.16 / `langchain` 1.4.6 on 2026-10-21.
+Script the model's replies with a LangChain fake chat model so tests make no API calls. Deep Agents binds tools to the model, and the stock fakes refuse that, so you need a one-line subclass. The pytest below **passed** on `deepagents` 0.7.20 / `langgraph` 1.2.12 on 2026-09-30, and again on `deepagents` 0.7.29 / `langgraph` 1.2.16 / `langchain` 1.4.6 on 2026-10-21. Not re-run on 0.7.34.
 
 ## Quick reference
 

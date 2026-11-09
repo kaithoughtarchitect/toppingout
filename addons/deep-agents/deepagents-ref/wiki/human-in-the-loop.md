@@ -7,7 +7,7 @@ product: sdk
 keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__
 read_when: Read when a tool needs human approval before running, when a resume fails, or when subagent interrupts do not fire.
 updated: 2026-11-09
-sources_hash: 2cb255e41dec
+sources_hash: 27fa543f7153
 ---
 
 # Human-in-the-loop (interrupt_on, approve/edit/reject/respond)
@@ -47,7 +47,7 @@ agent = create_deep_agent(
 
 - The keys are **tool names**. That includes built-ins such as `write_file`, `edit_file`, `delete`, `execute` and `task`, as well as your own tools.
 - `InterruptOnConfig` is a dict (`from langchain.agents.middleware import InterruptOnConfig`). It takes `allowed_decisions` and an optional `when` predicate (conditional interrupts need `langchain>=1.3.3`).
-- In the stack, `HumanInTheLoopMiddleware` sits near the tail: after memory, before `UnsupportedContentMiddleware` ([[middleware]]). It is only added when the merged interrupt map is non-empty.
+- In the stack, `HumanInTheLoopMiddleware` sits near the tail: after memory, before `UnsupportedContentMiddleware` and (since 0.7.33) `ModelRefusalMiddleware` ([[middleware]]). It is only added when the merged interrupt map is non-empty.
 - `PatchToolCallsMiddleware` repairs dangling tool calls. If a run is cancelled or interrupted before a tool result exists, it adds an error `ToolMessage` ("did not complete ... may have been cancelled or interrupted") on the next run.
 
 ### Conditional interrupts
@@ -100,7 +100,7 @@ if result.get("__interrupt__"):
 
 - A declarative `SubAgent` **inherits** the top-level `interrupt_on` unless its spec sets its own, which **overrides** the parent's (no merge).
 - The general-purpose subagent gets the top-level `interrupt_on` plus any interrupts generated from permissions.
-- `CompiledSubAgent` and `AsyncSubAgent` inherit **nothing**. Put HITL inside the compiled graph or the remote deployment ([[subagents]], [[async-subagents]]). Since 0.7.26 an async subagent paused on an interrupt reports task status `waiting`; the user answers it on the subagent's own thread, and the parent can't approve for them.
+- `CompiledSubAgent` and `AsyncSubAgent` inherit **nothing**. Put HITL inside the compiled graph or the remote deployment ([[subagents]], [[async-subagents]]). Since 0.7.26 an async subagent paused on an interrupt reports task status `waiting`; the user answers it on the subagent's own thread, and the parent can't approve for them. An `update_async_task` on a `waiting` task drops its pending request. With `update_strategy="enqueue"` (0.7.30+, beta) a queued follow-up also drops a request the current run raises later: the follow-up still starts.
 - Subagent interrupts surface on the parent result and parent `updates` stream as `__interrupt__`. `subgraphs=True` is only needed for child tokens. Resume through the parent with the parent's checkpointer and thread.
 - A tool inside any subagent can call `langgraph.types.interrupt({...})` directly. You then resume with an arbitrary payload, for example `Command(resume={"approved": True})`.
 - To gate delegation itself, use `interrupt_on={"task": True}`. **Dynamic** `task()` dispatch from interpreter code bypasses this, so gate `eval` instead ([[dynamic-subagents]]).
@@ -143,6 +143,7 @@ create_deep_agent(model=..., permissions=[
 - `../sources/package/deepagents/middleware/_fs_interrupt.py`
 - `../sources/package/deepagents/middleware/patch_tool_calls.py`
 - `../sources/package/deepagents/middleware/subagents.py`
+- `../sources/package/deepagents/middleware/async_subagents.py`
 
 ## See also
 

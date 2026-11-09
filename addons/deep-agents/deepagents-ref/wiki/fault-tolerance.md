@@ -4,15 +4,15 @@ id: fault-tolerance
 type: how-to
 status: code
 product: sdk
-keywords: fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, rate_limiter, 429, resilience, error handling, timeout, fallback model
-read_when: Read when adding retries, fallback models, call limits or rate limiting, or when errors kill a run or a subagent.
-updated: 2026-10-21
-sources_hash: bdc5f6b1a342
+keywords: fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, ModelRefusalMiddleware, ModelRefusalError, model refusal, rate_limiter, 429, resilience, error handling, timeout, fallback model
+read_when: Read when adding retries, fallback models, call limits or rate limiting, when errors kill a run or a subagent, or when a model refusal raises.
+updated: 2026-11-09
+sources_hash: 171a8988313f
 ---
 
 # Fault tolerance
 
-One-line truth: resilience is added with LangChain prebuilt middleware passed through `create_deep_agent(middleware=[...])` (retry, fallback, call limits, tool-error conversion) plus a model-level `rate_limiter`; nothing is on by default, and top-level middleware does **not** reach declarative subagents.
+One-line truth: resilience is added with LangChain prebuilt middleware passed through `create_deep_agent(middleware=[...])` (retry, fallback, call limits, tool-error conversion) plus a model-level `rate_limiter`. None of those is on by default (the one built-in is `ModelRefusalMiddleware`, since 0.7.33, which raises on refusals), and top-level middleware does **not** reach declarative subagents.
 
 ## Strategy by error type
 
@@ -22,6 +22,7 @@ One-line truth: resilience is added with LangChain prebuilt middleware passed th
 | LLM-recoverable (bad tool input, parse failure) | model | `ToolErrorMiddleware` -> error `ToolMessage` |
 | User-fixable (missing info) | human | `interrupt_on` / `interrupt()` ([[human-in-the-loop]]) |
 | Provider outage | system | `ModelFallbackMiddleware` |
+| Model refusal (since 0.7.33) | system or developer | `ModelFallbackMiddleware`, then catch `ModelRefusalError` |
 | Runaway loops / budget | system | `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` |
 | Unexpected | developer | let it propagate |
 
@@ -78,6 +79,7 @@ agent = create_deep_agent(
 - **Rate limiting**: `rate_limiter=` on the chat model throttles request rate; it is not middleware. It works with `create_deep_agent(model=<BaseChatModel>)`.
 - **Retries**: `ModelRetryMiddleware(max_retries, backoff_factor, initial_delay)` uses exponential backoff. Standard LangChain exceptions (`ModelRateLimitError`, `ModelTimeoutError`, `ModelAuthenticationError`, ...) carry `is_retryable`, which the retry middleware respects by default. Scope `ToolRetryMiddleware(tools=[...], retry_on=(...))` to network tools; retrying `read_file` is pointless.
 - **Fallback**: `ModelFallbackMiddleware("gpt-5.5")` switches model when the primary fails outright.
+- **Refusals** (since 0.7.33, code): `create_deep_agent` appends `ModelRefusalMiddleware()` at the end of the main tail (after `UnsupportedContentMiddleware`, comment: "so a caller's `ModelFallbackMiddleware` catches refusals first"), and to GP and every declarative subagent stack. It raises `ModelRefusalError` when a response has a `refusal` content block (also when structured-output parsing fails on one). Catch it where you invoke the agent; the refused reply is not saved to the thread (code: `ModelRefusalMiddleware` raises inside `wrap_model_call`, before the response reaches the model node, in `langchain/agents/middleware/model_refusal.py`). Model-level `with_fallbacks` does not catch refusals (docs). A sync subagent's refusal does not raise in the parent: `task` returns "The subagent stopped because a model refused the request. ..." and the parent continues ([[subagents]]); async subagents report the same notice ([[async-subagents]]).
 - **Call limits**: `run_limit` caps per invocation (resets each turn); `thread_limit` caps across a conversation and requires a checkpointer ([[persistence]]).
 - **Tool errors**: without `ToolErrorMiddleware` a raising tool halts the run. The handler returns a string (sent to the model as an error `ToolMessage`) or `None` (re-raise). Async handlers and composition with retry are covered in LangChain's prebuilt-middleware docs.
 - **Durability**: with a durable checkpointer a crashed/timed-out run resumes from the last checkpoint on the same `thread_id` without redoing completed steps.
@@ -85,12 +87,14 @@ agent = create_deep_agent(
 
 ## Where user middleware lands (code)
 
-- `_apply_custom_middleware`: a user middleware whose `.name` matches a built-in (e.g. `SummarizationMiddleware`) replaces it in place. Otherwise it is inserted after the core stack (Filesystem, SubAgent, the private `_ParentNotifierMiddleware`, Summarization, PatchToolCalls, AsyncSubAgent) and before the harness-profile / Skills / prompt-caching / `MemoryMiddleware` / `HumanInTheLoopMiddleware` / `UnsupportedContentMiddleware` tail (0.7.29 order; [[middleware]] has the full list).
+- `_apply_custom_middleware`: a user middleware whose `.name` matches a built-in (e.g. `SummarizationMiddleware`) replaces it in place. Otherwise it is inserted after the core stack (Filesystem, SubAgent, the private `_ParentNotifierMiddleware`, Summarization, PatchToolCalls, AsyncSubAgent) and before the harness-profile / Skills / prompt-caching / `MemoryMiddleware` / `HumanInTheLoopMiddleware` / `UnsupportedContentMiddleware` / `ModelRefusalMiddleware` tail (0.7.34 order; [[middleware]] has the full list).
+- Replacing a built-in `FilesystemMiddleware` this way (since 0.7.31): an unconfigured replacement inherits the agent's `permissions`; one with different non-empty `permissions` raises `ValueError`.
 - Declarative (`mode="isolated"`, the default) subagents get only their spec's `middleware`. Forked subagents (`mode="fork"`, experimental) inherit the parent `middleware` list. The auto-added general-purpose subagent inherits only user middleware whose name overrides one of its default slots, so a new `ModelRetryMiddleware` is **not** inherited by it. `CompiledSubAgent` runnables keep whatever they were built with.
 - `create_agent` rejects two middleware with the same `.name`, so you cannot add two `ModelRetryMiddleware` instances with different settings to one stack.
 
 ## Gotchas
 
+- A user `ModelFallbackMiddleware` in a subagent's spec `middleware` lands before that child's built-in `ModelRefusalMiddleware`, so it also retries refusals there; without it the refusal ends the child and comes back as the refusal notice.
 - Top-level `middleware=[...]` protects only the main agent loop. Subagent model calls get no retries, fallback or limits unless you put the middleware in each `SubAgent["middleware"]`. The GP subagent cannot receive them this way; to cover it, override it by declaring a subagent named `general-purpose` ([[subagents]]).
 - Doc snippets reference `ToolCallRequest` without importing it; in the handler just annotate loosely or import it from LangChain's agent middleware types.
 - The docs' "Transient errors" tab shows `langchain.agents.create_agent`; the same middleware works unchanged with `create_deep_agent(middleware=...)`.
@@ -103,6 +107,8 @@ agent = create_deep_agent(
 - `../sources/docs/oss/python/deepagents/going-to-production.md`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/subagents.py`
+- `../sources/package/deepagents/middleware/async_subagents.py`
+- `../sources/docs/oss/python/deepagents/subagents.md`
 
 ## See also
 

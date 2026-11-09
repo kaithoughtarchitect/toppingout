@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: memory history, edit history, audit trail, revision, versioning, undo, diff, original wording, correction, superseded preference, HistoryStoreBackend
 read_when: Read when memory edits must keep the prior wording, e.g. an owner corrects a preference and the original must stay visible.
-updated: 2026-10-21
-sources_hash: 3a453090c929
+updated: 2026-11-09
+sources_hash: 52c20990a566
 ---
 
 # Memory edit history
 
-**Deep Agents keeps no history of memory files.** `StoreBackend.write` and `edit` read the item and `store.put` the new value under the same key, so the old text is gone. Only `created_at` and `modified_at` survive. To keep prior wording, wrap the backend so every change is logged to a separate namespace. The subclass below **ran** on 0.7.20 on 2026-09-30: sync with an in-memory store, and async through a real two-process restart on SQLite and on Postgres 17 (`../scripts/check_persistence.py`). On 0.7.29 (2026-10-21) the sync run and the SQLite restart were re-run with the same result; Postgres was not re-run on 0.7.29.
+**Deep Agents keeps no history of memory files.** `StoreBackend.write` and `edit` read the item and `store.put` the new value under the same key, so the old text is gone. Only `created_at` and `modified_at` survive. To keep prior wording, wrap the backend so every change is logged to a separate namespace. The subclass below **ran** on 0.7.20 on 2026-09-30: sync with an in-memory store, and async through a real two-process restart on SQLite and on Postgres 17 (`../scripts/check_persistence.py`). On 0.7.29 (2026-10-21) the sync run and the SQLite restart were re-run with the same result; Postgres was not re-run on 0.7.29. On 0.7.34 (2026-11-09) the async restart was re-run on SQLite and on Postgres 17 (`check_persistence.py`) with the same result; the sync run was not re-run (`backends/store.py` is unchanged from 0.7.29).
 
 ## Quick reference
 
@@ -127,7 +127,7 @@ for it in entries:            # it.value: path, ts, op, before, after (+ old_str
 - **Async:** `ainvoke`/`astream` go through `awrite`, `aedit` and `adelete`, which are overridden above using `store.aget`/`store.aput` (**ran**). If you add a method, add both versions.
 - **Not atomic.** The live write and its log entry are two `put`s. A crash in between loses one log entry. Acceptable for an audit trail; use a DB transaction if it must be exact.
 - `upload_files` (app-side bulk writes) isn't logged. Override it if you use it.
-- `_get_store()` and `_get_namespace()` are private helpers of `StoreBackend` (still there in 0.7.29). On upgrade, re-run `../scripts/check_persistence.py`, which exercises this class.
+- `_get_store()` and `_get_namespace()` are private helpers of `StoreBackend` (still there in 0.7.34). On upgrade, re-run `../scripts/check_persistence.py`, which exercises this class.
 
 ## Gotchas
 

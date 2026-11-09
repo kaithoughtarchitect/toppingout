@@ -6,8 +6,8 @@ status: sourced
 product: sdk
 keywords: frontend, UI, useStream, @langchain/react, React, Vue, Svelte, Angular, langgraph dev, langgraph.json, Agent Server, subagent cards, todo list UI, sandbox IDE, chat UI, stream.values
 read_when: Read when building a web UI over a deep agent, or deciding what state the frontend should render.
-updated: 2026-10-21
-sources_hash: 4525d11c66e0
+updated: 2026-11-09
+sources_hash: 845dcf236359
 ---
 
 # Frontend UIs over a Python deep agent
@@ -59,7 +59,7 @@ Status strings: the React progress example counts `status === "complete"`; Pytho
 ## Pattern: subagent cards
 
 - No extra server options needed. Index subagent cards by the coordinator tool-call id that spawned them so each card sits under the delegating turn; optionally also a sidebar over all `stream.subagents`.
-- Submit via root stream: `stream.submit({messages:[...]}, {config:{recursion_limit: 100}})`. Deep Agents already sets a large default (`9_999` in 0.7.29 code; docs say 10,000) — only override if needed.
+- Submit via root stream: `stream.submit({messages:[...]}, {config:{recursion_limit: 100}})`. Deep Agents already sets a large default (`9_999` in 0.7.34 code; docs say 10,000) — only override if needed.
 - Handle errors per card; collapse finished cards when there are many. See [[subagents]], [[streaming]].
 
 ## Pattern: todo list
@@ -96,14 +96,14 @@ async def read_file(thread_id: str = Path(...), filePath: str = Query(...)):
     return {"path": filePath, "content": results[0].content.decode()}
 ```
 
-`aexecute`, `adownload_files`, `id` exist on `BaseSandbox`/`LangSmithSandbox` in 0.7.29. Thread id inside the graph: `langgraph.config.get_config()["configurable"]["thread_id"]`.
+`aexecute`, `adownload_files`, `id` exist on `BaseSandbox`/`LangSmithSandbox` in 0.7.34. Thread id inside the graph: `langgraph.config.get_config()["configurable"]["thread_id"]`.
 
 UI rules from the docs: persist `threadId` in `sessionStorage` so reloads reconnect to the same sandbox; refresh one file when a `write_file`/`edit_file`/`delete` `ToolMessage` arrives and the whole tree after `execute`; snapshot files before each run and default to diff view for changed files; filter `node_modules`; seed files with `upload_files` before the first run; keep secrets out of the sandbox (auth proxy).
 
 ## Gotchas
 
-- Docs' sandbox example passes `backend=lambda _runtime: get_or_create_sandbox_for_thread(...)`. **In 0.7.29 this raises `TypeError`**: `FilesystemMiddleware` rejects callables ("Backend factories were removed in deepagents 0.7; pass StateBackend(), CompositeBackend(...), or another BackendProtocol instance"). Code wins: resolve the sandbox in an async **graph factory** (the `langgraph.json` graph is a function that builds and returns `create_deep_agent(backend=<instance>)` per run) — see [[production]].
-- The docs' sequence diagram calls `LangSmithSandbox.create()`; no such method in 0.7.29 — `LangSmithSandbox(sandbox)` wraps an existing `langsmith` `Sandbox`. The docs' agent-side helper is sync while the API routes `await` it; pick one.
+- Docs' sandbox example passes `backend=lambda _runtime: get_or_create_sandbox_for_thread(...)`. **In 0.7.34 this raises `TypeError`**: `FilesystemMiddleware` rejects callables ("Backend factories were removed in deepagents 0.7; pass StateBackend(), CompositeBackend(...), or another BackendProtocol instance"). Code wins: resolve the sandbox in an async **graph factory** (the `langgraph.json` graph is a function that builds and returns `create_deep_agent(backend=<instance>)` per run) — see [[production]].
+- The docs' sequence diagram calls `LangSmithSandbox.create()`; no such method in 0.7.34 — `LangSmithSandbox(sandbox)` wraps an existing `langsmith` `Sandbox`. The docs' agent-side helper is sync while the API routes `await` it; pick one.
 - `http.app` routes take priority over built-in Agent Server routes; don't shadow `/threads` or `/runs`.
 - `todos` in subagents is excluded from the state merged back into the parent (`_EXCLUDED_STATE_KEYS`), so `stream.values.todos` reflects only the coordinator's plan.
 - Alternative wire protocol for non-LangChain frontends: AG-UI via `@ag-ui/langgraph` — see [[protocols]].

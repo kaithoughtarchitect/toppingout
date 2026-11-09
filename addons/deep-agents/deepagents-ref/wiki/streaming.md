@@ -6,8 +6,8 @@ status: sourced
 product: sdk
 keywords: streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events
 read_when: Read when streaming agent output or tokens, seeing no subagent events, or moving to stream_events v3.
-updated: 2026-10-21
-sources_hash: c7d0b4aa9b85
+updated: 2026-11-09
+sources_hash: 58b30bded982
 ---
 
 # Streaming (stream modes, subgraphs, event streaming v3)
@@ -128,13 +128,15 @@ Concurrency:
 
 ## Failed turns (for a Trace tab)
 
-Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results.
+Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. The refusal rows are from code, not a run (0.7.34 adds `ModelRefusalMiddleware` to the stack).
 
 | Failure | Default behaviour |
 |---|---|
 | Model calls an unknown tool, or passes bad args | The stream continues. The `ToolMessage` has `status="error"` and content `Error: nope is not a valid tool, try one of [...]` |
 | **A tool raises an exception** | **The whole stream raises**, e.g. `ValueError: boom`. The UI gets no error event, and other tool calls in the same step never appear |
 | Model or provider error (e.g. OpenRouter 429) | Raised from the stream. Middleware can't turn it into a tool message |
+| Main model refuses (a `refusal` content block; since 0.7.33) | `ModelRefusalMiddleware` in the main tail raises `ModelRefusalError` from the stream, unless a `ModelFallbackMiddleware` you pass gets a non-refusing answer first. Tokens of the refused reply may already have streamed (per the middleware's docstring) |
+| A subagent's model refuses | The `task` call returns a refusal notice string as its `ToolMessage`; the stream continues ([[subagents]]) |
 
 Fix for raising tools: convert exceptions into an error `ToolMessage`. The agent sees the error and can recover (**ran**: stream completed with `bad_tool error "Tool error: boom"`, then the final answer):
 
@@ -169,16 +171,18 @@ Trace-row recipe with `stream_mode=["updates", "messages", "custom"]`, `subgraph
 - The `tools:<id>` segment is the Pregel task id, **not** the `tool_call_id` of the `task` call; correlate start/finish via main-agent `tool_calls[i]["id"]` ↔ `ToolMessage.tool_call_id`.
 - Docs are inconsistent on node names: one example filters `{"model", "tools"}`, sample output prints `model_request`, and middleware hooks add their own nodes. Print node names from your installed `langchain` before filtering.
 - `version="v2"` on `stream` gives `StreamPart` dicts (`type`, `ns`, `data`), which the current Deep Agents streaming docs use; without it you get tuples. `version="v3"` is a different API, the `stream_events` projections. Don't mix them up.
-- Subagent output returned to the parent is only the last non-empty AI text (or `structured_response` JSON); the parent never streams subagent tokens unless you subscribe to subgraph/subagent streams.
-- Async subagents ([[async-subagents]]) run on a remote deployment; they do not appear as local subgraph namespaces. On an Agent Server their status updates arrive as user-role messages marked with `additional_kwargs["deepagents_notification"]` (since 0.7.26).
-- Default recursion limit is `9_999` in 0.7.29 code (frontend docs say "10,000").
+- Subagent output returned to the parent is only the last non-empty AI text (or `structured_response` JSON, or since 0.7.33 a refusal notice); the parent never streams subagent tokens unless you subscribe to subgraph/subagent streams.
+- Async subagents ([[async-subagents]]) run on a remote deployment; they do not appear as local subgraph namespaces. On an Agent Server their status updates arrive as user-role messages marked with LangChain notification metadata of source `"async_subagent"` (read with `get_notification_metadata`, since 0.7.33) and, deprecated, `additional_kwargs["deepagents_notification"]` (since 0.7.26).
+- Since 0.7.33 each sync subagent run carries `metadata["lc_subagent_tool_call_id"]` (the `task` call id), which checkpointers copy into its checkpoints; that links a subagent's stored namespace to the `tool_call_id`, unlike the `tools:<id>` segment.
+- Default recursion limit is `9_999` in 0.7.34 code (frontend docs say "10,000").
 - For frontends, prefer `useStream` / AG-UI rather than hand-parsing chunks — see [[frontend]], [[protocols]].
 
 ## Sources
 - `../sources/docs/oss/python/deepagents/streaming.md`
 - `../sources/docs/oss/python/deepagents/event-streaming.md`
 - `../sources/package/deepagents/graph.py` (with_config: recursion_limit, lc_agent_name)
-- `../sources/package/deepagents/middleware/subagents.py` (subagent naming, result extraction)
+- `../sources/package/deepagents/middleware/subagents.py` (subagent naming, result extraction, refusal notice, `lc_subagent_tool_call_id`)
+- `../sources/package/deepagents/middleware/async_subagents.py` (notification metadata)
 
 ## See also
 - [[index]]

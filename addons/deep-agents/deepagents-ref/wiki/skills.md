@@ -7,7 +7,7 @@ product: sdk
 keywords: skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools
 read_when: Read when adding task-specific procedures the agent loads on demand, when skills load zero, a new or edited skill does not appear, or a subagent lacks skills.
 updated: 2026-11-09
-sources_hash: 6c4d247ae301
+sources_hash: 8e09c145f552
 ---
 
 # Skills (SKILL.md, progressive disclosure)
@@ -96,7 +96,7 @@ agent = create_deep_agent(
   -> Read `/skills/org/langgraph-docs/SKILL.md` for full instructions
 ```
 
-plus instructions to `read_file(path, limit=1000)` (default read is 100 lines). With no skills: "(No skills available yet. You can create skills in ...)". Source-level `ls` errors appear as an escaped `<skill_load_warnings>` block (max 20, 1000 chars each). There is no dedicated skill-reading tool; level 2/3 loading is ordinary `read_file` ([[filesystem-tools]]). Stack position (0.7.29): after your middleware and profile extras, right before prompt caching, on the main agent and in subagents ([[middleware]]). Your own middleware therefore runs before it and can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section; replace `SkillsMiddleware` by name if you need that.
+plus instructions to `read_file(path, limit=1000)` (default read is 100 lines). With no skills: "(No skills available yet. You can create skills in ...)". Source-level `ls` errors appear as an escaped `<skill_load_warnings>` block (max 20, 1000 chars each). There is no dedicated skill-reading tool; level 2/3 loading is ordinary `read_file` ([[filesystem-tools]]). Stack position (0.7.34): after your middleware and profile extras, right before prompt caching, on the main agent and in subagents ([[middleware]]). Your own middleware therefore runs before it and can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section; replace `SkillsMiddleware` by name if you need that.
 
 ## Loading lifecycle and reload
 
@@ -127,7 +127,7 @@ result = agent.invoke(
 ```
 
 - `pinned_skills` is a state key on `SkillsState` (names only, matched exactly against `skills_metadata`). In `before_model`, `SkillsMiddleware` reads each named `SKILL.md`, strips the frontmatter, and appends one `HumanMessage` per skill in the order named: `<skill name="..." path="...">body</skill>`.
-- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text.
+- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. In 0.7.34 (changed after 0.7.29) `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model.
 - The message is a snapshot: editing `SKILL.md` later doesn't change it; pinning again appends a new copy. Earlier messages never change, so the prompt cache holds.
 - Unknown names and unreadable (or over 10 MB, or non-UTF-8) files are skipped with a debug log, no error. The key is cleared once used (reducer appends, so parallel tool calls can each pin).
 - Deep Agents does not parse skill names out of messages. Your app finds them (e.g. a regex for `/name`) and passes them in `pinned_skills`.
@@ -159,9 +159,9 @@ agent = create_deep_agent(
 
 - `SkillsMiddleware(..., tools=...)` takes a list of tools (plain functions are converted) or a `SkillToolResolver`: `(name: str, runtime: Runtime) -> Sequence[BaseTool]`, sync or async (async needs `ainvoke`). A resolver maps a readable name to generated tool names (MCP) or to many tools. It runs on every model call after the read and again before each skill tool call, so keep it cheap and return the same tools for the same name within a thread or the prompt cache breaks.
 - Gated: until the model `read_file`s the skill's `SKILL.md` (or the skill is pinned), a call to a skill tool fails as an unknown tool. When summarization drops that read or pinned message, the tool disappears again.
-- Skill tools are kept off `self.tools`, so they are not registered with the tool node on their own. Passing a tool to the agent's `tools=` instead makes it always visible, so `include_tools` then has no effect, unless the tool is deferred (`extras={"defer_loading": True}`), in which case reading the skill reveals it without a search.
+- Skill tools are kept off `self.tools`, so they are not registered with the tool node on their own. Passing a tool to the agent's `tools=` instead makes it always visible, so `include_tools` then has no effect, unless the tool is deferred (`extras={"defer_loading": True}`), in which case reading the skill reveals it without a search (the docs pair this with LangChain's `ProviderToolSearchMiddleware`, so the model can also find it by search).
 - When a skill lists a tool the agent already has (including built-ins such as `edit_file`), the agent's tool wins.
-- How a disclosed tool reaches the model: on Anthropic and OpenAI chat models whose profile sets `mid_conversation_tools`, it is inserted mid-conversation (cache stays valid); otherwise it is added to the request's `tools` (cache invalidated).
+- How a disclosed tool reaches the model: on Anthropic and OpenAI chat models whose profile sets `mid_conversation_tools`, it is inserted mid-conversation (cache stays valid); otherwise it is added to the request's `tools` (cache invalidated). Since 0.7.32 the model check reads `sys.modules` (`is_anthropic_chat_model` in `middleware/_utils.py`, `_is_openai_chat_model` in `middleware/_skill_tools.py`) instead of importing `langchain_anthropic` / `langchain_openai`; the result is the same.
 - `include_tools` as a YAML list, or with commas, logs a warning and matches nothing. Unmatched names log at DEBUG only.
 - `disclosed_skill_tool_names(state)` (from `deepagents.middleware.skills`) returns the skill tools shown to the latest model call, for middleware that gates tool calls itself.
 
@@ -211,6 +211,8 @@ Reading works on any backend; running `scripts/*.py` needs a shell, i.e. a sandb
 - `../sources/docs/oss/python/deepagents/skills.md`
 - `../sources/docs/oss/python/deepagents/memory.md`
 - `../sources/package/deepagents/middleware/skills.py`
+- `../sources/package/deepagents/middleware/_skill_tools.py`
+- `../sources/package/deepagents/middleware/_utils.py`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/subagents.py`
 

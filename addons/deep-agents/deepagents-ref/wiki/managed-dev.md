@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: mda dev, local development, LangSmith Studio, hot reload, mda evals, Harbor, evals, eval-engineering, tutorial, Tavily tool, .mda/build, langgraph dev, test schedule locally, memory not persisting, MDA_DEV, harbor-job.json
 read_when: Read when running or debugging a Managed Deep Agent locally, writing Harbor evals, or working through the tool plus memory plus schedule tutorial.
-updated: 2026-10-21
-sources_hash: ac111fb1418e
+updated: 2026-11-09
+sources_hash: c8c64cd64e56
 ---
 
 # MDA local development, evals and tutorial
@@ -38,12 +38,13 @@ Local behavior that differs from a deployment:
 | Memory | On disk in `.mda/__contexthub__`, separate from deployed memory | Context Hub |
 | Schedules | >=0.9.3: local crons that fire, recreated when `schedules/` changes (`--no-schedules` turns them off); older versions list them but never fire | Crons after deploy |
 | Agent-owned connections | Read `MDA_DEV_<SLUG>` env var | Workspace credential |
-| Tracing | Separate tracing project for local runs (0.7.2) | Deployment project |
+| Tracing | The agent's **Local** environment, project `{name}-local` (from `define_deep_agent(name=...)`) | Deployment project |
 
 - Hot reload watches sources (0.5.3), but the docs still say to stop and rerun after changing project files; rerun after adding new managed files (e.g. `memory.py`) so they are discovered.
 - Doc contradiction: the local-development page still says schedules never run under `mda dev`; the schedules and CLI pages and the 0.9.3 changelog say they fire locally. On >=0.9.3, trust the schedules page.
 - `mda chat` (changelog only) is a terminal client for the local agent; since 0.8.6 it starts its own dev server if none is running (log in `.mda/dev-server.log`). Per-call HITL (`interrupt_mode="per_call"`) needs `langgraph-api` 0.16 or later under `mda dev` (0.9.3).
-- Test identity, sandbox and user-owned OAuth on a **dev deployment** (`mda deploy`, default `--deployment-type dev`), not locally.
+- Local traces in an agent-based workspace are rejected until the agent record exists. `mda deploy` creates it, `mda dev` does not: create the agent once (UI or API, same identifier) or deploy once. Studio chat still works meanwhile.
+- Test identity, sandbox and user-owned OAuth on a deployment, not locally. `mda deploy --deployment-type serverless|dedicated` (default `serverless`; the old `dev|prod` values are gone). Use `dedicated` when pending state must survive scale-down; BYOC data planes do not support Serverless and get Dedicated by default.
 
 ## Evals (Harbor)
 
@@ -89,22 +90,28 @@ uv run --python 3.12 --with 'harbor[langsmith]==0.21.0' harbor view .mda/evals/j
 
 Starting from the quickstart `research-assistant` ([[tutorials]] for OSS equivalents):
 
-1. Authored Tavily tool replaces provider search:
+1. Authored Tavily tool replaces provider search. The key comes from an agent-owned connection (slug `research-tavily`), so the code is the same locally and deployed; for `mda dev` put `MDA_DEV_RESEARCH_TAVILY=<TAVILY_API_KEY>` in `.env`:
 
 ```python
 # tools/search.py
-import os
 from typing import Literal
 from langchain.tools import tool
-from tavily import TavilyClient
-
-tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])   # TAVILY_API_KEY in .env; uv add tavily-python
+from managed_deepagents import connections
+from tavily import AsyncTavilyClient   # uv add tavily-python
 
 @tool
-def internet_search(query: str, max_results: int = 5,
-                    topic: Literal["general", "news", "finance"] = "general") -> dict:
+async def internet_search(query: str, max_results: int = 5,
+                          topic: Literal["general", "news", "finance"] = "general") -> dict:
     """Search the internet for relevant sources."""
-    return tavily_client.search(query, max_results=max_results, topic=topic)
+    api_key = await connections.get("research-tavily", {"type": "agent"})
+    tavily_client = AsyncTavilyClient(api_key=api_key)
+    return await tavily_client.search(query, max_results=max_results, topic=topic)
+```
+
+After the first successful deploy, create the deployed credential (rotation applies on the next run, no redeploy):
+
+```bash
+uv run mda connections create research-tavily --secret-from-env MDA_DEV_RESEARCH_TAVILY
 ```
 
 ```python

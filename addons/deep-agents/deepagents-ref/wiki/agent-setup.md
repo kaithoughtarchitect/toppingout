@@ -7,7 +7,7 @@ product: sdk
 keywords: agent setup, reference setup, workspace, workspace_id, per-workspace memory, Memory tab, MemoryService, UI reads memory, read-only except memory, allow then deny, thread per workspace, workspace switch, leakage test, FreshMemory, GPT-6 Luna
 read_when: Read when building, reviewing or debugging your agent, its per-workspace memory, its Memory tab, or workspace switching.
 updated: 2026-11-09
-sources_hash: 8a9fe5e89fb5
+sources_hash: 8a9cde17adad
 ---
 
 # Agent setup — the checked reference setup
@@ -18,16 +18,16 @@ The whole agent wiring in one place: per-workspace Markdown memory, a durable st
 
 **Adapt:** a *workspace* is whatever your agent keeps memory separate by: a user, a project, a customer, a save file. Rename `"app"` in the namespaces to your product name, and `workspace_id` to your unit if you like. The model is the starter default; any `provider:model` string works ([[models]]).
 
-Everything below marked **ran** was executed against `deepagents` 0.7.29, `langgraph` 1.2.16 and `langchain` 1.4.6 on 2026-10-21 (`../scripts/check_recipes.py`, PASS 10/10).
+Everything below marked **ran** was executed against `deepagents` 0.7.29, `langgraph` 1.2.16 and `langchain` 1.4.6 on 2026-10-21 (`../scripts/check_recipes.py`, PASS 10/10), and re-run on `deepagents` 0.7.34, `langgraph` 1.2.20 and `langchain` 1.4.9 on 2026-11-09 with the same results (PASS 10/10).
 
 ## Quick reference
 
 - Model (starter default): `"openrouter:openai/gpt-6-luna"` + `OPENROUTER_API_KEY` ([[models]]).
 - Backend: `CompositeBackend(default=StateBackend(), routes={"/memories/": StoreBackend(namespace=ns, store=store)})`. With no sandbox default there's no `execute` tool (**ran**).
-- Permissions, in order: allow write `/memories/**`, then deny write `/**`. Memory writes succeed; other writes return `permission denied` (**ran**). Paths with a hidden segment, such as `/.x`, are the exception: no `**` rule matches them (checked in the source and with `wcmatch`: [[permissions]], Gotchas). Large-result offload still works (**ran**). A read-only agent needs more than a deny ([[permissions]], Gotchas).
+- Permissions, in order: allow write `/memories/**`, then deny write `/**`. Memory writes succeed; other writes return `permission denied` (**ran**). Paths with a hidden segment, such as `/.x`, are the exception: no `**` rule matches them (checked in the source and with `wcmatch`, again on 0.7.34: [[permissions]], Gotchas). Large-result offload still works (**ran**). A read-only agent needs more than a deny ([[permissions]], Gotchas).
 - Namespace: `("app", "mem", workspace_id)`. `workspace_id` must be a slug or UUID. `"My Workspace 1"` raises `ValueError` on the first turn, even for "hi" (**ran**).
 - The UI reads store key `/AGENTS.md`, not `/memories/AGENTS.md` (**ran**).
-- Durable persistence: `AsyncSqliteSaver` + `AsyncSqliteStore` locally, `AsyncPostgres*` in production. Both ran through a restart on 0.7.20 (2026-09-30); SQLite ran again on 0.7.29 (2026-10-21), Postgres not re-run on 0.7.29. On Windows, async Postgres needs `WindowsSelectorEventLoopPolicy` ([[persistence]]).
+- Durable persistence: `AsyncSqliteSaver` + `AsyncSqliteStore` locally, `AsyncPostgres*` in production. Both ran through a restart on 0.7.20 (2026-09-30); SQLite ran again on 0.7.29 (2026-10-21), Postgres not re-run on 0.7.29; neither re-run on 0.7.34. On Windows, async Postgres needs `WindowsSelectorEventLoopPolicy` ([[persistence]]).
 - One thread per (workspace, conversation). The framework never binds a thread to a workspace, so the app must.
 - Memory-tab edits don't reach an open thread (**ran**). Use `FreshMemory` or start a new thread (below).
 

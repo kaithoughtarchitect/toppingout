@@ -1,6 +1,6 @@
 # LangChain · LangGraph · Deep Agents: learning reference
 
-*Written 2026-09-30 from two real agent builds, and shipped with Topping Out's Deep Agents add-on. Versions then: `deepagents` 0.7.20, `langgraph` 1.2.12, `langchain` 1.4.3. Rechecked on 2026-10-21 against `deepagents` 0.7.29, `langgraph` 1.2.16, `langchain` 1.4.6 (recipes and the SQLite restart re-run; Postgres not re-run on 0.7.29).*
+*Written 2026-09-30 from two real agent builds, and shipped with Topping Out's Deep Agents add-on. Versions then: `deepagents` 0.7.20, `langgraph` 1.2.12, `langchain` 1.4.3. Rechecked on 2026-10-21 against `deepagents` 0.7.29, `langgraph` 1.2.16, `langchain` 1.4.6 (recipes and the SQLite restart re-run; Postgres not re-run on 0.7.29). Rechecked on 2026-11-09 against `deepagents` 0.7.34, `langgraph` 1.2.20, `langchain` 1.4.9 (recipes, the SQLite and Postgres restart, the starter tests and the failed-turn table re-run).*
 
 ---
 

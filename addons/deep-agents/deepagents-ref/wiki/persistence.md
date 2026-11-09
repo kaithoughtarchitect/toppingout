@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: persistence, checkpointer, store, remember across sessions, long-term memory, InMemorySaver, SqliteSaver, PostgresSaver, PostgresStore, StoreBackend, thread_id, survive restart, durable state
 read_when: Read when state or memory is lost after a restart, when thread_id seems ignored, or when choosing a durable checkpointer and store.
-updated: 2026-10-21
-sources_hash: 8bef6ee98cf3
+updated: 2026-11-09
+sources_hash: 67294ef65462
 ---
 
 # Persistence (checkpointers and stores)
@@ -98,7 +98,7 @@ Postgres: `from langgraph.checkpoint.postgres import PostgresSaver` / `from lang
 
 ## SQLite locally, Postgres in production (async app)
 
-Imports were checked against the installed `langgraph-checkpoint-sqlite` 3.1.1 and `langgraph-checkpoint-postgres` 3.1.2. **Both branches ran** on 2026-09-29 (SQLite, and Postgres 17 in Docker), each through a real two-process restart with memory, history and the conversation surviving: `../scripts/check_persistence.py`. The SQLite branch ran again on `deepagents` 0.7.29 / `langgraph` 1.2.16 on 2026-10-21 with the same result; the Postgres branch was not re-run on 0.7.29.
+Imports were checked against the installed `langgraph-checkpoint-sqlite` 3.1.1 and `langgraph-checkpoint-postgres` 3.1.2. **Both branches ran** on 2026-09-29 (SQLite, and Postgres 17 in Docker), each through a real two-process restart with memory, history and the conversation surviving: `../scripts/check_persistence.py`. The SQLite branch ran again on `deepagents` 0.7.29 / `langgraph` 1.2.16 on 2026-10-21 with the same result; the Postgres branch was not re-run on 0.7.29. Both branches were re-run on `deepagents` 0.7.34 / `langgraph` 1.2.20 on 2026-11-09 (SQLite, and Postgres 17 in Docker) with the same result.
 
 | Package (`pip install`) | Provides |
 |---|---|
@@ -189,12 +189,13 @@ Deployed: `await client.store.put_item((org_id,), "/compliance.md", create_file_
 - `thread_id` without a checkpointer does nothing. Every "multi-turn" example that omits `checkpointer=` (e.g. the content-builder tutorial) is single-turn.
 - Docs seed agent-scoped memory as `store.put(("my-agent",), "/memories/AGENTS.md", ...)` while routing `/memories/` to that StoreBackend. Because `CompositeBackend` strips the prefix, the agent reads key `/AGENTS.md`; the seeded item is never found. The org example (`"/compliance.md"` under `/policies/`) is correct. Code wins.
 - Docs show `StoreBackend()` with no args and a "legacy default namespace from assistant_id". Removed in 0.7: `namespace` is required.
-- Docs (memory.md full examples, backends.md "factory pattern still works") use `backend=lambda rt: CompositeBackend(default=StateBackend(rt), ...)`. In 0.7.29 factories raise `TypeError("backend must be an initialized backend instance. Backend factories were removed in deepagents 0.7 ...")` and `StateBackend()` takes no arguments.
+- Docs (memory.md full examples, backends.md "factory pattern still works") use `backend=lambda rt: CompositeBackend(default=StateBackend(rt), ...)`. In 0.7.34 factories raise `TypeError("backend must be an initialized backend instance. Backend factories were removed in deepagents 0.7 ...")` and `StateBackend()` takes no arguments.
 - HITL and `ToolCallLimitMiddleware/ModelCallLimitMiddleware(thread_limit=...)` require a checkpointer; resume must reuse the same `thread_id`.
 - Concurrent writes to the same store key are last-write-wins. Prefer user-scoped namespaces or per-topic files.
 - `InMemoryStore` and `InMemoryVectorStore` in tutorials are demo-only; they vanish on restart.
 - Subagents share the parent's `files` channel (only `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `rubric` and private keys are excluded), so `StateBackend` files written by the parent are visible to [[subagents]] and vice versa.
-- In 0.7.29 a subagent's returned state drops keys it gave back unchanged (not in 0.7.20). A custom state key that parallel `task` calls may each change still needs a reducer, or the step fails with `InvalidUpdateError`.
+- Since 0.7.29 a subagent's returned state drops keys it gave back unchanged (not in 0.7.20; still so in 0.7.34). A custom state key that parallel `task` calls may each change still needs a reducer, or the step fails with `InvalidUpdateError`.
+- `task` subagents (`invoke` and `ainvoke`) run with config metadata `lc_subagent_tool_call_id` set to the `task` call's id (0.7.33+), and checkpointers copy config metadata into each checkpoint, so a stored subagent checkpoint names the call that ran it (`middleware/subagents.py`).
 
 ## Sources
 

@@ -21,22 +21,22 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
   _rules, must know, mental model, core rules, gotchas, deepagents basics_
 - [[decisions]] — which piece to reach for: product, backend, memory vs skills, subagent kind
   _decision, which to use, choose, SDK vs dcode vs managed, StateBackend vs StoreBackend, sandbox vs interpreter, subagent vs skill, tradeoff, recommendation, default choice, when to use_
-- [[anti]] — stale doc examples and wrong mental models, with the 0.7.29 reality
+- [[anti]] — stale doc examples and wrong mental models, with the 0.7.34 reality
   _anti-patterns, wrong mental model, stale docs, doesn't work, TypeError, StoreBackend namespace, backend lambda, write_todos missing, virtual_mode, task args, pre-0.7 docs, common mistakes, breaking changes_
 - [[lookup]] — term, class, function or parameter → the page that explains it (generated symbol table)
   _lookup, find, where is, glossary, symbol, import, class, function, parameter, synonym_
 - [[gaps]] — what this folder does not cover, with the live URL for each — check before answering from memory (docs only)
   _not found, missing, not covered, testing, unit test, fake model, token usage, cost tracking, tracing, observability, MCP auth, OAuth, checkpointer classes, PostgresSaver, SqliteSaver, TodoListMiddleware params, LangGraph, create_agent_
-- [[versions]] — 0.7.29 deps and extras, 0.7.0 breaking changes, public API map
+- [[versions]] — 0.7.34 deps and extras, 0.7.0 breaking changes, public API map
   _deepagents version, changelog, breaking changes, 0.7.0, upgrade, migration, dependencies, extras, public API, __all__, deprecated, BASE_AGENT_PROMPT, virtual_mode, write_file overwrite, TodoListMiddleware removed, what changed_
 - [[sources]] — raw docs + vendored package; ground-truth order; refresh rule (docs only)
-  _sources, raw docs, ground truth, package source, deepagents 0.7.29, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs_
+  _sources, raw docs, ground truth, package source, deepagents 0.7.34, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs_
 - [[do-not]] — never invent an API; never answer from memory; never mix the three products
   _do not, never, hard rules, guardrails, invent API, training memory, stale answer, rules for agents, constraints, no guessing, cite sources, version pinning_
 
 ## Core harness
 
-- [[harness]] — what Deep Agents is, what is default vs opt-in in 0.7.29, install, minimal agent
+- [[harness]] — what Deep Agents is, what is default vs opt-in in 0.7.34, install, minimal agent
   _deep agents harness, agent harness, create_agent, middleware stack, built-in tools, virtual filesystem, StateBackend, write_todos missing, planning removed, execute tool, install deepagents, pip install deepagents, task tool, prompt caching, LangGraph graph_
 - [[create-deep-agent]] — full verified signature, every parameter, return type, assembly steps
   _create_deep_agent, create deep agent, signature, parameters, kwargs, system_prompt, interrupt_on, response_format, structured output, state_schema, context_schema, checkpointer, store, backend, subagents, recursion_limit_

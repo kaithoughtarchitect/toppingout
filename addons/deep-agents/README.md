@@ -15,6 +15,6 @@ For a product that is an AI agent built on LangChain, LangGraph or the Deep Agen
 
 **Install:** `/f-setup` does it. By hand: `node <package>/skills/f-setup/install.mjs --repo <repo> --addon deep-agents` (add `--starter` for the skeleton), then `python deepagents-ref/scripts/setup_sources.py`.
 
-**Keeping it current:** the wiki was last checked against `deepagents` 0.7.29 and the docs of 2026-10-21. Docs move faster than that: after a fresh install the lint may report STALE pages or missing sources. That's drift to re-check, not breakage; `deepagents-ref/MAINTAINING.md` has the monthly refresh routine, and a refresh is done when `wiki_lint.py --strict` passes.
+**Keeping it current:** the wiki was last checked against `deepagents` 0.7.34 and the docs of 2026-11-09. Docs move faster than that: after a fresh install the lint may report STALE pages or missing sources. That's drift to re-check, not breakage; `deepagents-ref/MAINTAINING.md` has the monthly refresh routine, and a refresh is done when `wiki_lint.py --strict` passes.
 
 **Licences:** `deepagents` is MIT (its licence arrives with the fetched wheel). The docs are fetched from docs.langchain.com under LangChain's terms; the wiki pages are original notes that cite them.
