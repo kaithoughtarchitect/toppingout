@@ -950,6 +950,38 @@ OVERVIEW_CSS = r"""
 @media (max-width:640px){.otiles{grid-template-columns:minmax(0,1fr)}.otile{grid-template-columns:auto auto minmax(0,1fr);grid-template-rows:auto auto}.otile svg{grid-row:1;grid-column:2;justify-self:start}.otile b{grid-column:3;grid-row:1}.otile .ow{grid-column:1/-1}}
 """
 
+SK_OVERVIEW_CSS = r"""
+.skov{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:14px;align-items:start}
+.skcol ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.skch{display:flex;flex-direction:column;gap:3px;margin:0 0 10px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.skch b{font:800 20px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.skch span{font:600 9.5px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.skg{margin:6px 0 0;font:700 9.5px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.skg:first-child{margin-top:0}
+.sktile{position:relative;display:block;width:100%;padding:8px 10px 9px;text-align:left;cursor:pointer;font:inherit;color:var(--ink);background:var(--ground);
+ border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .15s,box-shadow .15s,background .15s}
+.sktile:hover,.sktile:focus-visible{background:var(--hivis);color:#101316;transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.sktile:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sktile b{display:flex;align-items:baseline;gap:7px;font:600 13px/1.2 "Martian Mono",ui-monospace,monospace}
+.sktile .sno{font:800 14px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--brand)}
+.sktile:hover .sno,.sktile:focus-visible .sno{color:#101316}
+.sktile small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;font:400 11.5px/1.35 "Public Sans",system-ui,sans-serif;color:var(--ink-3)}
+.sktile:hover small,.sktile:focus-visible small{color:#30363B}
+.sktile .ywt{position:absolute;top:-9px;right:6px}
+.kmore{margin-top:2px}
+.kmore summary{cursor:pointer;display:inline-block;margin:6px 0 2px;font:700 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding:6px 9px;border:1.5px solid var(--line)}
+.kmore summary:hover{border-color:var(--ink);color:var(--ink)}
+.kmore[open] summary{display:none}
+.sk .tabs{gap:8px}
+@media (min-width:1001px){.sk .tabs{flex-wrap:wrap}.sk .tabs .tab{flex:1 1 auto;padding:8px 10px;gap:9px}.sk .tab b{font-size:23px;white-space:nowrap}.sk .tab span span{white-space:nowrap}.sk .tab svg{width:30px;height:30px}}
+@media (min-width:1001px) and (max-width:1339px){.sk .tabs{gap:6px}.sk .tabs .tab{padding:7px 8px;gap:7px}.sk .tab b{font-size:18.5px}.sk .tab span span{font-size:8.5px;letter-spacing:.08em}.sk .tab svg{width:22px;height:22px}.sk .tab .tn{font-size:12px}}
+@media (min-width:1001px) and (max-width:1179px){.sk .tab span span{display:none}}
+@media (min-width:1001px) and (max-width:1079px){.sk .tabs .tab{padding:6px 7px;gap:6px}.sk .tab b{font-size:16px}.sk .tab svg{width:18px;height:18px}}
+@media (max-width:1100px){.skov{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.skov{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.sktile{transition:none}}
+"""
+
 SKILLS_DESK_CSS = r"""
 .rhead2 .find{grid-column:2;display:flex;align-items:center;gap:10px;margin-top:10px;padding:0 12px;border:2px solid var(--ink);background:var(--panel);max-width:520px}
 .rhead2 .find span{font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
@@ -5697,7 +5729,9 @@ class Site:
                 f'<dl class="orw"><dt>Does</dt><dd>{inline(cap(n["blurb"]))}.</dd>' + (f'<dt>When</dt><dd>{inline(when)}</dd>' if when else "") + "</dl>"
                 + (f'<p class="knot"><i aria-hidden="true"></i><b>Not for</b><span>{inline(not_for(n["not"]))}</span></p>' if n.get("not") else "")
                 + f'<div class="kb kins"><h5>It\'s working if</h5><ul class="kchk">'
-                + "".join(f'<li><span>{inline(c)}</span></li>' for c in checks) + '</ul></div>'
+                + "".join(f'<li><span>{inline(c)}</span></li>' for c in checks[:3]) + '</ul>'
+                + (f'<details class="kmore"><summary>Show all {len(checks)}</summary><ul class="kchk">'
+                   + "".join(f'<li><span>{inline(c)}</span></li>' for c in checks[3:]) + '</ul></details>' if len(checks) > 3 else "") + '</div>'
                 + f'</div><div class="snav">{prev_}{next_}</div></section>')
             if key == "agents":
                 lens = n["label"].startswith("lens-")
@@ -5713,6 +5747,29 @@ class Site:
             md.append(md_row)
             if j + 1 == len(flat) or flat[j + 1][0] != key:
                 md.append("")
+
+        # which steps of the Order of works wait for your word (the same marks as its overview)
+        wflat = {t: w for _p, _n, _s, _o, st in flow_phases() for _a, t, _d, _tags, w in st}
+        word_steps = {step for step, *_r in FRONT["route_once"] + FRONT["route_loop"]
+                      if any(ORDER_WORDS.get(ft, wflat[ft]) for ft in ORDER_MAP[step])}
+        cols = []
+        for key, gtitle, gsub, _d in groups:
+            tl = []
+            for idx, pid in enumerate(mine[key]):
+                n = by[pid]
+                if key == "agents":
+                    lens = n["label"].startswith("lens-")
+                    if idx == 0 or (lens and not by[mine[key][idx - 1]]["label"].startswith("lens-")):
+                        tl.append(f'<li class="skg">{"Lenses &middot; run inside /f-inspect" if lens else "Helpers"}</li>')
+                num = f'<span class="sno">{steps[pid][0]:02d}</span>' if key == "route" else ""
+                yw = '<i class="ywt">Your word</i>' if key == "route" and steps[pid][1] in word_steps else ""
+                tl.append(f'<li><button type="button" class="sktile" data-open="{sid[pid]}">{yw}<b>{num}{esc(n.get("slash") or n["label"])}</b>'
+                          f'<small>{inline(cap(n["blurb"]))}</small></button></li>')
+            cols.append(f'<div class="skcol"><div class="skch"><b>{esc(gtitle)}</b><span>{esc(gsub)} &middot; {len(mine[key])}</span></div><ul>{"".join(tl)}</ul></div>')
+        overview = ('<div class="pane full" data-role="overview" role="tabpanel" aria-label="The whole picture"><div class="reader">'
+                    '<section class="spage ovw" id="sk-overview"><div class="sbar"><span>The whole picture</span></div><h4>Every skill and agent</h4>'
+                    '<p class="lead">Four groups. Pick any one to open it: what it does, when to use it, and how to tell it worked.</p>'
+                    f'<div class="skov">{"".join(cols)}</div></section></div></div>')
 
         def pane(key, title, first):
             return (f'<div class="pane" data-role="{key}" role="tabpanel" aria-label="{title}"{"" if first else " hidden"}>'
@@ -5733,13 +5790,17 @@ class Site:
                 f'<p class="lede">{esc(lede)} All on one map: the <a href="atlas.html">Skill Atlas</a>.</p>'
                 '<label class="find"><span>Find</span><input type="search" id="findbox" placeholder="What do you want to do? Try: review, plan, lesson" autocomplete="off">'
                 '<output id="findn" aria-live="polite"></output></label></header>'
-                '<div class="tabs" role="tablist" aria-label="Groups">' + "".join(tabb(k, ti, su, i == 0) for i, (k, ti, su, _d) in enumerate(groups)) + "</div>"
-                f'<div class="desk">{"".join(pane(k, ti, i == 0) for i, (k, ti, _s, _d) in enumerate(groups))}{find_pane}</div>'
+                '<div class="tabs" role="tablist" aria-label="Groups"><button type="button" class="tab b" role="tab" id="g-overview" data-rtab="overview" aria-selected="true">'
+                '<svg class="si" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" fill="#FBB401" stroke="#101316" stroke-width="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" fill="#F4F4EF" stroke="#101316" stroke-width="1.6"/>'
+                '<rect x="3" y="13.5" width="7.5" height="7.5" fill="#F4F4EF" stroke="#101316" stroke-width="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" fill="#F4F4EF" stroke="#101316" stroke-width="1.6"/></svg>'
+                f'<span><b>The whole picture</b><span>All {len(flat)}</span></span></button>'
+                + "".join(tabb(k, ti, su, False) for k, ti, su, _d in groups) + "</div>"
+                f'<div class="desk">{overview}{"".join(pane(k, ti, False) for k, ti, _s, _d in groups)}{find_pane}</div>'
                 '<p class="rmode">Coding agents can read a plain-text copy of each page.</p>'
                 '</div></main>' + self.foot() + ROLES_JS + SK_FIND_JS)
-        subs = [(f"#g-{k}", ti) for k, ti, _s, _d in groups]
+        subs = [("#g-overview", "The whole picture")] + [(f"#g-{k}", ti) for k, ti, _s, _d in groups]
         page = self.page("Skills and agents · Topping Out", f"Every Topping Out skill and agent: {n_skill} skills and {n_agent} agents.",
-                         ROLES_CSS + SKILLS_DESK_CSS, "skills.html", body, subs=subs)
+                         ROLES_CSS + SKILLS_DESK_CSS + OVERVIEW_CSS + SK_OVERVIEW_CSS, "skills.html", body, subs=subs)
         return page, "\n".join(md)
 
     # ---------- a skill or agent page, and its Markdown twin ----------
