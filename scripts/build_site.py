@@ -2399,9 +2399,9 @@ root.addEventListener("click",function(e){var w=e.target.closest("[data-w]");if(
 function go(){var h=decodeURIComponent(location.hash.slice(1));if(!h)return;var el=document.getElementById(h);if(!el)return;if(el.dataset.rtab)tab(el.dataset.rtab);else show(h,false)}
 window.addEventListener("hashchange",go);go()})()</script>"""
 
-FRONT_SUBS = [("#access", "Install"), ("#pillars", "Why Topping Out"), ("#route", "Order of works"), ("#shift", "The night shift"),
+FRONT_SUBS = [("#access", "Install"), ("#pillars", "Why Topping Out"), ("#route", "The order, in short"), ("#shift", "The night shift"),
               ("#lost", "Nothing is lost"), ("#why", "But why not just?"),
-              ("#needs", "Requirements"), ("#see", "See it")]
+              ("#needs", "What you need"), ("#see", "See it")]
 
 FRONT = {
     "title": "Topping Out",
