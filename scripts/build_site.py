@@ -981,9 +981,6 @@ SKILLS_DESK_CSS = r"""
 .kb{margin:0 0 12px}
 .kb h5{margin:0 0 6px;font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .kb p{margin:0;font-size:15px;line-height:1.55;color:var(--ink)}
-.says{display:flex;flex-wrap:wrap;gap:6px}
-.says span{font:500 13px/1.3 "Public Sans",system-ui,sans-serif;padding:4px 9px;border:1.5px dashed var(--ink-3);color:var(--ink)}
-.says span::before{content:"\201C"}.says span::after{content:"\201D"}
 .knot{display:flex;gap:10px;align-items:baseline;margin:0 0 12px;padding:10px 14px;border-left:3px solid #C42B1C;background:rgba(196,43,28,.07);font-size:14.5px}
 .knot b{flex:none;font:700 9.5px/1.6 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#C42B1C}
 :root[data-theme="dark"] .knot b{color:#FF7A6E}
@@ -3990,10 +3987,6 @@ DOCKET_CSS = r"""
 .dkt .lbl{position:absolute;top:-8px;left:10px;background:var(--panel);padding:0 6px;font:600 10.5px/16px "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
 .dkt .bx>p{margin:0;font-size:14.5px;line-height:1.55}
 .dkt .bx>p.sub{margin-top:8px;color:var(--ink-3);font-size:13.5px}
-.dkt .says{display:flex;flex-wrap:wrap;gap:6px}
-.dkt .says span{font:500 13px/1.2 "Public Sans",system-ui,sans-serif;background:var(--panel-2);border-left:3px solid var(--c);padding:6px 9px}
-.dkt .says span::before{content:"\201C";color:var(--ink-3)}
-.dkt .says span::after{content:"\201D";color:var(--ink-3)}
 .dkt .notice{margin:4px 20px 20px}
 .dkt .check{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
 .dkt .check li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;font-size:14.5px;line-height:1.5}
@@ -4075,10 +4068,9 @@ a.nb:hover{border-color:var(--c)}
 
 /* click to copy: the command and the phrases; a small "Copied" note shows at the foot of the screen */
 .dkt [data-copy]{cursor:copy;transition:background .15s,outline-color .15s}
-.dkt .plate code[data-copy]:hover,.dkt .says [data-copy]:hover{outline:2px solid #FBB401;outline-offset:1px}
+.dkt .plate code[data-copy]:hover{outline:2px solid #FBB401;outline-offset:1px}
 .dkt [data-copy]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .dkt [data-copy].copied{outline:2px solid #3FAE6A;outline-offset:1px}
-.dkt .cphint{margin-left:8px;font:600 9px/1 "Martian Mono",ui-monospace,monospace;font-style:normal;letter-spacing:.08em;text-transform:none;color:var(--ink-3)}
 .cptip{position:fixed;left:50%;bottom:22px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:9px 14px;background:#101316;color:#FBB401;border:2px solid #FBB401;
  font:700 12px/1 "Martian Mono",ui-monospace,monospace;box-shadow:4px 4px 0 rgba(0,0,0,.35);transition:opacity .2s,transform .2s}
 .cptip.on{opacity:1;transform:translate(-50%,0)}
@@ -5838,9 +5830,6 @@ class Site:
             h.append('<dl class="orw">' + (f'<dt>Called by</dt><dd class="cby">{called}</dd>' if called else "")
                      + (f'<dt>On site</dt><dd><p>{inline(n["role"])}</p>' + (f'<p class="sub">{inline(n["note"])}</p>' if n.get("note") else "") + "</dd>" if n.get("role") else "")
                      + (f"<dt>When</dt><dd><p>{inline(when)}</p></dd>" if when else "") + "</dl>")
-        if says:
-            h.append('<div class="bx"><span class="lbl">Say it <em class="cphint">tap to copy</em></span><div class="says">'
-                     + "".join(f'<span data-copy="{esc(s)}" role="button" tabindex="0" title="Copy">{esc(s)}</span>' for s in says) + "</div></div>")
         if n.get("not"):
             h.append(f'<p class="knot"><i aria-hidden="true"></i><b>Not for</b><span>{inline(not_for(n["not"]))}</span></p>')
         h.append(f'<div class="bx kins"><span class="lbl">It\'s working if</span><ul class="check kchk">'
