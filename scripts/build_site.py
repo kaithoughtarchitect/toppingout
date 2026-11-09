@@ -2596,7 +2596,7 @@ def one_job_html() -> str:
     lim = (f'<div class="ojlim mvb m-auto m-night"><p>{ONE_JOB_STOPS} After a stop it goes on only on your word.</p><p>{ONE_JOB_NEVER}</p>'
            f'<p class="mvb m-night">{ONE_JOB_NIGHT} <a href="#shift">The night shift, in full &darr;</a></p></div>')
     return ('<div class="oj" id="oj"><div class="ojk"><b>Watch one job</b><span>Your part, and the AI&rsquo;s part, from ticket to merge.</span></div>'
-            f'<div class="ojways"><span class="ojwl" id="ojwl">Three ways to run a job:</span><div class="ojmode" role="radiogroup" aria-labelledby="ojwl">{modes}</div></div>'
+            f'<div class="ojways"><span class="ojwl" id="ojwl">Three ways to run a job<small>Pick one to see its loop</small></span><div class="ojmode" role="radiogroup" aria-labelledby="ojwl">{modes}</div></div>'
             '<div class="ojg"><div class="ojlab" aria-hidden="true"><span></span><span class="y">You</span><span class="i">The AI</span></div>'
             + "".join(cols) + bld + ONE_JOB_NEXT + '</div>'
             '<div class="ojfoot">' + lim + '</div></div>'
@@ -2946,14 +2946,18 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 /* three ways to run a job: equal, always visible; every mode's text sits in the same cell, so nothing changes size */
 .ojways{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px 14px;margin:0 0 30px}
 .ojwl{font:800 19px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
-.ojmode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:2px solid var(--ink)}
+.ojwl small{display:block;margin-top:5px;font:600 10px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.ojmode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .ojmode input{position:absolute;opacity:0;width:1px;height:1px}
-.ojmode label{display:flex;flex-direction:column;gap:4px;padding:9px 12px;cursor:pointer;color:var(--ink-2);background:var(--ground)}
-.ojmode label b{font:700 11px/1.1 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.ojmode label{position:relative;display:flex;flex-direction:column;gap:4px;padding:9px 12px 10px;cursor:pointer;color:var(--ink-2);background:var(--ground);
+ border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s,background .12s}
+.ojmode label b{display:flex;align-items:center;gap:8px;font:700 11px/1.1 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.ojmode label b::before{content:"";flex:none;width:12px;height:12px;border:2px solid currentColor;border-radius:50%;box-sizing:border-box}
 .ojmode label small{font-size:12px;line-height:1.35}
-.ojmode label+input+label{border-left:2px solid var(--ink)}
-.ojmode label:hover{background:var(--panel)}
-.ojmode input:checked+label,.ojmode input:checked+label b{background:#FBB401;color:#101316}
+.ojmode label:hover{background:var(--panel);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.ojmode input:checked+label{background:#FBB401;color:#101316;transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.ojmode input:checked+label b{color:#101316}
+.ojmode input:checked+label b::before{background:#101316;box-shadow:inset 0 0 0 2px #FBB401}
 .ojmode input:focus-visible+label{outline:3px solid var(--focus);outline-offset:2px}
 .ojy,.oji,.ojhd>b,.ojfoot{display:grid;grid-template-columns:auto minmax(0,1fr)}
 .ojy>.mv,.oji>.mv,.ojhd>b>.mv{grid-row:1;grid-column:2}
@@ -2971,7 +2975,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojlim p{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2)}.ojlim p+p{margin-top:6px}.ojlim b{color:var(--ink)}
 .ojlim q{font:600 .92em "Martian Mono",ui-monospace,monospace;quotes:"\201C" "\201D"}
 .ojlim a{font:700 11px/1 "Martian Mono",ui-monospace,monospace;color:var(--ink);white-space:nowrap}
-@media (max-width:640px){.ojways{grid-template-columns:1fr}.ojmode label{padding:8px 7px}.ojmode label b{font-size:9.5px}.ojmode label small{font-size:11px}}
+@media (max-width:640px){.ojways{grid-template-columns:1fr}.ojmode{gap:8px}.ojmode label{padding:8px 7px;box-shadow:3px 3px 0 var(--ink)}.ojmode label b::before{width:10px;height:10px}.ojmode label b{font-size:9.5px}.ojmode label small{font-size:11px}}
 
 .board .tobtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.board .tobtns .toinst{margin-top:0}
 .board .toinst.togh{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:var(--ground)}.board .toinst.togh:hover{background:#FBB401;color:#101316}.board .togh svg{width:13px;height:13px}
