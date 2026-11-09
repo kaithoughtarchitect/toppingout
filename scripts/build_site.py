@@ -4019,6 +4019,8 @@ DOCKET_CSS = r"""
 .dkt .lead{padding:6px 20px 18px;margin:0;font-size:18px;line-height:1.45}
 .dkt .bx{margin:8px 20px 18px;border:1px solid var(--line);padding:16px 15px 13px;position:relative}
 .dkt .lbl{position:absolute;top:-8px;left:10px;background:var(--panel);padding:0 6px;font:600 10.5px/16px "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+/* a label that wraps on a phone stays in the flow, so it never covers the first line */
+@media (max-width:640px){.dkt .lbl{position:relative;top:auto;left:auto;display:block;width:fit-content;max-width:100%;margin:-25px 0 8px -6px}}
 .dkt .bx>p{margin:0;font-size:14.5px;line-height:1.55}
 .dkt .bx>p.sub{margin-top:8px;color:var(--ink-3);font-size:13.5px}
 .dkt .notice{margin:4px 20px 20px}
@@ -4026,10 +4028,18 @@ DOCKET_CSS = r"""
 .dkt .check li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;font-size:14.5px;line-height:1.5}
 .dkt .check li::before{content:"";width:14px;height:14px;border:2px solid var(--c);margin-top:3px}
 .dkt .faq{margin:0}
-.dkt .faq dt{font:700 15px/1.4 "Public Sans",sans-serif;padding-top:12px;border-top:1px dashed var(--line)}
-.dkt .faq dt:first-child{padding-top:0;border-top:0}
-.dkt .faq dd{margin:4px 0 12px;color:var(--ink-2);font-size:14.5px}
-.dkt .faq dd:last-child{margin-bottom:0}
+.dkt .faq details{border-top:1px dashed var(--line)}
+.dkt .faq details:first-child{border-top:0}
+.dkt .faq summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:baseline;padding:10px 0;font:700 15px/1.4 "Public Sans",sans-serif}
+.dkt .faq details:first-child summary{padding-top:2px}
+.dkt .faq summary::-webkit-details-marker{display:none}
+.dkt .faq summary::before{content:"+";flex:none;width:14px;font:700 16px/1 "Martian Mono",ui-monospace,monospace;color:var(--c)}
+.dkt .faq details[open] summary::before{content:"\2212"}
+.dkt .faq summary:hover{color:var(--c)}
+.dkt .faq details p{margin:0 0 12px 24px;color:var(--ink-2);font-size:14.5px}
+.dkt .kmore summary{cursor:pointer;display:inline-block;margin:8px 0 2px;font:700 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding:6px 9px;border:1.5px solid var(--line)}
+.dkt .kmore summary:hover{border-color:var(--ink);color:var(--ink)}
+.dkt .kmore[open] summary{display:none}
 .dkt .sample>p{margin:0 0 10px;color:var(--ink-3);font-size:13.5px}
 .dkt .sample pre{margin:0;background:var(--code-bg);color:var(--code-ink);padding:14px;overflow-x:auto;font:500 12.5px/1.6 "Martian Mono",ui-monospace,monospace;border:1px solid #101316}
 .dkt .tape{margin:4px 20px 18px}
@@ -5877,13 +5887,13 @@ class Site:
                 f'<a class="fp" href="{self.href(prv, p)}" rel="prev" data-key="ArrowLeft"><small>&larr; Previous</small><b>{esc(by[prv]["label"])}</b></a>'
                 f'<span class="fc"><b>{esc(gname)}</b><span>{mine.index(pid) + 1} / {len(mine)}</span><small>&larr; &rarr; keys</small></span>'
                 f'<a class="fn" href="{self.href(nxt, p)}" rel="next" data-key="ArrowRight"><small>Next &rarr;</small><b>{esc(by[nxt]["label"])}</b></a></nav>')
-        h = [f'<main class="page"><div class="back"><a class="bk" href="{back}" data-back>&larr; Back</a>'
+        h = [f'<main class="page"><div class="back">'
              f'<nav class="crumbs" aria-label="Breadcrumb"><a href="{p}skills.html">Skills and agents</a><span>/</span>{crumb}<span>/</span><span>{esc(name)}</span></nav></div>' + flip]
         h.append(f'<article class="dkt f-{n["family"]}"><div class="haz"></div><div class="band"></div><div class="punch"></div><div class="dkt-h"><div class="no">'
                  + (f'<b>{st11[pid][0]:02d}</b><span>of 11</span>' if kind == "route" else f'<svg class="kib" viewBox="0 0 24 24" aria-hidden="true">{KIND_ICONS[kind]}</svg><span>{esc(n["type"])}</span>')
                  + f'</div><div><div class="eyebrow">{"Step " + format(st11[pid][0], "02d") + " · " + esc(st11[pid][1]) if kind == "route" else esc(gname)}</div><h1>{esc(name)}</h1>'
                  + (f'<div class="plate"><code data-copy="{esc(n["slash"])}" role="button" tabindex="0" title="Copy">{esc(n["slash"])}</code></div>' if n.get("slash") else "")
-                 + f'</div><div class="stamp">{esc(n["type"])}</div></div>')
+                 + '</div></div>')
         h.append(f'<p class="lead">{inline(cap(n["blurb"]))}.</p>')
         # where it sits and when to use it on one plate; "not for" as the site's prohibition sign; a checklist you can tick,
         # sharing its ticks with the same skill on the Skills and agents page
@@ -5891,16 +5901,20 @@ class Site:
         called = "".join(f'<a href="{self.href(r["id"], p)}">{esc(by[r["id"]]["label"])}</a>' for r in callers)
         if n.get("role") or when or called:
             h.append('<dl class="orw">' + (f'<dt>Called by</dt><dd class="cby">{called}</dd>' if called else "")
-                     + (f'<dt>On site</dt><dd><p>{inline(n["role"])}</p>' + (f'<p class="sub">{inline(n["note"])}</p>' if n.get("note") else "") + "</dd>" if n.get("role") else "")
+                     + (f'<dt>Where it fits</dt><dd><p>{inline(n["role"])}</p>' + (f'<p class="sub">{inline(n["note"])}</p>' if n.get("note") else "") + "</dd>" if n.get("role") else "")
                      + (f"<dt>When</dt><dd><p>{inline(when)}</p></dd>" if when else "") + "</dl>")
         if n.get("not"):
             h.append(f'<p class="knot"><i aria-hidden="true"></i><b>Not for</b><span>{inline(not_for(n["not"]))}</span></p>')
-        h.append(f'<div class="bx kins"><span class="lbl">It\'s working if</span><ul class="check kchk">'
-                 + "".join(f'<li><span>{inline(c)}</span></li>' for c in content["checks"]) + '</ul></div>')
+        h.append('<div class="bx"><span class="lbl">Common questions</span><div class="faq">'
+                 + "".join(f"<details><summary>{inline(q)}</summary><p>{inline(a)}</p></details>" for q, a in content["faq"]) + "</div></div>")
         if sample:
             h.append(f'<div class="bx sample"><span class="lbl">{esc(meta.get("sample_title", "Sample"))}</span>'
                      + (f'<p>{inline(meta["sample_note"])}</p>' if meta.get("sample_note") else "") + f"<pre>{esc(sample)}</pre></div>")
-        h.append('<div class="bx"><span class="lbl">Common questions</span><dl class="faq">' + "".join(f"<dt>{inline(q)}</dt><dd>{inline(a)}</dd>" for q, a in content["faq"]) + "</dl></div>")
+        chk = content["checks"]
+        h.append(f'<div class="bx kins"><span class="lbl">It\'s working if</span><ul class="check kchk">'
+                 + "".join(f'<li><span>{inline(c)}</span></li>' for c in chk[:3]) + '</ul>'
+                 + (f'<details class="kmore"><summary>Show all {len(chk)}</summary><ul class="check kchk">'
+                    + "".join(f'<li><span>{inline(c)}</span></li>' for c in chk[3:]) + '</ul></details>' if len(chk) > 3 else "") + '</div>')
         h.append(tape + '<div class="tear"></div>' + f'<div class="stub">{conn or "<p>No links to other skills or agents.</p>"}</div>')
         h.append(f'<div class="foot"><span>{esc(n.get("path", ""))}</span>' + (f'<span>old name {esc(n["old"])}</span>' if n.get("old") else "")
                  + f'<a href="{esc(name)}.md">This page as Markdown</a></div></article></main>' + self.foot() + FLIP_JS + COPY_JS)
