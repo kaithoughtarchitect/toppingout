@@ -51,12 +51,12 @@ RAW = {
 # the site plan: one sheet per page, in this order
 SHEETS = [
     ("index.html", "Start"),
+    ("playbooks.html", "Who does what"),
     ("route.html", "Order of works"),
     ("repo.html", "Your repo"),
     ("logbook.html", "Logbook"),
     ("skills.html", "Skills and agents"),
     ("atlas.html", "Skill Atlas"),
-    ("playbooks.html", "Playbooks"),
     ("board.html", "Example board"),
     ("requirements.html", "Requirements"),
 ]
@@ -2461,12 +2461,12 @@ FRONT = {
     # the sheets, each with its preview image (docs/assets/see/<preview>-<light|dark>.webp, made by the site tools' previews.mjs)
     # and the page it was taken from, so the build can say when a preview is older than its page
     "see": [
+        ("playbooks.html", "Who does what", "Three roles: what each one does, and never does.", "", "playbooks", "raw/foreman-playbook.html"),
         ("route.html", "Order of works", "Every step, who does it, where you say OK.", "", "route", "route.html"),
         ("repo.html", "Your repo", "Every folder it adds, and what writes it.", "", "repo", "repo.html"),
         ("logbook.html", "Logbook", "Every lesson a job learned, kept as a card.", "", "logbook", "logbook.html"),
         ("skills.html", "Skills and agents", "Each one: what it does, how to tell it worked.", "", "skills", "skills.html"),
         ("atlas.html", "Skill Atlas", "Every skill on one map, with its links.", "", "atlas", "raw/atlas.html"),
-        ("playbooks.html", "Playbooks", "Every rule, with the mistake that made it.", "", "playbooks", "raw/foreman-playbook.html"),
         ("board.html", "Example board", "Ten jobs: merged, next, stuck.", "Synthetic data", "board", "raw/board.html"),
         ("requirements.html", "Requirements", "The kit, as a site induction.", "", "requirements", "requirements.html"),
     ],
@@ -5042,7 +5042,7 @@ class Site:
                     f'<nav class="side" aria-label="{title}: job and playbook">{side}</nav><div class="reader">{"".join(pages[key])}</div></div>')
 
         def tabb(key, icon, title, sub, first):
-            return (f'<button type="button" class="tab {key}" role="tab" data-rtab="{key}" aria-selected="{"true" if first else "false"}">'
+            return (f'<button type="button" class="tab {key}" role="tab" id="{ {"f": "foreman", "b": "builder", "y": "you"}[key]}" data-rtab="{key}" aria-selected="{"true" if first else "false"}">'
                     f'{ROLE_ICONS[icon]}<span><b>{title}</b><span>{sub}</span></span></button>')
 
         arrow_r = '<svg viewBox="0 0 44 14" aria-hidden="true"><path d="M2 7h36" stroke="currentColor" stroke-width="2.5"/><path d="M34 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>'
@@ -5056,7 +5056,7 @@ class Site:
                 f'{pane("b", "Builder-Playbook.md", "Builder", False)}{pane("y", "", "You", False)}</div>'
                 '</div></main>' + self.foot() + ROLES_JS)
         return self.page("Playbooks · Topping Out", "Who does what: the foreman's, the builder's and your job, and the playbook each role follows.",
-                         ROLES_CSS, "playbooks.html", body, subs=[("#roles", "Who does what")])
+                         ROLES_CSS, "playbooks.html", body, subs=[("#foreman", "Foreman"), ("#builder", "Builder"), ("#you", "You")])
 
     # ---------- your repo: a site plan of the folders Topping Out adds, from SETUP.md section 2 ----------
 

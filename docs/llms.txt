@@ -7,12 +7,12 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 ## Pages
 
 - [Topping Out](https://toppingout.dev/): Open-source software factory for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.
+- [Playbooks](https://toppingout.dev/playbooks.html): Who does what: the foreman's, the builder's and your job, and the playbook each role follows.
 - [Order of works](https://toppingout.dev/route.html): Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.
 - [Your repo](https://toppingout.dev/repo.html): A site plan of every folder Topping Out adds to your repo, and where one job's files appear.
 - [Logbook](https://toppingout.dev/logbook.html): The Logbook: the cards Topping Out keeps, how a lesson becomes a card and then a rule, its skills and its files.
 - [Skills and agents](https://toppingout.dev/skills.html): Every Topping Out skill and agent: 30 skills and 13 agents.
 - [Skill Atlas](https://toppingout.dev/atlas.html): Every Topping Out skill and agent as a map, with the links between them.
-- [Playbooks](https://toppingout.dev/playbooks.html): Who does what: the foreman's, the builder's and your job, and the playbook each role follows.
 - [Example board](https://toppingout.dev/board.html): What a Topping Out project board looks like, and how to read it: a made-up project with synthetic data.
 - [Requirements](https://toppingout.dev/requirements.html): The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.
 - [About](https://toppingout.dev/about.html): Kai Thought Architect, who drew Topping Out, and the systems it grew from.
