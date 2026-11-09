@@ -2622,7 +2622,7 @@ ADDON_SHORT = {
     "skill/deep/": ("/deep", "Sends any agent to the reference before it plans, builds or reviews agent code."),
     "deepagents-ref/": ("deepagents-ref/", "A wiki checked against the real deepagents code, with checked recipes and a beginner's guide."),
     "mcp.json": (".mcp.json", "LangChain's live docs server, for what the reference doesn't cover."),
-    "starter/": ("The skeleton", "A running agent with six tests and CI. Only for a new project."),
+    "starter/": ("The skeleton", "A running agent with six tests and CI, and SQLite and Postgres checkpoints. Only for a new project."),
 }
 
 
@@ -2812,7 +2812,7 @@ ADDON_KIT = {
     "installed": [
         ("deepagents", "Deep Agents", "Version 0.7.34, pinned."),
         ("langchain", "LangChain", "Comes with Deep Agents."),
-        ("langgraph", "LangGraph", "Comes with LangChain. The skeleton adds its SQLite and Postgres checkpoints."),
+        ("langgraph", "LangGraph", "Comes with LangChain."),
     ],
     "optional": ("langsmith", "LangSmith", "A free account for tracing and LangGraph Studio; paid hosting later. The add-on needs none of it."),
 }
@@ -2827,7 +2827,8 @@ def addon_html(parts: bool = False) -> str:
     req = (ROOT / "addons" / "deep-agents" / "starter" / "requirements.txt").read_text(encoding="utf-8")
     if "deepagents==0.7.34" not in req:
         raise SystemExit("build_site: the skeleton no longer pins deepagents==0.7.34: update ADDON_KIT")
-    inst = "".join(f'<li>{lc_logo(k, n)}<span>{d}</span></li>' for k, n, d in ADDON_KIT["installed"])
+    inst = ('<li><span class="lcrow">' + "".join(lc_logo(k, n) for k, n, _d in ADDON_KIT["installed"]) + '</span>'
+            '<span><b>deepagents</b> 0.7.34, pinned. Brings LangChain and LangGraph with it.</span></li>')
     ok, on, od = ADDON_KIT["optional"]
     tiles = "".join(f'<li><code>{esc(n)}</code><span>{esc(d)}</span></li>' for n, d in addon_parts()) if parts else ""
     return ('<div class="addon"><div class="adh"><span class="adt">Optional add-on</span><h3>Deep Agents</h3>'
@@ -3040,7 +3041,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .addon .adparts li{display:flex;flex-direction:column;gap:6px;padding:12px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
 .addon .adparts code{align-self:flex-start;font:700 12.5px/1.2 "Martian Mono",ui-monospace,monospace;padding:4px 7px;background:#FBB401;color:#101316;border:2px solid #101316}
 .addon .adparts span{font-size:13.5px;line-height:1.45;color:var(--ink-2)}
-.addon .adneed{margin:0;padding:10px 18px;font:600 11.5px/1.5 "Martian Mono",ui-monospace,monospace;color:var(--ink-3)}
+.addon .adneed{margin:0;padding:9px 18px;font:400 12px/1.5 "Public Sans",system-ui,sans-serif;color:var(--ink-3)}
 /* enforced, or only instructed: each promise, what keeps it, and what it doesn't stop */
 .enf{margin-top:26px}
 .enf h3{margin:0 0 6px;font:800 24px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
@@ -3071,6 +3072,8 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .addon .adc h4 small{margin-left:6px;padding:3px 5px;font-size:9px;letter-spacing:.08em;background:#FBB401;color:#101316}
 .addon .adc ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .addon .adc li{display:grid;gap:4px}.addon .adc li>span,.addon .adpy span{font-size:13px;line-height:1.45;color:var(--ink-2)}
+.addon .lcrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px}.addon .lcrow .lcl{padding:4px 0}
+.addon .adin li>span b{font:700 13px/1.4 "Martian Mono",ui-monospace,monospace;color:var(--ink)}
 .addon .lcl{display:block;padding:12px 0 8px}.addon .lcl img{display:block;height:22px;width:auto;max-width:100%}
 .addon .lcl .dk{display:none}
 :root[data-theme="dark"] .addon .lcl .lt{display:none}:root[data-theme="dark"] .addon .lcl .dk{display:block}
