@@ -865,6 +865,41 @@ ORDER_DESK_CSS = r"""
 .reader .orule span,.reader .oyour,.reader .oyour li{color:#101316}.reader .oyour li span{color:#30363B}.reader .oyour ul{margin:8px 0 0;padding:0}.reader .oyour li{margin:0}
 """
 
+# the first tab on the Order of works and the Logbook: the whole sheet on one page, before any detail
+OVERVIEW_CSS = r"""
+.pane.full{grid-template-columns:minmax(0,1fr)}
+.spage.ovw{max-width:none}
+.ovw .lead{max-width:760px}
+@media (min-width:1001px) and (min-height:620px){[data-desk].js .wrap:has(.pane[data-role="overview"]:not([hidden])){height:auto}}
+.olane{margin:18px 0 0;padding:12px;border:2px solid var(--ink);background:var(--panel)}
+.olane.loop{border-style:solid;border-left:8px solid var(--brand)}
+.olh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 10px}
+.olh b{font:800 19px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.olh span{font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.otiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.otiles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+.otile{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto;align-items:center;gap:6px 8px;width:100%;height:100%;padding:10px;text-align:left;cursor:pointer;
+ font:inherit;color:var(--ink);background:var(--ground);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .15s,box-shadow .15s,background .15s}
+.otile:hover,.otile:focus-visible{background:var(--hivis);color:#101316;transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.otile:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.otile .sno{font:800 18px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--brand)}
+.otile:hover .sno,.otile:focus-visible .sno{color:#101316}
+.otile svg{justify-self:end;width:26px;height:26px;padding:2px;background:#F4F4EF;border:1.5px solid #101316}
+.otile b{grid-column:1/-1;font:800 16px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.otile .ow{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;font:600 9px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.otile:hover .ow,.otile:focus-visible .ow{color:#30363B}
+.otile .ow>span{display:inline-flex;align-items:center;gap:5px}
+.otile .yw{position:absolute;top:-6px;right:-6px;width:12px;height:12px;background:#FBB401;border:1.5px solid #101316;transform:rotate(45deg)}
+.oret{margin:10px 0 0;font:700 11px/1.4 "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
+.okey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:16px 0 0}
+.okey ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 16px}
+.okey li,.okey p{display:inline-flex;align-items:center;gap:7px;margin:0;font-size:12.5px;color:var(--ink-2)}
+.okey .ykey{width:9px;height:9px;background:#FBB401;border:1.5px solid #101316;transform:rotate(45deg)}
+.ovw .omore{margin:12px 0 0}
+.ovw .memmap{margin-top:14px}
+@media (max-width:640px){.otiles{grid-template-columns:minmax(0,1fr)}.otile{grid-template-columns:auto auto minmax(0,1fr);grid-template-rows:auto auto}.otile svg{grid-row:1;grid-column:2;justify-self:start}.otile b{grid-column:3;grid-row:1}.otile .ow{grid-column:1/-1}}
+"""
+
 SKILLS_DESK_CSS = r"""
 .rhead2 .find{grid-column:2;display:flex;align-items:center;gap:10px;margin-top:10px;padding:0 12px;border:2px solid var(--ink);background:var(--panel);max-width:520px}
 .rhead2 .find span{font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
@@ -2967,7 +3002,6 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojheads li{padding:3px 6px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid var(--ink);background:var(--panel);color:var(--ink)}
 .ojheads li.pick{background:#FBB401;color:#101316;border-color:#101316;box-shadow:2px 2px 0 var(--ink)}
 .ojnew svg{display:block;flex:none;width:86px;height:20px;margin-left:auto;color:var(--ink)}
-.ojfz{transform-box:fill-box}
 .oj.play .ojfz{opacity:0;transition:opacity .3s}.oj.play.topped .ojfz{opacity:1}
 .oj.play .ojb2{opacity:.75}.oj.play .ojb2.hit{opacity:1}
 .oj.play .ojb2.now{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
@@ -4656,6 +4690,31 @@ def find_files(pages: dict) -> dict:
     return {"llms.txt": "\n".join(llms), "llms-full.txt": "\n".join(full), "sitemap.xml": sitemap, "robots.txt": robots}
 
 
+def memmap_html() -> str:
+    """Nothing is lost: the site in cutaway with a card per part. Drawn on the front page and on the Logbook sheet."""
+    F = FRONT
+    band = {"now": "ses", "next": "ses", "project": "job", "forever": "perm", "tool": "tool", "process": "job"}
+    nmem = len(F["memory"])
+    diag = {"logbook": ("See the Logbook graph", LOGBOOK_GRAPH), "card": ("See the six steps", CARD_PRESS)}
+    cards = "".join(f'<article class="mem{' tl' if sc in ('tool', 'process') else ''}" data-m="{k}" id="mem-{k}"><div class="mh"><span class="chip b-{band[sc]}">{"A Logbook tool" if sc == "tool" else "How a card is made" if sc == "process" else "Lasts: " + esc(last.lower())}</span><span class="mn">{i} / {nmem}</span></div>'
+                    f'<h3>{esc(nm)}</h3><code>{esc(path)}</code><p>{inline(what)}</p>'
+                    f'<dl><dt>{"When" if sc == "tool" else "Who" if sc == "process" else "Written by"}</dt><dd>{inline(wr)}</dd><dt>{"Note" if sc == "tool" else "Never" if sc == "process" else "Read by"}</dt><dd>{inline(rd)}</dd></dl>'
+                    + (f'<div class="mx" data-title="{esc(nm)}"><button type="button" class="mdiag">{diag[k][0]} &rarr;</button><div class="mxb">{diag[k][1]}</div></div>' if k in diag else "") + '</article>'
+                    for i, (k, nm, path, what, wr, rd, last, sc) in enumerate(F["memory"], 1))
+    tourcard = ('<article class="mem tour" hidden><div class="mh"><span class="chip b-job">Follow one lesson</span><span class="tn"></span></div><h3></h3><p></p>'
+                '<div class="mnav"><button type="button" data-next>Next &rarr;</button></div></article>')
+    return (f'<div class="memmap" id="memmap"><div class="cutw"><div class="cutsc">{CUTAWAY}</div><p class="taphint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V10m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.4-2L9 15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="thd">Click any outlined part to see inside</span><span class="thm">Tap a part to see inside</span></p><div class="hint"><button type="button" data-tour aria-pressed="false">&#9654; Follow one lesson</button><span>or tap any outlined part to see what it keeps and who reads it</span></div></div>'
+            f'<div class="mems"><div class="mstack">{cards}{tourcard}</div><div class="mnav"><button type="button" data-go="-1">&larr; Previous</button><button type="button" data-go="1">Next &rarr;</button></div></div></div>')
+
+
+def memmap_css() -> str:
+    """The cutaway's styles, cut from FRONT_CSS by its own comment lines so the two pages never drift apart."""
+    a, b = "/* nothing is lost: one session hands the next four things */", "/* the route: the plan runs once per project"
+    if a not in FRONT_CSS or b not in FRONT_CSS:
+        raise SystemExit("build_site: FRONT_CSS lost the comment lines around the cutaway's styles")
+    return FRONT_CSS[FRONT_CSS.index(a):FRONT_CSS.index(b)]
+
+
 class Site:
     def __init__(self):
         self.data = build_data(ROOT / "skills-wiki")
@@ -4753,6 +4812,7 @@ class Site:
                     f'<small>{esc(label or f"{num:02d} {step}")}</small></button>')
 
         pages, rows = {"once": [], "every": []}, {"once": [], "every": []}
+        tiles = {"once": [], "every": []}  # the overview: each step as a tile that opens it
         for j, (key, title, num, step, slug) in enumerate(steps):
             ic, _what, reads, writes, _rule, _mem = STEP_NOTES[step]
             what, rule = STEP_SHORT[step]
@@ -4785,6 +4845,9 @@ class Site:
                 + (f'<div class="oyour"><b>Your word <small>or your /goal</small></b><ul>' + "".join(f"<li><q>{esc(w)}</q><span>at {esc(ft)}</span></li>" for ft, w in words) + "</ul></div>" if words else "")
                 + (f'<p class="oloop"><b>{esc(note[0])}</b><span>{esc(note[1])}</span></p>' if note else "")
                 + f'<h5 class="osh">Step by step</h5><ol class="osubs">{"".join(subs)}</ol></div><div class="snav">{prev_}{next_}</div></section>')
+            tiles[key].append(f'<li><button type="button" class="otile{" yw" if words else ""}" data-open="{slug}"><span class="sno">{num:02d}</span>{icon(ic)}<b>{esc(step)}</b>'
+                              f'<span class="ow">{"".join(f"<span><span class=\"sh sh-{r}\" aria-hidden=\"true\"></span>{role_name[r]}</span>" for r in roles)}</span>'
+                              + ('<i class="yw" title="Waits for your word"></i>' if words else "") + "</button></li>")
             rows[key].append(f'<li><button type="button" class="srow{" on" if first else ""}" data-open="{slug}"><span class="sno">{num:02d}</span>{icon(ic)}'
                              f'<b>{esc(step)}</b>' + ('<i class="yw" title="Waits for your word"></i>' if words else "") + "</button></li>")
 
@@ -4801,18 +4864,33 @@ class Site:
         flow = f'<div class="flow" aria-hidden="true"><div>{arrow}</div><div>Then each ticket</div></div>'
         book = '<rect x="4" y="3" width="16" height="18" fill="#F4F4EF" stroke="#101316" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#101316" stroke-width="1.6"/>'
         STEP_ICONS.setdefault("book", book)
+        STEP_ICONS.setdefault("route", '<circle cx="5" cy="7" r="2.6" fill="#FBB401" stroke="#101316" stroke-width="1.5"/><circle cx="12" cy="7" r="2.6" fill="#FBB401" stroke="#101316" stroke-width="1.5"/>'
+                              '<circle cx="19" cy="7" r="2.6" fill="#FBB401" stroke="#101316" stroke-width="1.5"/><path d="M5 12v5h14v-5M15 14l4-2.5 0 0" fill="none" stroke="#101316" stroke-width="1.8"/>'
+                              '<path d="M3 17h4" stroke="#101316" stroke-width="1.8"/>')
+        legend = "".join(f'<li><span class="sh sh-{r}" aria-hidden="true"></span>{n}</li>' for r, n in role_name.items())
+        overview = ('<div class="pane full" data-role="overview" role="tabpanel" aria-label="The whole picture"><div class="reader">'
+                    '<section class="spage ovw" id="overview-map"><div class="sbar"><span>The whole picture</span></div><h4>From idea to merged job</h4>'
+                    f'<p class="lead">Every piece of work goes in the same order. Once per project: plan it, check it, cut it into tickets. '
+                    f'Then each ticket runs the same {len(stages[1][3])} steps, one job and one PR, and the next job starts again at the top.</p>'
+                    f'<div class="olane"><div class="olh"><b>Once per project</b><span>{len(stages[0][3])} steps &middot; {esc(stages[0][2])}</span></div><ol class="otiles">{"".join(tiles["once"])}</ol></div>'
+                    f'<div class="olane loop"><div class="olh"><b>For every ticket</b><span>{len(stages[1][3])} steps &middot; {esc(stages[1][2])}</span></div><ol class="otiles">{"".join(tiles["every"])}</ol>'
+                    '<p class="oret">&larr; Next job: a fresh foreman starts here, at step ' + f'{len(stages[0][3]) + 1:02d}</p></div>'
+                    f'<div class="okey"><ul>{legend}</ul><p><i class="ykey" aria-hidden="true"></i>Waits for your word, or your /goal</p></div>'
+                    '<p class="omore">Pick a step to open it: what it reads and writes, its rule, and each smaller step.</p></section></div></div>')
         words_pane = ('<div class="pane full" data-role="words" role="tabpanel" aria-label="Words used" hidden><div class="reader">'
                       '<section class="spage" id="words-list"><div class="sbar"><span>Words used on this page</span></div><h4>Words used</h4><dl class="gl">'
                       + "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in GLOSSARY) + "</dl></section></div></div>")
         body = (f'<main id="order" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("route.html")} · Order of works</span><h1>Order of works</h1>'
-                f'<p class="lede">From idea to merged job: {len(stages[0][3])} steps once per project, then {len(stages[1][3])} per ticket. Pick one.</p></header>'
-                f'<div class="tabs" role="tablist" aria-label="Stages">{tabb("once", "Once per project", stages[0][2], "plan", True)}{flow}'
+                f'<p class="lede">From idea to merged job: {len(stages[0][3])} steps once per project, then {len(stages[1][3])} per ticket.</p></header>'
+                f'<div class="tabs" role="tablist" aria-label="Stages">{tabb("overview", "The whole picture", f"All {len(steps)} steps", "route", True)}'
+                f'{tabb("once", "Once per project", stages[0][2], "plan", False)}{flow}'
                 f'{tabb("every", "For every ticket", stages[1][2], "hat", False, " b")}'
                 f'<button type="button" class="tab y" role="tab" id="words" data-rtab="words" aria-selected="false">{icon("book", "si")}<span><b>Words</b><span>Glossary</span></span></button></div>'
-                f'<div class="desk">{pane("once", "Once per project", True)}{pane("every", "For every ticket", False)}{words_pane}</div>'
+                f'<div class="desk">{overview}{pane("once", "Once per project", False)}{pane("every", "For every ticket", False)}{words_pane}</div>'
                 '</div></main>' + self.foot() + ROLES_JS)
         return self.page("Order of works · Topping Out", "Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.",
-                         ROLES_CSS + ORDER_DESK_CSS, "route.html", body, subs=[("#once", "Once per project"), ("#every", "For every ticket"), ("#words", "Words used")])
+                         ROLES_CSS + ORDER_DESK_CSS + OVERVIEW_CSS, "route.html", body,
+                         subs=[("#overview", "The whole picture"), ("#once", "Once per project"), ("#every", "For every ticket"), ("#words", "Words used")])
 
     def about(self) -> str:
         """Who drew the plans: the owner, and the systems Topping Out grew from, as the floors of a building."""
@@ -5298,21 +5376,28 @@ class Site:
         card_ic = '<rect x="4" y="3" width="16" height="18" fill="#FFFDF6" stroke="#101316" stroke-width="1.8"/><rect x="4" y="3" width="16" height="5" fill="#FBB401" stroke="#101316" stroke-width="1.8"/><path d="M7 12h10M7 15.5h10M7 19h6" stroke="#101316" stroke-width="1.4"/>'
         life_ic = '<circle cx="12" cy="12" r="9" fill="#F4F4EF" stroke="#101316" stroke-width="1.8"/><path d="M12 6v6l4 3" fill="none" stroke="#101316" stroke-width="2"/>'
         file_ic = '<path d="M2 6h7l2 2h11v12H2Z" fill="#FBB401" stroke="#101316" stroke-width="1.8" stroke-linejoin="round"/>'
+        map_ic = ('<rect x="2" y="3" width="20" height="18" fill="#E6EDF0" stroke="#101316" stroke-width="1.8"/><rect x="2" y="13" width="20" height="8" fill="#B9A58A" stroke="#101316" stroke-width="1.8"/>'
+                  '<rect x="6" y="8" width="5" height="5" fill="#FBB401" stroke="#101316" stroke-width="1.4"/><rect x="13" y="15" width="6" height="4" fill="#F4F4EF" stroke="#101316" stroke-width="1.4"/>')
+        overview = ('<div class="pane full" data-role="overview" role="tabpanel" aria-label="The whole picture"><div class="reader">'
+                    '<section class="spage ovw" id="overview-map"><div class="sbar"><span>The whole picture</span></div><h4>Where the Logbook keeps what</h4>'
+                    f'<p class="lead">{inline(FRONT["lost_lede"])} The higher up, the shorter it lasts. Pick a part to see what it keeps and who reads it, or follow one lesson from the job that learned it to a firm rule.</p>'
+                    + memmap_html() + '</section></div></div>')
         body = (f'<main id="logbook" class="lb" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("logbook.html")} · Logbook</span><h1>Logbook</h1>'
                 '<p class="lede">What one job learns, the next starts with.</p>'
                 '<ul class="rules3"><li><span><b>Rule</b>Every card carries its evidence and where it came from.</span></li>'
                 '<li><span><b>Rule</b>A card never overrides <code>RULES.md</code>.</span></li>'
                 '<li><span><b>Rule</b>A card becomes a firm rule only with your word.</span></li></ul></header>'
-                f'<div class="tabs" role="tablist" aria-label="The Logbook">{tabb("cards", "The cards", "3 kinds", card_ic, True, "b")}'
+                f'<div class="tabs" role="tablist" aria-label="The Logbook">{tabb("overview", "The whole picture", "Where it keeps what", map_ic, True, "b")}'
+                f'{tabb("cards", "The cards", "3 kinds", card_ic, False, "f")}'
                 f'{tabb("life", "A card&#39;s life", f"{len(MEMORY_TOUR)} moments", life_ic, False, "f")}'
                 f'{tabb("tools", "The tools", f"{len(order)} skills", KIND_ICONS["memory"], False, "f")}'
                 f'{tabb("files", "The files", "foreman/logbook/", file_ic, False, "f")}</div>'
-                f'<div class="desk">{pane("cards", "The cards", c_side, c_pages, True)}{pane("life", "A card&#39;s life", l_side, l_pages, False)}'
+                f'<div class="desk">{overview}{pane("cards", "The cards", c_side, c_pages, False)}{pane("life", "A card&#39;s life", l_side, l_pages, False)}'
                 f'{pane("tools", "The tools", t_side, t_pages, False)}{pane("files", "The files", f_side, f_pages, False)}</div>'
-                '</div></main>' + self.foot() + ROLES_JS)
+                '</div></main>' + self.foot() + ROLES_JS + MEMORY_JS.replace("__TOUR__", json.dumps(MEMORY_TOUR)) + CALLOUT_JS)
         return self.page("Logbook · Topping Out", "The Logbook: the cards Topping Out keeps, how a lesson becomes a card and then a rule, its skills and its files.",
-                         ROLES_CSS + LOGBOOK_DESK_CSS, "logbook.html", body,
-                         subs=[("#cards", "The cards"), ("#life", "A card's life"), ("#tools", "The tools"), ("#files", "The files")])
+                         ROLES_CSS + LOGBOOK_DESK_CSS + memmap_css() + OVERVIEW_CSS, "logbook.html", body,
+                         subs=[("#overview", "The whole picture"), ("#cards", "The cards"), ("#life", "A card's life"), ("#tools", "The tools"), ("#files", "The files")])
 
     # ---------- the front page ----------
 
@@ -5418,19 +5503,7 @@ class Site:
                    + f'<ul>{rules}</ul></div></section>')
 
         # 04 nothing is lost: what one session hands the next
-        band = {"now": "ses", "next": "ses", "project": "job", "forever": "perm", "tool": "tool", "process": "job"}
-        nmem = len(F["memory"])
-        diag = {"logbook": ("See the Logbook graph", LOGBOOK_GRAPH), "card": ("See the six steps", CARD_PRESS)}
-        cards = "".join(f'<article class="mem{' tl' if sc in ('tool', 'process') else ''}" data-m="{k}" id="mem-{k}"><div class="mh"><span class="chip b-{band[sc]}">{"A Logbook tool" if sc == "tool" else "How a card is made" if sc == "process" else "Lasts: " + esc(last.lower())}</span><span class="mn">{i} / {nmem}</span></div>'
-                        f'<h3>{esc(nm)}</h3><code>{esc(path)}</code><p>{inline(what)}</p>'
-                        f'<dl><dt>{"When" if sc == "tool" else "Who" if sc == "process" else "Written by"}</dt><dd>{inline(wr)}</dd><dt>{"Note" if sc == "tool" else "Never" if sc == "process" else "Read by"}</dt><dd>{inline(rd)}</dd></dl>'
-                        + (f'<div class="mx" data-title="{esc(nm)}"><button type="button" class="mdiag">{diag[k][0]} &rarr;</button><div class="mxb">{diag[k][1]}</div></div>' if k in diag else "") + '</article>'
-                        for i, (k, nm, path, what, wr, rd, last, sc) in enumerate(F["memory"], 1))
-        tourcard = ('<article class="mem tour" hidden><div class="mh"><span class="chip b-job">Follow one lesson</span><span class="tn"></span></div><h3></h3><p></p>'
-                    '<div class="mnav"><button type="button" data-next>Next &rarr;</button></div></article>')
-        out.append(sec(4, "lost", "Nothing is lost", F["lost_lede"])
-                   + f'<div class="memmap" id="memmap"><div class="cutw"><div class="cutsc">{CUTAWAY}</div><p class="taphint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V10m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.4-2L9 15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="thd">Click any outlined part to see inside</span><span class="thm">Tap a part to see inside</span></p><div class="hint"><button type="button" data-tour aria-pressed="false">&#9654; Follow one lesson</button><span>or tap any outlined part to see what it keeps and who reads it</span></div></div>'
-                   f'<div class="mems"><div class="mstack">{cards}{tourcard}</div><div class="mnav"><button type="button" data-go="-1">&larr; Previous</button><button type="button" data-go="1">Next &rarr;</button></div></div></div>'
+        out.append(sec(4, "lost", "Nothing is lost", F["lost_lede"]) + memmap_html()
                    + '<a class="treelink" href="logbook.html">The Logbook in full: the cards, their life, the tools, the files &rarr;</a>'
                    + MEMORY_JS.replace("__TOUR__", json.dumps(MEMORY_TOUR)) + CALLOUT_JS + '</section>')
 
