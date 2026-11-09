@@ -2317,10 +2317,6 @@ FRONT = {
         ("Merge", "foreman", True, []),
         ("Close", "foreman", True, ["f-signoff", "f-board"]),
     ],
-    "route_notes": {"Build": "one small step at a time, test first; the foreman checks each one",
-                    "Inspect": "automated checks first, then two reviews",
-                    "Review the PR": "Greptile reviews it, three rounds at most",
-                    "Close": "a day report, the next job picked and researched, the handover written"},
     # the six skills to start with, in the route's own words: (skill, route step, who, what it does, what you get)
     "featured": [
         ("f-survey", "Shape the idea", ["foreman", "you"], "Asks you only the questions that change the plan, and settles the rest from the code.", "a brief with every question answered"),
@@ -3137,8 +3133,11 @@ FRONT_CSS = r"""
 .pil .pw{margin:0 0 8px;font-weight:600;font-size:15px}
 .pil .ph{margin:0;color:var(--ink-2);font-size:14px}
 /* the route's outer frame: the night shift, job after job */
-.shiftbox{position:relative;margin-top:72px;border:2px dashed var(--ink-3);padding:30px 16px 14px}
-.shiftbox .sl{position:absolute;top:-11px;right:14px;background:#101316;color:#FBB401;font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px}
+.shiftbox{position:relative;margin-top:72px;padding:30px 16px 14px}
+.rtkey{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:0 0 18px;font-size:14px;color:var(--ink-2)}
+.rtkey a{color:var(--ink);text-decoration-color:var(--brand);text-underline-offset:3px}
+.rtkey .rtk{display:inline-flex;align-items:center;gap:8px;font:600 10.5px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.rtkey i{width:11px;height:11px;background:var(--hivis);border:2px solid #101316;transform:rotate(45deg)}
 .shiftbox .feed{margin-top:0}
 /* the night shift: a clock from day to morning */
 .clock{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:3px solid var(--ink)}
@@ -3458,15 +3457,10 @@ FRONT_CSS = r"""
 .r-foreman{color:var(--ink)}.r-builder{color:var(--run)}.r-inspectors{color:var(--inspect)}
 .who b.r-you{background:var(--hivis);color:#101316;border-color:#101316}
 .who em{flex-basis:100%;white-space:nowrap;font:600 9.5px/1.2 "Martian Mono",ui-monospace,monospace;font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
-.phs .nt{font-size:13px;line-height:1.35;color:var(--ink-3)}
-.phs .cmds{display:flex;flex-wrap:wrap;gap:2px 9px;font:500 11.5px/1.5 "Martian Mono",ui-monospace,monospace}
-.phs .cmds a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line)}
-.phs .cmds a:hover{color:var(--ink);border-bottom-color:var(--ink)}
 .feed{display:flex;align-items:center;gap:10px;margin:26px 0 0;padding-left:18px;font:600 11px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
 .feed b{font:700 16px/1 "Public Sans",sans-serif}
 .feed span{color:var(--ink-3);font-weight:500;letter-spacing:.06em;text-transform:none}
 @media (max-width:720px){.feed{flex-wrap:wrap}.feed span{flex-basis:100%}}
-@media (max-width:720px){.shiftbox{padding-top:40px}.shiftbox .sl{right:14px;line-height:1.35}}
 .loop{position:relative;margin-top:30px;padding-bottom:44px}
 .loop .track{padding:0 0 0 30px}
 .loop .phs .vb{font-size:19px}
@@ -5439,22 +5433,20 @@ class Site:
 
         def phases(items, first=1):
             li = []
-            for n, (step, who, word, ids) in enumerate(items, first):
-                # the owner's steps and the steps that need their word: in an autonomous run, the owner's /goal covers them
-                tag = "<em>or your /goal</em>" if who == "you" else "<em>Your word</em><em>or your /goal</em>" if word else ""
-                cmds = "".join(f'<a href="{self.href(s, "")}" title="{esc(cap(by[s]["blurb"]))}">/{esc(by[s]["label"])}</a>' for s in ids)
-                note = F["route_notes"].get(step, "")
+            for n, (step, who, word, _ids) in enumerate(items, first):
+                # only icon, number, name and who: the skills, notes and "your word" lines live on the Order of works sheet;
+                # the diamond on the track and the key above say where it waits for your word
                 slug = re.sub(r"[^a-z]+", "-", step.lower()).strip("-")
                 ico = f'<svg class="sico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{STEP_ICONS[STEP_NOTES[step][0]]}</svg>'
                 li.append(f'<li><div class="phs{" word" if word else ""}" data-step="{slug}" tabindex="0" role="button" aria-controls="sn-{slug}" aria-pressed="false">'
                           f'<span class="mk" aria-hidden="true"></span><span class="sih">{ico}<i class="sn">{n:02d}</i></span><b class="vb">{esc(step)}</b>'
-                          f'<span class="who"><b class="r-{who}">{role_name[who]}</b>{tag}</span>'
-                          + (f'<span class="nt">{esc(note)}</span>' if note else "")
-                          + (f'<span class="cmds">{cmds}</span>' if cmds else "") + "</div></li>")
+                          f'<span class="who"><b class="r-{who}">{role_name[who]}</b></span></div></li>')
             return f'<ol class="track" style="--n:{len(li)}">{"".join(li)}</ol>'
 
-        out.append(f'<div class="rt-h">Once per project: plan it, check it, cut it into tickets</div><div class="once">{phases(F["route_once"])}</div>'
-                   f'<div class="shiftbox"><span class="sl">Night shift: job after job, until the list is done</span>'
+        out.append('<p class="rtkey"><span class="rtl">The same job as <a href="#oj">Watch one job</a>, step by step, with the planning before it.</span>'
+                   '<span class="rtk"><i aria-hidden="true"></i>Waits for your word, or your /goal</span></p>'
+                   f'<div class="rt-h">Once per project: plan it, check it, cut it into tickets</div><div class="once">{phases(F["route_once"])}</div>'
+                   f'<div class="shiftbox">'
                    f'<div class="feed">Then, for every ticket: one job, one branch, one PR</div>'
                    f'<div class="loop">{phases(F["route_loop"], len(F["route_once"]) + 1)}<span class="ret">&larr; Next job: a fresh foreman starts here</span><svg class="chev cv-down" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path d="M2.5 5.5L7.5 10.5L12.5 5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg><svg class="chev cv-left" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path d="M9.5 2.5L4.5 7.5L9.5 12.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg><svg class="chev cv-up" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path d="M2.5 9.5L7.5 4.5L12.5 9.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg>'
                    + WALKER.replace("__WHO__", json.dumps([who for _, who, _, _ in F["route_loop"]])).replace("__SAYS__", json.dumps(WALK_SAYS)) + '</div></div>')
