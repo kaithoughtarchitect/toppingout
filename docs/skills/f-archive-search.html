@@ -213,7 +213,8 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojv{grid-column:1/-1;width:64px;height:40px;color:var(--ink);justify-self:start}
 .ojy,.oji{margin:0;padding:9px 10px;font-size:12.5px;line-height:1.4}
 .ojy{margin-top:8px;background:rgba(251,180,1,.22);border-left:4px solid #FBB401}
-.oji{margin-top:6px;background:var(--ground);border-left:4px solid var(--ink);color:var(--ink-2)}
+.oji{margin-top:6px;padding:8px 10px;font-size:12px;line-height:1.35;background:var(--ink);color:var(--ground);box-shadow:8px 0 0 var(--ink)}
+.ojst[data-s="4"] .oji{box-shadow:none}
 .ojy q,.oji q{font:600 .92em "Martian Mono",ui-monospace,monospace;quotes:"\201C" "\201D"}
 .ojt{fill:#3FAE6A}
 .ojst[data-s="3"] .ojhd{border-bottom-width:0;padding-bottom:16px;background-image:repeating-linear-gradient(-45deg,#101316 0 6px,#FBB401 6px 12px);background-size:100% 8px;background-repeat:no-repeat;background-position:bottom}
@@ -242,7 +243,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 @media (max-width:640px){.oj{padding:18px 16px}.ojg{display:flex;flex-direction:column;gap:14px}.ojst{display:block}.ojtk{display:none}
  .ojhd{grid-template-columns:auto auto 1fr}.ojv{grid-column:auto;justify-self:end;height:32px}
  .ojy::before,.oji::before{grid-row:1;grid-column:1;align-self:start;display:inline-block;margin-right:7px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;padding:3px 5px;vertical-align:1px}
- .ojy::before{content:"You";background:#FBB401;color:#101316}.oji::before{content:"It";background:var(--ink);color:var(--ground)}}
+ .ojy::before{content:"You";background:#FBB401;color:#101316}.oji::before{content:"It";background:var(--ground);color:var(--ink)}.oji{box-shadow:none}}
 
 /* the mode switch: with you, an autonomous run, a night shift; plain radios, so it works without script */
 /* three ways to run a job: equal, always visible; every mode's text sits in the same cell, so nothing changes size */
@@ -281,19 +282,20 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 #install{scroll-margin-top:16px}
 
 /* after the last job: the report and its next heads, your pick, a new board; complete at rest */
-.ojnext{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:44px repeat(3,minmax(0,1fr));gap:8px 20px;margin-top:10px}
+.ojnext{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:44px repeat(3,minmax(0,1fr));gap:8px 20px;margin-top:8px}
 .ojnl{display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;border:2px solid var(--ink);color:var(--ink)}
-.ojb2{position:relative;padding:11px 12px 12px;border:2px solid var(--ink);background:var(--ground);transition:background .25s,box-shadow .25s,transform .25s}
+.ojb2{position:relative;padding:8px 10px 9px;border:2px solid var(--ink);background:var(--ground);transition:background .25s,box-shadow .25s,transform .25s}
 .ojb2+.ojb2::before{content:"\2192";position:absolute;left:-17px;top:50%;transform:translateY(-50%);font:700 13px/1 "Martian Mono",ui-monospace,monospace;color:var(--ink)}
-.ojb2>b{display:block;margin:6px 0 4px;font:800 17px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
-.ojb2 p{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-2)}.ojb2 em{font-style:normal;font-weight:700;color:var(--ink)}
+.ojbh{display:flex;align-items:center;gap:7px;min-height:22px}
+.ojbh>b{font:800 15px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.ojb2 p{margin:5px 0 0;font-size:12px;line-height:1.35;color:var(--ink-2)}.ojb2 em{font-style:normal;font-weight:700;color:var(--ink)}
 .ojtag{display:inline-block;padding:3px 5px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
 .ojtag.y{background:#FBB401;color:#101316}.ojtag.i{background:var(--ink);color:var(--ground)}
 .ojpick{background:rgba(251,180,1,.22);border-left:6px solid #FBB401}
-.ojheads{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0;padding:0}
-.ojheads li{padding:4px 7px;font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid var(--ink);background:var(--panel);color:var(--ink)}
+.ojheads{list-style:none;display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 0;padding:0}
+.ojheads li{padding:3px 6px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid var(--ink);background:var(--panel);color:var(--ink)}
 .ojheads li.pick{background:#FBB401;color:#101316;border-color:#101316;box-shadow:2px 2px 0 var(--ink)}
-.ojnew svg{display:block;width:160px;height:34px;margin:2px 0 6px;color:var(--ink)}
+.ojnew svg{display:block;flex:none;width:86px;height:20px;margin-left:auto;color:var(--ink)}
 .ojfz{transform-box:fill-box}
 .oj.play .ojfz{opacity:0;transition:opacity .3s}.oj.play.topped .ojfz{opacity:1}
 .oj.play .ojb2{opacity:.75}.oj.play .ojb2.hit{opacity:1}

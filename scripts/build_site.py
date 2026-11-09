@@ -2425,15 +2425,15 @@ ADDON_SHORT = {
 # still hold, so the build stops when the README changes. (role icon, station, README steps, phrases, you, it)
 ONE_JOB = [
     ("foreman", "Plan", [1, 2], ["Give the foreman a ticket", "It walks the site", '"go"'],
-     'Pick a ticket, then say <q>go</q>.', "Reads the ticket and your code, and writes a plan."),
+     'Pick a ticket, then say <q>go</q>.', "Reads the ticket and your code. Writes a plan."),
     ("builder", "Build", [3], ["It writes work orders", "you paste each pointer into the builder", "or the pane link does it"],
-     "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Splits the plan into small steps. A cheaper model builds each one, tests first."),
+     "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Small steps, each built tests first by a cheaper model."),
     ("inspectors", "Check", [3], ["the two inspections and the acceptance ledger"],
-     "", "Two separate reviews, then checks every requirement has proof."),
+     "", "Two reviews, then proof for every requirement."),
     ("you", "Your OK", [4], ['("open the PR")', 'on "greploop"', "up to three Greptile rounds", '**"merge"** when the evidence satisfies you'],
-     '<q>Open the PR</q>, then <q>merge</q> when you&rsquo;re happy with the proof.', 'Opens the pull request. Say <q>greploop</q> and it runs up to three automated reviews.'),
+     '<q>Open the PR</q>, then <q>merge</q> when you&rsquo;re happy with the proof.', 'Opens the PR. On <q>greploop</q>, up to three reviews.'),
     (None, "Merged", [5], ["It closes the job, saves the lessons", "proposes the next ticket for you to confirm"],
-     "OK the next ticket.", "Closes the job, saves what it learned, suggests the next ticket."),
+     "OK the next ticket.", "Saves lessons and suggests the next ticket."),
 ]
 
 
@@ -2443,18 +2443,18 @@ GOAL_AUTO = "/goal autonomous run: <opener>, until done or stopped"
 GOAL_NIGHT = "/goal night shift: jobs 13, 17, until done or stopped"
 ONE_JOB_MODES = {
     "auto": [
-        (f"In a fresh session, one line: <code>{GOAL_AUTO.replace("<", "&lt;").replace(">", "&gt;")}</code>", "Plans, and answers its own planning questions with its recommended pick."),
+        (f"In a fresh session, one line: <code>{GOAL_AUTO.replace("<", "&lt;").replace(">", "&gt;")}</code>", "Plans, and answers its own questions with its pick."),
         ("Nothing: Orca passes each step to the builder.", None),
-        ("", "Two reviews, then the proof check. Anything that fails gets fixed, not a stop."),
+        ("", "Two reviews, then the proof check. Fixes what fails."),
         ("Nothing to say: your goal covers the PR, up to three automated reviews, and the merge.", "Opens the PR, runs the reviews, merges."),
-        ("Read the PR and the report: every answer it gave itself is listed, so you can reverse it.", "Closes the job, saves the records, and stops. It never starts the next job."),
+        ("Read the PR and the report: every answer it gave itself is listed, so you can reverse it.", "Closes the job and stops. Never starts the next."),
     ],
     "night": [
-        (f"Before bed, one line: <code>{GOAL_NIGHT}</code>", "A shift manager opens a fresh AI session for each job and starts it for you."),
+        (f"Before bed, one line: <code>{GOAL_NIGHT}</code>", "A shift manager starts each job in a fresh session."),
         ("Nothing: Orca passes each step to the builder.", None),
-        ("", "Two reviews, then the proof check. Anything that fails gets fixed, not a stop."),
+        ("", "Two reviews, then the proof check. Fixes what fails."),
         ("Covered by each job&rsquo;s goal.", "Opens the PR, runs the reviews, merges."),
-        ("Read the morning report.", "Closes the job, and the next one starts. Several jobs done by morning."),
+        ("Read the morning report.", "Closes the job. The next one starts."),
     ],
 }
 ONE_JOB_RULES = ["**What goes red is repaired, not a stop.**", "Ask only where these rules or `METHOD.md` name an owner step", "**two repair rounds**", "a security-class finding or an unresolved critical one",
@@ -2482,15 +2482,15 @@ def one_job_check_rules() -> None:
 # D22: what comes after topping out, the same in every mode (README "Topping out", METHOD.md section 11b)
 ONE_JOB_NEXT = (
     '<div class="ojnext"><span class="ojnl" aria-hidden="true">Then</span>'
-    '<div class="ojb2 ojrep" data-b="0"><span class="ojtag i">AI</span><b>The report</b>'
-    '<p>When the whole goal is built: a record of what was done and what&rsquo;s left, plus three to five ideas for the <em>next goal</em>.</p>'
+    '<div class="ojb2 ojrep" data-b="0"><div class="ojbh"><span class="ojtag i">AI</span><b>The report</b></div>'
+    '<p>What was built and what&rsquo;s left, plus three to five ideas for the <em>next goal</em>.</p>'
     '<ul class="ojheads" aria-label="Ideas for the next goal">' + "".join(f'<li style="--h:{k}"{" class=\"pick\"" if k == 1 else ""}>Idea {k + 1}</li>' for k in range(4)) + '</ul></div>'
-    '<div class="ojb2 ojpick" data-b="1"><span class="ojtag y">You</span><b>You pick one</b>'
-    '<p>Whenever you&rsquo;re ready. In every mode, the AI stops when the goal is built and never picks the next one itself.</p></div>'
-    '<div class="ojb2 ojnew" data-b="2"><span class="ojtag i">AI</span><b>A new board</b>'
-    '<svg viewBox="0 0 160 34" aria-hidden="true"><path d="M2 30h86" stroke="currentColor" stroke-width="3"/>'
-    '<rect class="ojplot" x="12" y="6" width="64" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/>'
-    '<text x="96" y="26" font-family="Martian Mono,monospace" font-weight="700" font-size="10" fill="currentColor">floor 0</text></svg>'
+    '<div class="ojb2 ojpick" data-b="1"><div class="ojbh"><span class="ojtag y">You</span><b>You pick one</b></div>'
+    '<p>Whenever you&rsquo;re ready. In every mode, the AI never picks it for you.</p></div>'
+    '<div class="ojb2 ojnew" data-b="2"><div class="ojbh"><span class="ojtag i">AI</span><b>A new board</b>'
+    '<svg viewBox="0 0 110 26" aria-hidden="true"><path d="M2 23h54" stroke="currentColor" stroke-width="3"/>'
+    '<rect class="ojplot" x="8" y="4" width="40" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/>'
+    '<text x="60" y="21" font-family="Martian Mono,monospace" font-weight="700" font-size="10" fill="currentColor">floor 0</text></svg></div>'
     '<p>A fresh board for the new goal, and the job loop starts again.</p></div></div>')
 
 
@@ -2884,7 +2884,8 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojv{grid-column:1/-1;width:64px;height:40px;color:var(--ink);justify-self:start}
 .ojy,.oji{margin:0;padding:9px 10px;font-size:12.5px;line-height:1.4}
 .ojy{margin-top:8px;background:rgba(251,180,1,.22);border-left:4px solid #FBB401}
-.oji{margin-top:6px;background:var(--ground);border-left:4px solid var(--ink);color:var(--ink-2)}
+.oji{margin-top:6px;padding:8px 10px;font-size:12px;line-height:1.35;background:var(--ink);color:var(--ground);box-shadow:8px 0 0 var(--ink)}
+.ojst[data-s="4"] .oji{box-shadow:none}
 .ojy q,.oji q{font:600 .92em "Martian Mono",ui-monospace,monospace;quotes:"\201C" "\201D"}
 .ojt{fill:#3FAE6A}
 .ojst[data-s="3"] .ojhd{border-bottom-width:0;padding-bottom:16px;background-image:repeating-linear-gradient(-45deg,#101316 0 6px,#FBB401 6px 12px);background-size:100% 8px;background-repeat:no-repeat;background-position:bottom}
@@ -2913,7 +2914,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 @media (max-width:640px){.oj{padding:18px 16px}.ojg{display:flex;flex-direction:column;gap:14px}.ojst{display:block}.ojtk{display:none}
  .ojhd{grid-template-columns:auto auto 1fr}.ojv{grid-column:auto;justify-self:end;height:32px}
  .ojy::before,.oji::before{grid-row:1;grid-column:1;align-self:start;display:inline-block;margin-right:7px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;padding:3px 5px;vertical-align:1px}
- .ojy::before{content:"You";background:#FBB401;color:#101316}.oji::before{content:"It";background:var(--ink);color:var(--ground)}}
+ .ojy::before{content:"You";background:#FBB401;color:#101316}.oji::before{content:"It";background:var(--ground);color:var(--ink)}.oji{box-shadow:none}}
 
 /* the mode switch: with you, an autonomous run, a night shift; plain radios, so it works without script */
 /* three ways to run a job: equal, always visible; every mode's text sits in the same cell, so nothing changes size */
@@ -2952,19 +2953,20 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 #install{scroll-margin-top:16px}
 
 /* after the last job: the report and its next heads, your pick, a new board; complete at rest */
-.ojnext{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:44px repeat(3,minmax(0,1fr));gap:8px 20px;margin-top:10px}
+.ojnext{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:44px repeat(3,minmax(0,1fr));gap:8px 20px;margin-top:8px}
 .ojnl{display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;border:2px solid var(--ink);color:var(--ink)}
-.ojb2{position:relative;padding:11px 12px 12px;border:2px solid var(--ink);background:var(--ground);transition:background .25s,box-shadow .25s,transform .25s}
+.ojb2{position:relative;padding:8px 10px 9px;border:2px solid var(--ink);background:var(--ground);transition:background .25s,box-shadow .25s,transform .25s}
 .ojb2+.ojb2::before{content:"\2192";position:absolute;left:-17px;top:50%;transform:translateY(-50%);font:700 13px/1 "Martian Mono",ui-monospace,monospace;color:var(--ink)}
-.ojb2>b{display:block;margin:6px 0 4px;font:800 17px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
-.ojb2 p{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-2)}.ojb2 em{font-style:normal;font-weight:700;color:var(--ink)}
+.ojbh{display:flex;align-items:center;gap:7px;min-height:22px}
+.ojbh>b{font:800 15px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.ojb2 p{margin:5px 0 0;font-size:12px;line-height:1.35;color:var(--ink-2)}.ojb2 em{font-style:normal;font-weight:700;color:var(--ink)}
 .ojtag{display:inline-block;padding:3px 5px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
 .ojtag.y{background:#FBB401;color:#101316}.ojtag.i{background:var(--ink);color:var(--ground)}
 .ojpick{background:rgba(251,180,1,.22);border-left:6px solid #FBB401}
-.ojheads{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0;padding:0}
-.ojheads li{padding:4px 7px;font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid var(--ink);background:var(--panel);color:var(--ink)}
+.ojheads{list-style:none;display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 0;padding:0}
+.ojheads li{padding:3px 6px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.04em;border:2px solid var(--ink);background:var(--panel);color:var(--ink)}
 .ojheads li.pick{background:#FBB401;color:#101316;border-color:#101316;box-shadow:2px 2px 0 var(--ink)}
-.ojnew svg{display:block;width:160px;height:34px;margin:2px 0 6px;color:var(--ink)}
+.ojnew svg{display:block;flex:none;width:86px;height:20px;margin-left:auto;color:var(--ink)}
 .ojfz{transform-box:fill-box}
 .oj.play .ojfz{opacity:0;transition:opacity .3s}.oj.play.topped .ojfz{opacity:1}
 .oj.play .ojb2{opacity:.75}.oj.play .ojb2.hit{opacity:1}
