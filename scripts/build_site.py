@@ -1682,8 +1682,6 @@ BOARD_KEYS = [
      '<rect x="24" y="10" width="46" height="34" fill="#FBB401" stroke="#101316" stroke-width="2"/><path d="M24 14h46" stroke="#101316" stroke-width="4" stroke-dasharray="4 4"/><path d="M2 27h18" stroke="currentColor" stroke-width="3"/><path d="M16 21l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.5"/>'),
     ("One bone, one job", "Numbered in the order they were planned, above and below the spine.",
      '<path d="M4 40h64" stroke="currentColor" stroke-width="3.5"/><path d="M22 40L12 18" stroke="currentColor" stroke-width="2.5"/><rect x="2" y="4" width="16" height="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="10" y="14" text-anchor="middle" font-size="10" font-family="Martian Mono,monospace" fill="currentColor">3</text><path d="M48 40l12 0" stroke="currentColor" stroke-width="3.5"/>'),
-    ("Its line says its state", "Solid: merged. Dotted: blocked. Dashed amber: waiting for your decision.",
-     '<path d="M4 12h64" stroke="currentColor" stroke-width="3"/><path d="M4 27h64" stroke="currentColor" stroke-width="3" stroke-dasharray="1.5 5" stroke-linecap="round"/><path d="M4 42h64" stroke="#C98A00" stroke-width="3" stroke-dasharray="8 5"/>'),
     ("Yellow is next", "The job the last close picked to build next, also named at the top.",
      '<path d="M4 40h64" stroke="currentColor" stroke-width="3.5"/><path d="M36 40L22 12" stroke="#FBB401" stroke-width="4"/><rect x="12" y="2" width="20" height="13" fill="#FBB401" stroke="#101316" stroke-width="1.6"/>'),
     ("Each job's docket", "The tabs underneath: what the job is, what it needs, and what it left behind.",
@@ -1733,22 +1731,21 @@ BOARD_CSS = r"""
 .bhead h1{margin:12px 0 14px;font:800 clamp(44px,7vw,80px)/.9 "Big Shoulders Display","Arial Narrow",Impact,sans-serif;text-transform:uppercase}
 .bhead .lede{max-width:70ch;color:var(--ink-2);margin:0;font-size:17px}
 .bhead .lede code,.bkeep code{font:500 .86em "Martian Mono",ui-monospace,monospace;background:rgba(251,180,1,.2);padding:1px 5px;color:var(--ink)}
-.bsyn{display:inline-block;margin-top:14px;font:700 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;padding:6px 8px;border:2px dashed var(--ink-3);color:var(--ink-2)}
-.bkeys{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-.bkeys li{border:2px solid var(--ink);background:var(--panel);padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px}
-.bkeys svg{width:72px;height:48px;color:var(--ink);flex:none}
+.bkeys{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.bkeys li{border:2px solid var(--ink);background:var(--panel);padding:10px 12px;display:flex;flex-direction:row;align-items:flex-start;gap:10px}
+.bkeys svg{width:48px;height:32px;color:var(--ink);flex:none}
 .bkeys li>div{display:flex;flex-direction:column;gap:6px}
-.bhow{margin:30px 0 0;font:800 28px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
-.bkeys b{font:800 18px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.bhow{margin:22px 0 0;font:800 22px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.bkeys b{font:800 16px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
 .bkeys .kn{font:800 14px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--brand);margin-right:6px}
-.bkeys span{font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.bkeys span{font-size:12.5px;line-height:1.4;color:var(--ink-2)}
 .bkeep{margin:16px 0 0;font-size:14.5px;color:var(--ink-2);max-width:90ch}
 .bkeep a{color:var(--ink);font-weight:600}
-.bframe{margin:22px 0 40px;border:3px solid var(--ink)}
+.bframe{margin:16px 0 18px;border:3px solid var(--ink)}
 .bframe .bfh{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-bottom:2px solid var(--ink);background:var(--panel);font:600 10.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .bframe .bfh a{color:var(--ink)}
 .bframe iframe{display:block;width:100%;height:1150px;border:0;background:var(--ground)}
-@media (max-width:1100px){.bkeys{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1100px){.bkeys{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:720px){.wrap{padding:0 16px}.bkeys{grid-template-columns:minmax(0,1fr)}.bkeys li{flex-direction:row;align-items:flex-start;gap:12px}.bframe iframe{height:1400px}}
 
 /* the key points at the board; the "nobody edits it by hand" line is a rule sign */
@@ -1762,10 +1759,10 @@ BOARD_CSS = r"""
 .bsign b{display:flex;align-items:center;padding:0 9px;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;background:#101316;color:#FBB401}
 .bsign span{padding:8px 12px;font:800 15px/1.15 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
 @media (max-width:560px){.bhow.live small{display:block;margin:6px 0 0}}
-.btop{margin:-4px 0 18px;font-size:14px;color:var(--ink-2)}.btop b{color:var(--ink)}
+.btop{margin:14px 0 44px;font-size:14px;color:var(--ink-2)}.btop b{color:var(--ink)}
 """
 
-BOARD_JS = '<script>(function(){var f=document.getElementById("boardframe");if(!f)return;\n/* the frame is sized to the board once it loads (hosted only). The board fills whatever height it is given, so it is not re-fitted after that */\nfunction fit(){try{var d=f.contentDocument;if(d&&d.documentElement){var h=d.documentElement.scrollHeight;if(h>200)f.style.height=(h+8)+"px"}}catch(e){}}\nvar ro=null;f.addEventListener("load",function(){fit();if(doc()&&doc().body){var hw=document.querySelector(".bhow");hw&&hw.classList.add("live");document.querySelector(".bkeys")&&document.querySelector(".bkeys").classList.add("live")}setTimeout(fit,400);});\nwindow.addEventListener("resize",function(){setTimeout(fit,200)});\n/* the key lights its part of the board: hover or focus to light, tap to light and bring it into view */\nvar parts={1:"rect.headbox, text.headt",2:"svg#fish g.rib",3:".fishbar .leg",4:"svg#fish g.rib.next, .status .nx, .jc.isnext",5:"section.panel"};\nfunction doc(){try{return f.contentDocument}catch(e){return null}}\nfunction ready(d){if(!d||d.getElementById("to-hl"))return;var st=d.createElement("style");st.id="to-hl";\n st.textContent=".to-hl{outline:3px solid #FBB401!important;outline-offset:4px;box-shadow:0 0 0 7px rgba(251,180,1,.25)!important}svg .to-hl{outline:none!important;filter:drop-shadow(0 0 3px #FBB401) drop-shadow(0 0 6px #FBB401)}";d.head.appendChild(st)}\nfunction light(k,show){var d=doc();if(!d||!d.body)return;ready(d);[].forEach.call(d.querySelectorAll(".to-hl"),function(e){e.classList.remove("to-hl")});if(!k)return;\n var els=d.querySelectorAll(parts[k]);[].forEach.call(els,function(e){e.classList.add("to-hl")});\n if(show&&els[0]){var r=els[0].getBoundingClientRect(),fr=f.getBoundingClientRect(),y=fr.top+r.top;if(y<60||y>innerHeight-80)scrollBy({top:y-innerHeight/3,behavior:"smooth"})}}\n[].forEach.call(document.querySelectorAll(".bkeys [data-hl]"),function(li){var k=li.getAttribute("data-hl");\n li.addEventListener("mouseenter",function(){light(k)});li.addEventListener("mouseleave",function(){light(0)});\n li.addEventListener("focus",function(){light(k)});li.addEventListener("blur",function(){light(0)});\n li.addEventListener("click",function(){light(k,true)})})})()</script>'
+BOARD_JS = '<script>(function(){var f=document.getElementById("boardframe");if(!f)return;\n/* the frame is sized to the board once it loads (hosted only). The board fills whatever height it is given, so it is not re-fitted after that */\nfunction fit(){try{var d=f.contentDocument;if(d&&d.documentElement){var h=d.documentElement.scrollHeight;if(h>200)f.style.height=(h+8)+"px"}}catch(e){}}\nvar ro=null;f.addEventListener("load",function(){fit();if(doc()&&doc().body){var hw=document.querySelector(".bhow");hw&&hw.classList.add("live");document.querySelector(".bkeys")&&document.querySelector(".bkeys").classList.add("live")}setTimeout(fit,400);});\nwindow.addEventListener("resize",function(){setTimeout(fit,200)});\n/* the key lights its part of the board: hover or focus to light, tap to light and bring it into view */\nvar parts={1:"rect.headbox, text.headt",2:"svg#fish g.rib",3:"svg#fish g.rib.next, .status .nx, .jc.isnext",4:"section.panel"};\nfunction doc(){try{return f.contentDocument}catch(e){return null}}\nfunction ready(d){if(!d||d.getElementById("to-hl"))return;var st=d.createElement("style");st.id="to-hl";\n st.textContent=".to-hl{outline:3px solid #FBB401!important;outline-offset:4px;box-shadow:0 0 0 7px rgba(251,180,1,.25)!important}svg .to-hl{outline:none!important;filter:drop-shadow(0 0 3px #FBB401) drop-shadow(0 0 6px #FBB401)}";d.head.appendChild(st)}\nfunction light(k,show){var d=doc();if(!d||!d.body)return;ready(d);[].forEach.call(d.querySelectorAll(".to-hl"),function(e){e.classList.remove("to-hl")});if(!k)return;\n var els=d.querySelectorAll(parts[k]);[].forEach.call(els,function(e){e.classList.add("to-hl")});\n if(show&&els[0]){var r=els[0].getBoundingClientRect(),fr=f.getBoundingClientRect(),y=fr.top+r.top;if(y<60||y>innerHeight-80)scrollBy({top:y-innerHeight/3,behavior:"smooth"})}}\n[].forEach.call(document.querySelectorAll(".bkeys [data-hl]"),function(li){var k=li.getAttribute("data-hl");\n li.addEventListener("mouseenter",function(){light(k)});li.addEventListener("mouseleave",function(){light(0)});\n li.addEventListener("focus",function(){light(k)});li.addEventListener("blur",function(){light(0)});\n li.addEventListener("click",function(){light(k,true)})})})()</script>'
 
 # the Playbooks sheet: who does what. The roles come from METHOD.md section 0's table, the rules from each role's playbook.
 def method_roles() -> dict:
@@ -2576,7 +2573,7 @@ FRONT = {
         ("logbook.html", "Logbook", "Every lesson a job learned, kept as a card.", "", "logbook", "logbook.html"),
         ("skills.html", "Skills and agents", "Each one: what it does, how to tell it worked.", "", "skills", "skills.html"),
         ("atlas.html", "Skill Atlas", "Every skill on one map, with its links.", "", "atlas", "raw/atlas.html"),
-        ("board.html", "Example board", "Ten jobs: merged, next, stuck.", "Synthetic data", "board", "raw/board.html"),
+        ("board.html", "Example board", "Eleven jobs: merged, next, stuck.", "Synthetic data", "board", "raw/board.html"),
         ("requirements.html", "Requirements", "The kit, as a site induction.", "", "requirements", "requirements.html"),
     ],
 }
@@ -5069,13 +5066,14 @@ class Site:
         raw = RAW["board"][0]
         body = (f'<main><div class="wrap"><header class="bhead"><span class="eyebrow">Sheet {sheet_no("board.html")}</span><h1>Example board</h1>'
                 '<p class="lede">Your project board: one file, <code>BOARD.json</code>, drawn by <code>/f-board</code> after every event. Below is a made-up project a few weeks in, drawn by the real renderer.</p>'
-                '<span class="bsyn">Made-up project · synthetic data</span></header>'
+                '</header>'
                 f'<h2 class="bhow">How to read it <small>point at a card to light it up on the board</small></h2><ol class="bkeys">{keys}</ol>'
+                f'<div class="bframe"><div class="bfh"><span>The board itself</span><a href="{raw}">Open it full screen &#8599;</a></div>'
+                f'<iframe class="frame" id="boardframe" src="{raw}" title="Example project board"></iframe></div>'
                 '<p class="bkeep"><span class="bsign"><b>Rule</b><span>Nobody edits it by hand: every change is an event, and bumps the version.</span></span>'
                 '<a href="skills/f-board.html">How /f-board keeps it &rarr;</a></p>'
                 '<p class="btop"><b>When every bone is done</b> the board tops out: it is frozen as the project&rsquo;s record, and the next board starts from it.</p>'
-                f'<div class="bframe"><div class="bfh"><span>The board itself</span><a href="{raw}">Open it full screen &#8599;</a></div>'
-                f'<iframe class="frame" id="boardframe" src="{raw}" title="Example project board"></iframe></div></div></main>' + self.foot() + BOARD_JS)
+                '</div></main>' + self.foot() + BOARD_JS)
         return self.page("Example board · Topping Out", "What a Topping Out project board looks like, and how to read it: a made-up project with synthetic data.",
                          BOARD_CSS, "board.html", body, subs=[("#boardframe", "The board itself")])
 
