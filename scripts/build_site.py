@@ -85,7 +85,7 @@ ATLAS_SITE_EDITS = [('<h2>From sketch to sign-off</h2>', '<h2>From sketch to sig
 # the site's own edits on top of the Atlas: the route numbered by the Order of works' 11 steps (SITE_N, filled in by
 # atlas_site_copy), one line in the side panel, and the docket's step number to match
 ATLAS_SITE_EDITS += [
-    ('function routeHTML(){', 'const SITE_N=__SITE_N__;\nfunction routeHTML(){'),
+    ('function routeHTML(){', 'const SITE_N=__SITE_N__,SITE_IC=__SITE_IC__,SITE_MEM=__SITE_MEM__;\nfunction routeHTML(){'),
     ("""if(r[0]==="pl")return '<li class="f-kit"><span class="pl">'""", """if(r[0]==="pl")return '<li class="f-kit" data-n="'+(SITE_N[r[1]]||"")+'"><span class="pl">'"""),
     ("""return '<li class="f-'+n.family+'"><button type="button" class="sb\"""", """return '<li class="f-'+n.family+'" data-n="'+(SITE_N[n.id]||"")+'"><button type="button" class="sb\""""),
     ("""'<b>'+String(i+1).padStart(2,"0")+'</b><span>of '+STEPS.length+'</span>'""", """'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>'"""),
@@ -97,12 +97,38 @@ ATLAS_SITE_EDITS += [
     ('<p class="what">The map groups every skill and agent by stage; this is the order a project runs them. Pick a step here or anything on the map.</p>',
      '<p class="what">Pick a step here, or anything on the map, to see what it connects to.</p>'),
 ]
+# the Atlas card, made to match a skill's full page: a link through to it, the group's icon in the badge, Not for as the
+# no-entry sign, When as the label, a group name that wraps, and no old name in the footer
+ATLAS_SITE_EDITS += [
+    (r"""(n.blurb?'<p class="lead">'+esc(n.blurb)+'</p>':'')+""",
+     r"""(n.blurb?'<p class="lead">'+esc(n.blurb)+'</p>':'')+'<a class="sfull" href="../'+(n.type==="agent"?"agents":"skills")+'/'+encodeURIComponent(n.label)+'.html" target="_top"><span>Full page</span><small>sample, questions, checks</small><i aria-hidden="true">&rarr;</i></a>'+"""),
+    (r"""'<b>'+code+'</b><span>'+esc(n.type)+'</span>'""",
+     r"""'<svg class="kib" viewBox="0 0 24 24" aria-hidden="true">'+SITE_IC[n.type==="agent"?"agents":(SITE_MEM.includes(n.id)?"memory":"toolkit")]+'</svg><span>'+esc(n.type)+'</span>'"""),
+    (r"""'<div class="notice"><b>Not for</b><p>'+esc(n.not.replace(/^Not for\s*/i,"").replace(/^Not the\s*/i,"the "))+'</p></div>'""",
+     r"""'<p class="knot"><i aria-hidden="true"></i><b>Not for</b><span>'+(t=>t.charAt(0).toUpperCase()+t.slice(1))(esc(n.not.replace(/^Not for\s*/i,"").replace(/^Not the\s*/i,"the ")))+'</span></p>'"""),
+    ('<span class="lbl">When to use it</span>', '<span class="lbl">When</span>'),
+    (r"""'</span>'+(n.old?'<span>old name '+esc(n.old)+'</span>':'')+'</div></div>'""", r"""'</span></div></div>'"""),
+]
 # the Atlas's route stops that are not a skill, by the Order of works step they belong to
 ATLAS_STOP_STEP = {"work orders": "Build", "PR": "Open the PR", "merge": "Merge"}
 
 ATLAS_SITE_EXTRA = r"""<style>
 /* inside the site: the site's header and theme toggle stand in for the Atlas's own */
 header,.theme-toggle{display:none!important}
+/* the card, as on a skill's full page */
+.dkt .eyebrow{white-space:normal;overflow:visible}
+.dkt .no .kib{width:44px;height:44px;padding:4px;background:#F4F4EF;border:2px solid #101316;display:block;margin-bottom:5px}
+.sfull{display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 10px;margin:0 18px 16px;padding:8px 10px 8px 12px;background:#FBB401;color:#101316;border:2px solid #101316;box-shadow:3px 3px 0 #101316;text-decoration:none;transition:transform .12s,box-shadow .12s}
+.sfull span{font:800 17px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.sfull small{grid-column:1;font:600 9px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#4A3A00}
+.sfull i{grid-column:2;grid-row:1/span 2;font:800 22px/1 "Public Sans",sans-serif;font-style:normal}
+.sfull:hover,.sfull:focus-visible{transform:translate(-2px,-2px);box-shadow:5px 5px 0 #101316}
+.dkt .knot{display:flex;align-items:stretch;margin:2px 18px 16px;padding:0;border:2px solid #101316;background:#F4F4EF;color:#101316;box-shadow:3px 3px 0 #101316}
+.dkt .knot i{flex:none;width:36px;display:grid;place-items:center;background:#C42B1C;border-right:2px solid #101316}
+.dkt .knot i::before{content:"";width:16px;height:16px;border-radius:50%;border:3px solid #fff;background:linear-gradient(45deg,transparent 42%,#fff 42% 58%,transparent 58%)}
+.dkt .knot b{display:flex;align-items:center;padding:0 8px;font:800 14px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.04em;color:#C42B1C;white-space:nowrap}
+.dkt .knot span{padding:8px 10px 8px 0;font-size:13px;line-height:1.45;color:#101316}
+@media (prefers-reduced-motion:reduce){.sfull{transition:none}}
 /* the route numbered by the 11 steps */
 .steps li[data-n]::before{content:attr(data-n)}
 /* on a phone the map scrolls sideways; say so */
@@ -190,7 +216,8 @@ def atlas_site_copy(text: str) -> str:
     steps = [st for st, *_r in FRONT["route_once"] + FRONT["route_loop"]]
     n = {sid: f"{k:02d}" for sid, (k, _name, _a) in step_of_skill().items()}
     n.update({stop: f"{steps.index(st) + 1:02d}" for stop, st in ATLAS_STOP_STEP.items()})
-    return text.replace("__SITE_N__", json.dumps(n)) + ATLAS_SITE_EXTRA
+    return (text.replace("__SITE_N__", json.dumps(n)).replace("__SITE_IC__", json.dumps(KIND_ICONS)).replace("__SITE_MEM__", json.dumps(MEMORY_SKILLS))
+            + ATLAS_SITE_EXTRA)
 
 
 def brand_mark(m: str, colour: str) -> str:

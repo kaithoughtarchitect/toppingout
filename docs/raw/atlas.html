@@ -231,7 +231,7 @@ function chip(r,shared){const m=byId[r.id];return '<li><button type="button" cla
 // a note every link in the block shares is said once, under the heading, not on each chip
 function block(title,arrow,rs){if(!rs.length)return '';const shared=rs.length>1&&rs[0].note&&rs.every(r=>r.note===rs[0].note)?rs[0].note:"";
  return '<div><h3>'+arrow+' '+title+' <b>'+rs.length+'</b></h3>'+(shared?'<p class="note" style="margin:-2px 0 6px">'+esc(shared)+'</p>':'')+'<ul>'+rs.map(r=>chip(r,!!shared)).join("")+'</ul></div>'}
-const SITE_N={"f-sketch": "01", "f-survey": "01", "f-blueprint": "02", "f-plancheck": "03", "f-schedule": "04", "f-shift": "05", "f-inspect": "07", "pack-review": "07", "xreview": "07", "adjudicate": "07", "f-greploop": "09", "f-signoff": "11", "f-board": "11", "work orders": "06", "PR": "08", "merge": "10"};
+const SITE_N={"f-sketch": "01", "f-survey": "01", "f-blueprint": "02", "f-plancheck": "03", "f-schedule": "04", "f-shift": "05", "f-inspect": "07", "pack-review": "07", "xreview": "07", "adjudicate": "07", "f-greploop": "09", "f-signoff": "11", "f-board": "11", "work orders": "06", "PR": "08", "merge": "10"},SITE_IC={"memory": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"14\" fill=\"#8C949A\" stroke=\"#101316\" stroke-width=\"1.8\"/><rect x=\"6\" y=\"9\" width=\"12\" height=\"4\" fill=\"#F4F4EF\" stroke=\"#101316\" stroke-width=\"1.2\"/><rect x=\"6\" y=\"14.5\" width=\"12\" height=\"4\" fill=\"#F4F4EF\" stroke=\"#101316\" stroke-width=\"1.2\"/><rect x=\"5\" y=\"3\" width=\"10\" height=\"4\" fill=\"#FBB401\" stroke=\"#101316\" stroke-width=\"1.4\"/>", "toolkit": "<path d=\"M14.5 3.5a5 5 0 0 0-5.6 6.7L3.5 15.6a2 2 0 0 0 2.9 2.9l5.4-5.4a5 5 0 0 0 6.7-5.6l-3 3-2.6-.6-.6-2.6Z\" fill=\"#9AA4A8\" stroke=\"#101316\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/>", "agents": "<circle cx=\"12\" cy=\"8.5\" r=\"4\" fill=\"#E8C4A0\" stroke=\"#101316\" stroke-width=\"1.6\"/><path d=\"M8 6.5c0-3 1.8-4.5 4-4.5s4 1.5 4 4.5Z\" fill=\"#C38BD9\" stroke=\"#101316\" stroke-width=\"1.4\"/><path d=\"M4 21c0-4.5 3.5-7.5 8-7.5s8 3 8 7.5Z\" fill=\"#C38BD9\" stroke=\"#101316\" stroke-width=\"1.6\"/>"},SITE_MEM=["f-card", "f-search", "f-archive", "f-archive-search", "f-catchup", "f-context", "f-distill", "f-dream"];
 function routeHTML(){return '<ol class="steps">'+ROUTE.map(r=>{
   if(r[0]==="ph")return '<li class="ph">'+esc(r[1])+'</li>';
   if(r[0]==="pl")return '<li class="f-kit" data-n="'+(SITE_N[r[1]]||"")+'"><span class="pl">'+esc(r[1])+'</span><small title="'+esc(r[2])+'">'+esc(r[2])+'</small></li>';
@@ -255,18 +255,18 @@ function detail(){const d=document.getElementById("detail");
    STEPS.map((id,k)=>'<button type="button" class="'+(k<i?"past":k===i?"here":"")+'" data-id="'+esc(id)+'" title="'+esc(byId[id].label)+'">'+(SITE_N[id]||k+1)+'</button>').join("")+'</div>'+
    '<div class="tn">'+(STEPS[i-1]?'<button type="button" data-id="'+esc(STEPS[i-1])+'">&larr; '+esc(byId[STEPS[i-1]].label)+'</button>':'<span></span>')+(STEPS[i+1]?'<button type="button" data-id="'+esc(STEPS[i+1])+'">'+esc(byId[STEPS[i+1]].label)+' &rarr;</button>':'')+'</div></div>':'';
  d.innerHTML='<div class="dkt"><div class="haz"></div><div class="band"></div><div class="punch"></div>'+
-  '<div class="dkt-h"><div class="no">'+(onRoute?'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>':'<b>'+code+'</b><span>'+esc(n.type)+'</span>')+'</div>'+
+  '<div class="dkt-h"><div class="no">'+(onRoute?'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>':'<svg class="kib" viewBox="0 0 24 24" aria-hidden="true">'+SITE_IC[n.type==="agent"?"agents":(SITE_MEM.includes(n.id)?"memory":"toolkit")]+'</svg><span>'+esc(n.type)+'</span>')+'</div>'+
    '<div><div class="eyebrow" title="'+esc(DATA.families[n.family]||n.family)+'">'+esc(n.group.split(":")[0].replace(/\s*\(.*\)\s*$/,"").replace(/^The /,""))+'</div><h2><span>'+esc(n.label)+'</span></h2>'+
    '</div>'+
    '</div>'+
-  (n.blurb?'<p class="lead">'+esc(n.blurb)+'</p>':'')+
+  (n.blurb?'<p class="lead">'+esc(n.blurb)+'</p>':'')+'<a class="sfull" href="../'+(n.type==="agent"?"agents":"skills")+'/'+encodeURIComponent(n.label)+'.html" target="_top"><span>Full page</span><small>sample, questions, checks</small><i aria-hidden="true">&rarr;</i></a>'+
   (n.role?'<div class="bx"><span class="lbl">Where it fits</span><p>'+esc(n.role)+'</p>'+(n.note?'<p class="sub">'+esc(n.note)+'</p>':'')+'</div>':'')+
   
-  (whenText?'<div class="bx"><span class="lbl">When to use it</span><p>'+esc(whenText)+'</p></div>':'')+
-  (n.not?'<div class="notice"><b>Not for</b><p>'+esc(n.not.replace(/^Not for\s*/i,"").replace(/^Not the\s*/i,"the "))+'</p></div>':'')+
+  (whenText?'<div class="bx"><span class="lbl">When</span><p>'+esc(whenText)+'</p></div>':'')+
+  (n.not?'<p class="knot"><i aria-hidden="true"></i><b>Not for</b><span>'+(t=>t.charAt(0).toUpperCase()+t.slice(1))(esc(n.not.replace(/^Not for\s*/i,"").replace(/^Not the\s*/i,"the ")))+'</span></p>':'')+
   tape+'<div class="tear"></div>'+
   '<div class="stub">'+(conn||'<p class="none">No links to other skills or agents.</p>')+'</div>'+
-  '<div class="foot"><span>'+esc(n.path||"")+'</span>'+(n.old?'<span>old name '+esc(n.old)+'</span>':'')+'</div></div>';
+  '<div class="foot"><span>'+esc(n.path||"")+'</span></div></div>';
  d.querySelectorAll(".nb,.ts button,.tn button").forEach(b=>b.addEventListener("click",()=>choose(b.dataset.id)));
  // a long name shrinks to fit its line instead of breaking mid-word (again once the web fonts land)
  const h=d.querySelector(".dkt h2"),fit=()=>{if(!h)return;const s=h.firstChild,room=h.clientWidth-88;let fs=46;h.style.fontSize="";while(s.offsetWidth>room&&fs>22){fs-=2;h.style.fontSize=fs+"px"}};
@@ -282,6 +282,20 @@ let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>
 <script>(function(){var r=document.documentElement;function cur(){var t=r.getAttribute("data-theme");if(t==="light"||t==="dark")return t;return window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.querySelectorAll("[data-theme-toggle]").forEach(function(b){function lab(){var to=cur()==="dark"?"light":"dark";b.textContent=to==="dark"?"Dark":"Light";b.setAttribute("aria-label","Switch to "+to+" mode");b.title="Switch to "+to+" mode";}lab();b.addEventListener("click",function(){var n=cur()==="dark"?"light":"dark";r.setAttribute("data-theme",n);try{localStorage.setItem("foreman-theme",n);}catch(e){}document.querySelectorAll("[data-theme-toggle]").forEach(function(x){x.dispatchEvent(new Event("relabel"));});});b.addEventListener("relabel",lab);});})();</script><style>
 /* inside the site: the site's header and theme toggle stand in for the Atlas's own */
 header,.theme-toggle{display:none!important}
+/* the card, as on a skill's full page */
+.dkt .eyebrow{white-space:normal;overflow:visible}
+.dkt .no .kib{width:44px;height:44px;padding:4px;background:#F4F4EF;border:2px solid #101316;display:block;margin-bottom:5px}
+.sfull{display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 10px;margin:0 18px 16px;padding:8px 10px 8px 12px;background:#FBB401;color:#101316;border:2px solid #101316;box-shadow:3px 3px 0 #101316;text-decoration:none;transition:transform .12s,box-shadow .12s}
+.sfull span{font:800 17px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.sfull small{grid-column:1;font:600 9px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#4A3A00}
+.sfull i{grid-column:2;grid-row:1/span 2;font:800 22px/1 "Public Sans",sans-serif;font-style:normal}
+.sfull:hover,.sfull:focus-visible{transform:translate(-2px,-2px);box-shadow:5px 5px 0 #101316}
+.dkt .knot{display:flex;align-items:stretch;margin:2px 18px 16px;padding:0;border:2px solid #101316;background:#F4F4EF;color:#101316;box-shadow:3px 3px 0 #101316}
+.dkt .knot i{flex:none;width:36px;display:grid;place-items:center;background:#C42B1C;border-right:2px solid #101316}
+.dkt .knot i::before{content:"";width:16px;height:16px;border-radius:50%;border:3px solid #fff;background:linear-gradient(45deg,transparent 42%,#fff 42% 58%,transparent 58%)}
+.dkt .knot b{display:flex;align-items:center;padding:0 8px;font:800 14px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.04em;color:#C42B1C;white-space:nowrap}
+.dkt .knot span{padding:8px 10px 8px 0;font-size:13px;line-height:1.45;color:#101316}
+@media (prefers-reduced-motion:reduce){.sfull{transition:none}}
 /* the route numbered by the 11 steps */
 .steps li[data-n]::before{content:attr(data-n)}
 /* on a phone the map scrolls sideways; say so */
