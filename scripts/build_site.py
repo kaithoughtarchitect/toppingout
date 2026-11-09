@@ -732,6 +732,7 @@ GLOSSARY = [
     ("H1 to Hn", "The hostile inputs a work order lists for its task, such as missing keys or wrong types. Each one needs a test."),
     ("G1 to G6", "The standard gap checklist in every work order: cancellation, deadlines, fields reaching their destination, every error path tested, many-item cases, typed errors for bad input."),
     ("HEAD", "The latest commit on a branch. A work order names the exact one it starts from."),
+    ("Head", "The product outcome a board builds to, for example \"checkout works end to end\". When it is reached, the board tops out and you pick the next head."),
     ("/goal", "A standing goal typed into the session. Only an autonomous run or a night shift lets it stand in for your word; every check still runs."),
     ("Cards in force", "The Logbook cards that apply to this job. The foreman lists them in its first reply."),
     ("Safety fact", "The one whole-system property the ticket must not break, proven by running the shipped code, or marked unproven."),
@@ -739,12 +740,14 @@ GLOSSARY = [
     ("Adjudicate", "Reproduce every claim in a review first, then accept, reject or partly accept it. Accepted fixes go to the builder as a work order."),
     ("Top out, next heads", "When every job on the board is merged or resolved, the board is frozen as the project's record, with a report and three to five candidate next projects (heads)."),
 ]
+HEAD_DEF = "The product outcome a board builds to, for example &ldquo;checkout works end to end&rdquo;. When it is reached, the board tops out and you pick the next head."
 # Where a glossary word appears on a step page, its first use carries the definition on hover (pattern, glossary word)
 GLOSS_HINTS = [(r"\bcold(?: read)?\b", "Cold read"), (r"\bwork orders?\b", "Work order"), (r"\bworktrees?\b", "Worktree"), (r"\bt0\b", "t0"),
                (r"\bbase versus head\b", "Base versus head"), (r"\bgate [12]\b", "Gate 1, gate 2"), (r"\bblueprint\b", "Blueprint"),
                (r"\b(?:opener|handover)\b", "Opener, handover"), (r"\bledger\b", "Acceptance ledger"), (r"\bGreptile\b", "Greptile"),
                (r"\bsafety fact\b", "Safety fact"), (r"\bcards in force\b", "Cards in force"), (r"/goal\b", "/goal"), (r"\blens\b", "Lens"),
-               (r"\badjudicate\b", "Adjudicate"), (r"\b(?:top out|next heads)\b", "Top out, next heads")]
+               (r"\badjudicate\b", "Adjudicate"), (r"\bhead\b", "Head"), (r"\b(?:top out|next heads)\b", "Top out, next heads")]
+HEAD_HINT = f'<span class="gt" tabindex="0" title="Head: {HEAD_DEF}">head</span>'
 
 
 def gloss_hints(h: str, used: set) -> str:
@@ -935,6 +938,7 @@ OVERVIEW_CSS = r"""
 .ofiles{margin:6px 0 0!important;font:500 11px/1.5 "Martian Mono",ui-monospace,monospace!important;color:var(--ink-3)!important}
 .ofiles code{font:inherit;background:none;padding:0;color:inherit}
 .gt{text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;cursor:help}
+.olh b .gt{font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;margin:0;padding:0;background:none;border:0}
 .oloop ul{margin:0;padding-left:18px}.oloop li+li{margin-top:3px}
 .oret{margin:10px 0 0;font:700 11px/1.4 "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
 .okey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:16px 0 0}
@@ -4826,7 +4830,7 @@ class Site:
         def icon(ic, cls=""):
             return f'<svg{f" class={cls}" if cls else ""} viewBox="0 0 24 24" aria-hidden="true">{STEP_ICONS[ic]}</svg>'
 
-        stages = [("once", "Once per project", "Plan, check, cut", FRONT["route_once"], "plan"),
+        stages = [("once", "Once per head", "Plan, check, cut", FRONT["route_once"], "plan"),
                   ("every", "For every ticket", "One job, one PR", FRONT["route_loop"], "hat")]
         steps = []  # (stage key, stage title, number, step, slug)
         i = 0
@@ -4904,7 +4908,8 @@ class Site:
         overview = ('<div class="pane full" data-role="overview" role="tabpanel" aria-label="The whole picture"><div class="reader">'
                     '<section class="spage ovw" id="overview-map"><div class="sbar"><span>The whole picture</span></div><h4>From idea to merged job</h4>'
                     f'<p class="lead">The planning runs once. Every ticket after it goes through the same {len(stages[1][3])} steps.</p>'
-                    f'<div class="olane"><div class="olh"><b>Once per project</b><span>{len(stages[0][3])} steps &middot; {esc(stages[0][2])}</span></div><ol class="otiles">{"".join(tiles["once"])}</ol></div>'
+                    f'<div class="olane"><div class="olh"><b>Once per {HEAD_HINT}</b><span>{len(stages[0][3])} steps &middot; plan, check, cut</span></div><ol class="otiles">{"".join(tiles["once"])}</ol>'
+                    '<p class="oret">&larr; Next head: when the board tops out, you pick one and it starts again here, at step 01</p></div>'
                     f'<div class="olane loop"><div class="olh"><b>For every ticket</b><span>{len(stages[1][3])} steps &middot; {esc(stages[1][2])}</span></div><ol class="otiles">{"".join(tiles["every"])}</ol>'
                     '<p class="oret">&larr; Next job: a fresh foreman starts here, at step ' + f'{len(stages[0][3]) + 1:02d}</p></div>'
                     f'<div class="okey"><ul>{legend}</ul><p><i class="ywt" aria-hidden="true">Your word</i>Waits for your word, or your /goal</p></div>'
@@ -4913,16 +4918,16 @@ class Site:
                       '<section class="spage" id="words-list"><div class="sbar"><span>Words used on this page</span></div><h4>Words used</h4><dl class="gl">'
                       + "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in GLOSSARY) + "</dl></section></div></div>")
         body = (f'<main id="order" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("route.html")} · Order of works</span><h1>Order of works</h1>'
-                f'<p class="lede">From idea to merged job: {len(stages[0][3])} steps once per project, then {len(stages[1][3])} per ticket.</p></header>'
+                f'<p class="lede">From idea to merged job: {len(stages[0][3])} steps once per {HEAD_HINT}, then {len(stages[1][3])} per ticket.</p></header>'
                 f'<div class="tabs" role="tablist" aria-label="Stages">{tabb("overview", "The whole picture", f"All {len(steps)} steps", "route", True)}'
-                f'{tabb("once", "Once per project", stages[0][2], "plan", False)}{flow}'
+                f'{tabb("once", "Once per head", stages[0][2], "plan", False)}{flow}'
                 f'{tabb("every", "For every ticket", stages[1][2], "hat", False, " b")}'
                 f'<button type="button" class="tab y" role="tab" id="words" data-rtab="words" aria-selected="false">{icon("book", "si")}<span><b>Words</b><span>Glossary</span></span></button></div>'
-                f'<div class="desk">{overview}{pane("once", "Once per project", False)}{pane("every", "For every ticket", False)}{words_pane}</div>'
+                f'<div class="desk">{overview}{pane("once", "Once per head", False)}{pane("every", "For every ticket", False)}{words_pane}</div>'
                 '</div></main>' + self.foot() + ROLES_JS)
         return self.page("Order of works · Topping Out", "Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.",
                          ROLES_CSS + ORDER_DESK_CSS + OVERVIEW_CSS, "route.html", body,
-                         subs=[("#overview", "The whole picture"), ("#once", "Once per project"), ("#every", "For every ticket"), ("#words", "Words used")])
+                         subs=[("#overview", "The whole picture"), ("#once", "Once per head"), ("#every", "For every ticket"), ("#words", "Words used")])
 
     def about(self) -> str:
         """Who drew the plans: the owner, and the systems Topping Out grew from, as the floors of a building."""
@@ -5473,7 +5478,7 @@ class Site:
             + '<script>(function(){var h=document.getElementById("hoard");if(!h)return;if(!window.IntersectionObserver){h.classList.add("live");return}'
               'new IntersectionObserver(function(es){h.classList.toggle("live",es[0].isIntersecting)}).observe(h)})()</script></section>')
 
-        # 02 the route in plain words: four steps once per project, then seven per ticket, each with who does it
+        # 02 the route in plain words: four steps once per head, then seven per ticket, each with who does it
         out.append(sec(2, "route", "Order of works"))
         placed = [s for part in ("route_once", "route_loop") for *_, ids in F[part] for s in ids]
         if sorted(placed) != sorted(steps):
@@ -5494,7 +5499,7 @@ class Site:
 
         out.append('<p class="rtkey"><span class="rtl">The same job as <a href="#oj">Watch one job</a>, step by step, with the planning before it.</span>'
                    '<span class="rtk"><i aria-hidden="true"></i>Waits for your word, or your /goal</span></p>'
-                   f'<div class="rt-h">Once per project: plan it, check it, cut it into tickets</div><div class="once">{phases(F["route_once"])}</div>'
+                   f'<div class="rt-h">Once per head: plan it, check it, cut it into tickets</div><div class="once">{phases(F["route_once"])}</div>'
                    f'<div class="shiftbox">'
                    f'<div class="feed">Then, for every ticket: one job, one branch, one PR</div>'
                    f'<div class="loop">{phases(F["route_loop"], len(F["route_once"]) + 1)}<span class="ret">&larr; Next job: a fresh foreman starts here</span><svg class="chev cv-down" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path d="M2.5 5.5L7.5 10.5L12.5 5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg><svg class="chev cv-left" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path d="M9.5 2.5L4.5 7.5L9.5 12.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg><svg class="chev cv-up" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path d="M2.5 9.5L7.5 4.5L12.5 9.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg>'
