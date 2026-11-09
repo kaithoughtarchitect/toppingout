@@ -89,6 +89,11 @@ ATLAS_SITE_EDITS += [
     ("""if(r[0]==="pl")return '<li class="f-kit"><span class="pl">'""", """if(r[0]==="pl")return '<li class="f-kit" data-n="'+(SITE_N[r[1]]||"")+'"><span class="pl">'"""),
     ("""return '<li class="f-'+n.family+'"><button type="button" class="sb\"""", """return '<li class="f-'+n.family+'" data-n="'+(SITE_N[n.id]||"")+'"><button type="button" class="sb\""""),
     ("""'<b>'+String(i+1).padStart(2,"0")+'</b><span>of '+STEPS.length+'</span>'""", """'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>'"""),
+    ("(says.length?'<div class=\"bx\"><span class=\"lbl\">Say it</span><div class=\"says\">'+says.map(s=>'<span>'+esc(s)+'</span>').join(\"\")+'</div></div>':'')+", ""),
+    ('<span class="lbl">On site</span>', '<span class="lbl">Where it fits</span>'),
+    ("'<div class=\"stamp\">'+esc(n.type)+'</div></div>'", "'</div>'"),
+    ("<b>step '+(i+1)+'</b> of '+STEPS.length+'", "<b>step '+(SITE_N[STEPS[i]]||i+1)+'</b> of 11"),
+    ("title=\"'+esc(byId[id].label)+'\">'+(k+1)+'</button>'", "title=\"'+esc(byId[id].label)+'\">'+(SITE_N[id]||k+1)+'</button>'"),
     ('<p class="what">The map groups every skill and agent by stage; this is the order a project runs them. Pick a step here or anything on the map.</p>',
      '<p class="what">Pick a step here, or anything on the map, to see what it connects to.</p>'),
 ]
@@ -138,7 +143,7 @@ var k=-1,t=0,auto=false,STEP=2000;
 function node(id){return [].filter.call(svg.querySelectorAll("g.node"),function(n){return (n.getAttribute("aria-label")||"").split(",")[0]===id})[0]}
 function sel(){var s=svg.querySelector("g.node.sel");return s?(s.getAttribute("aria-label")||"").split(",")[0]:null}
 function go(id){if(sel()===id)return;var x=det.querySelector('[data-id="'+id+'"]');auto=true;if(x)x.click();else{var n=node(id);n&&n.dispatchEvent(new MouseEvent("click",{bubbles:true}))}auto=false}
-function show(i){k=i;go(order[i]);st.textContent="Step "+(i+1)+" of "+order.length;bar.firstChild.style.width=(100*(i+1)/order.length)+"%";
+function show(i){k=i;go(order[i]);st.textContent="Step "+(SITE_N[order[i]]||i+1)+" of 11";bar.firstChild.style.width=(100*(i+1)/order.length)+"%";
  var n=node(order[i]),stage=document.getElementById("stage");if(n&&stage){var r=n.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.top<s.top||r.bottom>s.bottom)stage.scrollTop+=r.top-s.top-s.height/3}}
 function stop(clear){clearTimeout(t);if(k<0)return;k=-1;b.textContent="\u25B6 Play the route";b.setAttribute("aria-pressed","false");st.hidden=bar.hidden=true;if(clear){var s=sel();if(s){auto=true;var n=node(s);n&&n.dispatchEvent(new MouseEvent("click",{bubbles:true}));auto=false}}}
 function tick(){if(k<0)return;if(k+1<order.length){show(k+1);t=setTimeout(tick,STEP)}else t=setTimeout(function(){stop(true)},STEP)}

@@ -251,17 +251,17 @@ function detail(){const d=document.getElementById("detail");
  // the description's own trigger phrases become "say it" chips (and leave the when-sentence)
  const says=[...new Set([...(n.use||"").matchAll(/"([^"]{2,60})"/g)].map(m=>m[1]))].slice(0,6);
  const whenText=n.when||when.replace(/,?\s*(?:says\s+)?"[^"]*"(?:\s*\([^)]*\))?/g,"").replace(/\s*,\s*,/g,",").replace(/,\s*(?=[.;])/g,"").replace(/\s{2,}/g," ").replace(/,\s*or\s*,/g,", or").trim();
- const tape=onRoute?'<div class="tape"><div class="tl"><span>On the route</span><span><b>step '+(i+1)+'</b> of '+STEPS.length+'</span></div><div class="ts">'+
-   STEPS.map((id,k)=>'<button type="button" class="'+(k<i?"past":k===i?"here":"")+'" data-id="'+esc(id)+'" title="'+esc(byId[id].label)+'">'+(k+1)+'</button>').join("")+'</div>'+
+ const tape=onRoute?'<div class="tape"><div class="tl"><span>On the route</span><span><b>step '+(SITE_N[STEPS[i]]||i+1)+'</b> of 11</span></div><div class="ts">'+
+   STEPS.map((id,k)=>'<button type="button" class="'+(k<i?"past":k===i?"here":"")+'" data-id="'+esc(id)+'" title="'+esc(byId[id].label)+'">'+(SITE_N[id]||k+1)+'</button>').join("")+'</div>'+
    '<div class="tn">'+(STEPS[i-1]?'<button type="button" data-id="'+esc(STEPS[i-1])+'">&larr; '+esc(byId[STEPS[i-1]].label)+'</button>':'<span></span>')+(STEPS[i+1]?'<button type="button" data-id="'+esc(STEPS[i+1])+'">'+esc(byId[STEPS[i+1]].label)+' &rarr;</button>':'')+'</div></div>':'';
  d.innerHTML='<div class="dkt"><div class="haz"></div><div class="band"></div><div class="punch"></div>'+
   '<div class="dkt-h"><div class="no">'+(onRoute?'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>':'<b>'+code+'</b><span>'+esc(n.type)+'</span>')+'</div>'+
    '<div><div class="eyebrow" title="'+esc(DATA.families[n.family]||n.family)+'">'+esc(n.group.split(":")[0].replace(/\s*\(.*\)\s*$/,"").replace(/^The /,""))+'</div><h2><span>'+esc(n.label)+'</span></h2>'+
    '</div>'+
-   '<div class="stamp">'+esc(n.type)+'</div></div>'+
+   '</div>'+
   (n.blurb?'<p class="lead">'+esc(n.blurb)+'</p>':'')+
-  (n.role?'<div class="bx"><span class="lbl">On site</span><p>'+esc(n.role)+'</p>'+(n.note?'<p class="sub">'+esc(n.note)+'</p>':'')+'</div>':'')+
-  (says.length?'<div class="bx"><span class="lbl">Say it</span><div class="says">'+says.map(s=>'<span>'+esc(s)+'</span>').join("")+'</div></div>':'')+
+  (n.role?'<div class="bx"><span class="lbl">Where it fits</span><p>'+esc(n.role)+'</p>'+(n.note?'<p class="sub">'+esc(n.note)+'</p>':'')+'</div>':'')+
+  
   (whenText?'<div class="bx"><span class="lbl">When to use it</span><p>'+esc(whenText)+'</p></div>':'')+
   (n.not?'<div class="notice"><b>Not for</b><p>'+esc(n.not.replace(/^Not for\s*/i,"").replace(/^Not the\s*/i,"the "))+'</p></div>':'')+
   tape+'<div class="tear"></div>'+
@@ -322,7 +322,7 @@ var k=-1,t=0,auto=false,STEP=2000;
 function node(id){return [].filter.call(svg.querySelectorAll("g.node"),function(n){return (n.getAttribute("aria-label")||"").split(",")[0]===id})[0]}
 function sel(){var s=svg.querySelector("g.node.sel");return s?(s.getAttribute("aria-label")||"").split(",")[0]:null}
 function go(id){if(sel()===id)return;var x=det.querySelector('[data-id="'+id+'"]');auto=true;if(x)x.click();else{var n=node(id);n&&n.dispatchEvent(new MouseEvent("click",{bubbles:true}))}auto=false}
-function show(i){k=i;go(order[i]);st.textContent="Step "+(i+1)+" of "+order.length;bar.firstChild.style.width=(100*(i+1)/order.length)+"%";
+function show(i){k=i;go(order[i]);st.textContent="Step "+(SITE_N[order[i]]||i+1)+" of 11";bar.firstChild.style.width=(100*(i+1)/order.length)+"%";
  var n=node(order[i]),stage=document.getElementById("stage");if(n&&stage){var r=n.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.top<s.top||r.bottom>s.bottom)stage.scrollTop+=r.top-s.top-s.height/3}}
 function stop(clear){clearTimeout(t);if(k<0)return;k=-1;b.textContent="\u25B6 Play the route";b.setAttribute("aria-pressed","false");st.hidden=bar.hidden=true;if(clear){var s=sel();if(s){auto=true;var n=node(s);n&&n.dispatchEvent(new MouseEvent("click",{bubbles:true}));auto=false}}}
 function tick(){if(k<0)return;if(k+1<order.length){show(k+1);t=setTimeout(tick,STEP)}else t=setTimeout(function(){stop(true)},STEP)}
