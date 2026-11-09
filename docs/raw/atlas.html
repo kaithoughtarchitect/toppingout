@@ -231,13 +231,14 @@ function chip(r,shared){const m=byId[r.id];return '<li><button type="button" cla
 // a note every link in the block shares is said once, under the heading, not on each chip
 function block(title,arrow,rs){if(!rs.length)return '';const shared=rs.length>1&&rs[0].note&&rs.every(r=>r.note===rs[0].note)?rs[0].note:"";
  return '<div><h3>'+arrow+' '+title+' <b>'+rs.length+'</b></h3>'+(shared?'<p class="note" style="margin:-2px 0 6px">'+esc(shared)+'</p>':'')+'<ul>'+rs.map(r=>chip(r,!!shared)).join("")+'</ul></div>'}
+const SITE_N={"f-sketch": "01", "f-survey": "01", "f-blueprint": "02", "f-plancheck": "03", "f-schedule": "04", "f-shift": "05", "f-inspect": "07", "pack-review": "07", "xreview": "07", "adjudicate": "07", "f-greploop": "09", "f-signoff": "11", "f-board": "11", "work orders": "06", "PR": "08", "merge": "10"};
 function routeHTML(){return '<ol class="steps">'+ROUTE.map(r=>{
   if(r[0]==="ph")return '<li class="ph">'+esc(r[1])+'</li>';
-  if(r[0]==="pl")return '<li class="f-kit"><span class="pl">'+esc(r[1])+'</span><small title="'+esc(r[2])+'">'+esc(r[2])+'</small></li>';
-  const n=byId[r[0]];if(!n)return '';return '<li class="f-'+n.family+'"><button type="button" class="sb" data-id="'+esc(n.id)+'">'+esc(n.label)+'</button><small title="'+esc(n.blurb)+'">'+esc(n.blurb)+'</small></li>'}).join("")+'</ol>'}
+  if(r[0]==="pl")return '<li class="f-kit" data-n="'+(SITE_N[r[1]]||"")+'"><span class="pl">'+esc(r[1])+'</span><small title="'+esc(r[2])+'">'+esc(r[2])+'</small></li>';
+  const n=byId[r[0]];if(!n)return '';return '<li class="f-'+n.family+'" data-n="'+(SITE_N[n.id]||"")+'"><button type="button" class="sb" data-id="'+esc(n.id)+'">'+esc(n.label)+'</button><small title="'+esc(n.blurb)+'">'+esc(n.blurb)+'</small></li>'}).join("")+'</ol>'}
 function detail(){const d=document.getElementById("detail");
  if(!sel){d.className="detail f-kit";
-  d.innerHTML='<div class="dk">The route, in order</div><h2>From sketch to sign&#8209;off</h2><p class="what">The map groups every skill and agent by stage; this is the order a project runs them. Pick a step here or anything on the map.</p>'+routeHTML();
+  d.innerHTML='<div class="dk">The route, in order</div><h2>From sketch to sign&#8209;off</h2><p class="what">Pick a step here, or anything on the map, to see what it connects to.</p>'+routeHTML();
   d.querySelectorAll(".sb").forEach(b=>b.addEventListener("click",()=>choose(b.dataset.id)));return}
  const n=byId[sel];d.className="detail docket f-"+n.family;
  const typed=new Set([...n.uses,...n.usedBy,...n.after,...n.before].map(r=>r.id));
@@ -254,7 +255,7 @@ function detail(){const d=document.getElementById("detail");
    STEPS.map((id,k)=>'<button type="button" class="'+(k<i?"past":k===i?"here":"")+'" data-id="'+esc(id)+'" title="'+esc(byId[id].label)+'">'+(k+1)+'</button>').join("")+'</div>'+
    '<div class="tn">'+(STEPS[i-1]?'<button type="button" data-id="'+esc(STEPS[i-1])+'">&larr; '+esc(byId[STEPS[i-1]].label)+'</button>':'<span></span>')+(STEPS[i+1]?'<button type="button" data-id="'+esc(STEPS[i+1])+'">'+esc(byId[STEPS[i+1]].label)+' &rarr;</button>':'')+'</div></div>':'';
  d.innerHTML='<div class="dkt"><div class="haz"></div><div class="band"></div><div class="punch"></div>'+
-  '<div class="dkt-h"><div class="no">'+(onRoute?'<b>'+String(i+1).padStart(2,"0")+'</b><span>of '+STEPS.length+'</span>':'<b>'+code+'</b><span>'+esc(n.type)+'</span>')+'</div>'+
+  '<div class="dkt-h"><div class="no">'+(onRoute?'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>':'<b>'+code+'</b><span>'+esc(n.type)+'</span>')+'</div>'+
    '<div><div class="eyebrow" title="'+esc(DATA.families[n.family]||n.family)+'">'+esc(n.group.split(":")[0].replace(/\s*\(.*\)\s*$/,"").replace(/^The /,""))+'</div><h2><span>'+esc(n.label)+'</span></h2>'+
    '</div>'+
    '<div class="stamp">'+esc(n.type)+'</div></div>'+
@@ -279,6 +280,12 @@ let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>
 </script>
 
 <script>(function(){var r=document.documentElement;function cur(){var t=r.getAttribute("data-theme");if(t==="light"||t==="dark")return t;return window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.querySelectorAll("[data-theme-toggle]").forEach(function(b){function lab(){var to=cur()==="dark"?"light":"dark";b.textContent=to==="dark"?"Dark":"Light";b.setAttribute("aria-label","Switch to "+to+" mode");b.title="Switch to "+to+" mode";}lab();b.addEventListener("click",function(){var n=cur()==="dark"?"light":"dark";r.setAttribute("data-theme",n);try{localStorage.setItem("foreman-theme",n);}catch(e){}document.querySelectorAll("[data-theme-toggle]").forEach(function(x){x.dispatchEvent(new Event("relabel"));});});b.addEventListener("relabel",lab);});})();</script><style>
+/* inside the site: the site's header and theme toggle stand in for the Atlas's own */
+header,.theme-toggle{display:none!important}
+/* the route numbered by the 11 steps */
+.steps li[data-n]::before{content:attr(data-n)}
+/* on a phone the map scrolls sideways; say so */
+@media (max-width:640px){#stage::before{content:"Swipe the map \2192";position:sticky;left:0;display:block;width:max-content;margin:8px 0 0 12px;padding:4px 8px;font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;background:var(--hivis);color:#101316}}
 /* the site's scrollbars here too */
 html{scrollbar-color:#646C70 transparent}*{scrollbar-width:thin}
 /* the site copy: each link drawn in the colour of the stage it leaves; a picked link still turns ink */

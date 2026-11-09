@@ -82,8 +82,26 @@ BRAND_MARKS = {
 # find its text exactly once; if the Atlas changes at its source, the build stops and says which one to look at.
 ATLAS_SITE_EDITS = [('<h2>From sketch to sign-off</h2>', '<h2>From sketch to sign&#8209;off</h2>'), ('COLW=Math.max(MINCOL,Math.floor((stage.clientWidth-PADX*2+40)/cols.length))', 'COLW=Math.max(MINCOL,Math.floor((stage.clientWidth-PADX*2)/cols.length))'), ('  groups.filter(g=>g.family===f).forEach(g=>{g.x=x;g.y=y+4;y+=18;g.ids.forEach(id=>{pos[id]={x:x+8,y:y+8};y+=ROW});y+=GAP});', '  groups.filter(g=>g.family===f).forEach(g=>{g.x=x;g.y=y+4;g.lines=lblLines(g);y+=18+12*(g.lines.length-1);g.ids.forEach(id=>{pos[id]={x:x+8,y:y+8};y+=ROW});y+=GAP});'), (' const W=PADX*2+cols.length*COLW-40;\n svg.setAttribute("width",W);svg.setAttribute("height",H+10);svg.setAttribute("viewBox","0 0 "+W+" "+(H+10))}', ' const W=PADX*2+cols.length*COLW;\n svg.setAttribute("viewBox","0 0 "+W+" "+(H+10));svg.dataset.w=W;svg.dataset.h=H+10;fit()}\nfunction fit(){const W=+svg.dataset.w,Hh=+svg.dataset.h,k=Math.min(1,stage.clientWidth/W),z=k>=.72?k:1;svg.setAttribute("width",Math.floor(W*z));svg.setAttribute("height",Math.ceil(Hh*z))}'), ('function layout(){', 'const lblText=g=>g.name.split(":")[0].replace(/\\s*\\(.*\\)\\s*$/,"").replace(/^The /,"");\nfunction lblLines(g){const m=document.createElementNS(NS,"text");m.setAttribute("class","grp-lbl");svg.appendChild(m);const room=COLW-34,fits=s=>{m.textContent=s;return m.getComputedTextLength()<=room};\n const full=lblText(g);let out=[full];if(!fits(full)){const w=full.split(" ");let a=w.slice();while(a.length>1&&!fits(a.join(" ")))a.pop();out=[a.join(" "),w.slice(a.length).join(" ")]}\n svg.removeChild(m);return out}\nfunction layout(){'), ('t.textContent=g.name.split(":")[0].replace(/\\s*\\(.*\\)\\s*$/,"").replace(/^The /,"");svg.appendChild(t);lbls.push(t)});', 'g.lines.forEach((ln,k)=>{const sp=document.createElementNS(NS,"tspan");sp.setAttribute("x",g.x);if(k)sp.setAttribute("dy",12);sp.textContent=ln;t.appendChild(sp)});svg.appendChild(t);lbls.push(t)});'), (' fitLbls();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitLbls);\n', ''), ('let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{const was=COLW;layout();if(COLW!==was){build();paint()}},120)});', 'if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{build();paint()});\nlet rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{build();paint()},120)});')]
 
+# the site's own edits on top of the Atlas: the route numbered by the Order of works' 11 steps (SITE_N, filled in by
+# atlas_site_copy), one line in the side panel, and the docket's step number to match
+ATLAS_SITE_EDITS += [
+    ('function routeHTML(){', 'const SITE_N=__SITE_N__;\nfunction routeHTML(){'),
+    ("""if(r[0]==="pl")return '<li class="f-kit"><span class="pl">'""", """if(r[0]==="pl")return '<li class="f-kit" data-n="'+(SITE_N[r[1]]||"")+'"><span class="pl">'"""),
+    ("""return '<li class="f-'+n.family+'"><button type="button" class="sb\"""", """return '<li class="f-'+n.family+'" data-n="'+(SITE_N[n.id]||"")+'"><button type="button" class="sb\""""),
+    ("""'<b>'+String(i+1).padStart(2,"0")+'</b><span>of '+STEPS.length+'</span>'""", """'<b>'+(SITE_N[n.id]||String(i+1).padStart(2,"0"))+'</b><span>of 11</span>'"""),
+    ('<p class="what">The map groups every skill and agent by stage; this is the order a project runs them. Pick a step here or anything on the map.</p>',
+     '<p class="what">Pick a step here, or anything on the map, to see what it connects to.</p>'),
+]
+# the Atlas's route stops that are not a skill, by the Order of works step they belong to
+ATLAS_STOP_STEP = {"work orders": "Build", "PR": "Open the PR", "merge": "Merge"}
 
 ATLAS_SITE_EXTRA = r"""<style>
+/* inside the site: the site's header and theme toggle stand in for the Atlas's own */
+header,.theme-toggle{display:none!important}
+/* the route numbered by the 11 steps */
+.steps li[data-n]::before{content:attr(data-n)}
+/* on a phone the map scrolls sideways; say so */
+@media (max-width:640px){#stage::before{content:"Swipe the map \2192";position:sticky;left:0;display:block;width:max-content;margin:8px 0 0 12px;padding:4px 8px;font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;background:var(--hivis);color:#101316}}
 /* the site's scrollbars here too */
 html{scrollbar-color:#646C70 transparent}*{scrollbar-width:thin}
 /* the site copy: each link drawn in the colour of the stage it leaves; a picked link still turns ink */
@@ -164,7 +182,10 @@ def atlas_site_copy(text: str) -> str:
         if text.count(old) != 1:
             raise SystemExit(f"build_site: the Skill Atlas changed at its source; site edit {i} of {len(ATLAS_SITE_EDITS)} no longer applies: {old[:60]!r}")
         text = text.replace(old, new)
-    return text + ATLAS_SITE_EXTRA
+    steps = [st for st, *_r in FRONT["route_once"] + FRONT["route_loop"]]
+    n = {sid: f"{k:02d}" for sid, (k, _name, _a) in step_of_skill().items()}
+    n.update({stop: f"{steps.index(st) + 1:02d}" for stop, st in ATLAS_STOP_STEP.items()})
+    return text.replace("__SITE_N__", json.dumps(n)) + ATLAS_SITE_EXTRA
 
 
 def brand_mark(m: str, colour: str) -> str:
@@ -3120,6 +3141,11 @@ html,body{height:100%}
 body{overflow:hidden}
 .mainc{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .frame{flex:1;width:100%;min-height:0;border:0;display:block;background:var(--ground)}
+.fhead{flex:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 24px;padding:18px 28px 14px;border-bottom:2px solid var(--ink);background:var(--ground)}
+.fhead .eyebrow{flex-basis:100%;font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+.fhead h1{margin:6px 0 0;font:800 clamp(34px,4.4vw,52px)/.9 "Big Shoulders Display","Arial Narrow",Impact,sans-serif;text-transform:uppercase}
+.fhead p{margin:0;max-width:62ch;font-size:15px;color:var(--ink-2)}
+@media (max-width:640px){.fhead{padding:12px 16px 10px}.fhead p{font-size:13.5px}}
 .tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--ink);background:var(--panel)}
 .tabs button{font:800 18px/1 "Big Shoulders Display","Arial Narrow",sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:14px 20px 12px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--ink-2);cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--hivis);color:#101316}
@@ -4863,8 +4889,10 @@ class Site:
     def foot(self) -> str:
         return '<footer class="site-foot"><span>Topping Out</span><span>MIT licence</span><span>' + DOMAIN + '</span></footer>'
 
-    def framed(self, sheet: str, title: str, description: str, raw: str) -> str:
-        body = f'<iframe class="frame" src="{raw}" title="{esc(title)}"></iframe>'
+    def framed(self, sheet: str, title: str, description: str, raw: str, lede: str = "") -> str:
+        head = (f'<header class="fhead"><span class="eyebrow">Sheet {sheet_no(sheet)} · {esc(title)}</span><h1>{esc(title)}</h1>'
+                + (f'<p>{lede}</p>' if lede else "") + '</header>')
+        body = head + f'<iframe class="frame" src="{raw}" title="{esc(title)}"></iframe>'
         return self.page(f"{title} · Topping Out", description, FRAME_CSS, sheet, body)
 
     # ---------- the Order of works sheet ----------
@@ -6026,7 +6054,8 @@ def main() -> int:
     write("skills.html", listing)
     write("skills.md", listing_md)
     write("route.html", site.order())
-    write("atlas.html", site.framed("atlas.html", "Skill Atlas", "Every Topping Out skill and agent as a map, with the links between them.", RAW["atlas"][0]))
+    write("atlas.html", site.framed("atlas.html", "Skill Atlas", "Every Topping Out skill and agent as a map, with the links between them.", RAW["atlas"][0],
+                                     "How the skills connect: each line is one skill using another. Pick anything to see its links."))
     write("board.html", site.board())
     write("playbooks.html", site.playbooks())
     write("repo.html", site.repo())
