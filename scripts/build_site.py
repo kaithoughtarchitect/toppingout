@@ -737,6 +737,22 @@ ORDER_SHORT = {'Bring the idea': 'What you want built, in your words.',
 # words the flow does not mark but the method does: confirming the next job is the owner's (METHOD.md section 10, step 7a)
 ORDER_WORDS = {"Confirm the next job": "yes"}
 
+# Your repo's tree: a short name where SETUP.md lists several files on one line (the folder's own page keeps the full names)
+REPO_SHORT = {
+    "speak.ts, speak-setup.ts, bootstrap-env.ts": "voice add-on (optional)",
+    "JOB-<N>-SITE-WALK-ANSWERS.md, JOB-<N>-SCOPING.md, JOB-<N>-PLAN.md": "site walk, scoping, plan",
+    "JOB-<N>-BUILDER-PREFLIGHT.txt and its -REPORT.md": "builder pre-flight",
+    "JOB-<N>-WORK-ORDER-<m>.txt, -REPORT.md, -REVIEW.md": "work orders, reports, reviews",
+    "JOB-<N>-LENS-INSPECTION.md, blind-pack/ (the outside review's brief)": "lens inspection, blind pack",
+    "JOB-<N>-ACCEPTANCE-LEDGER.md, the PR body": "acceptance ledger, PR body",
+    "the dev report, JOB-<N+1>-NEXT-TICKET-DECISION.md, the next session's brief (at a topping out: TOPPING-OUT-REPORT.md, NEXT-HEADS.md)": "end-of-job reports",
+    ".claude/skills/deep/, deepagents-ref/, .mcp.json": "Deep Agents add-on (optional)",
+}
+# ...and one line under each top-level folder, from what its own page and its contents say
+REPO_HINT = {".claude/": "the skills and agents", "scripts/": "the outside review, the voice add-on", "foreman/": "everything the method owns",
+             "work-sessions/<Month-Year>/Work-<date>/": "each job's paperwork, one folder per day", "scratch/": "working files, kept out of git"}
+# each job moment by the Order of works step it falls in (from the steps' smaller steps), in SETUP.md's order
+REPO_MOMENT_STEP = ["05", "05\u201306", "06", "06", "07", "07\u201308", "11", "11"]
 # Your repo's short names for SETUP.md's job moments; a moment not listed keeps SETUP.md's own words
 REPO_MOMENTS = {'The board is checked and you say "go"': "You say go", "After the merge (`/f-signoff`)": "After the merge", "Then, in order": "The end game"}
 
@@ -1130,6 +1146,9 @@ fp.addEventListener("click",function(e){var g=e.target.closest("[data-go]");if(!
  fp.hidden=true;last=null;box.value="";out.textContent="";if(b)b.click()})})()</script>"""
 
 REPO_DESK_CSS = r"""
+.rp .srow b small.rh{display:block;margin-top:2px;font:400 11.5px/1.3 "Public Sans",system-ui,sans-serif;color:var(--ink-3);text-transform:none;letter-spacing:0}
+.rp .rhd .mbig{width:auto;min-width:54px;padding:0 8px;white-space:nowrap}
+.rp .side .srow .mno{width:44px;white-space:nowrap}
 .rhead2 .never{grid-column:2;border-left:4px solid #FBB401;display:flex;gap:10px;align-items:baseline;margin-top:10px;padding:9px 12px;background:#101316;color:#F4F4EF;font-size:13.5px;line-height:1.45;max-width:640px}
 .rhead2 .never b{flex:none;font:700 9.5px/1.6 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#FBB401}
 .rhead2 .never code{font:500 .9em "Martian Mono",ui-monospace,monospace;color:#FBB401}
@@ -5226,6 +5245,8 @@ class Site:
         page_ids = set(side_ids)
         sid = {i: f"n{i}" for i in by_id}
         moments = R["steps"]
+        if len(moments) != len(REPO_MOMENT_STEP):
+            raise SystemExit("build_site: SETUP.md's job moments changed: re-check REPO_MOMENT_STEP")
         mid = [f"job-{k}" for k in range(1, len(moments) + 1)]
         touch = {}
         for k, s in enumerate(moments):
@@ -5269,14 +5290,14 @@ class Site:
 
         # the Folders pane
         f_ids = [sid[i] for i in side_ids]
-        f_lab = [by_id[i]["name"] for i in side_ids]
+        f_lab = [REPO_SHORT.get(by_id[i]["name"], by_id[i]["name"]) for i in side_ids]
         f_pages, f_rows = [], []
         for j, i in enumerate(side_ids):
             n = by_id[i]
             w = n["who"]
             chips = (maker(w) if is_who(w) else (f"<span>{esc(w)}</span>" if w else ""))
             ins = inside(i)
-            jumps = "".join(f'<button type="button" data-open="{mid[k]}"><b>{k + 1:02d}</b>{inline(moments[k]["when"])}</button>' for k in touch.get(i, []))
+            jumps = "".join(f'<button type="button" data-open="{mid[k]}"><b>{REPO_MOMENT_STEP[k]}</b>{inline(REPO_MOMENTS.get(moments[k]["when"], moments[k]["when"]))}</button>' for k in touch.get(i, []))
             # a moment row inside the day folder is listed under its folder, so its jumps belong to the folder too
             prev_ = nav_btn(f_ids, f_lab, j - 1, True) if j > 0 else "<span></span>"
             next_ = nav_btn(f_ids, f_lab, j + 1, False) if j + 1 < len(f_ids) else "<span></span>"
@@ -5289,7 +5310,9 @@ class Site:
                 + (f'<div class="kb2"><h5>Where a job touches it</h5><div class="jumps">{jumps}</div></div>' if jumps else "")
                 + f'</div><div class="snav">{prev_}{next_}</div></section>')
             d = n["depth"]
-            f_rows.append(f'<li><button type="button" class="srow d{d}{" on" if not j else ""}" data-open="{sid[i]}">{ico(n, "")}<b>{esc(n["name"])}</b>'
+            hint = REPO_HINT.get(n["name"])
+            f_rows.append(f'<li><button type="button" class="srow d{d}{" on" if not j else ""}" data-open="{sid[i]}">{ico(n, "")}<b>{esc(REPO_SHORT.get(n["name"], n["name"]))}'
+                          + (f'<small class="rh">{esc(hint)}</small>' if hint else "") + '</b>'
                           + (f'<i>{len(kids[i])}</i>' if kids[i] else "") + "</button></li>")
 
         # the Follow a job pane
@@ -5311,12 +5334,12 @@ class Site:
             prev_ = nav_btn(mid, m_lab, k - 1, True) if k > 0 else "<span></span>"
             next_ = nav_btn(mid, m_lab, k + 1, False) if k + 1 < len(mid) else "<span></span>"
             m_pages.append(
-                f'<section class="spage" id="{mid[k]}"{" hidden" if k else ""}><div class="sbar"><span>Follow a job · moment {k + 1}</span><span>{k + 1} / {len(mid)}</span></div>'
-                f'<div class="rhd"><div class="mbig">{k + 1:02d}</div><h4 class="mt">{inline(mname[k])}</h4></div><div class="body">'
+                f'<section class="spage" id="{mid[k]}"{" hidden" if k else ""}><div class="sbar"><span>Follow a job · step {REPO_MOMENT_STEP[k]}</span><span>{k + 1} / {len(mid)}</span></div>'
+                f'<div class="rhd"><div class="mbig">{REPO_MOMENT_STEP[k]}</div><h4 class="mt">{inline(mname[k])}</h4></div><div class="body">'
                 f'<dl class="orw"><dt>What appears</dt><dd>{inline(cap(s["what"]))}.</dd><dt>Where</dt><dd>{inline(cap(s["where"]))}.</dd></dl>'
                 + (f'<div class="kb2"><h5>Show in Folders &rarr;</h5><div class="jumps">{lands}</div></div>' if lands else "")
                 + f'</div><div class="snav">{prev_}{next_}</div></section>')
-            m_rows.append(f'<li><button type="button" class="srow mo{" on" if not k else ""}" data-open="{mid[k]}"><span class="mno">{k + 1:02d}</span><b>{inline(mname[k])}</b></button></li>')
+            m_rows.append(f'<li><button type="button" class="srow mo{" on" if not k else ""}" data-open="{mid[k]}"><span class="mno">{REPO_MOMENT_STEP[k]}</span><b>{inline(mname[k])}</b></button></li>')
 
         def pane(key, title, rows, pages, first):
             return (f'<div class="pane" data-role="{key}" role="tabpanel" aria-label="{title}"{"" if first else " hidden"}>'
@@ -5330,7 +5353,7 @@ class Site:
         body = (f'<main id="repo" class="rp" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("repo.html")} · Your repo</span><h1>Your repo</h1>'
                 '<p class="lede">Every folder Topping Out adds, and what makes it.</p>'
                 '<p class="never"><i aria-hidden="true"></i><b>Not in here</b><span>Your product\'s code. It&rsquo;s built in its own copy and reaches <code>main</code> only by pull request.</span></p>'
-                '<p class="rmode">Two repos? <code>.claude/</code> and <code>foreman/</code> go in the records repo.</p></header>'
+                '<p class="rmode">One repo or two: the records can sit beside your code. With two, <code>.claude/</code> and <code>foreman/</code> go in a separate records repo that never holds product code.</p></header>'
                 f'<div class="tabs" role="tablist" aria-label="Views">{tabb("folders", "Folders", f"{len(side_ids)} places", folder, True, "f")}'
                 f'{tabb("follow", "Follow a job", f"{len(moments)} moments, in order", hat, False, "b")}</div>'
                 f'<div class="desk">{pane("folders", "Folders", f_rows, f_pages, True)}{pane("follow", "Follow a job", m_rows, m_pages, False)}</div>'
