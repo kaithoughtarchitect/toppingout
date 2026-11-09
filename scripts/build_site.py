@@ -1721,7 +1721,7 @@ PLAIN_ROLES = {
     "builder": (["Sets up its own copy of the code", "Keeps the job file", "Runs the checks and saves their results", "Writes the code and its tests",
                  "Commits", "Fixes what the foreman accepts from each inspection", "Opens the PR when told"],
                 ["Makes design decisions", "Explains away results it didn't expect", "Pushes or merges on its own"]),
-    "owner": (['Say "go"', "Paste the builder's pointers, when there is no pane link", "Watch the PR",
+    "owner": (['Say "go"', "Paste the builder's pointers, unless the two sessions are linked", "Watch the PR",
                "Give your word for each act that needs it (the list is in `RULES.md`)"],
               ["Choose between technical options. The foreman decides on evidence and writes down what it turned down"]),
 }
@@ -1745,6 +1745,7 @@ PLAIN = {
     ],
     "f-writing-a-work-order": [
         ("p", "Check every work order against this list before sending it."),
+        ("h", "What it says"),
         ("r", 'Say what "done" means, right at the top', "the builder can check itself against it"),
         ("r", "One outcome per work order. Two outcomes: split it", ""),
         ("r", "Every decision labelled and final", ""),
@@ -1755,11 +1756,13 @@ PLAIN = {
         ("r", "Run the existing tests before committing", ""),
         ("r", "Only ask for tests that can exist", "a real miss: a length test for a field with no length limit"),
         ("r", "List the only files the builder may read", ""),
-        ("r", "Try any claim about logs or libraries before writing it in", "a real miss: a library logged an error the plan didn't expect"),
         ("r", "For page changes, click through it in a real browser", "a text test doesn't prove a page works"),
         ("r", "For character or prompt text, describe what the owner wants in words, not a list of banned words", ""),
         ("r", 'Ask for one report: "Needs from the foreman" first, and a "Not confirmed" section', ""),
+        ("h", "What it checks first"),
+        ("r", "Try any claim about logs or libraries before writing it in", "a real miss: a library logged an error the plan didn't expect"),
         ("r", "Read it once for contradictions", ""),
+        ("h", "How it is handed over"),
         ("r", "Hand it over as a one-line pointer to the file, never pasted text", ""),
         ("r", "Never name the builder", ""),
         ("n", "Draft the next one or two while the current one runs. Each starts by checking the code is where it expects."),
@@ -1802,20 +1805,24 @@ PLAIN = {
     ],
     "f-talking-to-the-owner": [
         ("p", "How the foreman deals with you."),
+        ("h", "How it decides"),
         ("r", "Decide on evidence. No menus of options", "you shouldn't have to judge technical choices"),
+        ("r", "Once something is decided, it stays decided unless new evidence appears", ""),
+        ("h", "When it needs your word"),
         ("r", "Ask you only for the acts listed in `RULES.md`", "everything else is its call"),
-        ("r", "Report exactly what happened, mistakes included", 'a foreman once said "nothing was pushed" when it had been'),
         ("r", 'A general "yes" approves the goal, not each act', "it asks again for each act that needs your word"),
+        ("r", "A standing goal isn't your word for each act", 'it stops at "ready for your word"'),
+        ("r", "Except an autonomous run you started: that covers every step of that one job, and any failure stops it", ""),
+        ("r", "Explain plainly before asking for your word", "twice in one job the owner had to ask why"),
+        ("r", "Say plainly when it is asking you to switch builders", ""),
+        ("h", "How it reports"),
+        ("r", "Report exactly what happened, mistakes included", 'a foreman once said "nothing was pushed" when it had been'),
+        ("r", "End every reply with a short status block", "so you, and it, always know where things stand"),
+        ("h", "The jobs"),
         ("r", "You confirm the next job before it starts", ""),
         ("r", "When every job is done, it tops the board out and stops. The next head is always yours to pick", "with jobs left, only your own words top it out"),
         ("r", "Every job starts with work order 1, research too", ""),
         ("r", "Every job gets merged, code or not", ""),
-        ("r", "A standing goal isn't your word for each act", 'it stops at "ready for your word"'),
-        ("r", "Except an autonomous run you started: that covers every step of that one job, and any failure stops it", ""),
-        ("r", "Explain plainly before asking for your word", "twice in one job the owner had to ask why"),
-        ("r", "Once something is decided, it stays decided unless new evidence appears", ""),
-        ("r", "End every reply with a short status block", "so you, and it, always know where things stand"),
-        ("r", "Say plainly when it is asking you to switch builders", ""),
     ],
     "f-tool-hygiene": [
         ("p", "Small things that cost time."),
@@ -1846,10 +1853,8 @@ PLAIN = {
         ("p", "What every work order gives the builder."),
         ("r", "Answers, never questions", "judgment is a light builder's weak spot"),
         ("r", "One step, one decision", "less to reason about"),
-        ("r", "Exact commands and exact file paths", "nothing left to guess"),
-        ("r", "Tests that fail now. The builder makes them pass", ""),
-        ("r", "The list of bad inputs to test for", "on one job, every early bug came from this"),
-        ("r", 'What "done" means, right at the top', ""),
+        ("see", "The rest of what it carries: the foreman's work order checklist", "f-writing-a-work-order"),
+        ("h", "What it reports"),
         ("r", "One report at the end, then stop", "survives a session that stops halfway"),
         ("r", "The report opens with what it needs from the foreman", "so a blocker isn't buried"),
         ("r", "Report only what it saw. No excuses for surprises", ""),
@@ -1946,6 +1951,8 @@ def plain_html(entries):
             n = 0
         elif k == "n":
             out.append(f'<p class="nt">{inline(e[1])}</p>')
+        elif k == "see":
+            out.append(f'<p class="nt see"><a href="#{e[2]}" data-open="{e[2]}">{esc(e[1])} &rarr;</a></p>')
         elif k == "say":
             out.append(f'<div class="say"><b>Send exactly</b><code>{esc(e[1])}</code></div>')
     flush()
@@ -4980,6 +4987,10 @@ class Site:
         def lst(xs):
             return "".join(f"<li>{inline(x)}</li>" for x in xs)
 
+        # the playbooks speak to the foreman as "you"; this page keeps "you" for the reader, so the titles say "it"
+        shown = {"Before you plan": "Before it plans", "When you write code yourself": "When it writes code itself",
+                 "Talking to the owner": "Talking to you", "Your own scorecard": "Its own scorecard"}
+
         def idea(bk):
             words = re.sub(r"\*\*", "", ideas[bk][0][1][0]).split()
             return f'{esc(" ".join(words[:3]))} <em>{esc(" ".join(words[3:]))}</em>'
@@ -4988,7 +4999,8 @@ class Site:
             def dn(does, never):
                 return (f'<div class="dn"><div class="do"><h3>Does</h3><ul>{lst(does)}</ul></div>'
                         f'<div class="no"><h3>{never_h}</h3><ul>{lst(never)}</ul></div></div>')
-            return (f'<div class="pl">{dn(*PLAIN_ROLES[role])}</div><div class="ex">{dn(*roles[role])}</div>'
+            return (('<p class="lead">The builder is a cheaper model than the foreman. A light builder is a small one, a strong builder a bigger one.</p>' if role == "builder" else "")
+                    + f'<div class="pl">{dn(*PLAIN_ROLES[role])}</div><div class="ex">{dn(*roles[role])}</div>'
                     + (f'<p class="jobnote">{note}</p>' if note else ""))
 
         # every page in reading order across the three roles: (role key, role title, id, short name, kicker, body html, rule count)
@@ -5008,20 +5020,20 @@ class Site:
         plain_check(sources)
         flat = {t: w for _p, _n, _s, _o, st in flow_phases() for _a, t, _d, _tags, w in st}
         wrows = []
-        for step, *_r in FRONT["route_once"] + FRONT["route_loop"]:
+        for num, (step, *_r) in enumerate(FRONT["route_once"] + FRONT["route_loop"], 1):
             for ft in ORDER_MAP[step]:
                 w = ORDER_WORDS.get(ft, flat[ft])
                 if w:
                     slug = re.sub(r"[^a-z]+", "-", step.lower()).strip("-")
                     tags = "".join(f"<q>{esc(x.strip())}</q>" for x in re.split(r"\s*[\u00b7]\s*", w))
-                    wrows.append(f'<li><span class="wq">{tags}</span><a href="route.html#{slug}"><b>{esc(step)}</b> &middot; {esc(ft)}</a></li>')
+                    wrows.append(f'<li><span class="wq">{tags}</span><a href="route.html#{slug}"><b>{num:02d} {esc(step)}</b></a></li>')
         order.append(("y", "You", "y-words", "Your words", "",
                       '<div class="body"><p class="lead">Nothing on this list happens without your word. In an autonomous run, your <code>/goal</code> stands in for most of them; '
                       '<code>RULES.md</code> lists which.</p><ul class="ywords">' + "".join(wrows) + "</ul></div>", 0))
 
         def nav_btn(j, arrow_left):
             key, title, pid, short, *_ = order[j]
-            name = f"{title}: job description" if short == "Job description" else short
+            name = f"{title}: job description" if short == "Job description" else shown.get(short, short)
             return (f'<button type="button" data-open="{pid}"><span>{"&larr; Previous" if arrow_left else "Next &rarr;"}</span><small>{esc(name)}</small></button>')
 
         pages = {"f": [], "b": [], "y": []}
@@ -5030,7 +5042,9 @@ class Site:
             mine = [o for o in order if o[0] == key]
             i = [o[2] for o in mine].index(pid)
             first = i == 0
-            head = (idea({"f": "F", "b": "B"}[key]) if key != "y" else "You <em>decide.</em>") if first else esc(short)
+            head = (idea({"f": "F", "b": "B"}[key]) if key != "y" else "You <em>decide.</em>") if first else esc(shown.get(short, short))
+            if first and key == "f":
+                head = re.sub(r"^You are the ", "It is the ", head)
             lead0 = next((e[1] for e in PLAIN.get(pid, []) if e[0] == "p"), "")
             said = kicker and re.sub(r"[^a-z0-9 ]", "", lead0.lower()).startswith(re.sub(r"[^a-z0-9 ]", "", kicker.lower()))
             label = f"{title} · job description" if first else (f"{title} · your part" if key == "y" else f"{title} · playbook" + (f" · {esc(kicker)}" if kicker and not said else ""))
@@ -5042,7 +5056,7 @@ class Site:
             if first:
                 rows[key].append(f'<li><button type="button" class="srow job on" data-open="{pid}"><b>Job description</b><i>does / never</i></button></li>')
             else:
-                rows[key].append(f'<li><button type="button" class="srow" data-open="{pid}"><b>{esc(short)}</b></button></li>')
+                rows[key].append(f'<li><button type="button" class="srow" data-open="{pid}"><b>{esc(shown.get(short, short))}</b></button></li>')
 
         def pane(key, src, title, first):
             exact = f"<code>{esc(src)}</code>, word for word" if src else "<code>METHOD.md</code>, word for word"
