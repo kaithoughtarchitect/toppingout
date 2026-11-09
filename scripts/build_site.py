@@ -961,6 +961,11 @@ SKILLS_DESK_CSS = r"""
 .sk .srow .sno{flex:none;width:22px;font:800 15px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--brand)}
 .sk .srow b{flex:1;font:600 13.5px/1.2 "Martian Mono",ui-monospace,monospace;text-transform:none}
 .sk .srow small{display:block;margin-top:3px;font:500 11.5px/1.3 "Public Sans",system-ui,sans-serif;color:var(--ink-3)}
+.sk .srow small.bl{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:3px;font-weight:400;opacity:.9}
+.sk .srow small+small.bl{margin-top:2px}
+.sk .side .sgrp{list-style:none;margin:12px 18px 4px;font:700 10px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.sk .side .sgrp:first-child{margin-top:8px}
+.sk>.wrap>.rmode{margin:12px 0 0;font-size:13px;color:var(--ink-3)}
 .sk .side h3{margin:14px 18px 4px}
 .shd2{display:flex;align-items:center;gap:14px;margin:0 0 10px}
 .shd2 .big{flex:none;width:58px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#FBB401;color:#101316;border:2px solid #101316}
@@ -5662,6 +5667,8 @@ class Site:
             ms = [pid for pid in ids if kind_of(pid, by[pid], steps) == key]
             if key == "route":
                 ms.sort(key=lambda pid: (steps[pid][0], ids.index(pid)))
+            if key == "agents":
+                ms.sort(key=lambda pid: by[pid]["label"].startswith("lens-"))
             mine[key] = ms
         flat = [(key, pid) for key, *_r in groups for pid in mine[key]]
         sid = {pid: re.sub(r"[^a-z0-9]+", "-", pid.replace("agents/", "agent-")).strip("-") for _k, pid in flat}
@@ -5690,19 +5697,22 @@ class Site:
             idx = mine[key].index(pid)
             prev_ = nav_btn(j - 1, True) if j > 0 else "<span></span>"
             next_ = nav_btn(j + 1, False) if j + 1 < len(flat) else "<span></span>"
-            meta = (f'<code>{esc(n["slash"])}</code>' if n.get("slash") else "") + f'<em>{esc(n["type"])}</em>'
+            meta = f'<em>{esc(n["type"])}</em>'
             pages[key].append(
                 f'<section class="spage" id="{sid[pid]}"{"" if first else " hidden"}><div class="sbar"><span>{bar}</span><span>{idx + 1} / {len(mine[key])}</span></div>'
-                f'<div class="shd2">{big}<div><h4>{esc(n["label"])}</h4><div class="meta">{meta}</div></div>'
+                f'<div class="shd2">{big}<div><h4>{esc(n.get("slash") or n["label"])}</h4><div class="meta">{meta}</div></div>'
                 f'<a class="fullbtn" href="{self.href(pid, "")}"><span>Full page</span><small>sample, questions, links</small><i aria-hidden="true">&rarr;</i></a></div><div class="body">'
                 f'<dl class="orw"><dt>Does</dt><dd>{inline(cap(n["blurb"]))}.</dd>' + (f'<dt>When</dt><dd>{inline(when)}</dd>' if when else "") + "</dl>"
-                + (f'<div class="kb"><h5>Say it</h5><div class="says">' + "".join(f"<span>{esc(s)}</span>" for s in says) + "</div></div>" if says else "")
                 + (f'<p class="knot"><i aria-hidden="true"></i><b>Not for</b><span>{inline(not_for(n["not"]))}</span></p>' if n.get("not") else "")
                 + f'<div class="kb kins"><h5>It\'s working if</h5><ul class="kchk">'
                 + "".join(f'<li><span>{inline(c)}</span></li>' for c in checks) + '</ul></div>'
-                + f'<div class="kfull"><a class="go" href="{self.href(pid, "")}">The full page &rarr;</a><span>Sample, common questions and what it connects to.</span></div>'
                 + f'</div><div class="snav">{prev_}{next_}</div></section>')
-            rows[key].append(f'<li><button type="button" class="srow{" on" if first else ""}" data-open="{sid[pid]}">{mark}<b>{esc(n["label"])}{sub}</b></button></li>')
+            if key == "agents":
+                lens = n["label"].startswith("lens-")
+                if first or (lens and not by[mine[key][idx - 1]]["label"].startswith("lens-")):
+                    rows[key].append(f'<li class="sgrp">{"Lenses &middot; run inside /f-inspect" if lens else "Helpers"}</li>')
+            rows[key].append(f'<li><button type="button" class="srow{" on" if first else ""}" data-open="{sid[pid]}">{mark}<b>{esc(n["label"])}{sub}'
+                             f'<small class="bl">{inline(cap(n["blurb"]))}</small></b></button></li>')
             frows[key].append(f'<li data-find="{esc((n["label"] + " " + n["blurb"] + " " + (when or "")).lower())}"><button type="button" class="srow" data-go="{sid[pid]}">{mark}'
                               f'<b>{esc(n["label"])}<small>{inline(cap(n["blurb"]))}</small></b></button></li>')
             md_row = f"- [{n['label']}]({page_path(pid)}.md): {cap(n['blurb'])}."
@@ -5728,11 +5738,12 @@ class Site:
 
         body = (f'<main id="skills" class="sk" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("skills.html")} · '
                 f'{n_skill} skills · {n_agent} agents</span><h1>Skills and agents</h1>'
-                f'<p class="lede">{esc(lede)} All on one map: the <a href="atlas.html">Skill Atlas</a>.</p><p class="rmode">Coding agents can read a plain-text copy of each page.</p>'
+                f'<p class="lede">{esc(lede)} All on one map: the <a href="atlas.html">Skill Atlas</a>.</p>'
                 '<label class="find"><span>Find</span><input type="search" id="findbox" placeholder="What do you want to do? Try: review, plan, lesson" autocomplete="off">'
                 '<output id="findn" aria-live="polite"></output></label></header>'
                 '<div class="tabs" role="tablist" aria-label="Groups">' + "".join(tabb(k, ti, su, i == 0) for i, (k, ti, su, _d) in enumerate(groups)) + "</div>"
                 f'<div class="desk">{"".join(pane(k, ti, i == 0) for i, (k, ti, _s, _d) in enumerate(groups))}{find_pane}</div>'
+                '<p class="rmode">Coding agents can read a plain-text copy of each page.</p>'
                 '</div></main>' + self.foot() + ROLES_JS + SK_FIND_JS)
         subs = [(f"#g-{k}", ti) for k, ti, _s, _d in groups]
         page = self.page("Skills and agents · Topping Out", f"Every Topping Out skill and agent: {n_skill} skills and {n_agent} agents.",

@@ -47,6 +47,7 @@
 - [handoff-builder](agents/handoff-builder.md): Write the handover notes so the next session can pick up the work.
 - [spec-validator-fixer](agents/spec-validator-fixer.md): Correct statements in a plan that are provably wrong.
 - [plan-validator](agents/plan-validator.md): Check a plan against the real code before it's built (used inside f-plancheck).
+- [code-explorer](agents/code-explorer.md): Trace how an existing feature works through the code.
 - [lens-code](agents/lens-code.md): Look for bugs and broken project rules in the changed code.
 - [lens-errors](agents/lens-errors.md): Find errors that get silently ignored, and risky fallbacks.
 - [lens-types](agents/lens-types.md): Check that the data types can't hold invalid values.
@@ -55,4 +56,3 @@
 - [lens-instructions](agents/lens-instructions.md): Check prompts, skills and templates for contradictions and broken references.
 - [lens-migrations](agents/lens-migrations.md): Review database changes: migrations, queries and access rules.
 - [lens-simplify](agents/lens-simplify.md): Spot code that could be simpler, without changing what it does.
-- [code-explorer](agents/code-explorer.md): Trace how an existing feature works through the code.
