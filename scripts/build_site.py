@@ -2599,10 +2599,7 @@ def one_job_html() -> str:
             f'<div class="ojways"><span class="ojwl" id="ojwl">Three ways to run a job:</span><div class="ojmode" role="radiogroup" aria-labelledby="ojwl">{modes}</div></div>'
             '<div class="ojg"><div class="ojlab" aria-hidden="true"><span></span><span class="y">You</span><span class="i">The AI</span></div>'
             + "".join(cols) + bld + ONE_JOB_NEXT + '</div>'
-            '<div class="ojfoot"><div class="ojlim ojyou mvb m-you"><p><b>Every word is yours.</b> Nothing passes <q>go</q>, <q>open the PR</q>, <q>greploop</q> or <q>merge</q> without you, and the next ticket waits for your yes.</p>'
-            '<p><b>It moves on without you only on an explicit grant:</b> an autonomous run for one job, or a night shift. Any other standing goal grants nothing.</p>'
-            '<p><b>It asks you only where a step is yours:</b> the ones listed in <code>RULES.md</code>, putting something off, the next ticket. Technical choices it makes itself, on evidence, and writes down what it turned down.</p></div>'
-            + lim + '</div></div>'
+            '<div class="ojfoot">' + lim + '</div></div>'
             + ONE_JOB_JS)
 
 
@@ -2961,6 +2958,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojy,.oji,.ojhd>b,.ojfoot{display:grid;grid-template-columns:auto minmax(0,1fr)}
 .ojy>.mv,.oji>.mv,.ojhd>b>.mv{grid-row:1;grid-column:2}
 .ojfoot>*{grid-row:1;grid-column:1/-1}
+.oj:not(:has(#ojm-auto:checked)):not(:has(#ojm-night:checked)) .ojfoot{display:none}
 .oj .mv:not(.m-you),.oj .mvb:not(.m-you){visibility:hidden}
 .oj:has(#ojm-auto:checked) .m-you,.oj:has(#ojm-night:checked) .m-you{visibility:hidden}
 .oj:has(#ojm-auto:checked) .m-auto,.oj:has(#ojm-night:checked) .m-night{visibility:visible}
@@ -2971,7 +2969,7 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .ojnil{color:var(--ink-3)}
 .ojlim{margin-top:12px;padding:12px 14px;border:2px solid var(--ink);border-left:8px solid #E0442F;background:var(--ground)}
 .ojlim p{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2)}.ojlim p+p{margin-top:6px}.ojlim b{color:var(--ink)}
-.ojlim.ojyou{border-left-color:#FBB401}.ojlim q{font:600 .92em "Martian Mono",ui-monospace,monospace;quotes:"\201C" "\201D"}
+.ojlim q{font:600 .92em "Martian Mono",ui-monospace,monospace;quotes:"\201C" "\201D"}
 .ojlim a{font:700 11px/1 "Martian Mono",ui-monospace,monospace;color:var(--ink);white-space:nowrap}
 @media (max-width:640px){.ojways{grid-template-columns:1fr}.ojmode label{padding:8px 7px}.ojmode label b{font-size:9.5px}.ojmode label small{font-size:11px}}
 
