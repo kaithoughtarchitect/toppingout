@@ -2128,6 +2128,18 @@ REQ_CSS = r"""
 @media (max-width:760px){.rq .two{grid-template-columns:minmax(0,1fr)}}
 """
 
+# Who does what: the three role tabs read as a choice, like the job modes on the front page: a radio dot, one selected look
+PICK_CSS = r"""
+#roles .rpick{margin:22px 0 -6px;font:600 10.5px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+#roles .rpick i{font-style:normal;color:var(--brand)}
+#roles .tab b{display:flex;align-items:center;gap:10px}
+#roles .tab b::before{content:"";flex:none;width:15px;height:15px;border:2.5px solid currentColor;border-radius:50%;box-sizing:border-box}
+#roles .tab[aria-selected="true"]{background:#FBB401;color:#101316;border-color:#101316;box-shadow:1px 1px 0 var(--ink)}
+#roles .tab[aria-selected="true"] b::before{background:radial-gradient(circle,#101316 0 3px,transparent 3.6px)}
+#roles .tab[aria-selected="true"] svg{filter:none}
+@media (max-width:640px){#roles .rpick{margin:16px 0 -4px}#roles .tab b{gap:7px}#roles .tab b::before{width:12px;height:12px;border-width:2px}}
+"""
+
 ROLES_CSS = r"""
 .wrap{max-width:1240px;margin:0 auto;padding:0 32px}
 .rhead2{padding:26px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 40px;align-items:end}
@@ -5050,13 +5062,14 @@ class Site:
         flow = f'<div class="flow" aria-hidden="true"><div>{arrow_r}Work order</div><div>{arrow_l}Report</div></div>'
         body = (f'<main id="roles" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("playbooks.html")} · Playbooks</span><h1>Who does what</h1>'
                 '<p class="lede">Three roles: the foreman thinks and checks, the builder builds, you decide.</p></header>'
-                f'<div class="tabs" role="tablist" aria-label="Roles">{tabb("f", "foreman", "Foreman", "Plans, writes, reviews", True)}{flow}'
+                '<p class="rpick" id="rpick">Pick a role to read its job <i aria-hidden="true">&darr;</i></p>'
+                f'<div class="tabs" role="tablist" aria-labelledby="rpick">{tabb("f", "foreman", "Foreman", "Plans, writes, reviews", True)}{flow}'
                 f'{tabb("b", "builder", "Builder", "Builds what is written", False)}{tabb("y", "you", "You", "Decides", False)}</div>'
                 f'<div class="desk">{pane("f", "Foreman-Playbook.md", "Foreman", True)}'
                 f'{pane("b", "Builder-Playbook.md", "Builder", False)}{pane("y", "", "You", False)}</div>'
                 '</div></main>' + self.foot() + ROLES_JS)
         return self.page("Playbooks · Topping Out", "Who does what: the foreman's, the builder's and your job, and the playbook each role follows.",
-                         ROLES_CSS, "playbooks.html", body, subs=[("#foreman", "Foreman"), ("#builder", "Builder"), ("#you", "You")])
+                         ROLES_CSS + PICK_CSS, "playbooks.html", body, subs=[("#foreman", "Foreman"), ("#builder", "Builder"), ("#you", "You")])
 
     # ---------- your repo: a site plan of the folders Topping Out adds, from SETUP.md section 2 ----------
 
