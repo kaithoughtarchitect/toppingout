@@ -699,11 +699,18 @@ INSIGHT_EXAMPLE = [
 ]
 
 ORDER_NOTES = {
-    "Build": ("Repeat per task.", "Each task gets its own work order, build and review, until every task is built. Repairs go test-first into the next work order."),
     "Cut into tickets": ("Or skip the plan: an iteration board.", "For work found while testing a product: no blueprint, small jobs added as they turn up "
                          "(f-board, init --iteration). It tops out the same way."),
-    "Close": ("Back to 05 with the next job.", "Until every job on the list is merged or decided. On a night shift, the next job starts by itself. "
-              "When the last job closes, the board tops out instead: frozen as the record, a report, and three to five next heads for you to pick from."),
+    "Close": ("Back to 05 with the next job.", ["Until every job on the list is merged or decided.", "On a night shift, the next job starts by itself.",
+              "When the last job closes, the board tops out instead: frozen as the record, a report, and three to five next heads for you to pick from."]),
+}
+# A smaller step's title as the page shows it, where build_flow.py's own title would read as a second project plan
+ORDER_TITLE = {"The plan and gate 1": "The job plan and gate 1"}
+# Labels that group a long step's smaller steps: {step: {index of the first smaller step in the group: (label, line)}}
+ORDER_GROUPS = {
+    "Build": {1: ("Prepare the job", "Once per job."),
+              4: ("Each task", "Repeats until every task is built. Repairs go test-first into the next work order.")},
+    "Inspect": {1: ("Checks first", ""), 3: ("Review 1: a fresh session", ""), 6: ("Review 2: another company's model", ""), 9: ("Final", "")},
 }
 ACTOR_ROLE = {"op": "you", "or": "foreman", "bu": "builder", "rv": "inspectors"}
 GLOSSARY = [
@@ -725,7 +732,46 @@ GLOSSARY = [
     ("H1 to Hn", "The hostile inputs a work order lists for its task, such as missing keys or wrong types. Each one needs a test."),
     ("G1 to G6", "The standard gap checklist in every work order: cancellation, deadlines, fields reaching their destination, every error path tested, many-item cases, typed errors for bad input."),
     ("HEAD", "The latest commit on a branch. A work order names the exact one it starts from."),
+    ("/goal", "A standing goal typed into the session. Only an autonomous run or a night shift lets it stand in for your word; every check still runs."),
+    ("Cards in force", "The Logbook cards that apply to this job. The foreman lists them in its first reply."),
+    ("Safety fact", "The one whole-system property the ticket must not break, proven by running the shipped code, or marked unproven."),
+    ("Lens", "A review agent with one focus (code, errors, types and the rest). Several run inside the lens inspection."),
+    ("Adjudicate", "Reproduce every claim in a review first, then accept, reject or partly accept it. Accepted fixes go to the builder as a work order."),
+    ("Top out, next heads", "When every job on the board is merged or resolved, the board is frozen as the project's record, with a report and three to five candidate next projects (heads)."),
 ]
+# Where a glossary word appears on a step page, its first use carries the definition on hover (pattern, glossary word)
+GLOSS_HINTS = [(r"\bcold(?: read)?\b", "Cold read"), (r"\bwork orders?\b", "Work order"), (r"\bworktrees?\b", "Worktree"), (r"\bt0\b", "t0"),
+               (r"\bbase versus head\b", "Base versus head"), (r"\bgate [12]\b", "Gate 1, gate 2"), (r"\bblueprint\b", "Blueprint"),
+               (r"\b(?:opener|handover)\b", "Opener, handover"), (r"\bledger\b", "Acceptance ledger"), (r"\bGreptile\b", "Greptile"),
+               (r"\bsafety fact\b", "Safety fact"), (r"\bcards in force\b", "Cards in force"), (r"/goal\b", "/goal"), (r"\blens\b", "Lens"),
+               (r"\badjudicate\b", "Adjudicate"), (r"\b(?:top out|next heads)\b", "Top out, next heads")]
+
+
+def gloss_hints(h: str, used: set) -> str:
+    """Underline the first use of each glossary word on a step page, outside code and links, with its definition on hover."""
+    defs = dict(GLOSSARY)
+    keep = []
+    for pat, word in GLOSS_HINTS:
+        if word in used:
+            continue
+        parts, depth, done = re.split(r"(<[^>]+>)", h), 0, False
+        for n, part in enumerate(parts):
+            if part.startswith("<"):
+                if re.match(r"<(code|a)\b", part):
+                    depth += 1
+                elif re.match(r"</(code|a)>", part):
+                    depth -= 1
+                continue
+            if depth or done:
+                continue
+            m = re.search(pat, part, re.I)
+            if m:
+                keep.append(f'<span class="gt" tabindex="0" title="{esc(word)}: {esc(defs[word])}">{m.group(0)}</span>')
+                parts[n] = part[:m.start()] + f"\x00{len(keep) - 1}\x00" + part[m.end():]
+                used.add(word)
+                done = True
+        h = "".join(parts)
+    return re.sub(r"\x00(\d+)\x00", lambda m: keep[int(m.group(1))], h)
 
 ORDER_CSS = r"""
 .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
@@ -816,10 +862,7 @@ ORDER_DESK_CSS = r"""
 .rw2 h5{margin:0 0 6px;font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .rw2 p{margin:0;font-size:14.5px;line-height:1.5;color:var(--ink)}
 .orule{display:flex;gap:10px;align-items:baseline;margin:0 0 12px;padding:10px 14px;border-left:3px solid var(--ink);background:var(--panel-2);font-size:14.5px}
-.orule b,.oyour>b{flex:none;font:700 9.5px/1.6 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
-.oyour{margin:0 0 12px;padding:10px 14px;border-left:3px solid var(--hivis);background:rgba(251,180,1,.12)}
-.oyour ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
-.oyour li{display:flex;align-items:baseline;gap:10px;font-size:13.5px;color:var(--ink-2)}.oyour li q{font:700 12.5px/1.3 "Martian Mono",ui-monospace,monospace;quotes:none;background:var(--hivis);color:#101316;padding:2px 6px}
+.orule b{flex:none;font:700 9.5px/1.6 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
 .oloop{display:flex;gap:10px;align-items:baseline;margin:0 0 12px;padding:10px 14px;border:2px solid var(--ink);font-size:14px}
 .oloop b{flex:none;font:800 16px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
 .osh{margin:18px 0 0;font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
@@ -857,11 +900,7 @@ ORDER_DESK_CSS = r"""
 .orule::before{content:"";flex:none;width:10px;background:repeating-linear-gradient(-45deg,#101316 0 5px,#FBB401 5px 10px);border-right:2px solid #101316}
 .orule b{display:flex;align-items:center;flex:none;font:700 9.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;background:#101316;color:#FBB401;padding:0 9px}
 .orule span{padding:9px 12px;font:800 17px/1.15 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
-.oyour{margin:0 0 16px;padding:10px 12px 12px;border:2px solid #101316;background:#FBB401;color:#101316;box-shadow:3px 3px 0 #101316;max-width:560px}
-.oyour>b{display:block;font:700 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#101316}
-.oyour>b small{font:inherit;color:#6B4E00;margin-left:6px}
-.oyour li{color:#30363B}.oyour li q{background:#101316;color:#FBB401}
-.reader .orule span,.reader .oyour,.reader .oyour li{color:#101316}.reader .oyour li span{color:#30363B}.reader .oyour ul{margin:8px 0 0;padding:0}.reader .oyour li{margin:0}
+.reader .orule span{color:#101316}
 """
 
 # the first tab on the Order of works and the Logbook: the whole sheet on one page, before any detail
@@ -888,7 +927,15 @@ OVERVIEW_CSS = r"""
 .otile .ow{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;font:600 9px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .otile:hover .ow,.otile:focus-visible .ow{color:#30363B}
 .otile .ow>span{display:inline-flex;align-items:center;gap:5px}
-.otile .yw{position:absolute;top:-6px;right:-6px;width:12px;height:12px;background:#FBB401;border:1.5px solid #101316;transform:rotate(45deg)}
+.ywt{font:700 8.5px/1 "Martian Mono",ui-monospace,monospace;font-style:normal;letter-spacing:.1em;text-transform:uppercase;padding:3px 5px 2px;background:#FBB401;color:#101316;border:1.5px solid #101316}
+.otile .ywt{position:absolute;top:-9px;right:8px}
+.ogrp{list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:16px 0 6px;border-bottom:1px solid var(--line)}
+.ogrp b{font:800 15px/1 "Big Shoulders Display","Arial Narrow",sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--brand)}
+.ogrp span{font-size:13px;color:var(--ink-3)}
+.ofiles{margin:6px 0 0!important;font:500 11px/1.5 "Martian Mono",ui-monospace,monospace!important;color:var(--ink-3)!important}
+.ofiles code{font:inherit;background:none;padding:0;color:inherit}
+.gt{text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;cursor:help}
+.oloop ul{margin:0;padding-left:18px}.oloop li+li{margin-top:3px}
 .oret{margin:10px 0 0;font:700 11px/1.4 "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
 .okey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:16px 0 0}
 .okey ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 16px}
@@ -4798,7 +4845,8 @@ class Site:
         for j, (key, title, num, step, slug) in enumerate(steps):
             ic, _what, reads, writes, _rule, _mem = STEP_NOTES[step]
             what, rule = STEP_SHORT[step]
-            roles, words, subs = [], [], []
+            roles, words, subs, used = [], [], [], set()
+            lead_h, reads_h, writes_h, rule_h = (gloss_hints(inline(x), used) for x in (what, reads, writes, rule))
             for k, ft in enumerate(ORDER_MAP[step], 1):
                 a, _d, tags, w = flat[ft]
                 d, w = ORDER_SHORT[ft], ORDER_WORDS.get(ft, w)
@@ -4807,9 +4855,13 @@ class Site:
                     roles.append(r)
                 if w:
                     words.append((ft, w))
-                tg = "".join(tagh(x, l) for x, l in tags)
-                subs.append(f'<li class="osub"><span class="sn"><span class="sh sh-{r}" aria-hidden="true"></span>{num:02d}.{k}</span><div><h6>{esc(ft)}<small>{role_name[r]}</small></h6><p>{esc(d)}</p>'
-                            + (f'<div class="otags">{tg}</div>' if tg else "")
+                tg = "".join(tagh(x, l) for x, l in tags if x in ("skill", "agent", "opt"))
+                files = " &middot; ".join(tagh(x, l) for x, l in tags if x not in ("skill", "agent", "opt"))
+                grp = ORDER_GROUPS.get(step, {}).get(k)
+                if grp:
+                    subs.append(f'<li class="ogrp"><b>{esc(grp[0])}</b>' + (f"<span>{gloss_hints(esc(grp[1]), used)}</span>" if grp[1] else "") + "</li>")
+                subs.append(f'<li class="osub"><span class="sn"><span class="sh sh-{r}" aria-hidden="true"></span>{num:02d}.{k}</span><div><h6>{gloss_hints(esc(ORDER_TITLE.get(ft, ft)), used)}<small>{role_name[r]}</small></h6><p>{gloss_hints(esc(d), used)}</p>'
+                            + (f'<div class="otags">{tg}</div>' if tg else "") + (f'<p class="ofiles">{files}</p>' if files else "")
                             + (f'<div class="oword"><i>Your word</i>&ldquo;{esc(w)}&rdquo;</div>' if w else "") + "</div></li>")
             who = "".join(f'<b class="r-{r}"><span class="sh sh-{r}" aria-hidden="true"></span>{role_name[r]}</b>' for r in roles)
             note = ORDER_NOTES.get(step)
@@ -4821,15 +4873,14 @@ class Site:
                 f'<section class="spage" id="{slug}"{"" if first else " hidden"}><div class="sbar"><span>{esc(title)} · step {num:02d}</span>'
                 f'<span>{mine.index(steps[j]) + 1} / {len(mine)}</span></div>'
                 f'<div class="shd">{icon(ic)}<div><h4>{esc(step)}</h4><div class="who">{who}</div></div></div><div class="body">'
-                f'<p class="lead">{inline(what)}</p>'
-                f'<dl class="orw"><dt>Reads &larr;</dt><dd>{inline(reads)}</dd><dt>Writes &rarr;</dt><dd>{inline(writes)}</dd></dl>'
-                f'<p class="orule"><b>Rule</b><span>{inline(rule)}</span></p>'
-                + (f'<div class="oyour"><b>Your word <small>or your /goal</small></b><ul>' + "".join(f"<li><q>{esc(w)}</q><span>at {esc(ft)}</span></li>" for ft, w in words) + "</ul></div>" if words else "")
-                + (f'<p class="oloop"><b>{esc(note[0])}</b><span>{esc(note[1])}</span></p>' if note else "")
+                f'<p class="lead">{lead_h}</p>'
+                f'<dl class="orw"><dt>Reads &larr;</dt><dd>{reads_h}</dd><dt>Writes &rarr;</dt><dd>{writes_h}</dd></dl>'
+                f'<p class="orule"><b>Rule</b><span>{rule_h}</span></p>'
+                + ((f'<div class="oloop"><b>{esc(note[0])}</b>' + (f'<ul>{"".join(f"<li>{esc(x)}</li>" for x in note[1])}</ul>' if isinstance(note[1], list) else f"<span>{esc(note[1])}</span>") + "</div>") if note else "")
                 + f'<h5 class="osh">Step by step</h5><ol class="osubs">{"".join(subs)}</ol></div><div class="snav">{prev_}{next_}</div></section>')
             tiles[key].append(f'<li><button type="button" class="otile{" yw" if words else ""}" data-open="{slug}"><span class="sno">{num:02d}</span>{icon(ic)}<b>{esc(step)}</b>'
                               f'<span class="ow">{"".join(f"<span><span class=\"sh sh-{r}\" aria-hidden=\"true\"></span>{role_name[r]}</span>" for r in roles)}</span>'
-                              + ('<i class="yw" title="Waits for your word"></i>' if words else "") + "</button></li>")
+                              + ('<i class="ywt">Your word</i>' if words else "") + "</button></li>")
             rows[key].append(f'<li><button type="button" class="srow{" on" if first else ""}" data-open="{slug}"><span class="sno">{num:02d}</span>{icon(ic)}'
                              f'<b>{esc(step)}</b>' + ('<i class="yw" title="Waits for your word"></i>' if words else "") + "</button></li>")
 
@@ -4852,12 +4903,11 @@ class Site:
         legend = "".join(f'<li><span class="sh sh-{r}" aria-hidden="true"></span>{n}</li>' for r, n in role_name.items())
         overview = ('<div class="pane full" data-role="overview" role="tabpanel" aria-label="The whole picture"><div class="reader">'
                     '<section class="spage ovw" id="overview-map"><div class="sbar"><span>The whole picture</span></div><h4>From idea to merged job</h4>'
-                    f'<p class="lead">Every piece of work goes in the same order. Once per project: plan it, check it, cut it into tickets. '
-                    f'Then each ticket runs the same {len(stages[1][3])} steps, one job and one PR, and the next job starts again at the top.</p>'
+                    f'<p class="lead">The planning runs once. Every ticket after it goes through the same {len(stages[1][3])} steps.</p>'
                     f'<div class="olane"><div class="olh"><b>Once per project</b><span>{len(stages[0][3])} steps &middot; {esc(stages[0][2])}</span></div><ol class="otiles">{"".join(tiles["once"])}</ol></div>'
                     f'<div class="olane loop"><div class="olh"><b>For every ticket</b><span>{len(stages[1][3])} steps &middot; {esc(stages[1][2])}</span></div><ol class="otiles">{"".join(tiles["every"])}</ol>'
                     '<p class="oret">&larr; Next job: a fresh foreman starts here, at step ' + f'{len(stages[0][3]) + 1:02d}</p></div>'
-                    f'<div class="okey"><ul>{legend}</ul><p><i class="ykey" aria-hidden="true"></i>Waits for your word, or your /goal</p></div>'
+                    f'<div class="okey"><ul>{legend}</ul><p><i class="ywt" aria-hidden="true">Your word</i>Waits for your word, or your /goal</p></div>'
                     '<p class="omore">Pick a step to open it: what it reads and writes, its rule, and each smaller step.</p></section></div></div>')
         words_pane = ('<div class="pane full" data-role="words" role="tabpanel" aria-label="Words used" hidden><div class="reader">'
                       '<section class="spage" id="words-list"><div class="sbar"><span>Words used on this page</span></div><h4>Words used</h4><dl class="gl">'
