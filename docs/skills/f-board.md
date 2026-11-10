@@ -48,7 +48,7 @@ After the merge is verified, `close` records the job as merged and chooses the n
 
 ### What is a job's summary?
 
-The line on the Job tab that says what the job builds, so you know what it does without opening its ticket. It is one sentence, under about 20 words, with any plan references after it in brackets: "Loads the catalogue as a runtime block, so later jobs can use it. (T2, VP-6)". If one is unclear, `summary <job> --text "..."` replaces it, and `add` takes a `--summary` for a new job.
+The line on the job card that says what the job builds, so you know what it does without opening its ticket. It is one sentence, under about 20 words, with any plan references after it in brackets: "Loads the catalogue as a runtime block, so later jobs can use it. (T2, VP-6)". If one is unclear, `summary <job> --text "..."` replaces it, and `add` takes a `--summary` for a new job.
 
 ### What if one job turns out to be covered by another?
 
