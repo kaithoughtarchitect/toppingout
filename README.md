@@ -14,9 +14,9 @@ Each job ends with evidence you can check: what was asked, what was built, what 
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 
-![The project board: an Ishikawa (fishbone) diagram whose head is the product outcome and whose ribs are the jobs that feed it, here a synthetic example](assets/readme/board.webp)
+![The project board, one page: the head (what the product must do) on top, then what needs the owner, the job running now, and an Ishikawa (fishbone) diagram whose ribs are the jobs that feed the head, here a synthetic example](assets/readme/board.webp)
 
-*The project board (synthetic example): the head is what the product must do, every rib is one job. Solid is merged, yellow is next, dotted is blocked.*
+*The project board (synthetic example), one page: the head is what the product must do, "Needs you" lists every decision and debt waiting on the owner, "Now" is the job running, and every rib is one job. Solid is merged, yellow is next, dotted is blocked.*
 
 ### Try it in 2 minutes
 
