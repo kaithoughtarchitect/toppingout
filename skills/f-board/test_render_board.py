@@ -346,13 +346,45 @@ class Board(unittest.TestCase):
         self.edit(lambda s: s["project"]["head"].__setitem__("test", "the walking skeleton carries one turn"))
         self.ok()
 
-    def test_page_has_fishbone_tabs_and_owed(self):
+    def test_page_is_one_page_with_owed_under_needs_you(self):
         self.edit(lambda s: s["project"].__setitem__("owed", ["<b>still owed</b>"]))
         self.ok()
         page = (self.dir / "board.html").read_text(encoding="utf-8")
-        for part in ('id="fish"', 'data-tab="job"', 'data-tab="open"', 'data-tab="owed"', 'id="board-data"'):
+        for part in ('id="fish"', 'class="headsign"', 'aria-label="Needs you"', 'aria-label="Now"', 'id="cards"',
+                     'aria-label="All jobs"', 'id="board-data"', '&lt;b&gt;still owed&lt;/b&gt;'):
             self.assertIn(part, page)
         self.assertNotIn("<b>still owed</b>", page)
+        self.assertNotIn('data-tab=', page)
+        # every job has its card in the page, so it reads without script
+        for jid in ("00", "01", "02", "03"):
+            self.assertIn(f'id="job-{jid}"', page)
+
+    def test_nothing_is_cut_but_a_rib_name(self):
+        long_head = "The owner can do " + " ".join(f"thing{k}" for k in range(40)) + " and the last words stay"
+        long_title = "A job title long enough that the old page cut it short in the list and the next bar every time"
+        def mut(s):
+            s["project"]["head"]["outcome"] = long_head
+            s["jobs"][1]["title"] = long_title
+            s["project"]["alerts"] = ["An alert long enough to have been cut by the old one-line strip: " + "x " * 120 + "the end"]
+        self.edit(mut)
+        self.ok()
+        page = (self.dir / "board.html").read_text(encoding="utf-8")
+        self.assertIn(long_head, page)
+        self.assertIn("the end</span>", page)
+        self.assertGreaterEqual(page.count(long_title), 3)          # the card, the list, the "now" next line
+        # "…" only appears inside the drawing's rib names
+        outside = page.split('<svg class="fish"')[0] + page.split("</svg>", 1)[1].split("<script")[0]
+        self.assertNotIn("…", outside)
+
+    def test_needs_you_names_the_question_and_a_blocker_by_name(self):
+        self.ok()
+        page = (self.dir / "board.html").read_text(encoding="utf-8")
+        needs = page.split('aria-label="Needs you"')[1].split("</section>")[0]
+        self.assertIn("Decide · 03", needs)
+        self.assertIn("What exactly must be decided", needs)
+        rows = page.split('aria-label="All jobs"')[1].split("</section>")[0]
+        title01 = self.data()["jobs"][1]["title"]
+        self.assertIn(f"Waits on 01 · {title01}", rows)
 
     def test_figures_lesson_alerts_facts(self):
         for mut in (lambda d: d["jobs"][0].__setitem__("figures", [{"n": "1", "label": "x", "tone": "loud"}]),
@@ -375,7 +407,7 @@ class Board(unittest.TestCase):
         self.edit(good)
         self.ok()
         page = (self.dir / "board.html").read_text(encoding="utf-8")
-        for part in ('data-tab="lessons"', 'class="alert"', 'Green is an answer', 'A fact.', 'probes biting'):
+        for part in ('class="jlesson"', 'class="need alert"', 'Green is an answer', 'A fact.', 'probes biting', 'A lesson.'):
             self.assertIn(part, page)
         self.assertNotIn("An <alert>", page)
 

@@ -641,6 +641,8 @@ def esc(s):
 
 
 def wrap(text, width=20, lines=2):
+    """Words into lines of at most `width` characters. Only a rib's name on the drawing is held to `lines`
+    (and then ends in "…"): its full name is on the job's card and in the job list."""
     out, cur = [], ""
     for w in str(text).split():
         while len(w) > width:
@@ -660,30 +662,26 @@ def wrap(text, width=20, lines=2):
         out.append(cur)
     if len(out) > lines:
         out = out[:lines]
-        out[-1] = out[-1][: width - 1].rstrip("-") + "…"
+        out[-1] = out[-1][: width - 1].rstrip("-").rstrip() + "…"
     return out or [""]
 
 
 RANK = {"in-progress": 0, "ready": 1, "decision": 2, "blocked": 3, "merged": 4, "resolved": 4}
 
 
-def one_line(text, width):
-    t = " ".join(str(text).split())
-    return t if len(t) <= width else t[: width - 1].rstrip() + "…"
-
-
 def fishbone(board, by_id):
-    """The spine runs left to right into the head; ribs alternate above and below."""
+    """The drawing as the page first draws it (its script redraws it to fit the screen): the spine runs left to
+    right into an arrow; ribs alternate above and below, each with its number and its name in plain sight."""
     jobs, nxt = board["jobs"], board.get("next")
-    SPINE, GAP, X0, RISE, RUN = 380, 140, 150, 250, 130
+    SPINE, GAP, X0, RISE, RUN = 300, 150, 170, 190, 120
     n = len(jobs)
     slot = 0 if (nxt or board.get("topped_out")) else 1   # a dashed "next: not chosen" slot when nothing is next (never on a topped-out board)
-    last_x = X0 + (n - 1 + slot) * GAP + GAP / 2
-    head_x = last_x + 230
-    W, H = int(head_x + 430), 760
+    end_x = X0 + (n - 1 + slot) * GAP + GAP / 2 + 60
+    W, H = int(end_x + 40), 600
     p = [f'<svg class="fish" id="fish" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid meet" role="img" '
-         f'aria-label="Fishbone: {n} jobs feeding {esc(board["project"]["head"]["outcome"])}">',
-         f'<line class="spine" x1="40" y1="{SPINE}" x2="{head_x:.0f}" y2="{SPINE}"/>']
+         f'aria-label="Fishbone: {n} jobs toward the head">',
+         f'<line class="spine" x1="40" y1="{SPINE}" x2="{end_x:.0f}" y2="{SPINE}"/>',
+         f'<path class="spinehead" d="M{end_x - 2:.0f},{SPINE - 9} L{end_x + 11:.0f},{SPINE} L{end_x - 2:.0f},{SPINE + 9} Z"/>']
     for i, b in enumerate(jobs):
         up = i % 2 == 0
         d = -1 if up else 1
@@ -691,22 +689,23 @@ def fishbone(board, by_id):
         tx, ty = bx - RUN, SPINE + d * RISE
         st = shown_state(b, by_id)
         cls = st + (" next" if b["id"] == nxt else "")
-        p.append(f'<g class="rib {cls}" data-i="{i}" tabindex="0" role="button" aria-label="{esc(b["id"])} {esc(b["title"])}, {esc(LABEL[st])}">')
+        p.append(f'<g class="rib {cls}" data-i="{i}" aria-label="{esc(b["id"])} {esc(b["title"])}, {esc(LABEL[st])}">'
+                 f'<title>{esc(b["id"])} · {esc(b["title"])}</title>')
         p.append(f'<line class="tick" x1="{bx:.0f}" y1="{SPINE - 7}" x2="{bx:.0f}" y2="{SPINE + 7}"/>')
         p.append(f'<path class="ribl" d="M{bx:.0f},{SPINE} L{tx:.0f},{ty}"/>')
-        for k, tw in enumerate(b.get("twigs", [])[:3]):
+        for k, _ in enumerate(b.get("twigs", [])[:3]):
             f = (k + 1) / 4
             px, py = bx - RUN * f, SPINE + d * RISE * f
-            p.append(f'<line class="twl" x1="{px:.0f}" y1="{py:.0f}" x2="{px + 16:.0f}" y2="{py:.0f}"/>')
-            p.append(f'<text class="twt" x="{px + 20:.0f}" y="{py + 4:.0f}">{esc(one_line(tw, 44))}</text>')
-        cy = ty - 40 if up else ty + 18
+            p.append(f'<line class="twl" x1="{px:.0f}" y1="{py:.0f}" x2="{px + 14:.0f}" y2="{py:.0f}"/>')
+        cy = ty - 20 if up else ty + 2
         cw = max(36, 9 * len(b["id"]) + 14)
         p.append(f'<rect class="chip" x="{tx - cw / 2:.0f}" y="{cy}" width="{cw}" height="18"/>')
         p.append(f'<text class="chipt" x="{tx:.0f}" y="{cy + 13}" text-anchor="middle">{esc(b["id"])}</text>')
-        p.append(f'<text class="ribname" x="{tx + cw / 2 + 8:.0f}" y="{cy + 14}"><title>{esc(b["title"])}</title>{esc(one_line(b["title"], 30))}</text>')
-        sub = " · ".join(x for x in (b.get("key"), b.get("pr") and f'PR {b["pr"]}', LABEL[st] if st not in DONE else None) if x)
-        if sub:
-            p.append(f'<text class="ribkey" x="{tx + cw / 2 + 8:.0f}" y="{cy + (-6 if up else 32)}">{esc(one_line(sub, 40))}</text>')
+        names = wrap(b["title"], width=24, lines=2)
+        cx = max(tx, 90)
+        for k, ln in enumerate(names):
+            y = cy - 7 - 15 * (len(names) - 1 - k) if up else cy + 33 + 15 * k
+            p.append(f'<text class="ribname" x="{cx:.0f}" y="{y:.0f}" text-anchor="middle">{esc(ln)}</text>')
         p.append("</g>")
     if slot:
         i = n
@@ -714,19 +713,7 @@ def fishbone(board, by_id):
         bx = X0 + i * GAP + (0 if up else GAP / 2)
         tx, ty = bx - RUN, SPINE + (-1 if up else 1) * RISE
         p.append(f'<path class="nextl" d="M{bx:.0f},{SPINE} L{tx:.0f},{ty}"/>')
-        p.append(f'<text class="nextt" x="{tx - 30:.0f}" y="{ty - 26 if up else ty + 30}">next · not chosen</text>')
-    hl = wrap(board["project"]["head"]["outcome"], width=22, lines=3)
-    box_h = 70 + 30 * len(hl)
-    top = SPINE - box_h / 2
-    p.append(f'<rect class="headbox" x="{head_x + 14:.0f}" y="{top:.0f}" width="380" height="{box_h:.0f}"/>')
-    p.append(f'<rect class="headstripe" x="{head_x + 14:.0f}" y="{top:.0f}" width="10" height="{box_h:.0f}"/>')
-    p.append(f'<text class="heads" x="{head_x + 40:.0f}" y="{top + 30:.0f}">THE HEAD</text>')
-    for k, ln in enumerate(hl):
-        p.append(f'<text class="headt" x="{head_x + 40:.0f}" y="{top + 62 + 30 * k:.0f}">{esc(ln)}</text>')
-    test = board["project"]["head"].get("test")
-    if test:
-        for k, ln in enumerate(wrap("Judged by: " + test, width=48, lines=3)):
-            p.append(f'<text class="headn" x="{head_x + 14:.0f}" y="{top + box_h + 26 + 18 * k:.0f}">{esc(ln)}</text>')
+        p.append(f'<text class="nextt" x="{tx:.0f}" y="{ty - 6 if up else ty + 16}" text-anchor="middle">next: not chosen</text>')
     p.append("</svg>")
     return "\n".join(p)
 
@@ -735,51 +722,68 @@ def fig_html(x):
     return f'<div class="fig {esc(x.get("tone", ""))}"><b>{esc(x["n"])}</b><span>{esc(x["label"])}</span></div>'
 
 
-def job_detail(b, by_id):
-    """The Job pane for one job, complete without script (the script rebuilds it on selection)."""
+def need_spans(b, by_id):
+    """What a job needs, by number and name, each marked done or not."""
+    out = []
+    for x in b.get("needs") or []:
+        if x in by_id:
+            ok = shown_state(by_id[x], by_id) in DONE
+            out.append(f'<span class="{"ok" if ok else "no"}">{esc(x)} {"✓" if ok else "✗"} {esc(by_id[x]["title"])}</span>')
+    return out
+
+
+def job_detail(i, b, by_id, nxt):
+    """One job's card. Every card is in the page, so it reads without script; the script shows one at a time."""
     st = shown_state(b, by_id)
-    needs = b.get("needs") or []
-    need_html = " ".join(f'<span class="{"ok" if shown_state(by_id[n], by_id) in DONE else "no"}">{esc(n)} {"✓" if shown_state(by_id[n], by_id) in DONE else "✗"}</span>'
-                         for n in needs if n in by_id)
-    cells = [(k, esc(v)) for k, v in (("Key", b.get("key")), ("Ticket", b.get("ticket")), ("Run", b.get("run"))) if v]
-    if need_html:
-        cells.append(("Needs", need_html))
+    cells = [(k, esc(v)) for k, v in (("Key", b.get("key")), ("Run", b.get("run"))) if v]
+    needs = need_spans(b, by_id)
+    if needs:
+        cells.append(("Needs", "<br>".join(needs)))
     cells += [(k, esc(v)) for k, v in (("PR", b.get("pr")), ("Merge", b.get("merge"))) if v]
     spec = "".join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in cells)
-    notes = b.get("notes", [])
-    extra = []
+    flags = []
     if st == "decision" and b.get("decision"):
-        extra.append(f'<p class="flag dec"><b>To decide:</b> {esc(b["decision"])}</p>')
+        flags.append(f'<p class="flag dec"><b>To decide:</b> {esc(b["decision"])}</p>')
     if st == "resolved" and b.get("resolution"):
-        extra.append(f'<p class="flag ok"><b>Decided:</b> {esc(b["resolution"])}</p>')
-    flags = extra + [f'<p class="flag">{esc(x)}</p>' for x in notes]
-    return (f'<div class="jobp" id="jobp" data-state="{st}"><div class="jobmain">'
-            f'<div class="jobhead"><span class="jn" id="jn">{esc(b["id"])}</span><h2 class="jt" id="jt">{esc(b["title"])}</h2>'
-            f'<span class="pill {st}" id="jp">{esc(LABEL[st])}</span></div>'
-            f'<dl class="spec" id="jspec">{spec}</dl>'
-            f'<p class="jbody" id="jb">{esc(b.get("summary") or "")}</p>'
-            f'<div class="figs" id="jfigs">{"".join(fig_html(x) for x in b.get("figures", []))}</div>'
-            f'<p class="jlesson" id="jl"{"" if b.get("lesson") else " hidden"}><b>Lesson</b> {esc(b.get("lesson") or "")}</p></div>'
-            f'<div class="jside"><div class="lbl">Notes and flags · <span id="jcount">{len(flags) or "none"}</span></div>'
-            f'<div id="jf" class="flags">{"".join(flags) or "<p class=\"flag none\">Nothing recorded against this job.</p>"}</div>'
-            f'</div></div>')
+        flags.append(f'<p class="flag ok"><b>Decided:</b> {esc(b["resolution"])}</p>')
+    flags += [f'<p class="flag">{esc(x)}</p>' for x in b.get("notes", [])]
+    twigs = b.get("twigs", [])
+    parts = (f'<div class="lbl">Parts</div><ul class="parts">{"".join(f"<li>{esc(t)}</li>" for t in twigs)}</ul>' if twigs else "")
+    lesson = f'<p class="jlesson"><b>Lesson</b> {esc(b["lesson"])}</p>' if b.get("lesson") else ""
+    figs = f'<div class="figs">{"".join(fig_html(x) for x in b.get("figures", []))}</div>' if b.get("figures") else ""
+    ticket = f'<p class="jk">Ticket: {esc(b["ticket"])}</p>' if b.get("ticket") else ""
+    side = "".join(flags) or '<p class="flag none">Nothing recorded against this job.</p>'
+    return (f'<article class="jobp" id="job-{esc(b["id"])}" data-i="{i}" data-state="{st}"><div class="jobmain">'
+            f'<div class="jobhead"><span class="jn">{esc(b["id"])}</span><h3 class="jt">{esc(b["title"])}</h3>'
+            f'<span class="pill {st}">{"next · " if b["id"] == nxt else ""}{esc(LABEL[st])}</span></div>'
+            f'<dl class="spec">{spec}</dl>'
+            f'<p class="jbody">{esc(b.get("summary") or "")}</p>{parts}{figs}{lesson}{ticket}</div>'
+            f'<div class="jside"><div class="lbl">Notes and flags · {len(flags) or "none"}</div><div class="flags">{side}</div></div>'
+            f'</article>')
 
 
-def open_rows(jobs, by_id, nxt):
-    rows = [b for b in jobs if shown_state(b, by_id) not in DONE]
-    rows.sort(key=lambda b: (0 if b["id"] == nxt else 1, RANK[shown_state(b, by_id)]))
+def job_rows(jobs, by_id, nxt):
+    """Every job in board order: number, name, state, and what stands in its way."""
     out = []
-    for b in rows:
+    for b in jobs:
         st = shown_state(b, by_id)
-        needs = b.get("needs") or []
-        nd = " ".join(f'<span class="{"ok" if shown_state(by_id[n], by_id) in DONE else "no"}">{esc(n)} {"✓" if shown_state(by_id[n], by_id) in DONE else "✗"}</span>' for n in needs if n in by_id)
-        body = esc(b.get("summary") or "")
-        if st == "decision" and b.get("decision"):
-            body += f' <b>To decide:</b> {esc(b["decision"])}'
-        out.append(f'<div class="cr {st}{" isnext" if b["id"] == nxt else ""}" data-job="{esc(b["id"])}" role="button" tabindex="0" title="Open board {esc(b["id"])}{(" · " + esc(b["run"])) if b.get("run") else ""}"><div><span class="ck">{esc(b["id"])}</span>'
-                   f'<span class="cn">{esc(b["title"])}</span></div><div class="cb">{nd or "-"}</div>'
-                   f'<div class="cnote">{body}</div><span class="pill {st}">{"next · " if b["id"] == nxt else ""}{esc(LABEL[st])}</span></div>')
-    return "".join(out) or '<p class="lead">Every job is merged or decided.</p>'
+        if st == "blocked":
+            waits = [x for x in b.get("needs") or [] if x in by_id and shown_state(by_id[x], by_id) not in DONE]
+            detail = "Waits on " + "; ".join(f'{esc(x)} · {esc(by_id[x]["title"])}' for x in waits)
+        elif st == "decision":
+            detail = f'<b>To decide:</b> {esc(b.get("decision") or "")}'
+        elif st in DONE:
+            detail = " · ".join(x for x in (b.get("pr") and f'PR {esc(b["pr"])}', b.get("merge") and f'merge {esc(b["merge"])}',
+                                            b.get("resolution") and esc(b["resolution"])) if x)
+        elif st == "in-progress":
+            detail = " · ".join(x for x in (b.get("run") and esc(b["run"]), b.get("pr") and f'PR {esc(b["pr"])}') if x)
+        else:
+            detail = "Needs met: " + ", ".join(esc(x) for x in b.get("needs") or []) if b.get("needs") else "Needs nothing first"
+        isn = b["id"] == nxt
+        out.append(f'<li class="cr {st}{" isnext" if isn else ""}" data-job="{esc(b["id"])}"><span class="ck">{esc(b["id"])}</span>'
+                   f'<span class="cn">{esc(b["title"])}</span><span class="cb">{detail}</span>'
+                   f'<span class="pill {st}">{"next · " if isn else ""}{esc(LABEL[st])}</span></li>')
+    return f'<ol class="cl">{"".join(out)}</ol>'
 
 
 CSS = r"""
@@ -796,42 +800,69 @@ CSS = r"""
  --ink:#E7EAE5;--ink-2:#B4BBB6;--ink-3:#808983;
  --merged:#8FCB7C;--run:#80AFE9;--ready:#C9D0CB;--blocked:#7A837E;--decision:#F0B04A;--rib:#9AA29D;--focus:#80AFE9}
 *{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--ground);color:var(--ink);font:400 15px/1.55 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px;overflow:hidden}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font:400 15px/1.55 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px}
 :focus-visible{outline:2px solid var(--focus);outline-offset:3px}
-.wrap{max-width:1400px;height:100%;margin:0 auto;display:grid;grid-template-rows:auto minmax(210px,40%) minmax(0,1fr);gap:10px;padding-block:12px}
-.lbl{font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
-.bar{display:flex;flex-direction:column;gap:2px}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:12px 40px}
+.wrap>*{min-width:0}
+.lbl{margin:0;font:600 10.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.box{background:var(--panel);border:1px solid var(--line);padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+/* header */
+.bar{display:flex;flex-direction:column;gap:4px}
 .kick{font:500 11px/1.5 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:9px}
 .theme-toggle{margin-left:auto;font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;padding:7px 11px;border:1px solid var(--line);border-radius:0;background:var(--panel);color:var(--ink);cursor:pointer}
 .theme-toggle:hover{border-color:var(--ink)}
-.theme-toggle:focus-visible{outline:2px solid var(--hivis);outline-offset:2px}
 .mark{width:30px;height:30px;flex:none;display:inline-block;vertical-align:middle;filter:drop-shadow(1.5px 0 0 #ECEEEA) drop-shadow(-1.5px 0 0 #ECEEEA) drop-shadow(0 1.5px 0 #ECEEEA) drop-shadow(0 -1.5px 0 #ECEEEA)}
 .barrow{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:flex-end;justify-content:space-between}
 h1{margin:0;font:800 clamp(30px,3.6vw,46px)/.95 "Big Shoulders Display","Arial Narrow",Impact,sans-serif;text-transform:uppercase;text-wrap:balance}
-.hright{display:flex;align-items:flex-end;gap:18px;flex:0 0 auto}
+.hright{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 18px}
 .gauge{display:flex;flex-direction:column;gap:6px;width:260px;max-width:100%}
 .gnum{display:flex;align-items:baseline;gap:6px}
-.gnum b{font:800 44px/.8 "Big Shoulders Display","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
+.gnum b{font:800 44px/.8 "Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
 .gnum span{font:600 11px "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 .gbar{display:flex;gap:2px;height:9px}
 .gbar i{flex:1;background:var(--c,var(--line))}
 .gbar .merged,.gbar .resolved{--c:var(--merged)}.gbar .in-progress{--c:var(--run)}.gbar .decision{--c:var(--decision)}.gbar .blocked{background:repeating-linear-gradient(-45deg,var(--ink-3) 0 2px,transparent 2px 4px)}.gbar .isnext{--c:var(--hivis)}
-.status{display:flex;align-items:center;gap:0;white-space:nowrap}
+.status{display:flex;flex-wrap:wrap;align-items:center;row-gap:6px}
 .status span{font:500 12.5px "Public Sans",system-ui,sans-serif;color:var(--ink-2);padding:3px 12px;border-left:1px solid var(--line)}
 .status span:first-child{border-left:0;padding-left:0}
 .status b{font:700 13px "Martian Mono",ui-monospace,monospace;color:var(--ink);font-variant-numeric:tabular-nums}
-.status .nx{background:var(--hivis);border-left:0;margin-left:8px;padding:6px 11px;color:var(--hivis-ink)}.status .nx b{color:var(--hivis-ink)}
-.fishwrap{background:var(--panel);border:1px solid var(--line);display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
+/* 1 · the head: a site sign, never cut */
+.headsign{position:relative;background:var(--hivis);color:var(--hivis-ink);border:2px solid var(--hivis-ink);padding:22px 20px 16px;display:flex;flex-direction:column;gap:8px}
+.headsign::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:repeating-linear-gradient(-45deg,var(--hivis-ink) 0 8px,var(--hivis) 8px 16px)}
+.headsign .lbl{color:var(--hivis-ink);opacity:.75}
+.ht{margin:0;font:800 clamp(24px,2.6vw,34px)/1.08 "Big Shoulders Display","Arial Narrow",sans-serif;text-wrap:balance;max-width:60ch}
+.hj,.hr{margin:0;font-size:14.5px;max-width:90ch}
+.hj b,.hr b{font:700 11px "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;margin-right:6px}
+/* 2 · needs you */
+.needs{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.need{display:flex;gap:12px;align-items:baseline;padding:9px 12px;border:1px solid var(--line);background:var(--ground);font-size:14px;color:var(--ink-2)}
+.need>b{flex:none;font:700 10.5px/1.6 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;background:var(--ink);color:var(--ground)}
+.need.alert,.need.dec{background:var(--hivis);color:var(--hivis-ink);border:2px solid var(--hivis-ink)}
+.need.alert>b,.need.dec>b{background:var(--hivis-ink);color:var(--hivis)}
+.need.dec{cursor:pointer}.need.dec:hover{box-shadow:inset 0 0 0 1px var(--hivis-ink)}
+.need .nt{font-weight:700;color:inherit}
+.calm{margin:0;color:var(--ink-3);font-size:14px}
+/* 3 · now */
+.nowrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline}
+.nowrow .ck{font:800 22px/1 "Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif;background:var(--ink);color:var(--ground);padding:3px 8px 1px}
+.nowrow .nt{font-weight:700;font-size:16px}
+.nowrow .nm{font:500 12px "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
+.nowrow.next .ck{background:var(--hivis);color:var(--hivis-ink)}
+.stand{margin:0;color:var(--ink-2);font-size:14px;max-width:90ch}
+/* 4 · the spine */
+.fishwrap{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column}
 .fishbar{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--line-2)}
 .leg{display:flex;flex-wrap:wrap;gap:6px 16px;font:500 11.5px "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
 .leg i{display:inline-block;width:22px;height:0;border-top:2.5px solid var(--c,var(--rib));vertical-align:middle;margin-right:6px}
 .leg .l-run i{--c:var(--run)}.leg .l-ready i{border-top-style:dashed}.leg .l-blocked i{--c:var(--blocked);border-top-style:dotted}.leg .l-decision i{--c:var(--decision);border-top-style:dashed}.leg .l-next i{--c:var(--hivis);border-top-width:4px}
-.scroll{min-height:0;overflow:hidden;position:relative;background-image:radial-gradient(var(--line) 1px,transparent 1.3px);background-size:22px 22px;background-position:11px 11px}
+.fsel{font:600 12px "Martian Mono",ui-monospace,monospace;background:var(--ink);color:var(--ground);padding:4px 9px;overflow-wrap:anywhere}
+.scroll{height:360px;overflow-x:auto;overflow-y:hidden;background-image:radial-gradient(var(--line) 1px,transparent 1.3px);background-size:22px 22px;background-position:11px 11px}
 svg.fish{display:block;width:100%;height:100%}
 .spine{stroke:var(--line);stroke-width:5;stroke-linecap:round}
 .spine.built{stroke:var(--ink);stroke-width:6}
 .builtdot{fill:var(--ground);stroke:var(--ink);stroke-width:3}
+.spinehead{fill:var(--ink)}
 .tick{stroke:var(--ink);stroke-width:2}
 .ribl{stroke:var(--rib);stroke-width:2.2;fill:none;transition:stroke .15s}
 .rib.in-progress .ribl{stroke:var(--run);stroke-width:3.2}
@@ -840,164 +871,92 @@ svg.fish{display:block;width:100%;height:100%}
 .rib.decision .ribl{stroke:var(--decision);stroke-dasharray:9 5}
 .rib.next .ribl{stroke:var(--hivis);stroke-width:4}
 .twl{stroke:var(--line);stroke-width:1.4}
-.twt{font:600 13px "Public Sans",system-ui,sans-serif;fill:var(--ink);opacity:0;paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round;transition:opacity .15s;pointer-events:none}
-.twbg{fill:var(--panel);opacity:0;transition:opacity .15s;pointer-events:none}
-.rib.on .twt,.rib:hover .twt,.rib.on .twbg,.rib:hover .twbg{opacity:1}
-.rib.on .twl,.rib:hover .twl{stroke:var(--ink-2)}
-.fsel{font:600 12px "Martian Mono",ui-monospace,monospace;background:var(--ink);color:var(--ground);padding:4px 9px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{fill:var(--panel);stroke:var(--rib);stroke-width:1.2}.chipt{font:600 11px "Martian Mono",ui-monospace,monospace;fill:var(--ink-2);letter-spacing:.04em}
 .rib.in-progress .chip{fill:var(--run);stroke:var(--run)}.rib.in-progress .chipt{fill:var(--ground)}
 .rib.decision .chip{fill:var(--decision);stroke:var(--decision)}.rib.decision .chipt{fill:var(--ground)}
 .rib.blocked .chip{stroke-dasharray:2 2}
 .rib.next .chip{fill:var(--hivis);stroke:var(--hivis)}.rib.next .chipt{fill:var(--hivis-ink)}
-.rib:hover .chip{stroke:var(--ink)}
-.rib.on .chip{fill:var(--ink);stroke:var(--ink)}.rib.on .chipt{fill:var(--ground)}
-.ribname{font:700 15px "Public Sans",system-ui,sans-serif;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round;opacity:0;pointer-events:none}
-.rib.on .ribname,.rib:hover .ribname{opacity:1}
-.ribkey{font:500 10.5px "Martian Mono",ui-monospace,monospace;fill:var(--ink-3);opacity:0;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
-.rib.on .ribkey{opacity:1}
+.ribname{font:600 12.5px "Public Sans",system-ui,sans-serif;fill:var(--ink-2);paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round;pointer-events:none}
+.rib.next .ribname,.rib.in-progress .ribname,.rib.decision .ribname{fill:var(--ink);font-weight:700}
 .rib{cursor:pointer}.rib:focus{outline:none}
+.rib:hover .chip{stroke:var(--ink)}
 .rib:hover .ribl,.rib.on .ribl{stroke-width:3.4}
 .rib.on .ribl{stroke:var(--ink)}.rib.on.next .ribl{stroke:var(--hivis)}
+.rib.on .chip{fill:var(--ink);stroke:var(--ink)}.rib.on .chipt{fill:var(--ground)}.rib.on .ribname{fill:var(--ink)}
 .rib:focus-visible .chip{stroke:var(--focus);stroke-width:3}
 .nextl{stroke:var(--hivis);stroke-width:2.6;stroke-dasharray:8 6;fill:none}
 .nextt{font:700 13px "Public Sans",system-ui,sans-serif;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:6px;stroke-linejoin:round}
-.headbox{fill:var(--hivis)}.headstripe{fill:url(#hz)}.hzA{fill:var(--hivis)}.hzB{fill:var(--hivis-ink)}
-.heads{font:600 10.5px "Martian Mono",ui-monospace,monospace;fill:var(--hivis-ink);letter-spacing:.14em;opacity:.75}
-.headt{font:800 21px "Big Shoulders Display","Arial Narrow",sans-serif;fill:var(--hivis-ink);text-transform:uppercase}
-.spinehead{fill:var(--ink)}
-.headn{font:500 11px "Martian Mono",ui-monospace,monospace;fill:var(--ink-3)}
 .chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(34px,1fr));max-width:calc(var(--n,24) * 72px + 28px);gap:2px;padding:8px 14px 10px;border-top:1px solid var(--line-2)}
 .jc{font:600 11px/1 "Martian Mono",ui-monospace,monospace;padding:7px 0 6px;border:0;border-bottom:4px solid var(--c,var(--line));background:var(--panel-2);color:var(--ink-2);cursor:pointer;text-align:center}
 .jc:hover{color:var(--ink);background:var(--line-2)}
 .jc.in-progress{--c:var(--run)}.jc.decision{--c:var(--decision)}.jc.blocked{--c:var(--blocked)}.jc.merged,.jc.resolved{--c:var(--merged)}.jc.isnext{--c:var(--hivis)}
 .jc[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
-.panel{background:var(--panel);border:1px solid var(--line);display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0}
-.tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--panel)}
-.tab{font:800 18px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.02em;background:none;border:0;border-bottom:4px solid transparent;color:var(--ink-3);padding:10px 16px 7px;cursor:pointer;white-space:nowrap;display:flex;gap:8px;align-items:baseline}
-.tab b{font:600 11px "Martian Mono",ui-monospace,monospace;color:var(--ink-3)}
-.tab:hover{color:var(--ink)}
-.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--hivis)}
-.pane{padding:16px 18px;overflow:auto;min-height:0}
-.lead{margin:0 0 12px;color:var(--ink-2);font-size:14.5px}
-.jobp{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
-.jobmain{padding:4px 24px 4px 4px;display:flex;flex-direction:column;gap:10px;border-right:1px solid var(--line-2)}
+.dim{grid-row:1;position:relative;height:16px;margin-bottom:3px;border-inline:1.5px solid var(--ink-3);display:flex;align-items:center;justify-content:center}
+.dim::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--ink-3)}
+.dim span{position:relative;background:var(--panel);padding:0 8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.dim.short{justify-content:flex-start}
+.dim.short span{position:absolute;left:100%;margin-left:6px;padding-left:0}
+.chips.has-dim .jc{grid-row:2}
+/* 5 · the job card: a work docket */
+.cards{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column}
+.jnav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 18px;border-bottom:1px solid var(--line-2)}
+.jnav button{font:600 12px "Martian Mono",ui-monospace,monospace;padding:7px 10px;border:1px solid var(--line);background:var(--ground);color:var(--ink);cursor:pointer}
+.jnav button:disabled{opacity:.35;cursor:default}
+.jpos{font:600 12px "Martian Mono",ui-monospace,monospace;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.jobp{--sc:var(--line);position:relative;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);padding:24px 18px 18px}
+.jobp+.jobp{border-top:1px solid var(--line)}
+.jobp[data-state="merged"],.jobp[data-state="resolved"]{--sc:var(--merged)}.jobp[data-state="in-progress"]{--sc:var(--run)}
+.jobp[data-state="decision"]{--sc:var(--decision)}.jobp[data-state="blocked"]{--sc:var(--blocked)}.jobp[data-state="ready"]{--sc:var(--ink-3)}
+.jobp::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--sc)}
+.jobp::after{content:"";position:absolute;left:0;right:0;top:9px;height:7px;background:radial-gradient(circle,var(--ground) 2.4px,var(--line) 2.9px,transparent 3.4px) 4px 0/18px 7px repeat-x}
+.jobmain{padding:4px 24px 4px 0;display:flex;flex-direction:column;gap:10px;border-right:2px dashed var(--line)}
+.jobmain::before{content:"Work docket";font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
 .jobhead{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.jn{font:800 32px/1 "Big Shoulders Display","Arial Narrow",sans-serif;background:var(--ink);color:var(--ground);padding:4px 10px 1px}
-.jt{margin:0;font:800 32px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;overflow-wrap:anywhere}
+.jn{font:800 32px/1 "Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif;background:var(--ink);color:var(--ground);padding:4px 10px 1px}
+.jt{margin:0;font:800 32px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance}
 .jk{margin:0;font:500 12px "Martian Mono",ui-monospace,monospace;color:var(--ink-3);overflow-wrap:anywhere}
 .spec{margin:0;display:flex;flex-wrap:wrap;border:1px solid var(--line-2);background:var(--line-2);gap:1px}
 .spec:empty{display:none}
 .spec>div{background:var(--panel);padding:6px 12px 7px;display:flex;flex-direction:column;gap:2px;flex:1 1 auto}
 .spec dt{font:600 9.5px "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
-.spec dd{margin:0;font:600 13px "Martian Mono",ui-monospace,monospace;color:var(--ink);white-space:nowrap}
+.spec dd{margin:0;font:600 13px/1.5 "Martian Mono",ui-monospace,monospace;color:var(--ink);overflow-wrap:anywhere}
 .spec .ok{color:var(--merged)}.spec .no{color:var(--decision)}
-.jobp{--sc:var(--line);border-top:4px solid var(--sc);padding-top:14px}
-.jobp[data-state="merged"],.jobp[data-state="resolved"]{--sc:var(--merged)}.jobp[data-state="in-progress"]{--sc:var(--run)}
-.jobp[data-state="decision"]{--sc:var(--decision)}.jobp[data-state="blocked"]{--sc:var(--blocked)}.jobp[data-state="ready"]{--sc:var(--ink-3)}
-.jobp.swap .jobmain,.jobp.swap .jside{animation:swap .22s ease-out}
-@keyframes swap{from{opacity:.25;transform:translateY(4px)}to{opacity:1;transform:none}}
 .jbody{margin:0;font-size:15.5px;color:var(--ink-2);max-width:72ch;overflow-wrap:anywhere}
-.jneeds{margin:0;font:500 12px "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
-.jsha{margin:0;font:500 12px/1.5 "Martian Mono",ui-monospace,monospace;color:var(--merged)}
-.jside{padding:4px 4px 4px 22px;display:flex;flex-direction:column;gap:10px}
+.parts{margin:0;padding-left:20px;color:var(--ink-2);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.jside{padding:4px 0 4px 22px;display:flex;flex-direction:column;gap:10px}
 .flags{display:flex;flex-direction:column;gap:14px}
 .flag{margin:0;font-size:13.5px;color:var(--ink-2);padding:2px 0 2px 14px;border-left:3px solid var(--line);overflow-wrap:anywhere}
-.flag.dec{border-left-color:var(--decision)}.flag.ok{border-left-color:var(--merged)}.flag.none{color:var(--ink-3)}
-#pane-job{padding:0;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr)}
-#pane-job[hidden]{display:none}
-.jnav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 18px;border-bottom:1px solid var(--line-2);background:var(--panel)}
-.jpos{font:600 12px "Martian Mono",ui-monospace,monospace;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.jscroll{overflow:auto;min-height:0;padding:16px 18px}
+.flag.ok{border-left-color:var(--merged)}.flag.none{color:var(--ink-3)}
+.flag.dec{background:var(--hivis);color:var(--hivis-ink);border:2px solid var(--hivis-ink);padding:10px 12px}
+.flag.dec b,.flag.ok b{font:700 11px "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;margin-right:4px}
 .figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--line-2);border:1px solid var(--line-2)}
-.figs:empty{display:none}
 .fig{background:var(--ground);padding:10px 12px;display:flex;flex-direction:column;gap:4px}
-.fig b{font:800 30px/1 "Big Shoulders Display","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
+.fig b{font:800 30px/1 "Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
 .fig.good b{color:var(--merged)}.fig.warn b{color:var(--decision)}
 .fig span{font-size:12.5px;color:var(--ink-2);line-height:1.35}
 .jlesson{margin:0;padding:10px 12px;background:var(--ink);color:var(--ground);font-size:14px;border-left:4px solid var(--hivis)}
 .jlesson b{font:600 10.5px "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--hivis);margin-right:6px}
-.lesson{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px 40px;align-items:start}
-.lmain,.llist{display:flex;flex-direction:column;gap:12px;min-width:0}
-.lesson h3{margin:0;font:800 clamp(28px,3.2vw,44px)/.95 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;text-wrap:balance}
-.lesson .rule{margin:0;border-left:6px solid var(--hivis);padding:4px 0 4px 18px;font-size:16px;line-height:1.6;color:var(--ink)}
-.lesson .jl{margin:0;font-size:14px;color:var(--ink-2);padding:0 0 14px;border-bottom:1px solid var(--line-2)}
-.jlh{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;font-weight:700;color:var(--ink)}
-.jlh b{font:600 11px "Martian Mono",ui-monospace,monospace;background:var(--ink);color:var(--ground);padding:3px 6px}
-.alert{margin-top:8px;font-size:12.5px;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-left:0;padding:6px 10px 6px 24px;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.alert{cursor:pointer}.alert::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background:repeating-linear-gradient(-45deg,var(--hivis) 0 5px,var(--hivis-ink) 5px 10px)}.alert:hover{border-color:var(--ink-3)}
-.alert b{font:600 10.5px "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;margin-right:6px}
-.alert .more{font:600 11px "Martian Mono",ui-monospace,monospace;background:none;border:0;color:var(--run);cursor:pointer;padding:0 0 0 6px}
-.alerts-l li{border-left:4px solid var(--hivis)}
-.jnav button{font:600 12px "Martian Mono",ui-monospace,monospace;padding:7px 10px;border:1px solid var(--line);background:var(--ground);color:var(--ink);cursor:pointer}
-.jnav button:disabled{opacity:.35;cursor:default}
 .pill{justify-self:end;align-self:center;font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--c,var(--ink-2));border:1.5px solid var(--c,var(--ink-2));padding:5px 7px;white-space:nowrap}
 .pill.merged,.pill.resolved{--c:var(--merged)}.pill.in-progress{--c:var(--run)}.pill.blocked{--c:var(--blocked)}.pill.decision{--c:var(--decision)}
-.cl{display:flex;flex-direction:column;gap:1px;background:var(--line-2);border:1px solid var(--line-2)}
-.cr{background:var(--panel);display:grid;grid-template-columns:200px 150px minmax(0,1fr) auto;gap:0 16px;padding:12px 16px;border-left:4px solid var(--c,var(--line))}
-.cr{cursor:pointer}.cr:hover{background:var(--ground)}.cr:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-.cr.in-progress{--c:var(--run)}.cr.blocked{--c:var(--blocked)}.cr.decision{--c:var(--decision)}.cr.isnext{--c:var(--hivis);background:color-mix(in srgb,var(--hivis) 10%,var(--panel))}
+.jobhead .pill{font:800 15px/1 "Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif;letter-spacing:.14em;border:3px double var(--c,var(--ink-2));padding:5px 9px 3px;transform:rotate(-4deg);opacity:.92}
+/* 6 · the job list */
+.cl{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:1px;background:var(--line-2);border:1px solid var(--line-2)}
+.cr{background:var(--panel);display:grid;grid-template-columns:56px minmax(0,1.1fr) minmax(0,1.6fr) auto;gap:4px 16px;align-items:baseline;padding:10px 14px;border-left:4px solid var(--c,var(--line))}
+.cr[role="button"]{cursor:pointer}.cr[role="button"]:hover,.cr.on{background:var(--ground)}
+.cr.merged,.cr.resolved{--c:var(--merged)}.cr.in-progress{--c:var(--run)}.cr.blocked{--c:var(--blocked)}.cr.decision{--c:var(--decision)}.cr.isnext{--c:var(--hivis);background:color-mix(in srgb,var(--hivis) 10%,var(--panel))}
 .ck{font:600 13px "Martian Mono",ui-monospace,monospace}
-.cn{display:block;font-size:13.5px;font-weight:600;margin-top:2px}
-.cb{font:500 11.5px/1.7 "Martian Mono",ui-monospace,monospace;color:var(--ink-2)}
-.cb .ok{color:var(--merged)}.cb .no{color:var(--decision);font-weight:600}
-.cnote{font-size:13.5px;color:var(--ink-2);overflow-wrap:anywhere}
-.owed{counter-reset:o;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line-2);border:1px solid var(--line-2)}
-.owed li{counter-increment:o;background:var(--panel);padding:11px 14px 11px 48px;position:relative;font-size:14px;color:var(--ink-2)}
-.owed li::before{content:counter(o,decimal-leading-zero);position:absolute;left:14px;top:13px;font:600 11px "Martian Mono",ui-monospace,monospace;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px 40px;align-items:start}
-.amain,.aside{display:flex;flex-direction:column;gap:12px;min-width:0}
-.about .foot{grid-column:1 / -1}
-.about p{margin:0;color:var(--ink-2)}
-.about .h{font:800 clamp(30px,3.4vw,46px)/.95 "Big Shoulders Display","Arial Narrow",sans-serif;text-wrap:balance;text-transform:uppercase;color:var(--ink)}
-.foot{margin-top:14px;font:500 11px/1.7 "Martian Mono",ui-monospace,monospace;color:var(--ink-3);border-top:1px solid var(--line);padding-top:12px;overflow-wrap:anywhere}
-@media (max-width:900px),(max-height:560px){
- body{overflow:auto}
- .wrap{height:auto;display:flex;flex-direction:column;gap:14px;padding-block:14px 40px}
- .fishwrap .scroll{height:300px;overflow-x:auto;overflow-y:hidden}
- .pane{overflow:visible}
- #pane-job{overflow:visible}
- .jscroll{overflow:visible}
-}
-.wrap>*,.fishwrap,.panel,.fishbar,.chips,.scroll{min-width:0}
-.fishwrap,.panel{grid-template-columns:minmax(0,1fr)}
-@media (max-width:900px){
- .spec dd{white-space:normal;overflow-wrap:anywhere}.fsel{max-width:100%}
- .jobp{grid-template-columns:1fr}.jobmain{border-right:0;border-bottom:1px solid var(--line-2);padding:0 0 16px}.jside{padding:16px 0 0}
- .hright{flex-wrap:wrap;flex:1 1 auto}.lesson,.about{grid-template-columns:1fr}.status{flex-wrap:wrap;row-gap:6px}
- .cr{grid-template-columns:1fr auto;gap:6px 12px}.cr .cb,.cr .cnote{grid-column:1 / -1}.cr .pill{grid-row:1;grid-column:2}
-}
-/* ── Site details: stencil numbers, site notices, the stamp, the work docket, the dimension line ── */
-.jn,.gnum b,.fig b{font-family:"Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif}
-/* site notice: yellow sign, black border, the label as a black plate */
-.alert{background:var(--hivis);color:var(--hivis-ink);border:2px solid var(--hivis-ink);padding:5px 10px}
-.alert::before{display:none}
-.alert:hover{border-color:var(--hivis-ink);box-shadow:inset 0 0 0 1px var(--hivis-ink)}
-.alert b{background:var(--hivis-ink);color:var(--hivis);padding:3px 7px 2px;margin-right:10px}
-.alert .more{color:var(--hivis-ink);text-decoration:underline;text-underline-offset:2px}
-.flag.dec{background:var(--hivis);color:var(--hivis-ink);border:2px solid var(--hivis-ink);padding:10px 12px}
-.flag.dec b{font:700 11px "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;margin-right:4px}
+.cn{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.cb{font-size:13.5px;color:var(--ink-2);overflow-wrap:anywhere}
 .cr .pill.decision{background:var(--hivis);color:var(--hivis-ink);border:2px solid var(--hivis-ink)}
-/* the stamp: the job's status on its docket, inked and a little off square */
-.jobhead .pill{font:800 15px/1 "Big Shoulders Stencil Display","Big Shoulders Display","Arial Narrow",sans-serif;letter-spacing:.14em;
-  border:3px double var(--c,var(--ink-2));padding:5px 9px 3px;transform:rotate(-4deg);opacity:.92}
-/* the work docket: a punched top edge, a dashed tear line to the notes stub */
-.jobp{position:relative;border-top:0;padding-top:24px}
-.jobp::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--sc)}
-.jobp::after{content:"";position:absolute;left:0;right:0;top:9px;height:7px;background:radial-gradient(circle,var(--ground) 2.4px,var(--line) 2.9px,transparent 3.4px) 4px 0/18px 7px repeat-x}
-.jobmain{border-right:2px dashed var(--line)}
-.jobmain::before{content:"Work docket";font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-/* the dimension line: a surveyor's measure over the built part of the tape */
-.dim{grid-row:1;position:relative;height:16px;margin-bottom:3px;border-inline:1.5px solid var(--ink-3);display:flex;align-items:center;justify-content:center}
-.dim::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--ink-3)}
-.dim span{position:relative;background:var(--panel);padding:0 8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-/* under 3 chips the measure is too short for its label: the label sits just past its right end */
-.dim.short{justify-content:flex-start}
-.dim.short span{position:absolute;left:100%;margin-left:6px;padding-left:0}
-.chips.has-dim .jc{grid-row:2}
+/* footer */
+.foot{font:500 11px/1.7 "Martian Mono",ui-monospace,monospace;color:var(--ink-3);border-top:1px solid var(--line);padding-top:12px;overflow-wrap:anywhere;display:flex;flex-direction:column;gap:6px}
+.foot p,.foot ul{margin:0}.foot ul{padding-left:18px}
 @media (max-width:900px){
- .jobmain{border-right:0;border-bottom:2px dashed var(--line)}
+ .scroll{height:330px}
+ .jobp{grid-template-columns:1fr}.jobmain{border-right:0;border-bottom:2px dashed var(--line);padding:0 0 16px}.jside{padding:16px 0 0}
+ .cr{grid-template-columns:auto minmax(0,1fr) auto}.cr .cb{grid-column:1 / -1}
  .dim{display:none}.chips.has-dim .jc{grid-row:auto}
+ .need{flex-direction:column;gap:6px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 """
@@ -1006,126 +965,84 @@ JS = r"""
 (function(){
 const D = JSON.parse(document.getElementById("board-data").textContent);
 const jobs = D.jobs, n = jobs.length, LABEL = D.label;
-const chips = [...document.querySelectorAll(".jc")];
-const NS = "http://www.w3.org/2000/svg", box = document.querySelector(".fishwrap .scroll"), svg = document.getElementById("fish");
+const $ = id => document.getElementById(id);
+const chips = [...document.querySelectorAll(".jc")], cards = [...document.querySelectorAll(".jobp")];
+const NS = "http://www.w3.org/2000/svg", box = document.querySelector(".fishwrap .scroll"), svg = $("fish");
+const still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 function el(t, a, x){ const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (x != null) e.textContent = x; return e; }
-function cut(t, w){ t = String(t || ""); return t.length <= w ? t : t.slice(0, w - 1).trimEnd() + "\u2026"; }
-function wrapWords(t, w, max){ const out = []; let c = ""; String(t).split(/\s+/).forEach(x => { if (!c) c = x; else if ((c + " " + x).length <= w) c += " " + x; else { out.push(c); c = x; } }); if (c) out.push(c); if (out.length > max) { out.length = max; out[max - 1] = cut(out[max - 1], w); } return out; }
-let ribs = [];
+// a rib's name in at most two lines; the one place a cut is allowed (the full name is on the card and in the list)
+function twoLines(t, w){ const out = []; let c = "";
+  String(t || "").split(/\s+/).filter(Boolean).forEach(x => { if (!c) c = x; else if ((c + " " + x).length <= w) c += " " + x; else { out.push(c); c = x; } });
+  if (c) out.push(c);
+  if (out.length > 2) { out.length = 2; out[1] = out[1].slice(0, w - 1).trimEnd() + "…"; }
+  return out.map(l => l.length > w ? l.slice(0, w - 1) + "…" : l); }
+let ribs = [], cur = D.start;
+const hash = decodeURIComponent((location.hash || "").slice(1)), hi = jobs.findIndex(j => j.id === hash);
+if (hi >= 0) cur = hi;
 function draw(){
-  // a narrow screen keeps a full-size drawing and scrolls it sideways inside its own box
-  const narrow = box.clientWidth < 760, W = narrow ? 900 : box.clientWidth, H = Math.max(190, box.clientHeight);
-  svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.removeAttribute("width"); svg.removeAttribute("height");
-  svg.style.width = narrow ? W + "px" : "";
+  const slot = (D.next || D.topped) ? 0 : 1, total = n + slot, half = Math.ceil(total / 2) + 0.5;
+  // a narrow screen keeps a drawing wide enough for the names and scrolls it sideways inside its own box
+  const narrow = box.clientWidth < 760, W = narrow ? Math.max(900, Math.round(half * 175 + 80)) : box.clientWidth, H = Math.max(260, box.clientHeight);
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.style.width = narrow ? W + "px" : "";
   svg.textContent = "";
-  const headW = Math.min(250, W * 0.22), slot = (D.next || D.topped) ? 0 : 1, total = n + slot;
-  const SP = H / 2, left = 36, right = W - headW - 30;
-  const step = (right - left) / Math.max(1, Math.ceil(total / 2) + 0.5);
-  const rise = SP - 30, run = Math.min(step * 0.9, rise * 0.55);
-  const defs = el("defs", {}), pat = el("pattern", {id:"hz", width:12, height:12, patternUnits:"userSpaceOnUse", patternTransform:"rotate(45)"});
-  pat.appendChild(el("rect", {class:"hzA", width:12, height:12})); pat.appendChild(el("rect", {class:"hzB", width:6, height:12}));
-  defs.appendChild(pat); svg.appendChild(defs);
+  const SP = H / 2, left = 36, right = W - 40, step = (right - left) / half;
+  const rise = SP - 62, run = Math.min(step * 0.55, rise * 0.6), cpl = Math.max(10, Math.floor((step - 18) / 6.8));
   svg.appendChild(el("line", {class:"spine", x1:left - 10, y1:SP, x2:right + 4, y2:SP}));
   let built = -1; jobs.forEach((j, i) => { if (j.state === "merged" || j.state === "resolved") built = i; });
-  if (built >= 0) { const bxb = left + run + Math.floor(built / 2) * step + (built % 2 ? step / 2 : 0);
+  const pos = i => { const up = i % 2 === 0, bx = left + run + Math.floor(i / 2) * step + (up ? 0 : step / 2); return {up, bx, tx: bx - run, ty: SP + (up ? -1 : 1) * rise}; };
+  if (built >= 0) { const bxb = pos(built).bx;
     svg.appendChild(el("line", {class:"spine built", x1:left - 10, y1:SP, x2:bxb, y2:SP}));
     svg.appendChild(el("circle", {class:"builtdot", cx:bxb, cy:SP, r:6})); }
   svg.appendChild(el("path", {class:"spinehead", d:"M" + (right + 2) + "," + (SP - 9) + " L" + (right + 15) + "," + SP + " L" + (right + 2) + "," + (SP + 9) + " Z"}));
   ribs = [];
-  const pos = i => { const up = i % 2 === 0, bx = left + run + Math.floor(i / 2) * step + (up ? 0 : step / 2); return {up, bx, tx: bx - run, ty: SP + (up ? -1 : 1) * rise}; };
   jobs.forEach((j, i) => {
     const {up, bx, tx, ty} = pos(i), d = up ? -1 : 1;
     const g = el("g", {class:"rib " + j.state + (j.id === D.next ? " next" : ""), tabindex:"0", role:"button", "aria-label": j.id + " " + j.title + ", " + LABEL[j.state]});
+    g.appendChild(el("title", {}, j.id + " · " + j.title));
     g.appendChild(el("line", {class:"tick", x1:bx, y1:SP - 6, x2:bx, y2:SP + 6}));
     g.appendChild(el("path", {class:"ribl", d:"M" + bx + "," + SP + " L" + tx + "," + ty}));
-    const east = bx < W * 0.55;
     (j.twigs || []).forEach((t, k) => { const f = (k + 1) / 4, px = bx - run * f, py = SP + d * rise * f;
-      g.appendChild(el("line", {class:"twl", x1:px, y1:py, x2:east ? px + 12 : px - 12, y2:py}));
-      g.appendChild(el("text", {class:"twt", x:east ? px + 16 : px - 16, y:py + 4, "text-anchor": east ? "start" : "end"}, cut(t, 46))); });
+      g.appendChild(el("line", {class:"twl", x1:px, y1:py, x2:px + 12, y2:py})); });
     const cw = Math.max(26, 8 * j.id.length + 10), cy = up ? ty - 20 : ty + 2;
     g.appendChild(el("rect", {class:"chip", x:tx - cw / 2, y:cy, width:cw, height:18}));
     g.appendChild(el("text", {class:"chipt", x:tx, y:cy + 13, "text-anchor":"middle"}, j.id));
-    const anchor = east ? "start" : "end", nx = east ? tx + cw / 2 + 7 : tx - cw / 2 - 7;
-    // the selected job's name is shown in the bar above the drawing (never on the canvas, where it would collide)
-    const sub = [j.key, j.pr && "PR " + j.pr].filter(Boolean).join(" \u00b7 ");
-
-    const tt = el("title", {}, j.id + " \u00b7 " + j.title); g.insertBefore(tt, g.firstChild);
-    g.addEventListener("click", () => { pick(i); show("job", true); });
-    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i); show("job", true); } });
+    const lines = twoLines(j.title, cpl), wide = Math.max(...lines.map(l => l.length)) * 6.8 / 2;
+    const cx = Math.min(Math.max(tx, 4 + wide), W - 4 - wide);
+    lines.forEach((ln, k) => g.appendChild(el("text", {class:"ribname", x:cx, "text-anchor":"middle",
+      y: up ? cy - 7 - 15 * (lines.length - 1 - k) : cy + 33 + 15 * k}, ln)));
+    g.addEventListener("click", () => pick(i, true));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i, true); } });
     g.dataset.x = tx; svg.appendChild(g); ribs.push(g);
   });
-  svg.querySelectorAll(".twt").forEach(t => { const bb = t.getBBox();
-    t.parentNode.insertBefore(el("rect", {class:"twbg", x:bb.x - 4, y:bb.y - 2, width:bb.width + 8, height:bb.height + 4}), t); });
   if (slot) { const {up, bx, tx, ty} = pos(n);
     svg.appendChild(el("path", {class:"nextl", d:"M" + bx + "," + SP + " L" + tx + "," + ty}));
-    // one short line level with the chips, centred on the slot's open end
     svg.appendChild(el("text", {class:"nextt", x:tx, y:up ? ty - 6 : ty + 16, "text-anchor":"middle"}, "next: not chosen")); }
-  const hx = right + 20, lines = wrapWords(D.head.outcome, Math.max(12, Math.floor(headW / 11)), 4), bh = 50 + 24 * lines.length, top = SP - bh / 2;
-  svg.appendChild(el("rect", {class:"headbox", x:hx, y:top, width:headW, height:bh}));
-  svg.appendChild(el("rect", {class:"headstripe", x:hx, y:top, width:headW, height:10}));
-  svg.appendChild(el("text", {class:"heads", x:hx + 16, y:top + 30}, "THE HEAD"));
-  lines.forEach((ln, k) => svg.appendChild(el("text", {class:"headt", x:hx + 16, y:top + 56 + 24 * k}, ln)));
   if (ribs[cur]) { ribs[cur].classList.add("on"); svg.appendChild(ribs[cur]); }
 }
-const $ = id => document.getElementById(id);
-function txt(id, v){ const e = $(id); if (e) e.textContent = v || ""; }
-let cur = D.start;
-function pick(i){
+function pick(i, go){
   cur = i; const j = jobs[i];
   ribs.forEach((g, k) => g.classList.toggle("on", k === i));
   if (ribs[i]) { svg.appendChild(ribs[i]); if (box.scrollWidth > box.clientWidth) box.scrollLeft = Math.max(0, +ribs[i].dataset.x - box.clientWidth / 2); }
   chips.forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
-  txt("jn", j.id); txt("jt", j.title);
-  const sp = $("jspec"); sp.textContent = "";
-  const cell = (k, fill) => { const d = document.createElement("div"), t = document.createElement("dt"), v = document.createElement("dd"); t.textContent = k; fill(v); d.appendChild(t); d.appendChild(v); sp.appendChild(d); };
-  [["Key", j.key], ["Ticket", j.ticket], ["Run", j.run]].forEach(([k, v]) => v && cell(k, e => { e.textContent = v; }));
-  if (j.needs.length) cell("Needs", e => j.needs.forEach((x, q) => { const s = document.createElement("span"); s.className = x.done ? "ok" : "no"; s.textContent = x.id + (x.done ? " \u2713" : " \u2717"); if (q) e.appendChild(document.createTextNode(" ")); e.appendChild(s); }));
-  [["PR", j.pr], ["Merge", j.merge]].forEach(([k, v]) => v && cell(k, e => { e.textContent = v; }));
-  const jp2 = $("jobp"); jp2.dataset.state = j.state; jp2.classList.remove("swap"); void jp2.offsetWidth; jp2.classList.add("swap");
-  txt("fsel", [j.id, j.title, j.key, j.pr && "PR " + j.pr].filter(Boolean).join(" · "));
-  const p = $("jp"); p.textContent = LABEL[j.state]; p.className = "pill " + j.state;
-  txt("jb", j.summary);
-
-  const fg = $("jfigs"); fg.textContent = "";
-  (j.figures || []).forEach(x => { const d = document.createElement("div"); d.className = "fig " + (x.tone || "");
-    const b = document.createElement("b"); b.textContent = x.n; const sp = document.createElement("span"); sp.textContent = x.label;
-    d.appendChild(b); d.appendChild(sp); fg.appendChild(d); });
-  const jl = $("jl"); jl.hidden = !j.lesson; jl.textContent = ""; if (j.lesson) { const b = document.createElement("b"); b.textContent = "Lesson"; jl.appendChild(b); jl.appendChild(document.createTextNode(" " + j.lesson)); }
-  const f = $("jf"); f.textContent = "";
-  const flags = [];
-  if (j.state === "decision" && j.decision) flags.push(["dec", "To decide: ", j.decision]);
-  if (j.state === "resolved" && j.resolution) flags.push(["ok", "Decided: ", j.resolution]);
-  j.notes.forEach(x => flags.push(["", "", x]));
-  if (!flags.length) flags.push(["none", "", "Nothing recorded against this job."]);
-  flags.forEach(([c, b, t]) => { const e = document.createElement("p"); e.className = "flag " + c;
-    if (b) { const s = document.createElement("b"); s.textContent = b; e.appendChild(s); } e.appendChild(document.createTextNode(t)); f.appendChild(e); });
-  txt("jcount", flags[0][0] === "none" ? "none" : String(flags.length));
-  $("prev").disabled = i === 0; $("nextb").disabled = i === n - 1;
-  txt("jpos", (i + 1) + " of " + n); const sc2 = $("jscroll"); if (sc2) sc2.scrollTop = 0;
+  cards.forEach((c, k) => { c.hidden = k !== i; });
+  document.querySelectorAll(".cr[data-job]").forEach(r => r.classList.toggle("on", r.dataset.job === j.id));
+  $("fsel").textContent = j.id + " · " + j.title;
+  $("prev").disabled = i === 0; $("nextb").disabled = i === n - 1; $("jpos").textContent = (i + 1) + " of " + n;
+  if (go) {
+    if (/^[A-Za-z0-9._~-]+$/.test(j.id)) { try { history.replaceState(null, "", "#" + j.id); } catch (e) {} }
+    $("cards").scrollIntoView({block:"nearest", behavior: still ? "auto" : "smooth"});
+  }
 }
-chips.forEach((b, i) => b.addEventListener("click", () => { pick(i); show("job", true); }));
-$("prev").addEventListener("click", () => cur > 0 && pick(cur - 1));
-$("nextb").addEventListener("click", () => cur < n - 1 && pick(cur + 1));
-const tabs = [...document.querySelectorAll(".tab")], KEY = "foreman-board-tab-" + D.slug;
-function show(t, push){
-  tabs.forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
-  document.querySelectorAll(".pane").forEach(p => { p.hidden = p.id !== "pane-" + t; });
-  try { localStorage.setItem(KEY, t); } catch (e) {}
-  if (push) { try { history.replaceState(null, "", "#" + t); } catch (e) {} }
-  const pane = document.getElementById("pane-" + t); if (pane) pane.scrollTop = 0;
-}
-tabs.forEach(b => b.addEventListener("click", () => show(b.dataset.tab, true)));
-document.querySelectorAll(".cr[data-job]").forEach(r => { const go = () => { const i = jobs.findIndex(j => j.id === r.dataset.job); if (i >= 0) { pick(i); show("job", true); } };
-  r.addEventListener("click", go); r.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
-document.querySelectorAll("[data-go]").forEach(b => { b.addEventListener("click", e => { e.stopPropagation(); show(b.dataset.go, true); });
-  b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(b.dataset.go, true); } }); });
-tabs.forEach((b, k) => b.addEventListener("keydown", e => {
-  if (e.key === "ArrowRight" || e.key === "ArrowLeft") { const nb = tabs[(k + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length]; nb.focus(); show(nb.dataset.tab, true); } }));
-let start = (location.hash || "").slice(1);
-if (!tabs.some(b => b.dataset.tab === start)) { try { start = localStorage.getItem(KEY) || "job"; } catch (e) { start = "job"; } }
-show(tabs.some(b => b.dataset.tab === start) ? start : "job", false);
-draw(); pick(cur);
-let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { draw(); pick(cur); }, 120); });
+function hook(e, i){ e.setAttribute("role", "button"); e.tabIndex = 0;
+  e.addEventListener("click", () => pick(i, true));
+  e.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pick(i, true); } }); }
+chips.forEach((b, i) => b.addEventListener("click", () => pick(i, true)));
+document.querySelectorAll("[data-job]").forEach(r => { const i = jobs.findIndex(j => j.id === r.dataset.job); if (i >= 0) hook(r, i); });
+$("jnav").hidden = false;
+$("prev").addEventListener("click", () => cur > 0 && pick(cur - 1, false));
+$("nextb").addEventListener("click", () => cur < n - 1 && pick(cur + 1, false));
+draw(); pick(cur, false);
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { draw(); pick(cur, false); }, 120); });
 })();
 """
 
@@ -1139,6 +1056,9 @@ def logo_uri(path):
 
 
 def render(board, standalone=False):
+    """One page that answers, top to bottom: where is this going (the head), what needs the owner, what's
+    happening now, how far along (the spine), each job (its card), every job (the list). Nothing is cut short
+    except a rib's name on the drawing, whose full name is on its card and in the list."""
     jobs, nxt = board["jobs"], board.get("next")
     by_id = {b["id"]: b for b in jobs}
     count = {s: 0 for s in SHOWN}
@@ -1156,112 +1076,105 @@ def render(board, standalone=False):
     segs = "".join(f'<i class="{shown_state(b, by_id)}{" isnext" if b["id"] == nxt else ""}" title="{esc(b["id"])} · {esc(LABEL[shown_state(b, by_id)])}"></i>' for b in jobs)
     gauge = (f'<div class="gauge"><div class="gnum"><b>{done}</b><span>/ {len(jobs)} done</span></div>'
              f'<div class="gbar" aria-hidden="true">{segs}</div></div>')
-    status = []
-    for st, word in (("in-progress", "in progress"), ("ready", "ready"), ("blocked", "blocked"), ("decision", "to decide")):
-        if count[st]:
-            status.append(f'<span><b>{count[st]}</b> {word}</span>')
-    if board.get("topped_out"):
-        status.append(f'<span class="nx">topped out <b>{esc(board["topped_out"]["date"])} · {len(board["topped_out"].get("carried", []))} carried over</b></span>')
+    status = "".join(f'<span><b>{count[st]}</b> {word}</span>' for st, word in
+                     (("in-progress", "in progress"), ("ready", "ready"), ("blocked", "blocked"), ("decision", "to decide")) if count[st])
+
+    # 1 · the head
+    head = project["head"]
+    hs = [f'<div class="lbl">The head · what done means</div><p class="ht">{esc(head["outcome"])}</p>']
+    if head.get("test"):
+        hs.append(f'<p class="hj"><b>Judged by</b>{esc(head["test"])}</p>')
+    plesson = project.get("lesson")
+    if plesson:
+        hs.append(f'<p class="hr"><b>The project\'s rule</b>{esc(plesson["title"])}{(". " + esc(plesson["rule"])) if plesson.get("rule") else ""}</p>')
+    head_html = f'<section class="headsign" aria-label="The head">{"".join(hs)}</section>'
+
+    # 2 · what needs the owner
+    alerts, owed = project.get("alerts") or [], project.get("owed") or []
+    asks = [b for b in jobs if shown_state(b, by_id) == "decision"]
+    items = ([f'<li class="need alert"><b>Alert</b><span>{esc(a)}</span></li>' for a in alerts]
+             + [f'<li class="need dec" data-job="{esc(b["id"])}"><b>Decide · {esc(b["id"])}</b><span><span class="nt">{esc(b["title"])}.</span> {esc(b.get("decision") or "")}</span></li>' for b in asks]
+             + [f'<li class="need"><b>Owed</b><span>{esc(o)}</span></li>' for o in owed])
+    n_need = len(asks) + len(owed)
+    needs_html = (f'<section class="box" aria-label="Needs you"><div class="lbl">Needs you · {n_need or "nothing"}</div>'
+                  + (f'<ul class="needs">{"".join(items)}</ul>' if items else '<p class="calm">Nothing waits on you.</p>') + '</section>')
+
+    # 3 · what's happening now
+    run = next((b for b in jobs if shown_state(b, by_id) == "in-progress"), None)
+    if run:
+        meta = " · ".join(x for x in (run.get("run"), run.get("pr") and f'PR {run["pr"]}') if x)
+        now = (f'<div class="nowrow" data-job="{esc(run["id"])}"><span class="ck">{esc(run["id"])}</span><span class="nt">{esc(run["title"])}</span>'
+               f'<span class="nm">in progress{(" · " + esc(meta)) if meta else ""}</span></div>')
+    elif board.get("topped_out"):
+        t = board["topped_out"]
+        now = f'<p class="stand">Topped out {esc(t["date"])} · {len(t.get("carried", []))} carried over.</p>'
     else:
-        status.append(f'<span class="nx">next: <b>{esc(nxt + " · " + one_line(nb["title"], 34)) if nb else "not chosen"}</b></span>')
+        now = '<p class="calm">No job running.</p>'
+    if not run and not board.get("topped_out"):
+        now += (f'<div class="nowrow next" data-job="{esc(nb["id"])}"><span class="ck">{esc(nb["id"])}</span><span class="nt">{esc(nb["title"])}</span>'
+                f'<span class="nm">next · {esc(LABEL[shown_state(nb, by_id)])}</span></div>' if nb else '<p class="stand">Next: not chosen.</p>')
+    if project.get("standfirst"):
+        now += f'<p class="stand">{esc(project["standfirst"])}</p>'
+    now_html = f'<section class="box" aria-label="Now"><div class="lbl">Now</div>{now}</section>'
+
+    # 4 · the spine
     built_to = max((i for i, b in enumerate(jobs) if shown_state(b, by_id) in DONE), default=-1)
     dim = (f'<div class="dim{" short" if built_to + 1 < 3 else ""}" style="grid-column:1 / span {built_to + 1}" aria-hidden="true"><span>{done} of {len(jobs)} built</span></div>'
            if built_to >= 0 else "")
     chips = "".join(f'<button type="button" class="jc {shown_state(b, by_id)}{" isnext" if b["id"] == nxt else ""}" id="jc-{esc(b["id"])}" '
-                    f'aria-pressed="{str(i == start).lower()}">{esc(b["id"])}</button>' for i, b in enumerate(jobs))
-    open_n = len(jobs) - done
-    owed = project.get("owed") or []
+                    f'aria-pressed="{str(i == start).lower()}" aria-label="{esc(b["id"])} {esc(b["title"])}">{esc(b["id"])}</button>' for i, b in enumerate(jobs))
+    spine_html = (f'<section class="fishwrap" aria-label="The spine">'
+                  f'<div class="fishbar"><div class="leg"><span><i></i>merged / decided</span><span class="l-run"><i></i>in progress</span><span class="l-ready"><i></i>ready</span>'
+                  f'<span class="l-blocked"><i></i>blocked</span><span class="l-decision"><i></i>to decide</span><span class="l-next"><i></i>next</span></div>'
+                  f'<span class="fsel" id="fsel" aria-live="polite">{esc(jobs[start]["id"])} · {esc(jobs[start]["title"])}</span></div>'
+                  f'<div class="scroll">{fishbone(board, by_id)}</div>'
+                  f'<div class="chips{" has-dim" if dim else ""}" style="--n:{len(jobs)}">{dim}{chips}</div></section>')
+
+    # 5 · the job cards: all in the page; the script shows the selected one
+    cards_html = (f'<section class="cards" id="cards" aria-label="Job card" aria-live="polite">'
+                  f'<div class="jnav" id="jnav" hidden><button type="button" id="prev">← earlier</button>'
+                  f'<span class="jpos" id="jpos">{start + 1} of {len(jobs)}</span><button type="button" id="nextb">later →</button></div>'
+                  f'{"".join(job_detail(i, b, by_id, nxt) for i, b in enumerate(jobs))}</section>')
+
+    # 6 · every job
+    list_html = f'<section aria-label="All jobs" class="list"><div class="lbl" style="margin-bottom:8px">All jobs · {len(jobs)}</div>{job_rows(jobs, by_id, nxt)}</section>'
+
+    # footer
+    foot = [f'<p>{"Iteration board" if project.get("mode") == "iteration" else "Project board"} v{esc(board["version"])}'
+            f'{(" · " + esc(project["eyebrow"])) if project.get("eyebrow") else ""}{(" · " + esc(project["project_file"])) if project.get("project_file") else ""}</p>']
     sup = board.get("superseded", [])
-    tabs = [("job", "Job", ""), ("open", "Open", f"{open_n}")]
-    if owed:
-        tabs.append(("owed", "Debts", str(len(owed))))
     if sup:
-        tabs.append(("split", "Split", str(len(sup))))
-    plesson = project.get("lesson")
-    jlessons = [b for b in jobs if b.get("lesson")]
-    if plesson or jlessons:
-        tabs.append(("lessons", "Lessons", str(len(jlessons)) if jlessons else ""))
-    tabs.append(("head", "The head", ""))
-    tab_html = "".join(f'<button type="button" role="tab" class="tab" id="tab-{k}" data-tab="{k}" aria-selected="{str(k == "job").lower()}">{label}'
-                       f'{f" <b>{c}</b>" if c else ""}</button>' for k, label, c in tabs)
-    panes = [f'<div class="pane" id="pane-job" role="tabpanel">'
-             f'<div class="jnav"><button type="button" id="prev">← earlier</button>'
-             f'<span class="jpos" id="jpos">{start + 1} of {len(jobs)}</span>'
-             f'<button type="button" id="nextb">later →</button></div>'
-             f'<div class="jscroll" id="jscroll" aria-live="polite">{job_detail(jobs[start], by_id)}</div></div>',
-             f'<div class="pane" id="pane-open" role="tabpanel" hidden><p class="lead">Everything not yet merged or decided. The next job first.</p><div class="cl">{open_rows(jobs, by_id, nxt)}</div></div>']
-    if owed:
-        panes.append(f'<div class="pane" id="pane-owed" role="tabpanel" hidden><ul class="owed">{"".join(f"<li>{esc(o)}</li>" for o in owed)}</ul></div>')
-    if sup:
-        items = "".join(f'<li>{esc(x.get("id"))} · {esc(x.get("title", ""))} → split into {esc(", ".join(x.get("by", [])))} (v{esc(x.get("at_version", "?"))})</li>' for x in sup)
-        panes.append(f'<div class="pane" id="pane-split" role="tabpanel" hidden><ul class="owed">{items}</ul></div>')
-    if plesson or jlessons:
-        les = ['<div class="lesson"><div class="lmain">']
-        if plesson:
-            les.append(f'<div class="lbl">The project\'s rule</div><h3>{esc(plesson["title"])}</h3>')
-            if plesson.get("rule"):
-                les.append(f'<p class="rule">{esc(plesson["rule"])}</p>')
-        les.append('</div><div class="llist">')
-        if jlessons:
-            les.append(f'<div class="lbl">From each job · newest first</div>')
-        for b in reversed(jlessons):
-            les.append(f'<p class="jl"><span class="jlh"><b>{esc(b["id"])}</b>{esc(b["title"])}</span>{esc(b["lesson"])}</p>')
-        les.append("</div></div>")
-        panes.append(f'<div class="pane" id="pane-lessons" role="tabpanel" hidden>{"".join(les)}</div>')
-    test = project["head"].get("test")
-    about = [f'<div class="amain"><div class="lbl">The head · what done means</div><p class="h">{esc(project["head"]["outcome"])}</p>']
-    if test:
-        about.append(f'<p><b>Judged by:</b> {esc(test)}</p>')
-    if project.get("standfirst"):
-        about.append(f'<p>{esc(project["standfirst"])}</p>')
-    alerts = project.get("alerts") or []
+        foot.append("<p>Split: " + "; ".join(f'{esc(x.get("id"))} {esc(x.get("title", ""))} → {esc(", ".join(x.get("by", [])))} (v{esc(x.get("at_version", "?"))})' for x in sup) + "</p>")
     facts = project.get("facts") or []
-    if project.get("project_file"):
-        about.append(f'<p class="jk">{esc(project["project_file"])}</p>')
-    about.append('</div><div class="aside">')
-    if alerts:
-        about.append('<div class="lbl">Alerts</div><ul class="owed alerts-l">' + "".join(f"<li>{esc(a)}</li>" for a in alerts) + "</ul>")
     if facts:
-        about.append('<div class="lbl">Standing facts</div><ul class="owed facts-l">' + "".join(f"<li>{esc(a)}</li>" for a in facts) + "</ul>")
-    about.append('</div>')
-    about.append(f'<p class="foot">Generated from BOARD.json v{esc(board["version"])} by render_board.py. Edit the data, not this page.</p>')
-    panes.append(f'<div class="pane" id="pane-head" role="tabpanel" hidden><div class="about">{"".join(about)}</div></div>')
-    al = project.get("alerts") or []
-    alert_strip = ""
-    if al:
-        more = f' <button type="button" class="more" data-go="head">+{len(al) - 1} more</button>' if len(al) > 1 else ""
-        alert_strip = f'<div class="alert" data-go="head" role="button" tabindex="0" title="{esc(al[0])}"><b>Alert</b> {esc(one_line(al[0], 190))}{more}</div>'
-    data = {"slug": project.get("slug") or "board", "start": start, "label": LABEL, "next": nxt, "topped": bool(board.get("topped_out")),
-            "head": {"outcome": project["head"]["outcome"], "test": project["head"].get("test") or ""},
-            "jobs": [{"id": b["id"], "title": b["title"], "state": shown_state(b, by_id), "key": b.get("key"), "ticket": b.get("ticket"),
-                      "run": b.get("run"), "summary": b.get("summary"), "pr": b.get("pr"), "merge": b.get("merge"),
-                      "decision": b.get("decision"), "resolution": b.get("resolution"), "notes": b.get("notes", []), "twigs": b.get("twigs", [])[:3],
-                      "figures": b.get("figures", []), "lesson": b.get("lesson") or "",
-                      "needs": [{"id": x, "done": x in by_id and shown_state(by_id[x], by_id) in DONE} for x in b.get("needs") or []]}
-                     for b in jobs]}
+        foot.append('<p>Standing facts</p><ul>' + "".join(f"<li>{esc(a)}</li>" for a in facts) + "</ul>")
+    foot.append(f'<p>Generated from BOARD.json v{esc(board["version"])} by render_board.py. Edit the data, not this page.</p>')
+    foot_html = f'<footer class="foot">{"".join(foot)}</footer>'
+
+    data = {"start": start, "label": LABEL, "next": nxt, "topped": bool(board.get("topped_out")),
+            "jobs": [{"id": b["id"], "title": b["title"], "state": shown_state(b, by_id), "twigs": b.get("twigs", [])[:3]} for b in jobs]}
     blob = json.dumps(data, ensure_ascii=False).replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
     logo = logo_uri(Path(__file__).with_name("foreman-logo.png"))
     icon = f'<link rel="icon" type="image/png" href="{logo}">' if logo else ""
     mark = f'<img class="mark" src="{logo}" alt="">' if logo else ""
+    kick = (f'Topping Out · {"iteration board" if project.get("mode") == "iteration" else "project board"}'
+            f'{(" · topped out " + esc(board["topped_out"]["date"])) if board.get("topped_out") else ""} · {esc(board["updated"])}')
     body = f"""<title>{esc(project["title"])}</title>{icon}<script>try{{var t=localStorage.getItem("foreman-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}}catch(e){{}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Martian+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <style>{CSS}</style>
 <div class="wrap">
 <header class="bar">
-<div class="kick">{mark}<span>Topping Out · {"iteration board" if project.get("mode") == "iteration" else "project board"}{(" · " + esc(project["eyebrow"])) if project.get("eyebrow") else ""}{(" · topped out " + esc(board["topped_out"]["date"])) if board.get("topped_out") else ""} · v{esc(board["version"])} · {esc(board["updated"])}</span><button type="button" class="theme-toggle" data-theme-toggle>Light</button></div>
-<div class="barrow"><h1>{esc(project["title"])}</h1><div class="hright">{gauge}<div class="status">{"".join(status)}</div></div></div>
-{alert_strip}
+<div class="kick">{mark}<span>{kick}</span><button type="button" class="theme-toggle" data-theme-toggle>Light</button></div>
+<div class="barrow"><h1>{esc(project["title"])}</h1><div class="hright">{gauge}<div class="status">{status}</div></div></div>
 </header>
-<section class="fishwrap">
-<div class="fishbar"><div class="leg"><span><i></i>merged / decided</span><span class="l-run"><i></i>in progress</span><span class="l-ready"><i></i>ready</span><span class="l-blocked"><i></i>blocked</span><span class="l-decision"><i></i>to decide</span><span class="l-next"><i></i>next</span></div><span class="fsel" id="fsel" aria-live="polite">pick a rib or a chip</span></div>
-<div class="scroll">{fishbone(board, by_id)}</div>
-<div class="chips{" has-dim" if dim else ""}" style="--n:{len(jobs)}">{dim}{chips}</div>
-</section>
-<section class="panel">
-<div class="tabs" role="tablist" aria-label="Board panels">{tab_html}</div>
-{"".join(panes)}
-</section>
+{head_html}
+{needs_html}
+{now_html}
+{spine_html}
+{cards_html}
+{list_html}
+{foot_html}
 </div>
 <script type="application/json" id="board-data">{blob}</script>
 <script>{JS}</script>

@@ -19,14 +19,18 @@ description: >
 
 ## The page
 
-`board.html` is drawn entirely from `BOARD.json`:
+`board.html` is drawn entirely from `BOARD.json`, as one page that answers five questions top to bottom: where is this going, what needs the owner, what's happening now, how far along, and what's next or stuck. **Nothing on it is cut short** except a rib's name on the drawing (two lines at most), whose full name is on the job's card and in the job list. Nothing is revealed only on hover.
 
-- **Header:** `project.title` as the name, `project.eyebrow`, the version and date; a gauge (the done count over one segment per job, coloured by state); counts for in progress, ready, blocked and to decide; **next** as the one hi-vis tag (on a topped-out board: "topped out <date> · <n> carried over" instead). The kicker reads "project board", or "iteration board" for one started with `--iteration`, and adds "topped out <date>" once it has. The first of `project.alerts` sits under it on a hazard-striped strip that opens The head tab.
-- **Fishbone:** the spine runs into the head, drawn as a hi-vis sign (`project.head.outcome`). The spine is solid up to the last merged job and faint after it. One rib per job, alternating above and below, styled by state: merged or decided solid, in progress blue, ready dashed, blocked dotted, to decide amber, **next** hi-vis. A rib's label is outlined when done and solid when it matters (selected, in progress, to decide, next). With no `next`, a dashed "next: not chosen" slot. A job's optional `twigs` (up to three short lines) show on its rib when it's selected or hovered. On a narrow screen the drawing keeps its size and scrolls sideways inside its own box.
-- **Job strip:** one continuous tape of job numbers under the drawing, a state colour along the bottom of each.
-- **Panel with tabs:** **Job** (the selected job as a ticket: a state stripe, a spec strip of Key / Ticket / Run / Needs / PR / Merge, the summary, figures, lesson, and notes with its decision; earlier / later stay put while the ticket scrolls), **Open** (everything not merged or decided, the next job first; a row opens its job), **Debts** (numbered, from `project.owed`), **Split** (superseded jobs), **Lessons** (the project's rule beside each job's lesson), **The head** (the outcome and its test beside the alerts and standing facts). The page opens on the job in progress, else the next job, else the latest one done. It is complete without JavaScript; the script only switches jobs and tabs.
+- **Header:** `project.title`, the date, a gauge (the done count over one segment per job, coloured by state) and counts for in progress, ready, blocked and to decide. The kicker reads "project board", or "iteration board" for one started with `--iteration`, and adds "topped out <date>" once it has.
+- **The head:** a hi-vis sign with the full `project.head.outcome`, "Judged by" (`project.head.test`) and the project's rule (`project.lesson`) if there is one.
+- **Needs you:** every `project.alerts` item, each job waiting on a decision with its question (a row opens its card), and each `project.owed` item. "Nothing waits on you" when empty.
+- **Now:** the job in progress (number, name, run, PR); with none, "No job running" and the next job (or "next: not chosen", or the topping out). `project.standfirst` under it.
+- **Fishbone:** the spine runs left to right into an arrow, solid up to the last merged job and faint after it. One rib per job, alternating above and below, each with its number and its name always shown, styled by state: merged or decided solid, in progress blue, ready dashed, blocked dotted, to decide amber, **next** hi-vis. With no `next`, a dashed "next: not chosen" slot. A job's `twigs` show as small ticks on its rib (their text is on the card). On a narrow screen the drawing keeps a readable size and scrolls sideways inside its own box. Under it, a tape of job numbers, a state colour along the bottom of each.
+- **Job card:** the selected job as a work docket: a state stripe, Key / Run / Needs (each by number and name) / PR / Merge, the summary, its parts (`twigs`), figures, lesson, the ticket path, and notes with its decision. Earlier / later step through the jobs. The page opens on the job in progress, else the next job, else the latest one done; `#<job id>` in the link opens that job.
+- **All jobs:** every job in board order: number, name, state, and what stands in its way (a blocked job names the jobs it waits on, by name; a decision job its question; a merged job its PR and merge commit). A row opens its card.
+- **Footer:** the board version, `project.eyebrow`, `project.project_file`, superseded (split) jobs, `project.facts` as standing facts.
 
-The page fits one screen on a desktop: the fishbone scales to its box, the selected job's name shows in the bar above it, and the tabs switch inside a fixed panel. On a phone it stacks and scrolls. Light and dark themes both follow the viewer's setting.
+Every card is in the page, so without JavaScript the page reads in full (the cards as a list); the script draws the spine to fit and shows one card at a time. On a phone the blocks stack and nothing scrolls sideways but the spine's own box. Light and dark themes both follow the viewer's setting.
 
 **The design lives in `render_board.py`, not in any per-project file.** Every project's `board.html` is regenerated from its `BOARD.json` on each event or `render`, so a change to the renderer reaches every board at its next render. To bring an existing board up to date, run `render_board.py <path>/BOARD.json render`.
 
@@ -34,13 +38,13 @@ The page fits one screen on a desktop: the fishbone scales to its box, the selec
 
 | Field | Shown | Written by |
 |---|---|---|
-| `jobs[].twigs` (≤3 short lines) | on the selected rib | `/f-signoff`, from the job's key discoveries |
-| `jobs[].figures` (≤6 `{n, label, tone: good\|warn}`) | Job tab, as figures | `/f-signoff`, the job's few numbers that matter |
-| `jobs[].lesson` (one paragraph) | Job tab, and gathered in the Lessons tab | `/f-signoff`, the job's lesson (the same one its Logbook card carries) |
-| `project.owed` (list) | Debts tab | the foreman at each close: the debts the project still carries (loose ends left by merged work, not yet jobs) |
-| `project.lesson` (`{title, rule}`) | top of the Lessons tab | the foreman, when a lesson holds across jobs |
-| `project.alerts` (list) | hi-vis strip under the header (first one, "+n more") | the foreman: anything the owner must not miss (e.g. the tracker disagreeing with the repository) |
-| `project.facts` (list) | The head tab | the foreman: standing facts about the project |
+| `jobs[].twigs` (≤3 short lines) | ticks on the rib; the text on the job card | `/f-signoff`, from the job's key discoveries |
+| `jobs[].figures` (≤6 `{n, label, tone: good\|warn}`) | the job card, as figures | `/f-signoff`, the job's few numbers that matter |
+| `jobs[].lesson` (one paragraph) | the job card | `/f-signoff`, the job's lesson (the same one its Logbook card carries) |
+| `project.owed` (list) | Needs you, as owed | the foreman at each close: the debts the project still carries (loose ends left by merged work, not yet jobs) |
+| `project.lesson` (`{title, rule}`) | the head sign, as the project's rule | the foreman, when a lesson holds across jobs |
+| `project.alerts` (list) | Needs you, as alerts | the foreman: anything the owner must not miss (e.g. the tracker disagreeing with the repository) |
+| `project.facts` (list) | the footer, as standing facts | the foreman: standing facts about the project |
 
 Hand-editing these text fields in `BOARD.json` is allowed; the next render picks them up. Write them without em dashes (, ): a comma, a colon or a full stop reads better on the page.
 
@@ -60,7 +64,7 @@ Hand-editing these text fields in `BOARD.json` is allowed; the next render picks
 | A job HALTs or stops | `render_board.py BOARD.json halt <job> --reason "<why>" --to open` (retry later) or `--to decision --decision "<what must be decided, by whom>"` | work on the job stops; the HALT is noted on it |
 | The owner decides | `render_board.py BOARD.json decided <job> --note "<the decision, quoted>"` | a **decision job** becomes `resolved` (and its dependents can go ready), but only once its own needs are merged or resolved (deciding early is a re-plan: change its `needs` and record why); a halted **build job** goes back to `open` |
 | Work on a job turns up a new one | `render_board.py BOARD.json add <id> --title "<title>" --summary "<what it builds>" [--needs a,b] [--decision "<question>"]` | a new job, open or decision. **Ids are never reused**, including the id of a job that was split |
-| A job's summary is unclear | `render_board.py BOARD.json summary <job> --text "<what it builds, in plain words>"` | the summary on the Job tab, the line the owner reads to know what the job does without opening its ticket. One sentence, under about 20 words, plan references after it in brackets: *"Loads the catalogue as a runtime block, so later jobs can use it. (T2, VP-6)"*. `check` warns on a summary that is only references (*"Plan task T2; carries VP-6."*) |
+| A job's summary is unclear | `render_board.py BOARD.json summary <job> --text "<what it builds, in plain words>"` | the summary on the job card, the line the owner reads to know what the job does without opening its ticket. One sentence, under about 20 words, plan references after it in brackets: *"Loads the catalogue as a runtime block, so later jobs can use it. (T2, VP-6)"*. `check` warns on a summary that is only references (*"Plan task T2; carries VP-6."*) |
 | Scoping finds the job too big | `render_board.py BOARD.json split <job> --into "a=Title A,b=Title B" [--chain] [--active a]` | the children replace the job, dependents are rewired, work continues on the `--active` child, one version, a supersession record |
 | **The board's head is reached** (top out without a quote only when every job is merged or resolved; with any job unfinished, only on the owner's own words with `--quote`, never a goal's. No eligible next job alone is not a topping out) | `render_board.py BOARD.json topout --report <path to the topping out report> [--quote "<the owner's words>"] [--head yes\|partly\|no]`, then `render_board.py BOARD.json report` prints the report's mechanical part | the board is frozen as the project's record (no event after it); unfinished jobs are recorded as carried over; jobs still ready need the owner's words (`METHOD.md` §11b) |
 | **An iteration board** (work found as you go, no blueprint) | `render_board.py BOARD.json init --title "…" --head "<the outcome>" --job <id> --job-title "…" --iteration` | small jobs are added as they are found (`add`) |
