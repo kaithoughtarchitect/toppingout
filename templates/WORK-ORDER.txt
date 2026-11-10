@@ -1,7 +1,7 @@
 FOREMAN PRE-SEND CHECKLIST (tick every box before the pointer goes out; RULES.md "Foreman rules")
 [ ] One independently verifiable outcome (it may carry several D- decisions; two outcomes = two work orders).
 [ ] Every decision labelled D-... and final, down to the exact expression or data shape.
-[ ] Every command exact; prefix line on every command; NEW, BEFORE and AFFECTED defined once (the affected set from import_scan.py over the modules this work order touches; the whole test folder when the set is empty, the work order touches a conftest, fixture, helper or a file the scan can't follow, or the profile says "Whole suite every work order: yes").
+[ ] Every command exact; prefix line on every command; NEW, BEFORE and AFFECTED defined once (the affected set from import_scan.py over the modules this work order touches; the whole test folder when the set is empty, the work order touches a conftest, fixture, helper or a file the scan can't follow, or the profile says "Whole suite every work order: yes"; a set over half the suite's test files runs once as the whole folder, with no BEFORE).
 [ ] State check pins worktree, branch and the exact HEAD sha (re-pinned after the previous work order's review).
 [ ] Tests that must fail at the current head are named - and each one CAN exist (checked against the code). A correct test that cannot fail first (the language already gives the behaviour, or it pins a value that already exists, like a product name) is named as such under TESTS THAT CANNOT FAIL FIRST, with what pins it, never listed as must-fail.
 [ ] Hostile-input checklist H1-Hn specific to this task; coverage gate, probes per task, G1-G6, untested paths.
@@ -49,6 +49,9 @@ Test commands (always from $WT, through the repo's test adapter, templates/TEST-
     a file the scan can't follow (data, SQL, config), for a stack the scan can't read, or when the repo profile
     says "Whole suite every work order: yes" (templates/TEST-ADAPTERS.md "Affected tests"). The whole suite
     runs at t0 and at the final head.
+    <A BIG SET: when the affected set holds more than half the suite's test files, write instead:
+     "AFFECTED = the whole test folder; no BEFORE run: the baseline is <the last whole-suite output: t0's, or
+     the previous work order's AFFECTED>". One whole run then costs less than a big set run twice.>
   (paid keys are stripped inside run_tests by the adapter's no_paid guard)
 
 FILES YOU MAY READ
@@ -66,7 +69,8 @@ PART 0 - STATE CHECK (stop on any mismatch; write it in the report)
 0.6  ls "$REC/foreman/jobs/<job file name>"     -> the file is listed (existence only; don't open it).
      Missing: STOP. This isn't a job yet; work order 1 creates the job file.
 0.7  Run BEFORE now, before you change anything: ran_ok "$O/before.txt" "$O/before.exit" must pass.
-     It is this work order's baseline for B.2.
+     It is this work order's baseline for B.2. (No BEFORE when AFFECTED is the whole folder: the baseline
+     is the whole-suite output the foreman named above, and B.2 compares against that file.)
 
 <PART A - REPAIRS FROM THE LAST REVIEW, if any: for each R<i>, the
  test to add (must FAIL now), the exact fix, the test PASSES after.>
