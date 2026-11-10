@@ -13,6 +13,6 @@
 
 **Reviewer acknowledgment** (security or concurrency repairs, and converged-case fixes, `METHOD.md` §9): the changed-since-review diff `<reviewed sha>..<final sha>` sent back to the same reviewer; its answer: <ACK at `<final sha>` | objections> | not needed: <why>.
 **Proved in both states:** the regression test fails at `<before>` and passes at `<after>`; the probe BITES.
-**Existing tests run BEFORE the commit:** <which suites, results, FAILED/ERROR identical to the last capture>.
+**Existing tests run BEFORE the commit:** <which suites, results, FAILED/ERROR identical to the work order's BEFORE run>.
 **Review status of each repair:** <reviewer-specified, implemented as specified, proved in both states | reviewed in <file>>.
 **The reviewer's "keep" list and unknowns:** <noted; anything the reviewer did not run, and who ran it instead>.

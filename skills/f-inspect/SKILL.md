@@ -57,7 +57,7 @@ Each triggered lens runs as a **fresh subagent** with no context from this job. 
 - the settled decisions (`D-…`) marked **not to relitigate**;
 - one standing question: **where a test proves something is absent (no raw amount, no secret), is there also a test that pins the exact value shown?** Absence tests pass while the shown value is wrong;
 - **findings only**: no edits, no fixes, no verdict, no commit, no push, no PR;
-- **no test suites, builds or servers**: a lens reads the code and the diff; a finding that needs a run says so, and the foreman runs it on its own schedule (suites run serially, one at a time).
+- **no test suites, builds or servers**: a lens reads the code and the diff; a finding that needs a run says so, and the foreman runs it on its own schedule (one test run at a time).
 
 Lenses run sequentially by default. A lens never dispatches another lens and never touches git history.
 

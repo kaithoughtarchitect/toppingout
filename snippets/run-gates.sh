@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # Per-task gate capture for one job. Copy it into the day folder as run-gates-<ticket>.sh,
 # fill in the CONFIG block and the GATES block, then call it with a task label:
-#   bash run-gates-<ticket>.sh t0      (then t1, t2, ... so captures never overwrite each other)
+#   bash run-gates-<ticket>.sh t0      (then t1, t2, ... so captures never overwrite each other; t-final at the end)
 #
 # What it guarantees (SETUP.md section 3):
 #   - one <gate>.txt (full output) and one <gate>.exit (the exit code) per gate, in LOG;
 #   - a summary.txt with every gate's result, ending "ALL DONE";
-#   - every run strips the paid API keys first, and gates run one at a time.
+#   - every run strips the paid API keys first, and gates run one at a time;
+#   - the whole-suite gate (run_full_gate, through the repo's test adapter) runs at t0, t0-<n>, t-final,
+#     t-final-<n> (a second capture at the final head) and any label ending in "-full";
+#     at other labels it is skipped and says so, because the work order already ran its affected tests
+#     (METHOD.md section 7). FULL_EVERY_CAPTURE=1 runs it every time (the repo profile's
+#     "Whole suite every work order: yes", for a suite under about 5 minutes).
 # A code area that no gate covers gets its own copy of this file, with gates that name
 # that area's tests by explicit path.
 set +e
@@ -17,6 +22,8 @@ WT="<absolute path to the job's worktree>"
 LOG="<absolute path to the day folder>/${TASK}-<ticket>-gates"
 MAIN_REF="origin/main"                 # the repo profile's remote and main branch
 PAID_KEYS=(OPENROUTER_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY)   # every paid key the tests could reach
+FULL_EVERY_CAPTURE=0                   # 1 = the repo profile says "Whole suite every work order: yes"
+ADAPTER="<records>/test-adapter.sh"    # the repo's test adapter: the whole-suite gate runs through its run_tests
 # -----------------------------------------------------------------------------------------
 
 # a label names one capture: refuse to reuse it, so earlier evidence is never overwritten
@@ -54,8 +61,37 @@ run_gate() {
   return 0
 }
 
+# run_full_gate <name> <test paths...>: the whole test suite, through the adapter's run_tests (the same command
+# line, workers included, as every other run), so base-vs-head can reuse a t-final capture instead of running it
+# again. Runs at t0, t0-<n>, t-final, t-final-<n> and *-full labels, or every time with FULL_EVERY_CAPTURE=1;
+# otherwise writes no .txt/.exit and records the skip in the summary.
+run_full_gate() {
+  local name="$1"
+  shift
+  case "$TASK" in
+    t0|t0-*|t-final|t-final-*|*-full) ;;
+    *) if [ "$FULL_EVERY_CAPTURE" != 1 ]; then
+         echo "SKIP $name (whole suite: t0, t-final and *-full captures only; this work order ran its affected tests)" | tee -a "$SUMMARY"
+         return 0
+       fi ;;
+  esac
+  local start end rc
+  start=$(date +%s)
+  echo "START $name $(date -Iseconds)" | tee -a "$SUMMARY"
+  # strip every key this runner lists before the adapter runs (its own no_paid strips only the adapter's list)
+  ( unset "${PAID_KEYS[@]}"; source "$ADAPTER" && run_tests "$LOG/${name}.txt" "$LOG/${name}.exit" "$@" )
+  rc=$(cat "$LOG/${name}.exit" 2>/dev/null || echo "no exit file")
+  end=$(date +%s)
+  echo "END $name rc=$rc elapsed=$((end - start))s" | tee -a "$SUMMARY"
+  echo "PATHS $name: $*" | tee -a "$SUMMARY"
+  tail -n 20 "$LOG/${name}.txt" | tee -a "$SUMMARY"
+  echo "-----" | tee -a "$SUMMARY"
+  return 0
+}
+
 # ---- GATES: the repo profile's documented gates, one line each, in order -----------------
 # Examples (replace with the profile's own commands):
+#   run_full_gate g1_tests   tests                     (the whole suite: test paths only; it runs through $ADAPTER)
 #   run_gate g1_unit         python -m pytest tests/unit -q -p no:cacheprovider
 #   run_gate g2_integration  env TEST_DB_URL="<disposable database only>" python -m pytest tests/integration -q
 #   run_gate g3_lint         ruff check src tests

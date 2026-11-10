@@ -6,9 +6,9 @@
 |---|---|---|
 | `<sha>` | <what it does> | `<JOB-<N>-WORK-ORDER-<m>-REVIEW.md>` (<findings, or "clean">) |
 
-**Final captures t<k> (head `<sha>`):** every gate with its result, compared with t0; every difference **attributed** (which new module caused it) or named as a characterised intermittent. Database roles restored after each arm.
+**Final captures t<k> (head `<sha>`):** every gate with its result, compared with t0; every difference **attributed** (which new module caused it) or named as a characterised intermittent. Between t0 and t-final the whole-suite gate is a SKIP: the whole-suite evidence here is the builder's widened base-vs-head run; a difference outside every work order's affected set is attributed at t-final (or by bisecting the commits). Database roles restored after each arm.
 
-**Base-vs-head run 1:** the derived set (script + COUNT), base and head results. Widened comparison: head <f> failed / <p> passed, base <f> / <p>, **red-at-head-only = <n>**.
+**Base-vs-head run 1:** the derived set (script + COUNT), base and head results, **red-at-head-only = <n>**. The builder's widened comparison (its first run): head <f> failed / <p> passed, base <f> / <p>. The foreman's own run here is run 1; its widened run is at the final head (`METHOD.md` §8 step 6).
 - the builder's run: <result; if it stopped, what it stopped on>;
 - characterisation by the foreman (if any red): identical to base? isolated N/N on head and base? passed in every earlier capture? **Never retried to green**;
 - **the foreman's own run: red-at-head-only = <n>.**

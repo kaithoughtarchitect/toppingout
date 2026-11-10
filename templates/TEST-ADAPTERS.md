@@ -33,10 +33,13 @@ no_paid() { local a=(); for k in $PAID_KEYS; do a+=(-u "$k"); done; env "${a[@]}
 **pytest**
 
 ```bash
-run_tests()  { local out=$1 ex=$2; shift 2; no_paid python -m pytest -rfE "$@" >"$out" 2>&1; echo $? >"$ex"; }
+TEST_WORKERS=""   # empty = one process; a number only after the parallel proof (below) is recorded in the repo profile
+run_tests()  { local out=$1 ex=$2; shift 2; no_paid python -m pytest -rfE --durations=30 ${TEST_WORKERS:+-n "$TEST_WORKERS" --dist loadfile} "$@" >"$out" 2>&1; echo $? >"$ex"; }
 failed_ids() { grep -E '^(FAILED|ERROR) ' "$1" | cut -d' ' -f2 | sort -u; }
 ran_ok()     { local ex; ex=$(cat "$2"); [ "$ex" -le 1 ] && ! grep -qE 'no tests ran|ERROR collecting' "$1"; }   # 0 pass, 1 test failures; 2-5 = interrupted/usage/no tests
 ```
+
+`--durations=30` ends every output with the 30 slowest tests, so where a run's time goes is always on disk at no extra cost.
 
 **unittest**
 
@@ -72,10 +75,31 @@ ran_ok()     { grep -qE '^running [1-9]' "$1" && ! grep -q 'error: could not com
 
 **Another runner:** write the same three functions, then **prove the adapter** before the first job: two fixture runs where base and head fail **different** tests (same count), and `comm -13` must print the head-only one. Record the proof in the repo profile.
 
-## Affected tests (base-vs-head run 1)
+## Affected tests (each work order, and base-vs-head run 1)
 
-- **Python:** `python snippets/import_scan.py [--root <test root> ...] <touched module> ...` derives the test modules that import a touched module, including relative imports, src layouts, sibling tests and helper modules.
+- **Python:** `python snippets/import_scan.py [--root <test root> ...] <touched module> ...` derives the test modules that import a touched module, including relative imports, src layouts, sibling tests and helper modules. It prints one path per line, then `COUNT <n>`; the list without that last line is the **affected set**.
 - **Any other stack, or anything the scan can't see** (dynamic imports, plugins, fixtures): run the **whole affected suite** and say so in the report. An empty derived set is never proof on its own.
+- **Each work order** runs its affected set once before any change (`BEFORE`) and once after, with its new tests (`AFFECTED`), not the whole suite (`WORK-ORDER.txt`); the whole suite runs at t0 and at the final head (`METHOD.md` §7). After must equal before: the same failing-test IDs, and the passed count up by exactly the new tests.
+- **The whole test folder instead** when the derived set is empty, when the work order touches a conftest, a fixture, a test helper or a file the scan can't follow (data, SQL, config), or for a stack the scan can't read.
+- **A fast suite keeps the whole suite every work order.** When one whole-suite run takes under about 5 minutes, the repo profile says "Whole suite every work order: yes" and `AFFECTED` is the whole test folder. The rule follows the measured time.
+
+## Speed: one suite at a time, several workers in it
+
+Runs never overlap (`RULES.md`), but one run may use several processes. A serial pytest run on a 12-core machine uses one core; with workers it can be several times faster. Most other runners already do this (jest, vitest, go test and cargo test run in parallel by default).
+
+**pytest:** `pytest-xdist` (a dev dependency), switched on by setting `TEST_WORKERS` in the adapter. **Only after the parallel proof**, because tests that share something (a file outside `tmp_path`, a port, one disposable database, the process environment) can pass alone and fail side by side:
+
+```bash
+bash snippets/parallel_proof.sh "<records>/test-adapter.sh" <workers, e.g. 6> <test paths...>
+```
+
+It runs the suite once with one process and three times with the workers, and prints **PROVED** only when all four runs really ran with **identical failing-test IDs** and the parallel runs are at least twice as fast. Record its last line in the repo profile ("Parallel workers"), then set `TEST_WORKERS` in the adapter. Run it when no other session is running tests.
+
+**A test that differs side by side** is a finding, never retried to green. The adapter's `--dist loadfile` keeps every test of one file on one worker, in order, so tests that share something within a file are safe. Tests in **different files** that share something (one disposable database, a fixed file or port) either move into one file or stop sharing it (`tmp_path`, a free port, a database per worker), then prove again. A test that only fails under load (a timing assertion) is fixed, not grouped.
+
+**A trap, checked 2026-11-10:** `@pytest.mark.xdist_group` with `--dist loadgroup` silently does nothing with pytest 9.2 and pytest-xdist 3.8 (the grouped tests still ran on two workers and clashed); it works on pytest 8.4. Don't rely on it without the proof.
+
+**CI:** the same switch in the workflow's test step (`-n <the runner's core count> --dist loadfile`) once the proof holds on the CI runner's shape with that same worker count; prove the number CI will use.
 
 ## Coverage and the old-code check
 

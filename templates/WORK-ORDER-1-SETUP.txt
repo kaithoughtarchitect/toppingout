@@ -49,9 +49,10 @@ PART 2 - CHECK THE RUNNERS (do not edit them)
 2.1  bash -n <each runner> && echo syntax-ok
 2.2  tr -cd '\r' < <each runner> | wc -c     (must be 0)
 2.3  grep -n '^WT=' <each runner>     (must name $WT)
+2.4  grep -nE '^(ADAPTER=|FULL_EVERY_CAPTURE=)|run_full_gate ' <each runner>   (ADAPTER names $REC/test-adapter.sh; one run_full_gate line, the profile's whole-suite gate)
 Any failure: report and STOP.
 
-PART 3 - CAPTURE t0, SERIALLY
+PART 3 - CAPTURE t0, ONE GATE AT A TIME
 3.1  bash "$DAY/<gate runner>" t0    wait for "ALL DONE" in its summary.txt
 3.2  bash "$DAY/<other runner>" t0   only after 3.1 is done
 3.3  Count the .exit files (<n> and <n>) and "ALL DONE" in each summary.
@@ -105,8 +106,8 @@ RULES THAT ARE NOT NEGOTIABLE
 1. No product code, no commits, no push, no merge, no ticket change, no
    messages, no branch or worktree deletion.
 2. Never name a model, agent, vendor or tool. Only "the builder".
-3. Every test run strips the paid keys first. Serial runs only. Never
-   touch a container. Never point a roles test at the shared database.
+3. Every test run strips the paid keys first. One test run at a time.
+   Never touch a container. Never point a roles test at the shared database.
 
 ### END OF WORK ORDER 1. WRITE THE REPORT FILE, THEN STOP.
 <<<<<<<<<< END OF PROMPT - payload ends on the line above <<<<<<<<<<

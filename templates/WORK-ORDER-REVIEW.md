@@ -2,7 +2,7 @@
 
 **A stop is not a finished work order:** before reviewing, HEAD has moved to the reported commits and the report file exists. If either is missing, it was only a turn end: read the pane, don't review.
 
-**Disk first:** `<base>..HEAD` = <commits>; each touches only <files>; subject lines only, no trailer, not pushed; worktree `<status>`. t<k>: <n> + <n> `.exit`, `ALL DONE` both, disposable DB roles restored after each arm B; gates as t<k-1>; suite +<n> passed per arm, FAILED/ERROR lists identical to t<k-1> (sorted diff empty, both arms).
+**Disk first:** `<base>..HEAD` = <commits>; each touches only <files>; subject lines only, no trailer, not pushed; worktree `<status>`. t<k>: <n> + <n> `.exit`, `ALL DONE` both, disposable DB roles restored after each arm B; gates as t<k-1> (the whole-suite gate is a SKIP between t0 and t-final); AFFECTED = BEFORE + <n> new tests passed, FAILED/ERROR identical to BEFORE (sorted diff empty, both arms).
 
 **Earlier findings re-probed:** `<probe script>` at `<head>`: <R1..Rn each now refuses, with the result>.
 

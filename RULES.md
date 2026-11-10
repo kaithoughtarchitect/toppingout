@@ -99,7 +99,7 @@ These bind the foreman. Each was paid for by a real mistake (`Foreman-Playbook.m
 ## Safety on the test machine
 
 - **Money guard:** every test run strips paid API keys first (`env -u OPENROUTER_API_KEY -u OPENAI_API_KEY ...`). Every `-u` comes before every `VAR=value`.
-- Gates and suites run **serially**, never two at once.
+- **One test run at a time**, never two at once. One run may use several worker processes (the adapter's `TEST_WORKERS`), only after the repo profile records the parallel proof (`templates/TEST-ADAPTERS.md`).
 - Never start, restart, stop or remove shared containers or databases.
 - Destructive-test databases are **disposable and named** (e.g. port 5434), never the shared one.
 - **Guard hooks are the agents' to resolve.** A block that asks for a reshape (a copy or reuse gate, a test guard refusing removed assertions): the builder stops and puts the block in its report's first line, never asks in its pane; the foreman reworks the work order (add checks beside the old ones, reuse instead of copying). Never route such a block to the owner, and never type an unblock phrase. The exception is a migration guard (`SETUP.md` §5): it exists to wait for the owner's word, so ask once, with the reason.

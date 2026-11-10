@@ -48,7 +48,7 @@ Before sending, check every work order against this list:
 - [ ] **"Done when" sits right under the opening line**: the finish line the builder can check itself against (the tests that pass at head, one commit, the report written).
 - [ ] **One outcome.** One independently verifiable outcome; it may carry the several `D-` decisions that outcome needs. Two outcomes: split it.
 - [ ] **Every decision labelled `D-…` and final**, down to the exact expression or data shape.
-- [ ] **Every command exact**, with the prefix line of variables; `NEW` and `SUITE` defined once.
+- [ ] **Every command exact**, with the prefix line of variables; `NEW` and `AFFECTED` defined once.
 - [ ] **The state check pins the worktree, branch and exact HEAD sha** (re-pinned after the previous work order's review).
 - [ ] **Tests that must fail at the current head, named**; for existing code, "break it, see it fail, restore it".
 - [ ] **The hostile-input checklist H1–Hn, specific to this task**, plus the coverage gate, probes per task, G1–G6 and "untested paths".
@@ -107,7 +107,7 @@ Only when the owner says "you take over". **Nothing relaxes for you**:
 
 ## The end game
 
-- **Base-vs-head twice**: once by the builder, once by you at gate 2, and **both again at the final head** after the last fix.
+- **Base-vs-head twice**: once by the builder, once by you at gate 2 (run 1 only; your whole-suite run is at the final head), and **both again at the final head** after the last fix.
 - **Adjudicate every review claim by reproducing it first.** "Ship with follow-ups" becomes: fixed now, or rejected with a reason. No follow-ups.
 - **You run the lens inspection (`/f-inspect`) yourself**, in your session, with fresh lens agents; the builder never reviews its own branch. You check each finding and decide what the builder fixes. It isn't independent of you (QUICK skips it). The independent round is the cross-model one: **you pack it** (`/pack-review`, `templates/PACK-REVIEW.md`) and check the brief before it goes out, a fresh session of another family runs `/xreview`, you run `/adjudicate`.
 - **Scan the PR body for builder names** before anyone opens it.

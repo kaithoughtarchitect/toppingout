@@ -12,8 +12,10 @@ One file per product, kept in the records repo (`<records>/REPO-PROFILE-<product
 | Target repo | `<path>`, remote `<remote>` (usually `origin`), main branch `<main>` (usually `main`). Every template writes `<remote>/<main>`; the foreman fills in the real name in each work order |
 | Worktree tool and root | `<orca / git worktree>`, `<path>` |
 | Shell for work orders | **Bash is required** for every command in a work order (Git Bash on Windows): the templates use Bash variables, `env -u`, process substitution and `comm`. The builder may explore in any shell |
-| Gates (exact commands) | `<runner paths>`, or the repo's own gate, e.g. `python -m unittest discover -s tests -t .` |
+| Gates (exact commands) | `<runner paths>`, or the repo's own gate, e.g. `python -m unittest discover -s tests -t .`. **Whole-suite gate:** its name and paths in the runner (`run_full_gate <name> <paths>`, e.g. `g1_tests tests`): base-vs-head reuses a t-final capture by that name |
 | Test adapter | runner `<pytest / unittest / jest / vitest / go test / cargo test / other>`; its three Bash functions `run_tests`, `failed_ids`, `ran_ok` in `<records>/test-adapter.sh` (copied from `templates/TEST-ADAPTERS.md`, proved on a fixture before the first job), the branch-coverage command, and how new tests run against the previous commit's code |
+| Test time | one whole-suite run: `<n> min` measured `<date>` (from a run summary); the slowest tests from the adapter's `--durations` output. **Whole suite every work order:** `yes` under about 5 minutes, else `no` (the whole suite runs at t0 and the final head; `METHOD.md` §7) |
+| Parallel workers | `TEST_WORKERS=<n>` with the last line of `snippets/parallel_proof.sh` (`PROVED <date>: ...`), or `one process: <not proven / NOT PROVED line>`. Changing the test setup (a new shared database, a fixed port) means proving again |
 | Dirty-file allowlist | `<files that may be dirty in a worktree and are never staged, e.g. an untracked lockfile; or none>`. Every state check in a work order expects exactly this list |
 | Paid keys to strip on every run | `<ENV_VAR_1>`, `<ENV_VAR_2>` |
 | Disposable databases / services | `<name:port>` (never the shared one: `<name:port>`) |

@@ -124,7 +124,8 @@ The product's own changes never go in these folders: they're built in the job's 
 Write one runner per job (copy `snippets/run-gates.sh` and fill in its CONFIG and GATES blocks):
 - it starts with `WT=` and `LOG=` lines, and every run is `env -u <paid keys> ...`;
 - it writes one `.txt` and one `.exit` per gate, plus a `summary.txt` ending `ALL DONE`;
-- runs are serial, and each is called with a label (`t0`, `t1`, ...), so captures never overwrite each other.
+- runs go one at a time, and each is called with a label (`t0`, `t1`, ..., `t-final`), so captures never overwrite each other;
+- the whole-suite gate (`run_full_gate <name> <paths>`) runs through the repo's test adapter (`ADAPTER=` in the runner's CONFIG), at `t0`, `t0-<n>`, `t-final`, `t-final-<n>` and any `*-full` label, and writes `PATHS <name>: <paths>` to the summary (base-vs-head reuses a t-final capture by that line); at other labels it records a skip, because each work order already ran its affected tests (`METHOD.md` §7). A suite under about 5 minutes runs it every time (`FULL_EVERY_CAPTURE=1`, the repo profile's "Whole suite every work order: yes").
 
 A code area that no gate covers gets its own runner by explicit path: another copy of the same template, whose gates name that area's tests.
 

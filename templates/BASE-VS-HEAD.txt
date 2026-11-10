@@ -46,8 +46,16 @@ RUN 1 - THE TESTS THAT DEPEND ON WHAT CHANGED
        ( cd "$WT"   && run_tests "$B/head.txt" "$B/head.exit" <set> )
        ( cd "$BASE" && run_tests "$B/base.txt" "$B/base.exit" <base set> )
      Each run_tests line is its own tool call, never chained: a call past the tool limit loses the exit file.
-1.4  WIDENED: the same for the whole affected suites, into base-wide.* and head-wide.* (again one call per run; base-wide only if 1.2 said "base-wide RUN"):
+1.4  WIDENED <the builder's first run (METHOD.md section 8 step 1) and both final-head runs (step 6) only; the
+     foreman's gate-2 run is run 1 alone: omit 1.4, and base-wide from 1.2's loop>: the same for the whole
+     affected suites, into base-wide.* and head-wide.* (again one call per run; base-wide only if 1.2 said
+     "base-wide RUN"):
        <suite paths>
+     HEAD-WIDE FROM YOUR OWN t-final CAPTURE <builder, final head only>: when your t-final capture ran the
+     whole suite (run_full_gate, through the same adapter) at this exact head over exactly <suite paths>, copy
+     it instead of running it again (G = the profile's whole-suite gate name, e.g. g1_tests):
+       C="$DAY/t-final-<ticket>-gates"; G="<whole-suite gate name>"; grep -qE "^HEAD: +[0-9a-f]+ +$(git -C "$WT" rev-parse HEAD)$" "$C/summary.txt" && grep -qxF "PATHS $G: <suite paths>" "$C/summary.txt" && [ -z "$(git -C "$WT" status --porcelain --untracked-files=no)" ] && cp "$C/$G.txt" "$B/head-wide.txt" && cp "$C/$G.exit" "$B/head-wide.exit" && echo "head-wide REUSED from t-final" || echo "head-wide RUN"
+     Only your own capture: the foreman never reuses the builder's, and the builder never the foreman's.
      Save each base run you made, once ran_ok passes on it (1.5):
        cp "$B/<r>.txt" "$B/<r>.exit" "$B/<r>.key" "$S/"
 1.5  First ran_ok on every output (a run that collected nothing or crashed is a
@@ -77,14 +85,14 @@ Every output is already under $B (base, head, the exit files, red_at_head_only.t
 REPORT - ONE FILE, LF ENDINGS: $DAY/JOB-<N>-WORK-ORDER-<m>-REPORT.md
   1. The base-equality check. 2. Run 1: the set, COUNT, each base run
   REUSED or RUN with its key, both summaries,
-  the widened summaries, each RAN_OK result and exit code, the comm
+  the widened summaries (head-wide REUSED or RUN), each RAN_OK result and exit code, the comm
   command and red_at_head_only (quoted, or "empty"). 3. Run 2 as above.
   4. <Database roles restored after each arm, if the repo has arms.> 5. CR-byte count (0). 6. Final line: "WORK ORDER <m> DONE" or
   "WORK ORDER <m> STOPPED: red_at_head_only = <n>".
 
 RULES THAT ARE NOT NEGOTIABLE
 1. No code change, no commit, no push. 2. Paid keys stripped on every
-run. 3. Serial runs only; never touch a container. 4. Never retry a
+run. 3. One test run at a time; never touch a container. 4. Never retry a
 red test to green. 5. Never name a model, agent, vendor or tool.
 
 ### END OF WORK ORDER <m>. WRITE THE REPORT FILE, THEN STOP.

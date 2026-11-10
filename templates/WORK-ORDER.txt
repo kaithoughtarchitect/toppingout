@@ -1,7 +1,7 @@
 FOREMAN PRE-SEND CHECKLIST (tick every box before the pointer goes out; RULES.md "Foreman rules")
 [ ] One independently verifiable outcome (it may carry several D- decisions; two outcomes = two work orders).
 [ ] Every decision labelled D-... and final, down to the exact expression or data shape.
-[ ] Every command exact; prefix line on every command; NEW and SUITE defined once.
+[ ] Every command exact; prefix line on every command; NEW, BEFORE and AFFECTED defined once (the affected set from import_scan.py over the modules this work order touches; the whole test folder when the set is empty, the work order touches a conftest, fixture, helper or a file the scan can't follow, or the profile says "Whole suite every work order: yes").
 [ ] State check pins worktree, branch and the exact HEAD sha (re-pinned after the previous work order's review).
 [ ] Tests that must fail at the current head are named - and each one CAN exist (checked against the code). A correct test that cannot fail first (the language already gives the behaviour, or it pins a value that already exists, like a product name) is named as such under TESTS THAT CANNOT FAIL FIRST, with what pins it, never listed as must-fail.
 [ ] Hostile-input checklist H1-Hn specific to this task; coverage gate, probes per task, G1-G6, untested paths.
@@ -42,7 +42,13 @@ Use Bash (Git Bash on Windows). Start EVERY command with this exact prefix line:
 
 Test commands (always from $WT, through the repo's test adapter, templates/TEST-ADAPTERS.md):
   NEW   = ( cd "$WT" && run_tests "$O/new.txt" "$O/new.exit" <new test file> )
-  SUITE = ( cd "$WT" && run_tests "$O/suite.txt" "$O/suite.exit" <the whole test folder> )
+  BEFORE   = ( cd "$WT" && run_tests "$O/before.txt" "$O/before.exit" <the affected set> )
+  AFFECTED = ( cd "$WT" && run_tests "$O/affected.txt" "$O/affected.exit" <the affected set> <new test file> )
+    <the affected set>: the test files python "$DAY/import_scan.py" prints for <the touched modules>. The whole
+    test folder instead when that set is empty, when this work order touches a conftest, fixture, test helper or
+    a file the scan can't follow (data, SQL, config), for a stack the scan can't read, or when the repo profile
+    says "Whole suite every work order: yes" (templates/TEST-ADAPTERS.md "Affected tests"). The whole suite
+    runs at t0 and at the final head.
   (paid keys are stripped inside run_tests by the adapter's no_paid guard)
 
 FILES YOU MAY READ
@@ -59,6 +65,8 @@ PART 0 - STATE CHECK (stop on any mismatch; write it in the report)
 0.5  (diagnostics) git -C "$WT" log --oneline <base>..HEAD | wc -l -> <n>; git -C "$WT" log -1 --format=%s -> <subject>
 0.6  ls "$REC/foreman/jobs/<job file name>"     -> the file is listed (existence only; don't open it).
      Missing: STOP. This isn't a job yet; work order 1 creates the job file.
+0.7  Run BEFORE now, before you change anything: ran_ok "$O/before.txt" "$O/before.exit" must pass.
+     It is this work order's baseline for B.2.
 
 <PART A - REPAIRS FROM THE LAST REVIEW, if any: for each R<i>, the
  test to add (must FAIL now), the exact fix, the test PASSES after.>
@@ -105,11 +113,14 @@ TESTS THAT CANNOT FAIL FIRST (named by the foreman; not run red)
 BUILD
 -----
 B.1  Implement D-<x> to D-<v> in <file>.
-B.2  Run NEW: all pass. Run SUITE: RAN_OK, then the failing-test IDs
-     identical to the baseline's (the repo's test adapter,
-     templates/TEST-ADAPTERS.md), passed = baseline passed + your new tests:
-       ran_ok "$O/suite.txt" "$O/suite.exit" && diff <(failed_ids <baseline output>) <(failed_ids "$O/suite.txt")
-     Any difference: do not commit; report; STOP.
+B.2  Run NEW: all pass. Run AFFECTED: RAN_OK, its failing-test IDs
+     identical to BEFORE's, and its passed count = BEFORE's passed + your
+     new tests (the two summary lines; a test lost, skipped or no longer
+     collected shows here):
+       ran_ok "$O/affected.txt" "$O/affected.exit" && diff <(failed_ids "$O/before.txt") <(failed_ids "$O/affected.txt")
+     Any difference: do not commit; report; STOP. The one allowed
+     difference: a test the foreman named here as red at BEFORE and meant
+     to turn green by this work order (<none | test ids>).
 B.2a COVERAGE GATE. Run NEW once more under branch coverage:
        <NEW under the profile's branch-coverage command, e.g. pytest
         --cov=<new module> --cov-branch --cov-report=term-missing>
@@ -139,9 +150,11 @@ B.4  Commit:
        git -C "$WT" add <explicit paths>
        git -C "$WT" diff --cached --name-only     (exactly those)
        git -C "$WT" commit -m "<KEY> <verb phrase>"
-B.5  Captures, serially: bash "$DAY/<gate runner>" t<k> then
+B.5  Captures, one at a time: bash "$DAY/<gate runner>" t<k> then
      bash "$DAY/<other runner>" t<k>; wait for "ALL DONE" in each
-     summary.txt; count the .exit files.
+     summary.txt; count the .exit files against the gates that ran (the
+     whole-suite gate says SKIP except at t0, t-final and *-full labels;
+     a repeated t0 is t0-2, a second capture at the final head t-final-2).
 
 REPORT - ONE FILE, LF ENDINGS
 -----------------------------
@@ -150,7 +163,7 @@ Every claim cites its evidence: the command and its output, the commit
 hash, the test name. A claim without evidence is treated as not done.
 In order: 0. The report's first line: "NEEDS FROM THE FOREMAN: none" or
 "NEEDS FROM THE FOREMAN: BLOCKED on <what>". 1. PART 0 outputs. 2. The test-first failure lines (say which,
-if any, passed and why). 3. NEW and SUITE summary lines, the diff
+if any, passed and why). 3. NEW, BEFORE and AFFECTED summary lines, the diff
 command and its output. 3a. The coverage table (B.2a) and, for each
 uncovered line, its test or its allowed reason. 3b. The probe results
 (B.2b), each BITES. 3c. The gap checklist (B.2c), G1-G6, each with its
@@ -174,7 +187,8 @@ RULES THAT ARE NOT NEGOTIABLE
    producer of work, anywhere.
 4. Every test run strips the paid keys first; every -u before every
    VAR=value.
-5. Serial runs only. Never restart, stop or remove a container.
+5. One test run at a time (a run may use the workers the adapter sets).
+   Never restart, stop or remove a container.
 6. A new red test anywhere is a finding: report it, never retry it to
    green.
 7. A mutation probe that comes back GREEN (the tests still pass with
