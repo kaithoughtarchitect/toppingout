@@ -1,6 +1,6 @@
 # FULL extras (start from JOB-STANDARD.md)
 
-A job is FULL only when it spans several services. Copy `JOB-STANDARD.md`, set **Lane:** FULL, then add:
+A job is FULL only when it spans several services. Copy `JOB-STANDARD.md`, set **Size:** FULL, then add:
 
 - **Phase 0:** one t0 table per service, and each service's gate runner.
 - **Phase 2:** a row per cross-service contract (the interface, its owner, what changes).

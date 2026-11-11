@@ -11,7 +11,7 @@ sample_note: Every round uses this layout, exactly as the skill prints it. The m
 - Anything the code or the evidence can answer sits under "Settled by the foreman", with the evidence named, not as a question to you.
 - No question in a round depends on another question still open in the same round.
 - It stops asking once another answer would only tune implementation detail.
-- It ends with one self-contained commission block: in scope, out of scope, acceptance criteria, decisions with their reasons, the likely lane and the exact next action (`/f-blueprint <topic>`, or park it).
+- It ends with one self-contained commission block: in scope, out of scope, acceptance criteria, decisions with their reasons, the likely size (QUICK, STANDARD or FULL) and the exact next action (`/f-blueprint <topic>`, or park it).
 - It created no job, plan, code or commit along the way.
 
 ## Common questions

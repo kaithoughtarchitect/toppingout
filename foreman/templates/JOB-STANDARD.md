@@ -4,7 +4,7 @@
 **J-number:** J<n> (this job's ID for life) · **Board:** <NN> (its place on the project's board) · **Kind:** build
 **Ticket:** <tracker key and link>
 **SourcePlan:** <path to the blueprint section this job came from, or `none`>
-**Lane:** STANDARD
+**Size:** STANDARD
 **Inspections:** lens inspection: run · independent inspection: run
 **Validation strategy:** <code-read | check | harness | UI> (harness: its name and command from the repo profile)
 **Budgets:** repair work orders per task <3> · wall time <…> (usage-limit pauses don't count) · foreman tokens <…>

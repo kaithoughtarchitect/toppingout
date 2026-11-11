@@ -74,7 +74,7 @@ With a pane link (the repo profile's builder delivery), run `orca terminal list 
 Read the entire job file. **First list every unfilled placeholder** (`grep -n '<[^>]*>' <job file> | grep -v '`[^`]*<[^`]*`'`, ignoring the JOB COMPLETE section, which Step 3.1 replaces): each one is the first finding of the preflight, filled from the reviews before anything else. Then extract:
 
 - **Title**: the job's `# Job <NN>, <title>` line
-- **Lane**: QUICK / STANDARD / FULL
+- **Size**: QUICK / STANDARD / FULL (older job files call it **Lane**)
 - **Phase Status table**: All phases and their completion status
 - **Validation strategy**: `code-read | check | harness | UI` (the header line; older records: the State Summary block)
 - **Requirements**: How many satisfied
@@ -121,9 +121,9 @@ Net Change:    Lines Added - Lines Removed
 
 #### Step 2.1: Check Phase Completion
 
-Every lane uses the same phases 0–7 (`foreman/templates/JOB-STANDARD.md`, or `JOB-QUICK.md` for QUICK). Verify:
+Every size uses the same phases 0–7 (`foreman/templates/JOB-STANDARD.md`, or `JOB-QUICK.md` for QUICK). Verify:
 
-| Lane | Required |
+| Size | Required |
 | --- | --- |
 | STANDARD, FULL | Phases 0–7 all ✅; both inspections have rows in Phase 6 |
 | QUICK | Phases 0–7 all ✅; Phase 6's lens-inspection row says `SKIP (QUICK)` and the independent inspection has a row |
@@ -297,7 +297,7 @@ Output summary to user:
 # Job Closed
 
 **J-number:** [J<n>, title] · **Board:** [NN]
-**Lane:** [lane]
+**Size:** [size]
 **Validation Strategy:** [code-read | check | harness | UI]
 
 ## Final Metrics

@@ -5633,7 +5633,7 @@ class Site:
                   "Success rate: 100 when it was used once and worked, 80 when it is still untried."),
                  ("build", "BUILD", "A short record of what one job built, and what it taught.", "entries/builds/", "BUILD_YYYYMMDD_SHORT_NAME",
                   [("cluster", "billing"), ("impact", "HIGH"), ("scope", "SIGNIFICANT")], build,
-                  "Scope is the job's size: MAJOR over 8 hours, SIGNIFICANT 4 to 8, MODERATE 2 to 4, MINOR under 2.")]
+                  "Scope is how long the job took: MAJOR over 8 hours, SIGNIFICANT 4 to 8, MODERATE 2 to 4, MINOR under 2.")]
         c_items, c_rows = [], []
         for key, name, what, folder, cid, fm, secs, measure in types:
             card = (f'<div class="card ty-{key}"><div class="ch"><b>{name}</b><code>{esc(cid)}</code></div>'

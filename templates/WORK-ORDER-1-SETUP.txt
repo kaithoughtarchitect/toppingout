@@ -82,7 +82,7 @@ PART 5 - THE JOB FILE
 **J-number:** J<n> · **Board:** <NN>
 **Ticket:** <key and link>
 **SourcePlan:** <blueprint section path or , >
-**Lane:** <STANDARD | QUICK | FULL>
+**Size:** <STANDARD | QUICK | FULL>
 **Inspections:** lens inspection: <run | SKIP (QUICK)> · independent inspection: run
 **Validation strategy:** <code-read | check | harness | UI>
 **Budgets:** repair work orders per task <n> · wall time <…> · foreman tokens <…>

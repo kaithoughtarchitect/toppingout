@@ -68,9 +68,9 @@ Topping Out has four roles: the foreman, the builder, the inspectors (the lens a
 
 **On the board:** at the owner's "go", record it with the `f-board` **start** event (the job becomes in-progress and `next`). If the job later HALTs, record the **halt** event.
 
-**Lane:** a ticket built by this method is **STANDARD** by default (job record `foreman/templates/JOB-STANDARD.md`); QUICK (`JOB-QUICK.md`) when the owner agrees it at "go"; FULL only if the ticket spans several services (`JOB-STANDARD.md` plus `JOB-FULL.md`). Work order 1 names the template for the lane.
+**Size:** a ticket built by this method is **STANDARD** by default (job record `foreman/templates/JOB-STANDARD.md`); QUICK (`JOB-QUICK.md`) when the owner agrees it at "go"; FULL only if the ticket spans several services (`JOB-STANDARD.md` plus `JOB-FULL.md`). Work order 1 names the template for the size.
 
-**QUICK lane** (a small, low-risk ticket: one module, no security, concurrency, schema or outward change, no new dependency): the same work orders and mechanical checks, one base-vs-head run at the end, the acceptance ledger, and **one** inspection: the independent inspection. The lens inspection is skipped and recorded as `SKIP (QUICK)` in the job header, gate 2 and the PR's review record. The owner agrees the lane at "go"; any finding of a security or concurrency kind moves the job back to STANDARD.
+**QUICK size** (a small, low-risk ticket: one module, no security, concurrency, schema or outward change, no new dependency): the same work orders and mechanical checks, one base-vs-head run at the end, the acceptance ledger, and **one** inspection: the independent inspection. The lens inspection is skipped and recorded as `SKIP (QUICK)` in the job header, gate 2 and the PR's review record. The owner agrees the size at "go"; any finding of a security or concurrency kind moves the job back to STANDARD.
 
 **Budgets** (in the repo profile, recorded in the job header): max repair work orders per task (default 3), wall time, foreman tokens. Exhausting one is a HALT: re-scope the job, split it, or switch builder, with the owner. A usage-limit pause doesn't count against wall time, and never leads to a switch (§7e).
 

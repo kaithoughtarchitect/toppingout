@@ -79,7 +79,7 @@ Use this section only when mode is **full**.
 ```
 - git log --oneline -5 + git status --short          → the REAL committed/uncommitted state (target repo AND records repo, if separate)
 - Read the repo's always-current state docs, if it keeps any (e.g. root HANDOFF.md / STATUS.md) → what's done / next
-- Read the active job file if one exists (foreman/jobs/JOB_*.md) and the job's PLAN.md → lane, open tasks, work orders done
+- Read the active job file if one exists (foreman/jobs/JOB_*.md) and the job's PLAN.md → size, open tasks, work orders done
 - Read the PREVIOUS handoff (the newest `foreman/handovers/AGENT-HANDOFF-*`) → template baseline + what carried forward
 - Verify EVERY file path you will reference actually exists (Glob)
 - Spot-check load-bearing claims in code (constants, config values, model names, counts) with Grep/Read

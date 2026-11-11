@@ -20,7 +20,7 @@
 ## Starting point (measured, with the commands)
 <What the repository already holds for this job: files, partial work, tests. Updated whenever the ticket is picked.>
 
-## Size check
+## Fits one PR
 One PR, one module area, roughly 8–9 work orders at most. If scoping shows it's bigger, split the job (`/f-schedule --split <project> <nn>`) rather than stretching the job.
 
 ## For a decision job only

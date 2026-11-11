@@ -139,7 +139,7 @@ When every question is settled, return a self-contained block:
 - existing patterns/interfaces to preserve;
 - decisions made with rationale;
 - open empirical checks;
-- likely lane (QUICK / STANDARD / FULL) and why;
+- likely size (QUICK / STANDARD / FULL) and why;
 - suggested validation strategy;
 - options ruled out along the way that could plausibly come back: propose a ruled-out card for each (`/f-card`, tag `ruled-out`), written on the owner's yes;
 - known future work this commission leads to (id, title, what it needs), so it goes on the project board with real `needs` (`render_board.py … add`, `METHOD.md` §11);
