@@ -74,7 +74,14 @@ The name comes from the building site: the ceremony held when the last beam goes
 | A new foreman | this README → `METHOD.md` → `RULES.md` → `OVERRIDES.md` → `Foreman-Playbook.md` → `templates/` |
 | The owner | this README → `METHOD.md` §"The owner's loop" → `BUILDER-PROFILES.md` |
 | Setting it up in a new repo | `SETUP.md` |
+| Updating an existing install | the next section |
 | Choosing or running a builder | `BUILDER-PROFILES.md` + `Builder-Playbook.md` |
+
+## Updating
+
+In your project, **between jobs**, start a session and type `/f-setup`. It pulls the newest Topping Out, shows what's new (`CHANGELOG.md`), applies it on your yes, keeps every file you've adapted, and commits exactly the changed files on your word. It refuses while a job is open. Read-only check at any time: `node <path to toppingout>/skills/f-setup/install.mjs --repo . --check`.
+
+**An install from before 2026-11-11** has the older `/f-setup`, which doesn't pull. Update once by hand: `git pull` in your Topping Out folder, then `/f-setup`. From then on, `/f-setup` alone.
 
 ---
 

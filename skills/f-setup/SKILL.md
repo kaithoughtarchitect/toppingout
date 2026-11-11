@@ -4,9 +4,10 @@ description: >
   Install Topping Out into a repo, or upgrade an existing install, then fill in
   the repo profile, the names files and the test adapter, and prove the install.
   Use when the user runs /f-setup, says "set up Topping Out here", "install the
-  method", "upgrade Topping Out", or points at the package and asks to install it.
-  Never commits or pushes (the owner's word); never overwrites a file the repo
-  already has, except an unadapted one during an upgrade.
+  method", "upgrade Topping Out", "update Topping Out", "is there a new version",
+  or points at the package and asks to install it. Never pushes; commits an
+  upgrade only on the owner's word; never overwrites a file the repo already has,
+  except an unadapted one during an upgrade.
 ---
 
 # Topping Out: Setup
@@ -18,7 +19,7 @@ One command from an empty repo to a repo ready for its first job: the files inst
 **The contract:**
 - **Copy only what's missing; never overwrite.** A file the repo already has may carry its adaptations (`SETUP.md` §1 "Adapt"). The installer's upgrade mode is the only path that replaces a file, and only one unchanged since the last install.
 - **Find out before asking.** Read the repo for every profile field it can answer; ask the owner only what it can't, in one batch.
-- **Git custody:** setup never stages, commits or pushes. It ends with the list of files for the owner's commit.
+- **Git custody:** setup never pushes, and never stages or commits on its own. An install ends with the list of files for the owner's commit. An upgrade, on the owner's word, stages exactly the installer's `== to commit` list and commits it (Step 1b); pushing, or a PR, stays the owner's.
 - **Secrets:** read the names of keys in `.env` files, never their values; never print a value. Never echo the names kept out of records (Step 3) into chat or a tracked file.
 - Ends with one line: `F-SETUP: READY <profile path>` or `F-SETUP: HALTED <specific reason>`.
 
@@ -43,16 +44,24 @@ One command from an empty repo to a repo ready for its first job: the files inst
 2. `node <package>/skills/f-setup/install.mjs --repo <repo>`: copies what's missing, creates the `foreman/` folders, writes `foreman/INSTALL-RECEIPT.txt` with the `installed …` lines, and adds `scratch/` to `.gitignore` unless git already ignores it. Exit 2 with "uncommitted changes" means the package checkout is dirty: report it and HALT (the receipt would name a revision that doesn't match the files).
 3. **Builders that read `.agents/skills/`** instead of `.claude/`: if the repo has an `.agents/` folder or the owner names such a builder, mirror `.claude/skills/` there the same way (copy only what's missing).
 
-## Step 1b · Upgrade
+## Step 1b · Upgrade (also: "update Topping Out")
 
-1. **A clean point:** the repo on its main branch (`git branch --show-current`), no job worktree open (`git worktree list` shows only the main checkout, or worktrees the owner says aren't jobs), no tracked changes in the files the upgrade touches.
-2. `node <package>/skills/f-setup/install.mjs --repo <repo> --upgrade`: the plan, writing nothing.
+The owner types `/f-setup`; everything below is this skill's work. Say what each step found in one line.
+
+1. **A clean point:** the repo on its main branch (`git branch --show-current`), no job worktree open (`git worktree list` shows only the main checkout, or worktrees the owner says aren't jobs), no tracked changes in the files the upgrade touches. Not clean: say what's open and HALT.
+2. **The package on this machine:** the receipt's `package:` path if it exists here and is a git checkout of the receipt's URL; otherwise `scratch/topping-out-package` (clone it from the receipt's URL, full clone, if it isn't there).
+3. **Is there anything new?** `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --check` (read-only: it fetches the package's remote). `UP TO DATE`: say so and stop with `F-SETUP: READY`.
+4. **The plan, with the newest package:** `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --upgrade --pull`. It fast-forwards the package checkout, then prints the plan and **what's new** (the `CHANGELOG.md` lines this install hasn't seen), writing nothing in the repo.
    - Exit 1: a job is open (`foreman/jobs/JOB_*.md`) or an end game is owed (`foreman/ENDGAME-PENDING.md`). Report it and HALT.
-   - Exit 2: report the installer's line. A receipt without a git revision, or a package clone without that revision: upgrade by hand (`SETUP.md` §1, "Upgrade by hand").
-3. Show the plan. On the owner's yes: `… --upgrade --apply`.
-4. **Adapted files** (changed here and in the package): for each, diff the repo's copy against the package's and merge the package's change into the adaptation by hand. Show each merge before writing it. **Gone from the package but adapted here:** ask the owner, keep or delete. **Added back:** a file listed under "add" that the repo once had and deleted on purpose (the voice trio, say): ask before keeping it.
-5. Any repo-profile row that names a path the upgrade removed: update it.
-6. Re-read the profile against the current `templates/REPO-PROFILE.md` and add any row the template gained since (e.g. "CI runner shape"), found out the same way as Step 2. Then the names-file check (Step 3.3) and Step 5.
+   - Exit 2: report the installer's line. A diverged package checkout: clone a fresh one into `scratch/`. A receipt without a git revision, or a package without that revision: upgrade by hand (`SETUP.md` §1, "Upgrade by hand").
+   - **Run the package's installer**, never the installed copy in `.claude/skills/f-setup/`: the package's is the new one.
+5. **Show the owner** what's new in plain words, then the plan's counts (added, replaced, kept for a hand merge, removed). On the owner's yes: `… --upgrade --apply`.
+6. **Adapted files** (changed here and in the package): for each, diff the repo's copy against the package's and merge the package's change into the adaptation by hand. Show each merge before writing it. **Gone from the package but adapted here:** ask the owner, keep or delete. **Added back:** a file listed under "add" that the repo once had and deleted on purpose (the voice trio, say): ask before keeping it.
+7. Any repo-profile row that names a path the upgrade removed: update it. Re-read the profile against the current `templates/REPO-PROFILE.md` and add any row the template gained since (e.g. "Test time", "Parallel workers", "Runs on"), found out the same way as Step 2. Then the names-file check (Step 3.3) and Step 5.
+8. **Commit, on the owner's word:** stage exactly the paths under the installer's `== to commit` (`git add -A -- <each path>`, so new files and removals are included), plus the files steps 6 and 7 changed; then `git status --short` must show none of those paths unstaged or untracked. Commit with a subject only, no trailer (`Topping Out <old> to <new>: <what's new, in a few words>`). Pushing, or opening a PR where the repo merges through PRs, is the owner's word.
+9. **New switches the update brought:** offer each that applies, one line each, never run without a yes. Today: **the parallel test proof** when the adapter is pytest and the profile's "Parallel workers" row isn't proven on this machine (`bash foreman/method/snippets/parallel_proof.sh <adapter> <cores minus 1, at most 6> <test paths>`, 20 to 30 minutes, between jobs; only on PROVED write the number into the git-ignored `foreman/.test-workers` and record the line in the profile).
+
+**A newer package mid-job:** never upgrade then. The foreman's site walk runs `--check` and only reports it; the upgrade waits for the end of the job.
 
 ## Step 1c · The Deep Agents add-on (only on yes)
 

@@ -16,7 +16,7 @@ In the repo that will hold your records, start a session and say `Read <path to 
 
 ### How do I update later?
 
-Run `/f-setup` again. With a receipt in the repo it upgrades: files you didn't adapt are replaced, files you did are listed for a merge by hand. It refuses while a job is open or an end game is owed.
+Between jobs, run `/f-setup` again. With a receipt in the repo it upgrades: it pulls the newest package, shows what's new from the changelog, and on your yes replaces the files you didn't adapt and lists the ones you did for a merge by hand. On your word it commits exactly the changed files, new ones included. It refuses while a job is open or an end game is owed. An install from before 2026-11-11 updates once by hand first: `git pull` in your Topping Out folder, then `/f-setup`.
 
 ### What does it ask me?
 

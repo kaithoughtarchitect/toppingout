@@ -33,7 +33,9 @@ no_paid() { local a=(); for k in $PAID_KEYS; do a+=(-u "$k"); done; env "${a[@]}
 **pytest**
 
 ```bash
-TEST_WORKERS=""   # empty = one process; a number only after the parallel proof (below) is recorded in the repo profile
+# workers per machine: a number in the git-ignored foreman/.test-workers of this machine's main checkout, written only
+# after this machine's parallel proof (below); no file = one process. FOREMAN_TEST_WORKERS, if set, wins for one run.
+TEST_WORKERS="${FOREMAN_TEST_WORKERS:-$(tr -dc '0-9' 2>/dev/null < "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)/../foreman/.test-workers")}"
 run_tests()  { local out=$1 ex=$2; shift 2; no_paid python -m pytest -rfE --durations=30 ${TEST_WORKERS:+-n "$TEST_WORKERS" --dist loadfile} "$@" >"$out" 2>&1; echo $? >"$ex"; }
 failed_ids() { grep -E '^(FAILED|ERROR) ' "$1" | cut -d' ' -f2 | sort -u; }
 ran_ok()     { local ex; ex=$(cat "$2"); [ "$ex" -le 1 ] && ! grep -qE 'no tests ran|ERROR collecting' "$1"; }   # 0 pass, 1 test failures; 2-5 = interrupted/usage/no tests
@@ -88,13 +90,13 @@ ran_ok()     { grep -qE '^running [1-9]' "$1" && ! grep -q 'error: could not com
 
 Runs never overlap (`RULES.md`), but one run may use several processes. A serial pytest run on a 12-core machine uses one core; with workers it can be several times faster. Most other runners already do this (jest, vitest, go test and cargo test run in parallel by default).
 
-**pytest:** `pytest-xdist` (a dev dependency), switched on by setting `TEST_WORKERS` in the adapter. **Only after the parallel proof**, because tests that share something (a file outside `tmp_path`, a port, one disposable database, the process environment) can pass alone and fail side by side:
+**pytest:** `pytest-xdist` (a dev dependency), switched on **per machine**: the worker count goes in the git-ignored `foreman/.test-workers` of that machine's main checkout, which the adapter reads (no file: one process). A PC and a server have different core counts, so each proves its own number. **Only after the parallel proof**, because tests that share something (a file outside `tmp_path`, a port, one disposable database, the process environment) can pass alone and fail side by side:
 
 ```bash
 bash snippets/parallel_proof.sh "<records>/test-adapter.sh" <workers, e.g. 6> <test paths...>
 ```
 
-It runs the suite once with one process and three times with the workers, and prints **PROVED** only when all four runs really ran with **identical failing-test IDs** and the parallel runs are at least twice as fast. Record its last line in the repo profile ("Parallel workers"), then set `TEST_WORKERS` in the adapter. Run it when no other session is running tests.
+It runs the suite once with one process and three times with the workers, and prints **PROVED** only when all four runs really ran with **identical failing-test IDs** and the parallel runs are at least twice as fast. Record its last line in the repo profile ("Parallel workers"), then write the number into that machine's `foreman/.test-workers` (add `foreman/.test-workers` to `.gitignore` if git doesn't ignore it yet). Run it when no other session is running tests.
 
 **A test that differs side by side** is a finding, never retried to green. The adapter's `--dist loadfile` keeps every test of one file on one worker, in order, so tests that share something within a file are safe. Tests in **different files** that share something (one disposable database, a fixed file or port) either move into one file or stop sharing it (`tmp_path`, a free port, a database per worker), then prove again. A test that only fails under load (a timing assertion) is fixed, not grouped.
 

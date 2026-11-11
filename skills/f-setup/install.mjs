@@ -5,6 +5,8 @@
 //   node install.mjs --repo <repo> [--pkg <package>] [--dry-run]      install: copy only what's missing, never overwrite
 //   node install.mjs --repo <repo> [--pkg <package>] --upgrade        upgrade plan (writes nothing)
 //   node install.mjs --repo <repo> [--pkg <package>] --upgrade --apply
+//   add --pull to an upgrade: first fast-forward the package checkout to its upstream (git fetch + merge --ff-only)
+//   node install.mjs --repo <repo> [--pkg <package>] --check     read-only: is a newer package on its remote? what's new?
 //   node install.mjs --self-test
 //   add --addon deep-agents to install with the Deep Agents add-on (addons/deep-agents/README.md), and --starter
 //   for its agent skeleton in a new project
@@ -16,7 +18,9 @@
 // Upgrade: needs the package as a git checkout and the receipt's revision. Per file: missing -> add; unchanged since
 //   the receipt -> replace; differs from both the old and the new package (adapted) -> kept, listed for a hand merge;
 //   removed from the package -> deleted if unadapted, else listed. Refuses while a job is open (foreman/jobs/JOB_*.md
-//   or foreman/ENDGAME-PENDING.md). With --apply it writes, then rewrites the receipt's revision line.
+//   or foreman/ENDGAME-PENDING.md). With --apply it writes, then rewrites the receipt's revision line, and prints
+//   every path to commit (new files included) under "== to commit".
+// What's new: the plan and --check print the lines CHANGELOG.md gained between the receipt's revision and the package's.
 // A git package must be clean: only its tracked files are copied, so the receipt's revision is exactly what was copied.
 // Add-ons: recorded in the receipt's "addons:" line, so an upgrade includes them; the starter skeleton is copied once
 //   and never upgraded (it becomes product code).
@@ -51,7 +55,7 @@ export function dest(p, { addons = new Set(), starter = false } = {}) {
     if (r.startsWith("starter/")) return starter ? r.slice("starter/".length) : null;
     return null; // the add-on's own README
   }
-  if (["AGENTS.md", "CONTRIBUTING.md", "ROADMAP.md"].includes(p)) return null; // the package's own repo pages, never the project's
+  if (["AGENTS.md", "CONTRIBUTING.md", "ROADMAP.md", "CHANGELOG.md"].includes(p)) return null; // the package's own repo pages, never the project's
   if (p.startsWith("skills/") || p.startsWith("agents/")) return ".claude/" + p;
   if (SCRIPTS.has(p)) return p;
   if (p.startsWith("foreman/templates/") || p.startsWith("foreman/blueprints/") || p.startsWith("foreman/logbook/")) return p;
@@ -86,6 +90,70 @@ function revision(pkg) {
 }
 function origin(pkg) {
   try { return git(pkg, "remote", "get-url", "origin").toString().trim(); } catch { return null; }
+}
+
+function receiptRevision(repo) {
+  const r = join(repo, "foreman/INSTALL-RECEIPT.txt");
+  if (!existsSync(r)) return null;
+  const m = readFileSync(r, "utf8").match(/^revision: ([0-9a-f]{7,40})\s*$/m);
+  return m ? m[1] : null;
+}
+
+// the CHANGELOG.md lines the package gained between two revisions (all of it when the old one had none)
+export function whatsNew(pkg, from, to = "HEAD") {
+  let had = true;
+  try { git(pkg, "cat-file", "-e", `${from}:CHANGELOG.md`); } catch { had = false; }
+  let lines;
+  if (had) {
+    lines = git(pkg, "diff", "--no-color", "-U0", from, to, "--", "CHANGELOG.md").toString().split("\n")
+      .filter((l) => l.startsWith("+") && !l.startsWith("+++")).map((l) => l.slice(1));
+  } else {
+    try { lines = git(pkg, "show", `${to}:CHANGELOG.md`).toString().split("\n"); } catch { return []; }
+    lines = lines.filter((l) => !/^# /.test(l));
+  }
+  while (lines.length && !lines[0].trim()) lines.shift();
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  return lines;
+}
+
+// fast-forward the package checkout to its upstream; refuse anything else
+export function pullPackage(pkg, log = console.log) {
+  if (!revision(pkg)) fail(`--pull needs the package as a git checkout; ${pkg} isn't one`);
+  if (git(pkg, "status", "--porcelain", "--untracked-files=no").toString().trim()) fail(`the package at ${pkg} has uncommitted changes: commit or stash them first`);
+  let up;
+  try { up = git(pkg, "rev-parse", "--abbrev-ref", "@{u}").toString().trim(); } catch { fail(`the package checkout has no upstream branch to pull from (git -C "${pkg}" branch -u origin/main)`); }
+  const before = revision(pkg);
+  try { git(pkg, "fetch", "--quiet"); } catch (e) { fail(`couldn't fetch the package's remote: ${String(e.stderr || e.message).split("\n")[0]}`); }
+  try { git(pkg, "merge", "--ff-only", "--quiet", up); } catch { fail(`the package checkout has diverged from ${up}: it can only be fast-forwarded. Resolve it by hand, or clone a fresh copy`); }
+  const after = revision(pkg);
+  log(after === before ? `f-setup: package already at the newest ${after.slice(0, 7)}` : `f-setup: package pulled ${before.slice(0, 7)} -> ${after.slice(0, 7)}`);
+}
+
+// read-only: compare the receipt's revision with the package's upstream
+export function checkUpdate(pkg, repo, log = console.log) {
+  const have = receiptRevision(repo);
+  if (!have) { log("f-setup: no receipt revision here, nothing to compare (install, or upgrade by hand)"); return 0; }
+  let up;
+  try { up = git(pkg, "rev-parse", "--abbrev-ref", "@{u}").toString().trim(); } catch { up = null; }
+  if (up) { try { git(pkg, "fetch", "--quiet"); } catch { log("f-setup: couldn't reach the package's remote; compared with the local checkout only"); up = null; } }
+  const tip = up ? git(pkg, "rev-parse", up).toString().trim() : revision(pkg);
+  if (!tip) { log("f-setup: the package isn't a git checkout; can't tell"); return 0; }
+  let known = true;
+  try { git(pkg, "cat-file", "-e", `${have}^{commit}`); } catch { known = false; }
+  if (tip.startsWith(have) || have.startsWith(tip)) { log(`f-setup: UP TO DATE at ${have.slice(0, 7)}`); return 0; }
+  const n = known ? git(pkg, "rev-list", "--count", `${have}..${tip}`).toString().trim() : "?";
+  if (known) {
+    // only changes that an upgrade would install count (the site and the package's own pages don't)
+    const opts = { addons: new Set(receiptAddons(readFileSync(join(repo, "foreman/INSTALL-RECEIPT.txt"), "utf8"))), starter: false };
+    const changed = git(pkg, "diff", "--name-only", have, tip).toString().split("\n").filter(Boolean);
+    if (!changed.some((f) => dest(f, opts) && !LOGBOOK_DATA.test(f))) {
+      log(`f-setup: UP TO DATE: the package's ${n} newer commit(s) change nothing an upgrade installs (the site or the package's own pages)`);
+      return 0;
+    }
+  }
+  log(`f-setup: UPDATE AVAILABLE: this repo is at ${have.slice(0, 7)}, the package at ${tip.slice(0, 7)} (${n} commit(s) newer). Upgrade between jobs: /f-setup, or install.mjs --upgrade --pull`);
+  if (known) { const w = whatsNew(pkg, have, tip); if (w.length) { log("== what's new"); for (const l of w) log(`   ${l}`); } }
+  return 0;
 }
 
 export function install(pkg, repo, { dryRun = false, log = console.log, addons = [], starter = false } = {}) {
@@ -213,12 +281,17 @@ export function upgrade(pkg, repo, { apply = false, log = console.log } = {}) {
   show("removeAdapted", "gone from the package but adapted here: kept, decide by hand", plan.removeAdapted);
   log(`== unchanged: ${plan.same}`);
   const rev = revision(pkg);
+  const news = whatsNew(pkg, old);
+  if (news.length) { log("== what's new"); for (const l of news) log(`   ${l}`); }
   if (!apply) { log(`f-setup: upgrade plan ${old.slice(0, 7)} -> ${(rev || "?").slice(0, 7)}; nothing written (add --apply)`); return 0; }
   for (const [d, p] of [...plan.add, ...plan.replace]) put(join(repo, d), readFileSync(join(pkg, p)));
   for (const d of plan.remove) unlinkSync(join(repo, d));
   for (const d of DIRS) mkdirSync(join(repo, d), { recursive: true });
   const receipt = join(repo, "foreman/INSTALL-RECEIPT.txt");
   writeFileSync(receipt, readFileSync(receipt, "utf8").replace(/^revision: .*$/m, `revision: ${rev}`) + plan.add.map(([d]) => `installed ${d}\n`).join("") + `upgraded ${new Date().toISOString().slice(0, 10)}: ${old.slice(0, 7)} -> ${rev.slice(0, 7)}, ${plan.add.length} added, ${plan.replace.length} replaced, ${plan.remove.length} removed, ${plan.adapted.length + plan.removeAdapted.length} left for a hand merge\n`);
+  const commit = ["foreman/INSTALL-RECEIPT.txt", ...[...plan.add, ...plan.replace].map(([d]) => d), ...plan.remove].sort();
+  log(`== to commit: ${commit.length} path(s), new files and removals included (stage exactly these: git add -A -- <path>)`);
+  for (const d of commit) log(`   ${d}`);
   log(`f-setup: upgraded to ${rev.slice(0, 7)}`);
   return 0;
 }
@@ -251,7 +324,7 @@ function selfTest() {
     const first = install(pkg, repo, { log: quiet });
     check("install copies what's missing", first.includes("foreman/method/METHOD.md") && first.includes(".claude/skills/f-a/SKILL.md") && first.includes("scripts/speak.ts") && first.includes("foreman/logbook/logbook_index.md"));
     check("install skips the site, generators and caches", !first.some((d) => /build_site|docs\/|pycache/.test(d)));
-    check("install skips the package's own repo pages", ["AGENTS.md", "CONTRIBUTING.md", "ROADMAP.md"].every((n) => !first.includes(n) && !first.includes("foreman/method/" + n)));
+    check("install skips the package's own repo pages", ["AGENTS.md", "CONTRIBUTING.md", "ROADMAP.md", "CHANGELOG.md"].every((n) => !first.includes(n) && !first.includes("foreman/method/" + n)));
     check("install never overwrites", readFileSync(join(repo, ".claude/skills/f-b/SKILL.md"), "utf8") === "b adapted\n");
     check("install writes the receipt and ignores scratch", readFileSync(join(repo, "foreman/INSTALL-RECEIPT.txt"), "utf8").includes(`revision: ${v1}`) && readFileSync(join(repo, ".gitignore"), "utf8").includes("scratch/"));
     check("a second install adds nothing", install(pkg, repo, { log: quiet }).length === 0 && readFileSync(join(repo, ".gitignore"), "utf8").match(/scratch\//g).length === 1);
@@ -273,6 +346,7 @@ function selfTest() {
     put(join(pkg, "foreman/logbook/entries/insights/INSIGHT-TEMPLATE.md"), "card template v2\n");
     put(join(pkg, "addons/deep-agents/deepagents-ref/AGENTS.md"), "ref v2\n");
     put(join(pkg, "addons/deep-agents/starter/src/agent/agent.py"), "agent v2\n");
+    put(join(pkg, "CHANGELOG.md"), "# Changelog\n\n## v2\n- two\n");
     git(pkg, "add", "-A"); git(pkg, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=", "commit", "-q", "-m", "v2");
     const { plan } = upgradePlan(pkg, repo);
     const names = (l) => l.map((x) => (Array.isArray(x) ? x[0] : x));
@@ -293,11 +367,36 @@ function selfTest() {
     put(join(repo, "foreman/jobs/JOB_2026-01-01_x.md"), "open\n");
     check("upgrade refuses while a job is open", upgrade(pkg, repo, { apply: true, log: quiet }) === 1 && readFileSync(join(repo, "foreman/method/METHOD.md"), "utf8") === "method v1\n");
     unlinkSync(join(repo, "foreman/jobs/JOB_2026-01-01_x.md"));
-    const applied = upgrade(pkg, repo, { apply: true, log: quiet });
+    check("what's new: the whole changelog when the old revision had none", whatsNew(pkg, v1).join("|") === "## v2|- two");
+    const out = [];
+    const applied = upgrade(pkg, repo, { apply: true, log: (l) => out.push(l) });
+    const toCommit = out.slice(out.findIndex((l) => l.startsWith("== to commit"))).map((l) => l.trim());
+    check("the plan shows what's new", out.includes("== what's new") && out.includes("   - two"));
+    check("apply lists every path to commit, new files and removals included", ["foreman/INSTALL-RECEIPT.txt", ".claude/skills/f-c/SKILL.md", "foreman/method/METHOD.md", ".claude/agents/x.md"].every((d) => toCommit.includes(d)) && !toCommit.includes("foreman/method/RULES.md"));
     const read = (p) => readFileSync(join(repo, p), "utf8").replace(/\r\n/g, "\n"); // a checkout may write CRLF
     check("upgrade applies", applied === 0 && read("foreman/method/METHOD.md") === "method v2\n" && existsSync(join(repo, ".claude/skills/f-c/SKILL.md")) && !existsSync(join(repo, ".claude/agents/x.md")));
     check("upgrade keeps adaptations and the Logbook index", read("foreman/method/RULES.md") === "rules adapted\n" && read("foreman/logbook/logbook_index.md") === "repo index\n");
     check("upgrade rewrites the receipt", read("foreman/INSTALL-RECEIPT.txt").includes(`revision: ${revision(pkg)}`));
+
+    // --check and --pull against a clone that tracks the package
+    const pc = join(tmp, "pc");
+    git(tmp, "clone", "-q", pkg, pc);
+    const v2 = revision(pkg);
+    const said = [];
+    checkUpdate(pc, repo, (l) => said.push(l));
+    check("--check says up to date at the receipt's revision", said.some((l) => l.includes(`UP TO DATE at ${v2.slice(0, 7)}`)));
+    put(join(pkg, "docs/index.html"), "site only v2\n");
+    git(pkg, "add", "-A"); git(pkg, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=", "commit", "-q", "-m", "site");
+    said.length = 0;
+    checkUpdate(pc, repo, (l) => said.push(l));
+    check("--check ignores a newer commit that changes only the site", said.some((l) => l.includes("UP TO DATE") && l.includes("change nothing an upgrade installs")));
+    put(join(pkg, "CHANGELOG.md"), "# Changelog\n\n## v3\n- three\n\n## v2\n- two\n"); put(join(pkg, "METHOD.md"), "method v3\n");
+    git(pkg, "add", "-A"); git(pkg, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=", "commit", "-q", "-m", "v3");
+    said.length = 0;
+    checkUpdate(pc, repo, (l) => said.push(l));
+    check("--check sees the newer upstream and only its new changelog lines", said.some((l) => l.includes("UPDATE AVAILABLE") && l.includes("2 commit(s) newer")) && said.includes("   - three") && !said.includes("   - two") && revision(pc) === v2);
+    pullPackage(pc, quiet);
+    check("--pull fast-forwards the package checkout", revision(pc) === revision(pkg));
   } catch (e) { results.push(`FAIL exception: ${e.message.split("\n")[0]}`); }
   finally { rmSync(tmp, { recursive: true, force: true }); }
   console.log(results.join("\n"));
@@ -307,7 +406,7 @@ function selfTest() {
 const argv = process.argv.slice(2);
 if (argv[0] === "--self-test") selfTest();
 else {
-  let repo, pkg, dryRun = false, up = false, apply = false, starter = false;
+  let repo, pkg, dryRun = false, up = false, apply = false, starter = false, pull = false, check = false;
   const addons = [];
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--repo") repo = argv[++i];
@@ -315,17 +414,23 @@ else {
     else if (argv[i] === "--dry-run") dryRun = true;
     else if (argv[i] === "--upgrade") up = true;
     else if (argv[i] === "--apply") apply = true;
+    else if (argv[i] === "--pull") pull = true;
+    else if (argv[i] === "--check") check = true;
     else if (argv[i] === "--addon") { const a = argv[++i]; if (!ADDONS.has(a)) fail(`unknown add-on ${a}; known: ${[...ADDONS].join(", ")}`); addons.push(a); }
     else if (argv[i] === "--starter") starter = true;
     else fail(`unknown argument ${argv[i]}`);
   }
-  if (!repo) fail("usage: --repo <repo> [--pkg <package>] [--dry-run] [--addon deep-agents [--starter]] | --upgrade [--apply] | --self-test");
+  if (!repo) fail("usage: --repo <repo> [--pkg <package>] [--dry-run] [--addon deep-agents [--starter]] | --upgrade [--pull] [--apply] | --check | --self-test");
   if (!pkg) pkg = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
   pkg = resolve(pkg); repo = resolve(repo);
   if (!existsSync(join(pkg, "METHOD.md")) || !existsSync(join(pkg, "skills"))) fail(`${pkg} is not the Topping Out package (no METHOD.md and skills/): pass --pkg`);
   if (!existsSync(repo)) fail(`no such repo folder: ${repo}`);
   if (pkg === repo) fail("--repo is the package itself");
   if (apply && !up) fail("--apply goes with --upgrade");
+  if (pull && !up) fail("--pull goes with --upgrade");
+  if (check && (up || dryRun || addons.length || starter)) fail("--check runs alone (read-only)");
+  if (check) process.exit(checkUpdate(pkg, repo));
+  if (pull) pullPackage(pkg);
   if (starter && !addons.includes("deep-agents")) fail("--starter goes with --addon deep-agents");
   if (up && (addons.length || starter)) fail("an upgrade takes its add-ons from the receipt; add one with a plain install (--addon), then upgrade");
   process.exit(up ? upgrade(pkg, repo, { apply }) : (install(pkg, repo, { dryRun, addons, starter }), 0));
