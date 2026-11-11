@@ -171,11 +171,42 @@ Each of these cost a turn the first time it bit. Read them before the first job 
 - **Headless Chrome screenshots** need an absolute output path; a relative one is silently written elsewhere or not at all.
 - **The stop watcher can be reaped.** The coding tool may kill background shells under memory pressure, and a dead watcher means the foreman can't see the builder stop. `orca-pi-connect` §6 tells the foreman to read the Stop log itself at the start of its next turn, and to go hand-carried if the log can't be read. A real job reported that setting `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1` before starting Claude Code stops the reaping; treat that as a reported workaround, not a documented setting.
 
+## 8b · Running in the cloud (a Linux server)
+
+Jobs and night shifts can run on a small Linux server you rent, driven through Orca, while your own computer sleeps. Orca on your computer becomes a window onto the server: close it and the work goes on.
+
+**What you need:** a VPS from any provider, Ubuntu 24.04 LTS, about 4 cores, 8 GB of RAM and 50 GB of disk or more (a job with its foreman, builder and tests used 2 to 3 GB of RAM); a free Tailscale account; Orca on your computer. Below, `<user>` is the server user you create and `<ts-ip>` is the server's Tailscale address. **Agents never run `sudo`:** every `sudo` line is yours, typed over `ssh -t <user>@<ts-ip> "sudo ..."`.
+
+1. **Harden the server.** Log in with an SSH key; create `<user>` with sudo and give it the key; in `/etc/ssh/sshd_config` set `PasswordAuthentication no` and `PermitRootLogin no`; turn on `unattended-upgrades`; `ufw` denies all incoming. Install Tailscale on the server and on your computer, then allow SSH only on Tailscale (`ufw allow in on tailscale0 to any port 22 proto tcp`) and remove the public SSH rule. Test each step in a second terminal before closing the first; the provider's web console is the way back in if you lock yourself out. Take a snapshot if your provider offers one.
+2. **Install Orca.** Download Orca's Linux `.deb`, then: `sudo apt-get install -y xvfb ./orca-ide_<version>_amd64.deb && sudo ufw allow in on tailscale0 to any port 6768 proto tcp && sudo loginctl enable-linger <user>`. On Linux the command is `orca-ide`; `xvfb` gives Orca's browser a virtual screen, and linger keeps your services running after you log out.
+3. **Pair your computer.** On the server, in the foreground: `orca-ide serve --port 6768 --pairing-address <ts-ip>`. It prints a pairing link: **a secret, like a password.** Paste it into Orca on your computer (Settings → Remote Orca Servers → Add Server), then stop the server with Ctrl+C. Install it as a service so it always runs: `orca-ide serve service install --port 6768 --bind <ts-ip> --pairing-address <ts-ip>` (binding to the Tailscale address keeps it off the public internet). The service also writes an `orca` command into `~/.local/bin`, which the skills call. On your computer, set Settings → Browser → Remote server workspaces to **Server (streamed)**: pages then load on the server, so they work with your computer closed.
+4. **Install the tools as `<user>`, no sudo,** under `~/.local`: Node 22 (the official tarball, checksum checked), `gh`, then `npm config set prefix ~/.local` and `npm install -g` Claude Code, the codex CLI and Pi (the version §1 pins). Copy Pi's stop extension to `~/.pi/agent/extensions/` (§4). Put `~/.local/bin` on `PATH` in `~/.bashrc`. Python: `sudo apt-get install -y python3-venv python3-pip`.
+5. **Sign in.** `orca-ide account add --agent claude` and `orca-ide account add --agent codex` each print a link to open on your computer; agents Orca starts use these accounts (a plain `claude auth status` over SSH may still say logged out: that's expected). `gh auth login --web`, then `gh auth setup-git`. API keys go in a file only you can read (`chmod 600`), sourced from `~/.bashrc` and `~/.profile`. **Write it with Unix line endings:** a key copied from Windows can carry a trailing carriage return that breaks every call. `cat -A <file>` must show lines ending in `$`, not `^M$`.
+6. **Your repo.** Clone it, create its environment (a Python `.venv`, say), install Topping Out (§1), and register it with Orca: `orca-ide repo add --path <repo> --kind git`. In the repo profile, set the **Foreman launch command** and the **Runs on** line (`templates/REPO-PROFILE.md`), so every foreman knows it is on a server.
+7. **The codex sandbox (Ubuntu 24.04).** The independent inspection runs codex read-only, and its sandbox needs `bwrap`, which Ubuntu 24.04's AppArmor setting blocks for ordinary users. Without this, codex stops with a sandbox error. Once, as you: `sudo apt-get install -y bubblewrap`, then save this as `/etc/apparmor.d/bwrap` and load it with `sudo apparmor_parser -r /etc/apparmor.d/bwrap`:
+   ```
+   abi <abi/4.0>,
+   include <tunables/global>
+
+   profile bwrap /usr/bin/bwrap flags=(unconfined) {
+     userns,
+     include if exists <local/bwrap>
+   }
+   ```
+   Check: `bwrap --unshare-user --ro-bind / / true` exits 0.
+8. **Start work** from Orca on your computer, in the server's workspace: a job (§7) or a night shift. Then you can close your computer.
+
+**On a server:**
+- **Browser work uses Orca's browser** (`orca tab create`, `snapshot`, `click`; METHOD.md §10). No browser extension runs there, and Playwright isn't needed.
+- **Something needs installing system-wide?** The foreman stops and asks you; it never tries `sudo`.
+- **Watching it:** `free -h` and `uptime` over SSH, or your provider's dashboard.
+- **Your phone (optional):** Orca Mobile pairs with the server over Tailscale (the phone on your tailnet): `orca-ide pair --mobile --address <ts-ip>`, then scan the QR code (a secret). Mobile pairing needs the service listening on every interface, so install it with `--bind 0.0.0.0 --refuse-public` instead (the firewall still allows port 6768 only on Tailscale, and Orca refuses public addresses).
+
 ## 9 · Tested setup
 
-**Tested:** Windows 11, Claude Code as the foreman, Git Bash for work orders, Node 22, Python 3.12, on real repos since September 2026. That is the only configuration every step has run on.
+**Tested:** Windows 11, Claude Code as the foreman, Git Bash for work orders, Node 22, Python 3.12, on real repos since September 2026. That is the only configuration every step has run on. **Also run:** jobs and night shifts on an Ubuntu 24.04 server through Orca (§8b).
 
-**Expected to work, not yet verified:** macOS and Linux. The installer and the checks are Node and Python, the work orders are Bash, and nothing in the core method needs Windows (the voice add-on's playback does); the Windows-specific parts are workarounds (§8). If something breaks on another system, it is most likely a path or shell difference an agent can fix in place.
+**Expected to work, not yet verified:** macOS, and Linux as a desktop. The installer and the checks are Node and Python, the work orders are Bash, and nothing in the core method needs Windows (the voice add-on's playback does); the Windows-specific parts are workarounds (§8). If something breaks on another system, it is most likely a path or shell difference an agent can fix in place.
 
 | Part | Needed | Notes |
 |---|---|---|

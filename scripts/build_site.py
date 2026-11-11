@@ -59,10 +59,12 @@ SHEETS = [
     ("atlas.html", "Skill Atlas"),
     ("board.html", "Example board"),
     ("requirements.html", "Requirements"),
+    ("cloud.html", "Cloud setup"),
 ]
 # Brand marks for the requirements sheet, from Simple Icons (CC0): one 24x24 path each.
 BRAND_PI = ('M420 280H280V140H0V0H420V280Z', 'M560 560H420V280H560V560Z', 'M140 560H0V140H140V280H280V420H140V560Z')
 BRAND_MARKS = {
+    'server': 'M2 3h20v7H2ZM5 5.5v2h2v-2ZM2 14h20v7H2ZM5 16.5v2h2v-2Z',  # drawn for the site: two rack units
     'openai': 'M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z',
     'windows': 'M0,0H11.377V11.372H0ZM12.623,0H24V11.372H12.623ZM0,12.623H11.377V24H0Zm12.623,0H24V24H12.623',
     'claude': 'm4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z',
@@ -1708,6 +1710,41 @@ BOARD_KEYS = [
 ]
 
 
+CLOUD_CSS = r"""
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+.chead{padding:40px 0 10px}
+.chead .eyebrow{font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+.chead h1{margin:12px 0 14px;font:800 clamp(44px,7vw,80px)/.9 "Big Shoulders Display","Arial Narrow",Impact,sans-serif;text-transform:uppercase}
+.chead .lede{max-width:66ch;color:var(--ink-2);margin:0;font-size:17px}
+.cflow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:22px 0 0;padding:12px 14px;border:2px solid var(--ink);background:var(--panel);font:600 12px/1.3 "Martian Mono",ui-monospace,monospace}
+.cflow span{padding:6px 9px;border:2px solid var(--ink);background:var(--ground)}
+.cflow span.srv{background:#FBB401;color:#101316;border-color:#101316}
+.cflow i{font-style:normal;color:var(--ink-3)}
+.csec{margin:44px 0 0}
+.csec>h2{margin:0 0 14px;font:800 clamp(28px,4vw,40px)/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.cneed{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:2px solid var(--ink)}
+.cneed li{padding:12px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+.cneed li b{display:block;font-weight:700}
+.cneed li span{display:block;margin-top:3px;font-size:14px;color:var(--ink-2)}
+.csteps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.csteps li{display:grid;grid-template-columns:64px minmax(0,1fr);border:2px solid var(--ink);background:var(--panel);box-shadow:3px 3px 0 var(--ink)}
+.csteps .n{display:grid;place-items:center;background:#101316;color:#FBB401;font:800 34px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;border-right:2px solid var(--ink)}
+.csteps .b{padding:12px 16px 14px;min-width:0}
+.csteps h3{margin:0 0 4px;font-size:18px}
+.csteps p{margin:0 0 10px;color:var(--ink-2);max-width:72ch}
+.csteps .cmdline{max-width:100%}
+.ctips{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ctips li{padding:12px 14px;border:2px solid var(--ink);border-left:6px solid #FBB401;background:var(--panel)}
+.ctips li b{display:block;margin-bottom:3px}
+.ctips li span{font-size:14.5px;color:var(--ink-2)}
+.cmore{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 0;padding:14px 16px;background:#FBB401;color:#101316;border:2px solid #101316;box-shadow:3px 3px 0 #101316;text-decoration:none}
+.cmore b{font-weight:800}.cmore span{font-size:14px}
+.cmore:hover,.cmore:focus-visible{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #101316}
+.chead code,.csteps code,.ctips code,.cneed code{font:500 .9em "Martian Mono",ui-monospace,monospace;white-space:nowrap}
+@media (max-width:760px){.wrap{padding:0 16px}.cneed{grid-template-columns:minmax(0,1fr)}.ctips{grid-template-columns:minmax(0,1fr)}
+.csteps li{grid-template-columns:44px minmax(0,1fr)}.csteps .n{font-size:26px}.cmore{flex-direction:column;align-items:flex-start}}
+"""
+
 ABOUT_CSS = r"""
 .ab .wrap{max-width:980px;margin:0 auto;padding:30px 32px 10px}
 .abh{display:grid;grid-template-columns:auto minmax(0,1fr);gap:26px;align-items:center}
@@ -2526,6 +2563,7 @@ FRONT = {
         ("windows", "#0078D4", "Windows 11", "the machine", "Built and run here, every day."),
         ("gnubash", "#4EAA25", "Git Bash", "the shell", "Most commands run here."),
         ("powershell", "#5391FE", "PowerShell", "the other shell", "For the calls Git Bash rewrites."),
+        ("server", "#E95420", "Linux server", "the cloud option", "Ubuntu 24.04, driven through Orca: jobs run while your computer sleeps. See Cloud setup."),
         ("claude", "#D97757", "Claude Code", "the foreman", "Plans, inspects, signs off."),
         ("pi", "", "Pi", "the builder's agent", "The builder runs here, beside the foreman."),
         ("img:orca", "", "Orca", "the workspace", "Foreman and builder, side by side."),
@@ -2581,9 +2619,9 @@ FRONT = {
          "Setup adds one foreman/ folder and a short profile of your project.",
          "`SETUP.md` section 1"),
         ("Does it work on Mac or Linux?",
-         "Expected to, not yet verified.",
-         "It is tested on Windows 11. The installer and checks are Node and Python, and the work orders are Bash.",
-         "`SETUP.md` section 9, \"Tested setup\""),
+         "Linux, yes, on a server of your own. Mac: expected, not yet verified.",
+         "It is built on Windows 11, and runs on a Linux server through Orca (the Cloud setup sheet). The installer and checks are Node and Python, and the work orders are Bash.",
+         "`SETUP.md` sections 8b and 9"),
     ],
     "install_lede": "My own setup, shared as it is. I can only support what I use.",
     "gaps": [
@@ -5098,8 +5136,54 @@ class Site:
                 '</div></main>' + self.foot())
         return self.page("About · Topping Out", "Kai Thought Architect, who drew Topping Out, and the systems it grew from.", ABOUT_CSS, "about.html", body)
 
+    def cloud(self) -> str:
+        """A short guide: Topping Out on a Linux server of your own, driven through Orca. The exact commands live in
+        SETUP.md section 8b; this page is the walk-through and links there. Owner's word (2026-11-11): a plain guide,
+        no proof or test results on the page, and no provider named."""
+        repo = INSTALL["repo"]
+        setup = f"https://github.com/{repo}/blob/main/SETUP.md#8b--running-in-the-cloud-a-linux-server"
+        need = [("A VPS", "From any provider you like."), ("Ubuntu 24.04 LTS", "The steps below are written for it."),
+                ("4 cores, 8 GB RAM, 50 GB disk", "Or more. One job with its tests fits easily."),
+                ("A Tailscale account", "Free. It keeps the server off the public internet."),
+                ("Orca on your computer", "It becomes your window onto the server."),
+                ("The usual kit", "Git, Node, Python, the agents: see <a href=\"requirements.html\">Requirements</a>.")]
+        steps = [("Lock it down", "SSH keys only, a user of your own, the firewall closed to everything, then SSH only over Tailscale. Test each change in a second terminal before you close the first.",
+                  "sudo ufw allow in on tailscale0 to any port 22 proto tcp"),
+                 ("Install Orca", "Orca's Linux package, plus <code>xvfb</code> so its browser has a screen. Open Orca's port on Tailscale only, and turn on linger so it keeps running after you log out. On Linux the command is <code>orca-ide</code>.",
+                  "sudo apt-get install -y xvfb ./orca-ide_<version>_amd64.deb"),
+                 ("Pair your computer", "Run it once in the foreground: it prints a pairing link (a secret, like a password). Paste it into Orca on your computer, under Settings, Remote Orca Servers. Then install it as a service, and set Orca's browser to <b>Server (streamed)</b>.",
+                  "orca-ide serve --port 6768 --pairing-address <tailscale-ip>"),
+                 ("Add the agents", "Node, <code>gh</code>, Claude Code, codex and Pi go under your home folder, no <code>sudo</code>. Sign each agent in through Orca; each prints a link to open on your computer.",
+                  "orca-ide account add --agent claude"),
+                 ("Bring your repo", "Clone it, install Topping Out as usual, and register it with Orca. In the repo profile, set <b>Runs on</b> to the server, so every foreman knows where it is.",
+                  "orca-ide repo add --path <repo> --kind git"),
+                 ("Start work", "Open the server's workspace in Orca on your computer and start a job or a night shift. Then close your computer: the work carries on.",
+                  "/goal night shift: 2 jobs, auto-pick, until done or stopped")]
+        tips = [("Agents never use sudo", "If a job needs a system package, the foreman stops and asks you. You run it."),
+                ("The codex sandbox", "On Ubuntu 24.04 the independent review's read-only sandbox needs <code>bubblewrap</code> and a small AppArmor profile. A one-time fix, in SETUP.md."),
+                ("Browser work", "Walkthroughs use Orca's own browser on the server. No browser extension, no Playwright."),
+                ("API keys", "Keep them in a file only you can read, with Unix line endings: a key copied from Windows can carry a hidden carriage return."),
+                ("Watching it", "<code>free -h</code> and <code>uptime</code> over SSH, or your provider's dashboard."),
+                ("Your phone", "Orca Mobile can pair with the server too, with the phone on Tailscale.")]
+        need_html = "".join(f"<li><b>{esc(t)}</b><span>{d}</span></li>" for t, d in need)
+        steps_html = "".join(f'<li><span class="n">{i}</span><div class="b"><h3>{esc(t)}</h3><p>{d}</p>{cmd(c).replace("<code>/<wbr>", "<code>/")}</div></li>'
+                             for i, (t, d, c) in enumerate(steps, 1))
+        tips_html = "".join(f"<li><b>{esc(t)}</b><span>{d}</span></li>" for t, d in tips)
+        body = (f'<main class="cl"><div class="wrap"><header class="chead"><span class="eyebrow">Sheet {sheet_no("cloud.html")} · Cloud setup</span>'
+                '<h1>Cloud setup</h1><p class="lede">Set up your own cloud software factory. Rent a small Linux server, put Orca on it, '
+                'and your jobs and night shifts run there while your computer sleeps.</p>'
+                '<div class="cflow" aria-label="How it fits together"><span>Your computer</span><i>&rarr; Tailscale &rarr;</i>'
+                '<span class="srv">Your server: Orca, the foreman, the builder</span><i>&rarr;</i><span>GitHub</span></div></header>'
+                f'<section class="csec" id="need"><h2>What you need</h2><ul class="cneed">{need_html}</ul></section>'
+                f'<section class="csec" id="steps"><h2>Six steps</h2><ol class="csteps">{steps_html}</ol></section>'
+                f'<section class="csec" id="tips"><h2>Good to know</h2><ul class="ctips">{tips_html}</ul>'
+                f'<a class="cmore" href="{esc(setup)}"><b>Every command, step by step</b><span>SETUP.md, section 8b, on GitHub &#8599;</span></a></section>'
+                '</div></main>' + self.foot())
+        return self.page("Cloud setup · Topping Out", "Set up your own cloud software factory: Topping Out on a small Linux server, driven through Orca, while your computer sleeps.",
+                         CLOUD_CSS, "cloud.html", body, subs=[("#need", "What you need"), ("#steps", "Six steps"), ("#tips", "Good to know")])
+
     def board(self) -> str:
-        keys = "".join(f'<li data-hl="{i}" tabindex="0"><svg viewBox="0 0 72 48" aria-hidden="true">{svg}</svg><div><b><span class="kn">{i}</span>{esc(h)}</b><span>{esc(d)}</span></div></li>'
+        keys ="".join(f'<li data-hl="{i}" tabindex="0"><svg viewBox="0 0 72 48" aria-hidden="true">{svg}</svg><div><b><span class="kn">{i}</span>{esc(h)}</b><span>{esc(d)}</span></div></li>'
                        for i, (h, d, svg) in enumerate(BOARD_KEYS, 1))
         raw = RAW["board"][0]
         body = (f'<main><div class="wrap"><header class="bhead"><span class="eyebrow">Sheet {sheet_no("board.html")}</span><h1>Example board</h1>'
@@ -5386,14 +5470,14 @@ class Site:
         Without JavaScript it is a plain list of the kit."""
         F = FRONT
         by = {r[2]: r for r in F["req_core"]}
-        levels = [("ground", "Tested on", "Windows 11, with Git Bash and PowerShell. macOS and Linux are expected to work, not yet verified. Coming: a cloud option.",
-                   ["Windows 11", "Git Bash", "PowerShell"]),
+        levels = [("ground", "Tested on", "Windows 11, with Git Bash and PowerShell. macOS and desktop Linux are expected to work, not yet verified. Or on a Linux server of your own: see Cloud setup.",
+                   ["Windows 11", "Git Bash", "PowerShell", "Linux server"]),
                   ("crew", "The crew", "Who plans and who builds.", ["Claude Code"]),
                   ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"]),
                   ("site", "Optional", "Useful, not needed. Tap them if you have them; they don't count.", ["Pi", "Orca", "Greptile", "OpenRouter"])]
         # what each extra adds (README and SETUP.md: Orca and Pi carry the pointers, the night shift needs Orca; Greptile is the greploop rounds)
         opt_why = {"Pi": "The builder's agent I use, in the pane beside the foreman. Any agent that reads files, runs a shell and writes a report will do.",
-                   "Orca": "Foreman and builder side by side. Without it you carry one-line pointers; the night shift needs it.",
+                   "Orca": "Foreman and builder side by side. Without it you carry one-line pointers; the night shift and the cloud setup need it.",
                    "Greptile": "Up to three review rounds per PR, when you say greploop.",
                    "OpenRouter": "Voice, and the councils. Paid calls only when you allow them."}
         assert sorted(n for *_, ns in levels for n in ns) == sorted(by), "build_site: every requirement sits in one level"
@@ -5710,7 +5794,7 @@ class Site:
                         for when, title, text, c, kind in F["shift"])
         assert len(RULE_ICONS) == len(F["shift_rules"]), "build_site: one pictogram per shift rule"
         rules = "".join(f'<li>{icon}<span>{inline(r)}</span></li>' for icon, r in zip(RULE_ICONS, F["shift_rules"]))
-        out.append(sec(3, "shift", "The night shift") + f'<p class="lede">{inline(F["shift_lede"])}</p>'
+        out.append(sec(3, "shift", "The night shift") + f'<p class="lede">{inline(F["shift_lede"])} <a href="cloud.html">On a server of your own</a>, your computer can sleep too.</p>'
                    + NIGHT_STRIP
                    + '<div class="rboard"><div class="rbh"><b>Night shift rules</b><span>All workers · every night</span></div>'
                    + f'<ul>{rules}</ul></div></section>')
@@ -5749,7 +5833,7 @@ class Site:
         upd = INSTALL["steps"][2]
         first, then = INSTALL["steps"][0][2], INSTALL["steps"][1][2]
         by_req = {r[2]: r for r in F["req_core"]}
-        tag_order = ["Windows 11", "Git Bash", "PowerShell", "Claude Code", "Pi", "Orca", "Greptile", "OpenRouter", "Git", "GitHub and gh", "Node", "Python 3"]
+        tag_order = ["Windows 11", "Git Bash", "PowerShell", "Linux server", "Claude Code", "Pi", "Orca", "Greptile", "OpenRouter", "Git", "GitHub and gh", "Node", "Python 3"]
         assert sorted(tag_order) == sorted(by_req), "build_site: every requirement has a tag on the front page"
         # the builders I use sit together, one amber row after the workspace
         bnames = [b[2] for b in F["req_builders"]]
@@ -5764,7 +5848,7 @@ class Site:
         out.append(sec(6, "needs", "Requirements", F["install_lede"])
                    + '<div class="req"><div class="rmine" id="ptags"><h3>My setup <small>Inspected, in use</small></h3>'
                    f'<ul class="ptags">{req}</ul></div>'
-                   '<div class="rside"><div class="rno rtest"><h3>Tested on</h3><p><b>Windows 11, with Claude Code as the foreman.</b> macOS and Linux are expected to work, not yet verified.</p><p class="rcloud"><b>Coming</b>A cloud option.</p></div>'
+                   '<div class="rside"><div class="rno rtest"><h3>Tested on</h3><p><b>Windows 11, with Claude Code as the foreman.</b> macOS and desktop Linux are expected to work, not yet verified.</p><p class="rcloud"><b>Cloud</b><a href="cloud.html">Run it on a server while you sleep &rarr;</a></p></div>'
                    '<div class="ryours"><h3>Make it yours</h3><p>It&rsquo;s all plain text. Fork it, swap any part, and it&rsquo;s your setup.</p>'
                    f'<a class="rfork" href="https://github.com/{esc(repo)}/fork">Fork it on GitHub &#8599;</a></div>'
                    '<a class="rmore" href="requirements.html"><b>Every tool, in detail</b><span>What each one does here, and the builders I&rsquo;ve used</span><i aria-hidden="true">&rarr;</i></a></div></div>'
@@ -6142,6 +6226,7 @@ def main() -> int:
     write("repo.html", site.repo())
     write("logbook.html", site.logbook())
     write("requirements.html", site.requirements())
+    write("cloud.html", site.cloud())
     write("about.html", site.about())
     for pid in sorted(site.built):
         page, md = site.skill(pid)

@@ -11,7 +11,7 @@ Topping Out is a method and a set of skills for running AI coding agents one tic
 Don't copy files by hand. In the repo that will hold the user's records, read `skills/f-setup/SKILL.md` from this checkout and follow it. It runs `skills/f-setup/install.mjs`, profiles the repo, and asks only what it can't find.
 
 - Needs `git`, Node 18+, Python 3.9+ and Bash (`/f-setup` checks each).
-- Tested on Windows 11 with Claude Code as the foreman. macOS and Linux are expected to work but are not verified yet (`SETUP.md`, "Tested setup").
+- Tested on Windows 11 with Claude Code as the foreman. macOS and desktop Linux are expected to work but are not verified yet (`SETUP.md`, "Tested setup"). It also runs on a Linux server through Orca (`SETUP.md` §8b).
 - The installer copies only what a project needs (skills, agents, templates, the method). It never copies `docs/`, the wiki, `.github/` or this file.
 
 ## Where things are

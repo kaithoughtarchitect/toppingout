@@ -15,6 +15,7 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 - [Skill Atlas](https://toppingout.dev/atlas.html): Every Topping Out skill and agent as a map, with the links between them.
 - [Example board](https://toppingout.dev/board.html): What a Topping Out project board looks like, and how to read it: a made-up project with synthetic data.
 - [Requirements](https://toppingout.dev/requirements.html): The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.
+- [Cloud setup](https://toppingout.dev/cloud.html): Set up your own cloud software factory: Topping Out on a small Linux server, driven through Orca, while your computer sleeps.
 - [About](https://toppingout.dev/about.html): Kai Thought Architect, who drew Topping Out, and the systems it grew from.
 
 ## Skills and agents (Markdown)

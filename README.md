@@ -55,7 +55,7 @@ The name comes from the building site: the ceremony held when the last beam goes
 
 **How to start:** in the repo that will hold your records, start a session and say `Read <path to this folder>/skills/f-setup/SKILL.md and follow it` (`SETUP.md`). Then run one job (below). You don't need the whole flow first: the foreman follows `METHOD.md`, and you answer when it asks.
 
-**Tested on** Windows with Claude Code as the foreman. macOS and Linux are expected to work (the scripts are Node, Python and Bash) but aren't verified yet: `SETUP.md`, "Tested setup".
+**Tested on** Windows with Claude Code as the foreman. macOS and desktop Linux are expected to work (the scripts are Node, Python and Bash) but aren't verified yet: `SETUP.md`, "Tested setup". To run it on a Linux server of your own while your computer sleeps: `SETUP.md`, "Running in the cloud".
 
 ### One job, from your side
 
