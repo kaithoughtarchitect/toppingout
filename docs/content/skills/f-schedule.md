@@ -27,7 +27,7 @@ No. Publishing the board page and adding a note to the source plan are each a se
 
 ### What if scoping later finds a job is too big?
 
-Run `/f-schedule --split <project-slug> <job-id>`. The children replace the job, dependents are rewired, and every verification point is still carried. A merged or decision job can't be split.
+Run `/f-schedule --split <project-slug> <job-id>`. The children replace the job, dependents are rewired, and every verification point is still carried. A merged or decision job can't be split. Each job that needed the parent is pointed at the child it actually uses. Under an autonomous run (and every job of a night shift) the foreman may split the job it is running, at scoping only, when its plan is over the repo profile's work-order limit; the split is flagged for you to review.
 
 ### We use a ticket tracker. Will it create tickets there?
 

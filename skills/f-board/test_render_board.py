@@ -171,6 +171,24 @@ class Board(unittest.TestCase):
         self.refused(2, "close", "01", "--pr", "#2", "--merge", "abcdef1", "--no-next")
         self.ok("close", "01", "--pr", "#2", "--merge", "abcdef1", "--no-next", "--reason", "owner pause")
 
+    # --rewire: each dependent needs only the child it uses
+    def test_split_rewire_points_each_dependent_at_its_child(self):
+        self.ok("add", "05", "--title", "Uses part A", "--needs", "01")
+        self.ok("add", "06", "--title", "Uses part B", "--needs", "01")
+        self.ok("add", "07", "--title", "Uses nothing named", "--needs", "01")
+        self.ok("split", "01", "--into", "a=Part A,b=Part B", "--rewire", "05=a,06=b")
+        jobs = {j["id"]: j for j in self.data()["jobs"]}
+        self.assertEqual(jobs["05"]["needs"], ["01a"])
+        self.assertEqual(jobs["06"]["needs"], ["01b"])
+        self.assertEqual(sorted(jobs["07"]["needs"]), ["01a", "01b"])
+        self.assertEqual(jobs["01b"]["needs"], jobs["01a"]["needs"])  # no --chain: b doesn't need a
+        self.assertTrue(any("after 01 was split" in n for n in jobs["05"]["notes"]))
+
+    def test_split_rewire_refuses_a_job_that_isnt_a_dependent_or_a_wrong_child(self):
+        self.ok("add", "05", "--title", "Uses part A", "--needs", "01")
+        self.refused(2, "split", "01", "--into", "a=Part A,b=Part B", "--rewire", "03=a")
+        self.refused(2, "split", "01", "--into", "a=Part A,b=Part B", "--rewire", "05=c")
+
     # F12: split is one versioned event
     def test_split_in_progress_job(self):
         self.ok("start", "01", "--run", "J2")

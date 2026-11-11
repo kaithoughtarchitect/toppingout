@@ -21,7 +21,10 @@ summaries), then run `render`.
   render_board.py BOARD.json decided <job> --note "the owner's decision, quoted"
   render_board.py BOARD.json add     <job> --title "..." [--needs a,b] [--decision "..."] [--summary "..."]
                                      [--merged --pr "#5" --merge <sha> --run J5]   (backfill a job already merged)
-  render_board.py BOARD.json split   <job> --into "a=Title A,b=Title B" [--chain] [--active a]   (a suffix or the full child id)
+  render_board.py BOARD.json split   <job> --into "a=Title A,b=Title B" [--chain] [--active a] [--rewire "05=a,06=a+b"]
+                                     (a suffix or the full child id; --chain: each child needs the one before it;
+                                     --rewire: which child(ren) each dependent of the parent needs, by what it uses;
+                                     a dependent not named needs every child, or the last one with --chain)
   render_board.py BOARD.json covered <job> --by <job> --quote "<the owner's words>"   (an open job made redundant: it leaves the board)
   render_board.py BOARD.json set-next <job>
   render_board.py BOARD.json summary <job> --text "..."   (what the job builds, in plain words; check warns on a summary of plan references only)
@@ -516,7 +519,7 @@ def child_id(bid, suf):
 
 
 def ev_split(board, args):
-    pos, vals, flags = parse(args, ("--into", "--active", "--standfirst"), ("--chain",))
+    pos, vals, flags = parse(args, ("--into", "--active", "--standfirst", "--rewire"), ("--chain",))
     bid = one_job(pos, "split")
     b = job(board, bid)
     st = stored(b)
@@ -553,9 +556,24 @@ def ev_split(board, args):
             c["state"], c["run"] = "in-progress", b["run"]
         children.append(c)
     tail = [children[-1]["id"]] if "--chain" in flags else [c["id"] for c in children]
+    dependents = {x["id"] for x in board["jobs"] if bid in x.get("needs", [])}
+    rewire = {}
+    for item in [s for s in vals.get("--rewire", "").split(",") if s.strip()]:
+        if "=" not in item:
+            raise Usage(f"--rewire items are dependent=child[+child], got {item!r}")
+        dep, kids = (s.strip() for s in item.split("=", 1))
+        if dep not in dependents:
+            raise Usage(f"--rewire names {dep!r}, which doesn't need {bid}; dependents: {sorted(dependents) or 'none'}")
+        ids = [child_id(bid, k) for k in kids.split("+") if k.strip()]
+        if not ids or any(i not in [p[0] for p in parts] for i in ids):
+            raise Usage(f"--rewire {dep}={kids}: each must be one of the children {[p[0] for p in parts]}")
+        rewire[dep] = ids
     for x in board["jobs"]:
-        if bid in x.get("needs", []):
-            x["needs"] = [n for n in x["needs"] if n != bid] + [t for t in tail if t not in x["needs"]]
+        if x["id"] in dependents:
+            to = rewire.get(x["id"], tail)
+            x["needs"] = [n for n in x["needs"] if n != bid] + [t for t in to if t not in x["needs"]]
+            if x["id"] in rewire:
+                x.setdefault("notes", []).append(f"needs {', '.join(to)} after {bid} was split (what it uses)")
     board["jobs"][idx:idx + 1] = children
     board.setdefault("superseded", []).append({"id": bid, "title": b["title"], "by": [c["id"] for c in children],
                                                "at_version": board["version"] + 1})

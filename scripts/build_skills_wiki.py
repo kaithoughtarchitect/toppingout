@@ -83,7 +83,7 @@ SKILLS = {
                    ["adjudicate"], [], ["f-inspect"]),
     "f-night-shift": ("Run several jobs one after another without you: a shift boss opens a fresh foreman for each",
                       "When you type /goal night shift with a list of jobs, or a number of jobs to pick: usually before you sleep.",
-                      "Each job is its own autonomous run; the boss only starts it and checks the repo. Any stop ends the shift, and so does a completed topping out (the next head is yours to pick); the morning summary is one file.",
+                      "Each job is its own autonomous run; the boss only starts it and checks the repo. Any stop ends the shift, and so does a completed topping out (the next head is yours to pick); the morning summary is one file. It runs wherever Orca runs: on your computer, or on a Linux server of your own (`SETUP.md` §8b), so your computer can sleep too.",
                       [], [], ["f-signoff"]),
     "orca-pi-connect": ("Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes",
                         "Handing work to the builder in Orca: the foreman sends each work order itself and is woken up when the builder finishes.",
@@ -212,7 +212,7 @@ WHEN = {
     'lens-simplify': 'Last in every end-of-job review, as a report only.',
     'spec-validator-fixer': "At close, when the job record says something the code doesn't.",
     'code-explorer': 'When the foreman needs to understand how an existing feature works.',
-    'lens-instructions': 'When skills, prompts, agents or templates changed.',
+    'lens-instructions': 'When skills, prompts, agents or templates changed. It also runs on demand, outside any job, whenever you decide: ask the session "run lens-instructions over <files or folder>" (`/f-setup` installs it in `.claude/agents/`). Same agent as the one some repos call `instruction-reviewer`.',
     'lens-migrations': 'When the changes touch the database.',
 }
 

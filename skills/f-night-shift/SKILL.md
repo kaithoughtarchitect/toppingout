@@ -40,6 +40,7 @@ description: >
 ## 2 · The next job
 
 - **Planned mode:** each job was told its next job ("next job is board <id>" in its goal, for the end game only), so its end game writes that job's opener; check its line 1 `(board <id>)` is the next board id on the owner's list. If the finished job's end game picked a different one, stop: say which it picked and which the list said.
+- **A job that split itself** (`RULES.md`, "Its own job's split"): in planned mode its children take its place on the list, in order (05 becomes 05a, 05b, then 06), so the next job is its second child; write the new list and why in the shift record. Each child counts as a job against the shift's job count and time limits, so a shift can end on a child: the record says so, so it doesn't read as short.
 - **Auto mode:** take the opener the end game wrote; stop after the number of jobs the goal named.
 - **Spend:** read each job's **Extra paid spend** line in its dev report (`templates/DEV-REPORT.md`) and subtract it; at or over the cap, stop before the next job. A shift with a cap whose job's dev report has no such line ends there (nothing to measure, and a number is never guessed).
 - Then step 1 again, with a fresh tab and a fresh session. Never reuse a foreman session for a second job.

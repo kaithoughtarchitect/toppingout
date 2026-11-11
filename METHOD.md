@@ -214,7 +214,7 @@ When the builder is done (or out of budget) and only review fixes remain, **the 
 
 ## 10 · PR, merge, close
 
-**In an autonomous run** (`RULES.md`, "The one exception"), the owner's `/goal` stands in for the words in steps 2, 2a and 3 and for the walkthrough; every check below still runs, and any stop condition there halts the run.
+**In an autonomous run** (`RULES.md`, "The one exception"), the owner's `/goal` stands in for the words in steps 2, 2a and 3 and for the walkthrough; every check below still runs, and any stop condition there halts the run. A job that split itself at scoping (`RULES.md`, "Its own job's split") is flagged in the PR body and the dev report, and its second child is the next-ticket choice unless the goal names another.
 
 **Every build job takes this whole path, code or not** (`RULES.md` rule 13): documents, research and data deliverables go through the PR and the merge like code. Only a **decision** job skips steps 1–4: it is closed by the owner's recorded decision, then runs steps 5–9 the same way.
 
@@ -366,7 +366,7 @@ A reviewer model is rewarded for finding things, so it always finds something. L
 
 **The board is generated** (`skills/f-board/render_board.py`). The foreman records lifecycle **events**, one command each: `start` at "go", `close` (merged + next, one version), `halt`, `decided`, `add`. The tool derives ready/blocked from `needs`, bumps the version once, and re-renders; the page is republished to the same link. It refuses bad data and impossible events (starting a blocked job, closing a job that is not in progress, a merged job without its SHA, an ineligible `next`). **Never hand-edit the page or a job's state.** State lives only in `BOARD.json`, not in `PROJECT.md` or the ticket files.
 
-**If scoping finds a job too big:** `/f-schedule --split`, recorded in the project. Don't stretch the job.
+**If scoping finds a job too big:** `/f-schedule --split`, recorded in the project. Don't stretch the job. Under an autonomous run the foreman may split the job it is running, at scoping only, with its guards (`RULES.md`, "Its own job's split").
 
 ---
 

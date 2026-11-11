@@ -96,7 +96,7 @@ Commit nothing unless the owner asks.
 
 ## `--split <project-slug> <job-id>`
 
-When scoping shows a job is bigger than one PR: `render_board.py BOARD.json split <id> --into "a=Title A,b=Title B" [--chain] [--active a]` (one event: the children replace the job, dependents are rewired to the last child with `--chain` or to all children without it, a job in progress continues on its `--active` child, one version, a supersession record). Then move the VPs across in new ticket files (each VP still carried) and record the split in `PROJECT.md`. A merged or decision job can't be split.
+When scoping shows a job is bigger than one PR (a plan over the repo profile's "Max work orders per job", default 9): `render_board.py BOARD.json split <id> --into "a=Title A,b=Title B" [--chain] [--active a] [--rewire "05=a,06=b"]` (one event: the children replace the job; each dependent named in `--rewire` needs the child it actually uses, the rest need every child, or the last one with `--chain`; use `--chain` only when the second child uses the first one's code; a job in progress continues on its `--active` child; one version, a supersession record). Under an autonomous run the foreman may split the job it is running this way, with the guards in `RULES.md`, "Its own job's split"; an attended split is the owner's word. Then move the VPs across in new ticket files (each VP still carried) and record the split in `PROJECT.md`. A merged or decision job can't be split.
 
 ## Report
 
