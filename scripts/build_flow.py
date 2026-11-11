@@ -325,7 +325,7 @@ page = f"""<title>Topping Out Flow</title><script>try{{var t=localStorage.getIte
 </div></nav>
 <main>{''.join(stages_html)}</main>
 <div class="aside">
- <section class="card"><h2>The Logbook, now and then</h2><p><code>/f-card</code> for a lesson mid-job. <code>/f-dream</code> to merge duplicates and find repeated mistakes. <code>/f-distill</code> to promote the best cards into rules, on your word. <code>/f-archive</code> past 250 cards; ruled-out options always stay in view.</p></section>
+ <section class="card"><h2>The Logbook looks after itself</h2><p><code>/f-card</code> for a lesson mid-job. Every close catches up jobs that never got cards; every 10th close merges duplicate cards (<code>/f-dream</code>, with guards) and previews the cards ready to become rules. <code>/f-distill</code> promotes them, on your word. <code>/f-archive</code> past 250 cards; ruled-out options always stay in view.</p></section>
  <section class="card"><h2>Form B: an audition</h2><p>For a builder on trial, stage 2 changes: the builder writes the plan itself as plain steps (<code>WORK-ORDER-2-PLAN.txt</code>) and the foreman judges it at gate 1 (<code>GATE1-REVIEW.md</code>). Everything else on the route stays the same.</p></section>
 </div>
 <footer>Topping Out · METHOD.md §0–§14 · every skill and agent on this route is mapped in skills-wiki/index.md · roles: ◆ owner · ● foreman · ■ builder · ▲ independent inspector</footer>

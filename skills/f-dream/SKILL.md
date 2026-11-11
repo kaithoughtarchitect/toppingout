@@ -13,6 +13,14 @@ description: >
 
 Default is a read-only dry run over the last ten completed jobs (`foreman/completed-jobs/*/JOB_*.md`). `--since` and `--jobs` bound the corpus. `--save-proposal <id>` requires explicit write authority. `--apply --proposal <id>` applies that saved proposal only, no most-recent default.
 
+## Automatic mode (from `/f-signoff` Step 3.2c only)
+
+The close is the mutation authority, for this one proposal. Run the dry run over the jobs since the last dream line in `foreman/logbook/upkeep.md`, save it (`--save-proposal <date>-J<n>`), then apply **only** the items that pass every guard:
+- a **merge** of two cards with the same lesson in the same context, or a **supersession** where the newer card cites the evidence that overturns the older one, at the proposal's highest confidence;
+- **never** a CRITICAL card, a contradiction that needs judgement, or an item whose provenance can't be verified: those stay in the saved proposal, listed for the owner;
+- a new recurring-pattern card only with three or more cited jobs.
+The Apply steps below run unchanged (copy, verify, update, verify, then remove the active copy, with a manifest that reverses every change), so nothing is ever lost: a retired card sits in the proposal's retired area. Report the proposal id and every change for the dev report. Never stage, commit or push; the close's records commit carries it.
+
 ## Dry-run
 
 1. Read the selected jobs, active cards, Logbook index, relationships, and earlier dream proposals.

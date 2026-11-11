@@ -19,7 +19,7 @@ Write Logbook cards for past jobs that never got any.
 
 Checks each lesson against its job before writing it, and skips jobs with nothing to learn.
 
-**When to use it:** When past jobs finished without anyone saving their lessons.
+**When to use it:** Automatically at every close, for up to three past jobs without lessons; by hand to seed many at once.
 
 ## Links
 

@@ -9,7 +9,7 @@ Source: `skills/f-dream/SKILL.md`
 
 ## On site
 
-The Logbook: now and then. It shows what it would change first, and only applies it with your permission. Every change can be undone, and it never removes a card marked critical.
+The Logbook: automatically every 10th close, applying only merges and supersessions its guards allow and leaving the rest for you; or by hand any time, dry run first. Every change can be undone, and it never removes a card marked critical.
 
 ## Say it
 
@@ -19,7 +19,7 @@ The Logbook: now and then. It shows what it would change first, and only applies
 
 ## When to use it
 
-Now and then, to tidy the Logbook: merge repeats and spot patterns.
+Automatically every 10th close, with guards; by hand any time.
 
 ## Not for
 

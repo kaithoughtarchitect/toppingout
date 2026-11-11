@@ -8,7 +8,11 @@ description: >
 disable-model-invocation: true
 ---
 
-Owner-invoked only. This pass writes many card files, so it fires when the owner types it and never on description match.
+Owner-invoked, or followed in **automatic mode** by `/f-signoff` Step 3.2c. It never fires on description match: a bulk pass writes many card files.
+
+## Automatic mode (from `/f-signoff` Step 3.2c only)
+
+No y/n: the close itself is the go. Only completed jobs that **no card names in its `job:`**, at most three per close, oldest first. Every rule below still holds (no invented learnings, verify against the source, no forced BUILD, recount the index and links), except the preview-and-wait in Halt and step 3. Never runs `/f-distill`. A job whose evidence can't be verified gets no card and is listed for the owner.
 
 # Topping Out: Logbook catch-up
 

@@ -13,7 +13,7 @@ The Logbook: once to fill it from past jobs, or after a gap. It shows you what's
 
 ## When to use it
 
-When past jobs finished without anyone saving their lessons.
+Automatically at every close, for up to three past jobs without lessons; by hand to seed many at once.
 
 ## Not for
 
@@ -32,7 +32,7 @@ A session status refresh (f-status).
 
 ### Will it run on its own?
 
-No. It is set to run only when you type it, because it writes many card files.
+Not from a description match: it writes many card files. It runs in two ways: when you type it, and automatically at every job's close (`/f-signoff`), for up to three finished jobs that have no cards yet.
 
 ### Can I limit how far back it looks?
 
