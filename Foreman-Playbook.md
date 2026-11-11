@@ -22,7 +22,7 @@ So: **distrust your own work exactly as much as the builder's.** Every safeguard
 
 | Do | Why |
 |---|---|
-| **Run the site walk honestly**: answer cold, *then* open the key; re-answer misses | the score tells you where your picture of the system is wrong before it becomes a wrong plan |
+| **Run the site walk honestly**: answer cold, *then* open the key; re-answer misses; then the outside grade (`METHOD.md` §2 step 1a), and re-answer every point it lists | the score tells you where your picture of the system is wrong before it becomes a wrong plan |
 | **Measure, don't trust the shift handover.** Your command wins; say so when it disagrees | shift handovers go stale within hours; a count in one was already wrong when the session opened |
 | **Read the live ticket and every linked ticket's scope line** | the fact that decided one job's scope was in *another* ticket's boundary line |
 | **Check the repository before the board** | a ticket can look unblocked on the board while its description names prerequisites with no commits yet |

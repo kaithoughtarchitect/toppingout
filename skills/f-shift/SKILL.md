@@ -53,7 +53,7 @@ Search the Logbook (`/f-search`) for the job's area: its module, its ticket's te
 
 ## 4 · Then run the site walk (`METHOD.md` §2) and STOP for "go"
 
-The site walk includes its **outside grade** (§2 step 1a, `snippets/site_walk_grade.mjs`): after your own score, a model from the other family grades your cold answers; re-answer every point it lists; a blocking question it marks wrong or missing is a stop; `KEY-WRONG` items go to the dev report.
+The site walk includes its **outside grade** (§2 step 1a, `snippets/site_walk_grade.mjs`): after your own score, a model from the other family grades your cold answers; re-answer every point it lists; a blocking question it marks wrong or missing is re-read and re-answered before you go on (never a wait for the owner); `KEY-WRONG` items go to the dev report.
 
 In an **autonomous run** (the owner's `/goal autonomous run: <opener path>`, typed by the owner or by a night shift the owner started), the goal is the "go" and the survey's answers (`/f-survey` answers its own questions with its starred picks): carry on unless a question has no clear recommendation or the site walk found a scope-changing disagreement (`RULES.md`, "The one exception"). A plan over the repo profile's "Max work orders per job" may split this job at scoping, before work order 2 (`RULES.md`, "Its own job's split").
 

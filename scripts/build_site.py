@@ -1871,7 +1871,7 @@ PLAIN_ROLES = {
 PLAIN = {
     "f-before-you-plan": [
         ("p", "Get the facts straight before planning."),
-        ("r", "Test what it knows about the project, then check the answers", "shows where its picture is wrong before that becomes a wrong plan"),
+        ("r", "Test what it knows about the project, then check the answers, and have another AI grade them too", "shows where its picture is wrong before that becomes a wrong plan"),
         ("r", "Count things itself. Don't trust the last session's notes", "notes go stale within hours"),
         ("r", "Read the ticket, and the scope of every ticket linked to it", "on one job, the deciding fact was in another ticket"),
         ("r", "Check the code before trusting the board", "a ticket can look ready while the work it depends on isn't done"),
@@ -2046,7 +2046,7 @@ PLAIN = {
 
 PLAIN_HASH = {
     "f-job": "09819ffef0",
-    "f-before-you-plan": "30247e5f5b",
+    "f-before-you-plan": "ac3f147d05",
     "f-planning": "6e58c46fdf",
     "f-writing-a-work-order": "9b34f06469",
     "f-reviewing-a-work-order": "2d933087ab",
