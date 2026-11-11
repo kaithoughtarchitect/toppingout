@@ -15,6 +15,8 @@
 
 **Base-vs-head run 2:** <result, or "empty": 0 modules failed collection, with the grep>.
 
+**P0 coverage:** every P0 VP and the probe that bites on its guard (id, BITES), or the gap; the non-functional rows (speed, security, privacy, cost) touched so far.
+
 **Coverage caveat:** code the gates do not run, and where its evidence comes from instead.
 
 **The one safety fact:** <the whole-system property this ticket must not break>, proven by executing shipped code: <command + output>, or **unproven** because <why>.

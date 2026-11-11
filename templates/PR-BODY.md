@@ -18,7 +18,9 @@ Each with its evidence and what was rejected.
 
 ## 5 · How it was proved
 - New tests: <n>, plus <database proofs, on which disposable DB>.
-- Mutation probes: <n>/<n> bite.
+- Mutation probes: <n>/<n> bite; every P0 VP has its probe.
+- Non-functional checks: speed, security, privacy, cost: each PASS or `not touched` (from the acceptance ledger).
+- Behaviour (AI features only): the eval harness, base vs head, or `not measured` (owed) / `not applicable`.
 - Under an autonomous run: the survey answers it gave itself, any in-scope option taken over a starred pick, and any usage-limit pause (or "not an autonomous run").
 - Base vs head: red-at-head-only = 0 (both runs, at the final head).
 - Captures: every gate at the final head, compared with the baseline.

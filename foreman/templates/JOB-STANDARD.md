@@ -106,8 +106,8 @@ _Each work order's review is linked in the task row above. Repairs are counted a
 
 ### Verification points
 
-| VP | Requirement | Proof (command + output, or test name) | Result |
-| --- | --- | --- | --- |
+| VP | Risk | Requirement | Proof (command + output, or test name; P0: the probe id too) | Result |
+| --- | --- | --- | --- | --- |
 | <VP id> | <R id> | <command + output, or test name> | <PASS / FAIL> |
 
 **The one safety fact:** <property>, <proof or "unproven because …">

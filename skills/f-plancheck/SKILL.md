@@ -136,6 +136,7 @@ fix them.**
 - Every cited measurement has a surviving artifact, or is labelled unreproduced.
 - Every latency, speed or size budget that a VP passes or fails on has a **measured baseline** behind it (a live run, with its anchor named: from which event to which), or is marked `estimate`. An estimate is never a pass/fail VP: the VP records the measured figure until the owner sets a number. Report each unbacked budget as a finding.
 - The Done-when block exists, is non-empty, and every line is checkable.
+- Every VP has a risk level (P0 to P3), and every P0 names the guard a mutation probe will break.
 
 ## 4. Freeze one assignment, dispatch every seat in parallel
 

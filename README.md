@@ -134,7 +134,7 @@ In your project, **between jobs**, start a session and type `/f-setup`. It pulls
  CROSS-MODEL   foreman /pack-review (checks its own brief) ──> fresh session of another
                family runs /xreview ──> foreman /adjudicate ──> repair work orders
  FINAL RE-RUN  all captures, probes, both base-vs-head again at the final head
- ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE to open the PR; every row PASS (the foreman's own run done) to merge
+ ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE/blank to open the PR; every requirement row PASS (the foreman's own run done) to merge
                                           │
  PR opened (owner watches it in the browser) ──> /f-greploop: ≤3 Greptile rounds
       (adjudicate → builder repairs → tests + both base-vs-head + ledger re-run → push) ──> PR description check

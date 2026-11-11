@@ -143,11 +143,11 @@ Verify completion metrics:
 | ------------- | ------------ | -------- | ------ |
 | Requirements  | 100%         | X/Y (Z%) | ✅/❌  |
 | Tasks         | 100%         | X/Y (Z%) | ✅/❌  |
-| Acceptance ledger | every row PASS | X/Y | ✅/❌  |
+| Acceptance ledger | every requirement and VP row PASS; non-functional rows PASS or `not touched` | X/Y | ✅/❌  |
 | All Phases    | Complete     | X/Y      | ✅/❌  |
 ```
 
-**The acceptance ledger** (`templates/ACCEPTANCE-LEDGER.md`, written before the PR) is the completion record: every requirement and VP PASS at the final reviewed head, with its achieved mode at least the proof its risk level asks for, and the one safety fact. The non-functional checks are each PASS or `not touched` with a reason (never blank), and the behaviour row is a recorded base and head result, `not applicable`, or `not measured: no harness` (then owed to the owner). **There is no percentage threshold and no deferral:** a requirement or VP row that isn't PASS blocks close, and so does a non-functional row that is FAIL or blank. The only way to drop a requirement is the owner's quoted scope decision, recorded in the ledger.
+**The acceptance ledger** (`templates/ACCEPTANCE-LEDGER.md`, written before the PR) is the completion record: every requirement and VP PASS at the final reviewed head, with its achieved mode and at least the proof its risk level asks for, and the one safety fact. The non-functional checks are each PASS or `not touched` with a reason (never blank), and the behaviour row is a recorded base and head result, `not applicable`, or `not measured: no harness` (then owed to the owner). **There is no percentage threshold and no deferral:** a requirement or VP row that isn't PASS blocks close, and so does a non-functional row that is FAIL or blank. The only way to drop a requirement is the owner's quoted scope decision, recorded in the ledger.
 
 #### Step 2.3: Completion Decision
 
@@ -219,7 +219,7 @@ Find the "JOB COMPLETE" section (older records: "COMMISSION COMPLETE") and **rep
 **Lines of Code:** +X added, -Y removed (net +/-Z)
 ```
 
-There is no incomplete close: `/f-signoff` runs only after the merge, and the merge only after every acceptance-ledger row is PASS. A job that can't finish is HALTed on the board (`f-board halt`), not closed.
+There is no incomplete close: `/f-signoff` runs only after the merge, and the merge only after every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks). A job that can't finish is HALTed on the board (`f-board halt`), not closed.
 
 #### Step 3.2: Write the job's Logbook cards
 
@@ -367,7 +367,7 @@ merge verified (METHOD §10 step 3)
 /f-signoff                    ← YOU ARE HERE
         │
         ├─ Preflight, writes nothing: find the job file, LOC over the pinned range,
-        │  the acceptance ledger (every row PASS), the drift audit and card list (proposed)
+        │  the acceptance ledger (every requirement and VP row PASS), the drift audit and card list (proposed)
         ├─ Checkpoint block written, then in order:
         │    drift_corrections → finalization → logbook_cards → logbook_index_links → logbook_upkeep → board_record → archive
         │  (each stage pending → written → verified by hash → complete; the blueprint is never retired)

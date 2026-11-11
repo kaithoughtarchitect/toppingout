@@ -21,9 +21,9 @@ One task = one work order (light builder). Repairs from a review go in PART A of
 ## 4 · Verification points
 The table `/f-signoff` and the acceptance ledger read (columns exactly):
 
-| # | Type | Description | Requirement | Selector/Probe |
-|---|---|---|---|---|
-| VP1 | positive / negative | | R… | test name or probe id |
+| # | Risk | Type | Description | Requirement | Selector/Probe |
+|---|---|---|---|---|---|
+| VP1 | P0 / P1 / P2 / P3 (from the blueprint; none given: P2) | positive / negative | | R… | test name, or for P0 the mutation probe id |
 
 At least 3 negative VPs.
 
@@ -36,7 +36,7 @@ Unit tests per task; the database proof (which disposable DB, and that it can fa
 
 | # | Finding (with its evidence) | Fate | Why |
 |---|---|---|---|
-| P1 | <claim, file:line or scenario> | applied / rejected / answered | <what changed, or why not: e.g. reopens D-3, no evidence, style only> |
+| F1 | <claim, file:line or scenario> | applied / rejected / answered | <what changed, or why not: e.g. reopens D-3, no evidence, style only> |
 
 ## 6 · Risks and outward decisions
 Anything that needs the owner's word, stated as NOT done unless given.

@@ -45,7 +45,7 @@ Ordinary edge-case findings are normal. They go test-first into the next work or
 
 | | Strong builder | Light builder |
 |---|---|---|
-| Work order size | one or several tasks per work order (one commit and every check per task) | one independently verifiable outcome per work order (with the `D-` decisions it needs); split tasks that have two |
+| How big a work order is | one or several tasks per work order (one commit and every check per task) | one independently verifiable outcome per work order (with the `D-` decisions it needs); split tasks that have two |
 | Design | foreman writes the plan (form A); an audition may have it write one (form B, plain steps) | foreman writes the plan (form A); work order gives decisions |
 | Runners and scripts | builder writes them from a named template | foreman writes them; builder verifies and runs them |
 | Edge cases | hostile-input checklist in every code work order | the same, **plus** the coverage gate, G1–G6 and an untested-paths section; tests named up front |

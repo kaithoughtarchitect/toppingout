@@ -134,7 +134,8 @@ B.2a COVERAGE GATE. Run NEW once more under branch coverage:
      work order (list: <none | the allowed exceptions>). Nothing else.
 B.2b PROBES FOR THIS TASK'S GUARDS. For every guard this work order adds
      (<list them: the check, the flag-and-raise, the freeze ...>), add
-     its mutation probe to <probe harness> now and run it:
+     its mutation probe to <probe harness> now and run it (each probe line
+     names the P0 VP it proves, if any):
        <probe command> <probe ids>
      Every probe must print BITES. On GREEN: report and STOP (rule 7).
 B.2c THE STANDARD GAP CHECKLIST. For each item, name the test that

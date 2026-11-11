@@ -34,7 +34,7 @@ Every verification point in the plan maps to at least one job. A VP no job carri
 
 | # | Finding (with its evidence) | Fate | Why |
 |---|---|---|---|
-| P1 | <claim, file:line or scenario> | applied / rejected / answered | <what changed, or why not: e.g. reopens D-3, no evidence, style only> |
+| F1 | <claim, file:line or scenario> | applied / rejected / answered | <what changed, or why not: e.g. reopens D-3, no evidence, style only> |
 
 ## Decisions and research the owner owns
 Each decision job: what must be decided, the options with their evidence, and which jobs each answer unblocks.

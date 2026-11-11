@@ -31,14 +31,14 @@ By taking part you agree to the [code of conduct](.github/CODE_OF_CONDUCT.md).
 | Small scripts a project copies (gate runner, parallel proof, site-walk grader…) | `snippets/` |
 | The board tool | `skills/f-board/render_board.py` (and its test) |
 | The installer and updater | `skills/f-setup/install.mjs` |
-| The website | generated into `docs/` by `scripts/build_site.py`; the skill map by `scripts/build_skills_wiki.py` and `scripts/wiki_graph_html.py`; the flow page by `scripts/build_flow.py` |
+| The website and generated pages | `docs/` by `scripts/build_site.py`; it copies in pages built by the others: `flow.html` (`scripts/build_flow.py`), the two playbook pages (`scripts/build_foreman_playbook.py`), the skill pages (`scripts/build_skills_wiki.py`, checked by `scripts/skills_wiki_sync.py`) and the Skill Atlas (`scripts/wiki_graph_html.py skills-wiki`) |
 | What changed, for people updating | `CHANGELOG.md` |
 
 ## Changing the package
 
 1. Fork, branch, and keep one change per pull request.
 2. Run the checks. The full list is the CI workflow, `.github/workflows/ci.yml`, which runs every one on every pull request (the installer, the end game, the names check, the board, the Logbook archive, the snippets' tests and more). Each is one command, for example `node skills/f-setup/install.mjs --self-test` or `python skills/f-board/test_render_board.py`.
-3. `docs/` is the website and is generated. Edit the sources, never the pages, then rebuild with `python scripts/build_site.py`.
+3. `docs/` and the other HTML pages are generated. Edit the sources, never the pages, then rebuild in this order: `python scripts/build_foreman_playbook.py`, `python scripts/build_flow.py`, `python scripts/build_skills_wiki.py`, `python scripts/skills_wiki_sync.py`, `python scripts/wiki_graph_html.py skills-wiki`, and last `python scripts/build_site.py` (it copies the others in, so it goes last).
 4. A change people will notice adds a line to `CHANGELOG.md`: `/f-setup` shows those lines to everyone who updates.
 5. House style: plain language, no em dashes, and every claim backed by a file, a command or a commit. Never name a builder's model or vendor in records (`RULES.md`).
 

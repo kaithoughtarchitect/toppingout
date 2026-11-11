@@ -29,8 +29,8 @@
 |---|---|---|
 | <KEY> | <blocked by X / out of phase / needs a stakeholder decision> | <condition> |
 
-## Risk and size (next-job branch)
-<The hardest part, in one line. The expected size (files, whether a DB proof is needed, whether a migration is needed: say "no .sql expected" or why one is).>
+## Risk and expected scope (next-job branch)
+<The hardest part, in one line. The expected scope (files, whether a DB proof is needed, whether a migration is needed: say "no .sql expected" or why one is).>
 
 ## What the shift handover must carry (next-job branch)
 The forks the next session has to settle (listed, not decided here), the gotchas, the red lines.
