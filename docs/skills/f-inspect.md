@@ -75,4 +75,4 @@ Yes: `/f-lens` still works.
 ## Connections
 
 - Leads to: f-greploop, pack-review
-- Uses: lens-code, lens-comments, lens-errors, lens-instructions, lens-migrations, lens-simplify, lens-tests, lens-types
+- Uses: lens-code, lens-comments, lens-errors, lens-instructions, lens-loose-ends, lens-migrations, lens-simplify, lens-tests, lens-types

@@ -47,6 +47,7 @@ relates:
   - agents/code-explorer
   - agents/lens-instructions
   - agents/lens-migrations
+  - agents/lens-loose-ends
 updated: 2026-09-25
 ---
 
@@ -143,6 +144,7 @@ The method itself: `../README.md` → `../METHOD.md`. The whole flow as a pictur
 - [[agents/lens-comments]]: Check that comments and docs still match the code
 - [[agents/lens-instructions]]: Check prompts, skills and templates for contradictions and broken references
 - [[agents/lens-migrations]]: Review database changes: migrations, queries and access rules
+- [[agents/lens-loose-ends]]: Find what a change should also have touched: an untouched copy, a sibling line, a companion piece, an existing function
 - [[agents/lens-simplify]]: Spot code that could be simpler, without changing what it does
 
 ## Agents that are optional

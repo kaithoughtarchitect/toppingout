@@ -11,7 +11,7 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 - [Order of works](https://toppingout.dev/route.html): Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.
 - [Your repo](https://toppingout.dev/repo.html): A site plan of every folder Topping Out adds to your repo, and where one job's files appear.
 - [Logbook](https://toppingout.dev/logbook.html): The Logbook: the cards Topping Out keeps, how a lesson becomes a card and then a rule, its skills and its files.
-- [Skills and agents](https://toppingout.dev/skills.html): Every Topping Out skill and agent: 30 skills and 13 agents.
+- [Skills and agents](https://toppingout.dev/skills.html): Every Topping Out skill and agent: 30 skills and 14 agents.
 - [Skill Atlas](https://toppingout.dev/atlas.html): Every Topping Out skill and agent as a map, with the links between them.
 - [Example board](https://toppingout.dev/board.html): What a Topping Out project board looks like, and how to read it: a made-up project with synthetic data.
 - [Requirements](https://toppingout.dev/requirements.html): The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.
@@ -27,6 +27,7 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 - [lens-comments](https://toppingout.dev/agents/lens-comments.md): Check that comments and docs still match the code.
 - [lens-errors](https://toppingout.dev/agents/lens-errors.md): Find errors that get silently ignored, and risky fallbacks.
 - [lens-instructions](https://toppingout.dev/agents/lens-instructions.md): Check prompts, skills and templates for contradictions and broken references.
+- [lens-loose-ends](https://toppingout.dev/agents/lens-loose-ends.md): Find what a change should also have touched: an untouched copy, a sibling line, a companion piece, an existing function.
 - [lens-migrations](https://toppingout.dev/agents/lens-migrations.md): Review database changes: migrations, queries and access rules.
 - [lens-simplify](https://toppingout.dev/agents/lens-simplify.md): Spot code that could be simpler, without changing what it does.
 - [lens-tests](https://toppingout.dev/agents/lens-tests.md): Find changes that aren't properly tested.

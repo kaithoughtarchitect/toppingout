@@ -33,6 +33,8 @@ jobs:
         run: node skills/agent-council/scripts/agent-council.mjs self-test
       - name: Comply tests
         run: node skills/f-comply/comply.test.mjs
+      - name: Loose-ends lens tests
+        run: node skills/f-inspect/loose-ends/loose-ends.test.mjs
       - name: Board renderer tests
         run: python skills/f-board/test_render_board.py
       - name: Logbook archive tests

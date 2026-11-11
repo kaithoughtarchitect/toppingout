@@ -76,7 +76,7 @@ SKILLS = {
     "f-inspect": ("Have specialist reviewers check the finished job's changes and report only problems",
                "Near the end of a job, the first of two reviews: the foreman runs it once the build is finished, before any pull request. Small, low-risk jobs skip it.",
                "It reviews only this job's changes, makes no fixes and gives no verdict, just findings. The record goes in `templates/LENS-INSPECTION.md`.",
-               ["agents/lens-code", "agents/lens-tests", "agents/lens-errors", "agents/lens-types", "agents/lens-comments", "agents/lens-instructions", "agents/lens-migrations", "agents/lens-simplify"], [], []),
+               ["agents/lens-code", "agents/lens-tests", "agents/lens-errors", "agents/lens-types", "agents/lens-comments", "agents/lens-instructions", "agents/lens-migrations", "agents/lens-loose-ends", "agents/lens-simplify"], [], []),
     "f-greploop": ("Run an open pull request through Greptile's review, up to three rounds",
                    "On every pull request, right after it opens and before you say \"merge\"; a fourth round is your word, \"greploop\". Then the pull request's description is checked, on every job.",
                    "Each finding is checked, the builder makes the fixes, the tests run again every round, and the fixes are pushed with your permission.",
@@ -166,6 +166,8 @@ AGENTS = {
                              "Used as a reviewer inside [[f-inspect]] when skills, prompts or templates change; also used to check Topping Out itself after an edit."),
     "lens-migrations": ("Review database changes: migrations, queries and access rules",
                               "Used as a reviewer inside [[f-inspect]] when the changes touch the database. Every database change also needs your approval."),
+    "lens-loose-ends": ("Find what a change should also have touched: an untouched copy, a sibling line, a companion piece, an existing function",
+                        "Used as a reviewer inside [[f-inspect]]; the only lens that reads the rest of the repo rather than the diff. Its candidate list comes from a local script in f-inspect's folder."),
 }
 
 
@@ -214,6 +216,7 @@ WHEN = {
     'code-explorer': 'When the foreman needs to understand how an existing feature works.',
     'lens-instructions': 'When skills, prompts, agents or templates changed. It also runs on demand, outside any job, whenever you decide: ask the session "run lens-instructions over <files or folder>" (`/f-setup` installs it in `.claude/agents/`). Same agent as the one some repos call `instruction-reviewer`.',
     'lens-migrations': 'When the changes touch the database.',
+    'lens-loose-ends': 'When the changes add functions or edit existing code, which is nearly every job.',
 }
 
 
@@ -276,7 +279,7 @@ GROUPS = [
 AG_GROUPS = [
     ("Agents still in use", ["simplicity-critic", "handoff-builder", "spec-validator-fixer"]),
     ("Used only inside f-plancheck", ["plan-validator"]),
-    ("Agents used as review lenses (through f-inspect)", ["lens-code", "lens-errors", "lens-types", "lens-tests", "lens-comments", "lens-instructions", "lens-migrations", "lens-simplify"]),
+    ("Agents used as review lenses (through f-inspect)", ["lens-code", "lens-errors", "lens-types", "lens-tests", "lens-comments", "lens-instructions", "lens-migrations", "lens-loose-ends", "lens-simplify"]),
     ("Agents that are optional", ["code-explorer"]),
 ]
 all_ids = list(SKILLS) + [f"agents/{a}" for a in AGENTS]

@@ -48,6 +48,7 @@ Each triggered lens runs as a **fresh subagent** with no context from this job. 
 | `lens-comments` | durable comments or documentation prose changed |
 | `lens-instructions` | skills, agents, prompts or templates changed |
 | `lens-migrations` | the diff touches the repo profile's **database change paths** |
+| `lens-loose-ends` | the diff adds functions or edits existing code (nearly every job): it reads the rest of the repo for the copies, sibling lines and companion pieces the change should also have touched. Its script is `loose-ends/loose-ends.mjs` in this skill's folder; give the lens that path |
 | `lens-simplify` | last, and always with the words **report-only** (its no-write branch) |
 
 ## 3 · Brief every lens the same way
@@ -57,7 +58,7 @@ Each triggered lens runs as a **fresh subagent** with no context from this job. 
 - the settled decisions (`D-…`) marked **not to relitigate**;
 - one standing question: **where a test proves something is absent (no raw amount, no secret), is there also a test that pins the exact value shown?** Absence tests pass while the shown value is wrong;
 - **findings only**: no edits, no fixes, no verdict, no commit, no push, no PR;
-- **no test suites, builds or servers**: a lens reads the code and the diff; a finding that needs a run says so, and the foreman runs it on its own schedule (one test run at a time).
+- **no test suites, builds or servers**: a lens reads the code and the diff; a finding that needs a run says so, and the foreman runs it on its own schedule (one test run at a time). The one exception is `lens-loose-ends`'s candidate script, a read-only lookup over git that runs nothing of the product.
 
 Lenses run sequentially by default. A lens never dispatches another lens and never touches git history.
 

@@ -4,7 +4,7 @@
 
 **The way in is `/f-setup`.** Start a session in the repo that will hold your records and say `Read <path to the package>/skills/f-setup/SKILL.md and follow it`. It installs the package, writes the repo profile from what the repo actually has (asking you only what it can't find out), sets up the names files and the test adapter, runs the checks, and lists the files for your commit. The install copies `f-setup` too, so later runs (an upgrade, a re-check) are just `/f-setup`. The sections below say what it does, for reference and for a setup by hand.
 
-This folder is the whole package: **30 skills** (Topping Out's own `f-*`, including `f-setup`, `f-sketch`, `f-comply`, `f-inspect` and `f-greploop`, plus the shared `pack-review`, `xreview`, `adjudicate`, `f-plancheck`, `model-council`, `agent-council`, `speak`, `converse`, `orca-pi-connect`), 13 agents (repo-agnostic), templates, snippets, scripts. **Install rule: copy only what's missing; never overwrite.** A skill, agent, template or Logbook the repo already has may carry that repo's adaptations (§1 "Adapt"), so an install never replaces it. Updating an existing file is an **upgrade** (below), done file by file with a diff. Topping Out's skills are all `f-*` or uniquely named, so they sit beside a repo's other skills without colliding.
+This folder is the whole package: **30 skills** (Topping Out's own `f-*`, including `f-setup`, `f-sketch`, `f-comply`, `f-inspect` and `f-greploop`, plus the shared `pack-review`, `xreview`, `adjudicate`, `f-plancheck`, `model-council`, `agent-council`, `speak`, `converse`, `orca-pi-connect`), 14 agents (repo-agnostic), templates, snippets, scripts. **Install rule: copy only what's missing; never overwrite.** A skill, agent, template or Logbook the repo already has may carry that repo's adaptations (§1 "Adapt"), so an install never replaces it. Updating an existing file is an **upgrade** (below), done file by file with a diff. Topping Out's skills are all `f-*` or uniquely named, so they sit beside a repo's other skills without colliding.
 
 The installer is one Node script, the same on Windows, macOS and Linux:
 
@@ -56,7 +56,7 @@ Everything below is created by the install (§1) or by a step of the method; the
 your-repo/
 ├── .claude/
 │   ├── skills/                    the 30 skills (see the skills pages)          install
-│   └── agents/                    the 13 agents (see the skills pages)          install
+│   └── agents/                    the 14 agents (see the skills pages)          install
 ├── scripts/
 │   ├── cross-review-dispatch.mjs  sends the independent review to another AI company's session   install
 │   └── speak.ts, speak-setup.ts, bootstrap-env.ts   the voice add-on (optional)   install

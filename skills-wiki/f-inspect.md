@@ -12,6 +12,7 @@ relates:
   - agents/lens-comments
   - agents/lens-instructions
   - agents/lens-migrations
+  - agents/lens-loose-ends
   - agents/lens-simplify
 updated: 2026-09-25
 ---
@@ -37,6 +38,7 @@ It reviews only this job's changes, makes no fixes and gives no verdict, just fi
 - uses [[agents/lens-comments]]
 - uses [[agents/lens-instructions]]
 - uses [[agents/lens-migrations]]
+- uses [[agents/lens-loose-ends]]
 - uses [[agents/lens-simplify]]
 
 ## See also

@@ -1,6 +1,6 @@
 # Topping Out skills and agents
 
-30 skills and 13 agents. Every skill and agent: what it does, when to use it, how to tell it worked.
+30 skills and 14 agents. Every skill and agent: what it does, when to use it, how to tell it worked.
 
 ## The order of works
 
@@ -55,4 +55,5 @@
 - [lens-comments](agents/lens-comments.md): Check that comments and docs still match the code.
 - [lens-instructions](agents/lens-instructions.md): Check prompts, skills and templates for contradictions and broken references.
 - [lens-migrations](agents/lens-migrations.md): Review database changes: migrations, queries and access rules.
+- [lens-loose-ends](agents/lens-loose-ends.md): Find what a change should also have touched: an untouched copy, a sibling line, a companion piece, an existing function.
 - [lens-simplify](agents/lens-simplify.md): Spot code that could be simpler, without changing what it does.
