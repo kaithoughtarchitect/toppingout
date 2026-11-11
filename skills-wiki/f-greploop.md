@@ -16,11 +16,11 @@ Slash: `/f-greploop`. Folder: `skills/f-greploop/SKILL.md`.
 
 Run an open pull request through Greptile's review, up to three rounds.
 
-**On site:** After you open the pull request and say "greploop", before you say "merge". Then the pull request's description is checked, on every job.
+**On site:** On every pull request, right after it opens and before you say "merge"; a fourth round is your word, "greploop". Then the pull request's description is checked, on every job.
 
 Each finding is checked, the builder makes the fixes, the tests run again every round, and the fixes are pushed with your permission.
 
-**When to use it:** After the pull request is open, when you say "greploop".
+**When to use it:** On every pull request, right after it opens.
 
 ## Links
 

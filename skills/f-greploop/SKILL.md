@@ -4,8 +4,9 @@ description: >
   Take an open PR through Greptile the Topping Out way: ask Greptile to review it,
   adjudicate its findings, have the builder fix what's accepted by work order,
   re-run the tests and the acceptance ledger, push on the owner's grant, and
-  ask again. At most three rounds, then stop for the owner. Use after the PR is
-  open and before "merge", when the owner says "greploop" or /f-greploop.
+  ask again. At most three rounds, then stop for the owner. Runs on every PR,
+  right after it opens and before "merge" (the word that opened the PR covers it);
+  also when the owner says "greploop" (a fourth round) or /f-greploop.
   Not the lens inspection (f-inspect) or the
   independent inspection (xreview); never merges.
 argument-hint: "<PR number>"
@@ -20,12 +21,12 @@ The third review of a job, and the only one on the **open PR**. It runs after th
 
 ## The owner's grant
 
-This skill starts only on the owner's word **"greploop"** (or `/f-greploop <PR>` typed by the owner), or inside an **autonomous run** the owner started, directly or through a night shift (`RULES.md`, "The one exception"; the goal's words are in the job file). That one word authorises, **for this PR only, for at most three rounds**:
+This skill runs on **every PR, right after it opens**: the owner's word that opened the PR (or an **autonomous run** the owner started, directly or through a night shift, `RULES.md` "The one exception"; the goal's words are in the job file) also authorises, **for this PR only, for at most three rounds** (`RULES.md` act 10):
 
 - posting `@greptileai review` on the PR, once per round;
 - pushing reviewed repair commits to the PR's branch (normal push, **never force**).
 
-It authorises nothing else: no merge, no tracker transition, no other branch, no comment other than the review request and **one reply on the thread of each routed finding** (step 5). A fourth round needs a new word.
+It authorises nothing else: no merge, no tracker transition, no other branch, no comment other than the review request and **one reply on the thread of each routed finding** (step 5). A fourth round needs the owner's word "greploop".
 
 ## Never
 
@@ -55,7 +56,7 @@ It authorises nothing else: no merge, no tracker transition, no other branch, no
 6. **Repairs:** accepted findings go to the builder as test-first repair work orders (`templates/WORK-ORDER.txt`); the foreman reviews each one.
 7. **Re-run at the new head:** all captures, the probe harness, both base-vs-head runs (through the repo's test adapter), then update the acceptance ledger. Anything red: **halt**; don't push red.
 8. **Push** the repair commits to the PR branch (under the grant). Confirm the remote head moved (`git ls-remote <remote> refs/heads/<branch>` = the new head). The new head is now the final head: write it into the job file's header (**Final head**) and into Phase 7, then re-run the blank check (`METHOD.md` §10 step 1: the header and Phases 1-7, outside code spans; the merge line waits for the merge).
-9. **Round limit:** after round 3, **stop and hand over to the owner** with the score of each round, the findings still open, the commits each round added, and the PR link. The owner decides: merge as is, a new "greploop" for more rounds, or rework.
+9. **Round limit:** after round 3, **stop and hand over to the owner** with the score of each round, the findings still open, the commits each round added, and the PR link. The owner decides: merge as is, "greploop" for one more round, or rework.
 
 ## Before merge: the PR description check (every PR)
 

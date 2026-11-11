@@ -43,7 +43,7 @@ Then the job's own inputs, named in the opener: the shift handover, the ticket, 
 | The target repo, the records repo, the day folder | the shift handover; measured by you |
 | The gates and runners | the repo profile (its gates, exact commands); the shift handover; `SETUP.md` §3 |
 | The Topping Out version | `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --check` (read-only; the package from the receipt's `package:` line, or `scratch/topping-out-package`). An update is **reported, never applied mid-job**: one line in your first reply, `update available, upgrade between jobs with /f-setup`. No package on this machine: "not checked" |
-| What needs the owner's word this job | `RULES.md` (the acts listed there, including the "greploop" grant) plus the ticket's own red lines; if the owner started an **autonomous run**, which of those its goal covers (`RULES.md`, "The one exception") |
+| What needs the owner's word this job | `RULES.md` (the acts listed there; the Greptile rounds 1 to 3 come with the word that opens the PR) plus the ticket's own red lines; if the owner started an **autonomous run**, which of those its goal covers (`RULES.md`, "The one exception") |
 
 Anything the opener, shift handover or ticket leave unclear: **measure it, or list it as an owed question.** Never assume.
 

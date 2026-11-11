@@ -133,7 +133,7 @@ A code area that no gate covers gets its own runner by explicit path: another co
 
 One script per job (e.g. `tests/acceptance/<ticket>_mutation_probes.py` in the target repo). Each probe finds its guard **by a unique anchor read from the file** (never a hand-copied line number), breaks it in place, runs the named tests, prints **BITES** (red) or **GREEN** (still passing), then restores the file byte for byte. A full run exits non-zero if any probe is GREEN. Probes are written in the work order that adds the guard (`WORK-ORDER.txt` B.2b). The harness to copy: `snippets/mutation_probes.py` (fill in its CONFIG block and add one `Probe` per guard). It reports BITES, GREEN, DIRTY or UNRUN (a test that fails by raising still bites, and the line shows its first error), restores every file byte for byte, and refuses to run with an empty probe list. Before sending a work order, `PROBE_ROOT=<the tree after its edits> python <harness> --check-anchors` checks every anchor still matches exactly once, without running tests.
 
-## 4 · Optional: the pane link
+## 4 · The pane link (Orca and Pi)
 
 The bundled skill **`skills/orca-pi-connect`** lets the foreman send pointers to a Pi builder in the pane beside it, in **Orca** (the builder pane split to the foreman's right, in the job's worktree), and wait on Pi's real turn-end signal. It needs:
 - **Orca** installed, with both sessions running inside it (`orca` on PATH; the foreman's pane has `ORCA_TERMINAL_HANDLE`);
@@ -213,10 +213,10 @@ Jobs and night shifts can run on a small Linux server you rent, driven through O
 | A foreman: a coding agent that runs skills (Claude Code tested) | required | |
 | A builder: any coding agent that can read a file, run a shell and write a report | required | `BUILDER-PROFILES.md` |
 | `git`, Node 18+, Python 3.9+, Bash | required | `/f-setup` checks each |
-| Hand-carried work orders | the default | you paste a one-line pointer; works with any builder and any terminal |
-| Orca and Pi (the pane link) | optional adapter | `skills/orca-pi-connect`, §4 above; an autonomous run you leave alone, and the night shift, need it |
-| Greptile | optional | the PR review rounds; `none` in the profile skips them |
+| Pi (the builder's agent) and Orca (the workspace) | required | the pane link (`skills/orca-pi-connect`, §4): the foreman sends each work order to the builder beside it; autonomous runs, the night shift and the cloud setup run through it. Without them you carry one-line pointers by hand, which `/f-setup` warns about |
+| Greptile | required | the review rounds on every PR (`skills/f-greploop`): the Greptile app installed on the repo. `/f-setup` warns if it isn't |
+| An OpenRouter key | required | the plan check's and the councils' readers from other model families (`f-plancheck`, the councils), and voice. Paid calls only within a cap you set; tests always run with paid keys stripped. `/f-setup` warns if `.env` has no `OPENROUTER_API_KEY` |
 | A session from a second model family (the independent review) | required (`METHOD.md` §8) | its CLI lets the dispatcher run it headless (Claude and codex foremen); hand-carrying the brief into that family's session also works |
-| Paid calls and add-ons | optional, opt-in | the councils, voice and a live-key walkthrough spend money only when you allow it; tests always run with paid keys stripped. Voice needs Windows audio playback today; `agent-council` needs the pinned Pi CLI (§1) |
+| Paid calls | opt-in, per job | the councils, voice and a live-key walkthrough spend money only within the cap you name; tests always run with paid keys stripped. Voice needs Windows audio playback today; `agent-council` needs the pinned Pi CLI (§1) |
 
 **Removing it:** the package's files are the `installed …` lines in `foreman/INSTALL-RECEIPT.txt`, including those an upgrade added. Delete those you haven't adapted, then the receipt and the lines the installer added to `.gitignore`. With the Deep Agents add-on, also remove the `docs-langchain` entry from `.mcp.json` if it was merged by hand, and `deepagents-ref/sources/`. The agent skeleton (`starter …` lines) is your product code and stays. Your records are yours and stay: `foreman/jobs/`, `foreman/completed-jobs/`, `foreman/projects/`, `foreman/handovers/`, the Logbook's cards, `foreman/REPO-PROFILE-*.md`, `foreman/test-adapter.sh` and the day folders.

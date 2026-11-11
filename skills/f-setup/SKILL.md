@@ -37,6 +37,7 @@ One command from an empty repo to a repo ready for its first job: the files inst
   - Neither → **install** (Step 1a).
 - **The one question asked first:** "Is this product an AI agent built on LangChain, LangGraph or Deep Agents?" (yes / no / not sure; the repo's `requirements.txt`, `pyproject.toml` or `package.json` naming `deepagents`, `langgraph` or `langchain` makes yes the default; "not sure" is answered from those files, and none of them naming one means no). Yes adds the Deep Agents add-on (Step 1c); no skips it, and the profile's framework check is `none` unless the owner names another.
 - **Prerequisites:** `git`, `node` (18 or later), `python` (3.9 or later), and a Bash shell (Git Bash on Windows): work orders run in Bash (`templates/REPO-PROFILE.md`, "Shell for work orders"). Check each with `--version`; a missing one is a HALT naming it.
+- **Required tools, checked and warned about (never a HALT):** Pi (`pi --version`), Orca (`orca --version`), the Greptile app on the repo (the repo's installed GitHub apps, or ask the owner once), and an OpenRouter key (the name `OPENROUTER_API_KEY` in `.env`, never its value). Each one missing gets one loud line, `REQUIRED BUT MISSING: <tool>: <what it costs you>` (Pi or Orca: work orders carried by hand, no autonomous run or night shift; Greptile: no review rounds on PRs; OpenRouter: no plan-check readers from other model families), repeated in the final report. Setup still finishes.
 
 ## Step 1a · Install
 

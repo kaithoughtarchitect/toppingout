@@ -67,7 +67,7 @@ PHASES = [
  ("5", "PR and merge", "Merge", "Outward acts: each one needs your word.", [
    ("or", "PR body", "What changed, acceptance, proof, limitations, rollback, the review record. Scanned for builder names.", [("file", "PR-BODY.md")], None),
    ("op", "Open the PR", "Pushed and opened; you watch it in the browser. Opening is not merging.", [], "open the PR"),
-   ("or", "Greptile rounds", "Greptile scores the open PR out of 5. Its findings are checked like any inspection, the builder fixes what's accepted, the tests and sign-off re-run, then the push. Three rounds at most, then it stops for you.", [("skill", "f-greploop")], "greploop"),
+   ("or", "Greptile rounds", "Greptile scores the open PR out of 5. Its findings are checked like any inspection, the builder fixes what's accepted, the tests and sign-off re-run, then the push. Three rounds at most, then it stops for you. It comes with opening the PR; a fourth round is your word.", [("skill", "f-greploop")], None),
    ("or", "PR description check", "Before you're asked to merge: the PR's description is re-read against the final code and results, and anything stale is rewritten.", [], None),
    ("op", "Merge", "Then the merge's tree is checked against the tree that was reviewed.", [], "merge"),
    ("or", "Clean up", "Once the tree check passes: delete the merged branch and remove the job's worktrees, unasked. Only the tracker transition waits for your word.", [], "tracker transition"),

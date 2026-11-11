@@ -9,7 +9,7 @@ Source: `skills/f-greploop/SKILL.md`
 
 ## On site
 
-After you open the pull request and say "greploop", before you say "merge". Then the pull request's description is checked, on every job. Each finding is checked, the builder makes the fixes, the tests run again every round, and the fixes are pushed with your permission.
+On every pull request, right after it opens and before you say "merge"; a fourth round is your word, "greploop". Then the pull request's description is checked, on every job. Each finding is checked, the builder makes the fixes, the tests run again every round, and the fixes are pushed with your permission.
 
 ## Say it
 
@@ -18,7 +18,7 @@ After you open the pull request and say "greploop", before you say "merge". Then
 
 ## When to use it
 
-After the pull request is open, when you say "greploop".
+On every pull request, right after it opens.
 
 ## Not for
 
@@ -36,9 +36,9 @@ The lens inspection (f-inspect) or the independent inspection (xreview); never m
 
 ## Common questions
 
-### What does "greploop" let it do?
+### Do I have to ask for it?
 
-For this PR only and at most three rounds: post the review request and push reviewed repair commits to the PR's branch. Nothing else: no merge, no other branch, no other comment. A fourth round needs your word again. Inside an autonomous run you started for this job, the goal's own words grant this instead.
+No. It runs on every PR, right after the PR opens: your word to open the PR covers it. For this PR only and at most three rounds, it posts the review request and pushes reviewed repair commits to the PR's branch. Nothing else: no merge, no other branch, no other comment. A fourth round needs your word, "greploop". Inside an autonomous run you started for this job, the goal's own words cover it.
 
 ### Does it resolve Greptile's threads?
 

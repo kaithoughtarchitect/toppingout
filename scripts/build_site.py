@@ -2052,7 +2052,7 @@ PLAIN_HASH = {
     "f-when-the-builder-stops": "66ea3cb562",
     "f-when-you-write-code-yourself": "25d508d8f5",
     "f-the-end-game": "de867dde89",
-    "f-talking-to-the-owner": "27e7a8073c",
+    "f-talking-to-the-owner": "5ecea1b78d",
     "f-tool-hygiene": "9f36e5fffc",
     "f-your-own-scorecard": "1aac6f628f",
     "b-job": "ffc33f1ee4",
@@ -2567,8 +2567,8 @@ FRONT = {
         ("claude", "#D97757", "Claude Code", "the foreman", "Plans, inspects, signs off."),
         ("pi", "", "Pi", "the builder's agent", "The builder runs here, beside the foreman."),
         ("img:orca", "", "Orca", "the workspace", "Foreman and builder, side by side."),
-        ("img:greptile", "", "Greptile", "the review rounds", "Up to three review rounds per PR."),
-        ("img:openrouter", "", "OpenRouter", "the key", "Voice, and the councils."),
+        ("img:greptile", "", "Greptile", "the review rounds", "Reviews every PR, up to three rounds."),
+        ("img:openrouter", "", "OpenRouter", "the key", "The plan check, the councils, and voice."),
         ("git", "#F03C2E", "Git", "the records", "Every job, plan and lesson is a file."),
         ("github", "", "GitHub and gh", "the merge", "Work reaches `main` only by pull request."),
         ("nodedotjs", "#5FA04E", "Node", "the installer", "Runs the installer and the checks."),
@@ -2580,9 +2580,9 @@ FRONT = {
         ("openai", "", "GPT-6.1 Terra", "OpenAI, on subscription", "Builds each work order."),
     ],
     "needs_opt": [
-        ("Greptile", "Review rounds on the pull request, when you say greploop."),
-        ("Orca", "Puts the builder in the pane beside the foreman. Without it, you carry one-line pointers."),
-        ("An OpenRouter key", "Voice, and the councils."),
+        ("Greptile", "Reviews every pull request, up to three rounds."),
+        ("Orca", "Puts the builder in the pane beside the foreman, so work orders reach it without you."),
+        ("An OpenRouter key", "The plan check, the councils, and voice."),
     ],
     # the skeptic's questions: (question, the answer in one line, one short sentence of proof, the source)
     "skeptic": [
@@ -2674,8 +2674,8 @@ ONE_JOB = [
      "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Small steps, each built tests first by a cheaper model."),
     ("inspectors", "Check", [3], ["the two inspections and the acceptance ledger"],
      "", "Two reviews, then proof for every requirement."),
-    ("you", "Your OK", [4], ['("open the PR")', 'on "greploop"', "up to three Greptile rounds", '**"merge"** when the evidence satisfies you'],
-     '<q>Open the PR</q>, then <q>merge</q> when you&rsquo;re happy with the proof.', 'Opens the PR. On <q>greploop</q>, up to three reviews.'),
+    ("you", "Your OK", [4], ['("open the PR")', "up to three Greptile review rounds", '**"merge"** when the evidence satisfies you'],
+     '<q>Open the PR</q>, then <q>merge</q> when you&rsquo;re happy with the proof.', 'Opens the PR, then up to three Greptile reviews.'),
     (None, "Merged", [5], ["It closes the job, saves the lessons", "proposes the next ticket for you to confirm"],
      "OK the next ticket.", "Saves lessons and suggests the next ticket."),
 ]
@@ -5474,12 +5474,12 @@ class Site:
                    ["Windows 11", "Git Bash", "PowerShell", "Linux server"]),
                   ("crew", "The crew", "Who plans and who builds.", ["Claude Code"]),
                   ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"]),
-                  ("site", "Optional", "Useful, not needed. Tap them if you have them; they don't count.", ["Pi", "Orca", "Greptile", "OpenRouter"])]
-        # what each extra adds (README and SETUP.md: Orca and Pi carry the pointers, the night shift needs Orca; Greptile is the greploop rounds)
-        opt_why = {"Pi": "The builder's agent I use, in the pane beside the foreman. Any agent that reads files, runs a shell and writes a report will do.",
-                   "Orca": "Foreman and builder side by side. Without it you carry one-line pointers; the night shift and the cloud setup need it.",
-                   "Greptile": "Up to three review rounds per PR, when you say greploop.",
-                   "OpenRouter": "Voice, and the councils. Paid calls only when you allow them."}
+                  ("site", "The workshop", "Where the builder works, who reviews each PR, and the key the outside readers use.", ["Pi", "Orca", "Greptile", "OpenRouter"])]
+        # what each workshop tool does (SETUP.md §1: all four required; Orca and Pi carry the work orders, Greptile reviews every PR)
+        opt_why = {"Pi": "The builder's agent, in the pane beside the foreman: the foreman sends it each work order and waits for it to finish.",
+                   "Orca": "Foreman and builder side by side. Autonomous runs, the night shift and the cloud setup run through it.",
+                   "Greptile": "Reviews every PR before you merge, up to three rounds, each finding checked and fixed.",
+                   "OpenRouter": "Readers from other model families for the plan check and the councils, and voice. Paid calls only within the cap you set."}
         assert sorted(n for *_, ns in levels for n in ns) == sorted(by), "build_site: every requirement sits in one level"
 
         mark = brand_mark
@@ -5488,9 +5488,9 @@ class Site:
             m, colour, name, role, why = row
             if lid == "ground":  # the tested machine: shown, not tapped
                 return (f'<li class="kit0"><div class="kb0">{mark(m, colour)}<b>{esc(name)}</b><span class="role">{esc(role)}</span><p>{inline(why)}</p></div></li>')
-            opt = lid == "site"
+            opt = False  # every level counts (SETUP.md §1)
             return (f'<li class="kit{" opt" if opt else ""}" data-k="{esc(key)}"{" data-opt=1" if opt else ""}><button type="button" aria-pressed="false">{mark(m, colour)}<b>{esc(name)}</b>'
-                    f'<span class="role">{esc(role)}{" &middot; optional" if opt else ""}</span><p>{inline(opt_why[name] if opt else why)}</p><i class="got" aria-hidden="true">Got it</i></button></li>')
+                    f'<span class="role">{esc(role)}{" &middot; optional" if opt else ""}</span><p>{inline(opt_why[name] if lid == "site" else why)}</p><i class="got" aria-hidden="true">Got it</i></button></li>')
 
         blocks = []
         for lid, title, sub, names in levels:
@@ -5502,10 +5502,10 @@ class Site:
                 extra = ('<div class="bpick"><h4>And one builder <small>pick one</small></h4>'
                          '<p>It only builds what the foreman settled, so a cheap model will do. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra.</p>'
                          f'<ul class="kits">{builders}</ul></div>')
-            lvn = "Record" if lid == "ground" else ("Extras" if lid == "site" else f"Level {len(blocks):02d}")
+            lvn = "Record" if lid == "ground" else f"Level {len(blocks):02d}"
             blocks.append(f'<section class="lvl{" lvl0" if lid == "ground" else ""}" id="{lid}"><div class="lvh"><span class="lvn">{lvn}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
                           f'<ul class="kits">{rows}</ul>{extra}</section>')
-        total = sum(len(ns) for lid, _t, _s, ns in levels if lid in ("crew", "paper")) + 1  # + the one builder
+        total = sum(len(ns) for lid, _t, _s, ns in levels if lid in ("crew", "paper", "site")) + 1  # + the one builder
         repo = INSTALL["repo"]
         install = cmd(INSTALL["steps"][0][2]) + '<p class="pthen">Then, in Claude Code, in your repo:</p>' + cmd(INSTALL["steps"][1][2])
         pass_card = (f'<aside class="pass" id="pass" aria-live="polite"><div class="clip" aria-hidden="true"></div><div class="ph">Site induction <span>Topping Out</span></div>'
@@ -5528,7 +5528,7 @@ class Site:
                 '</div></main>' + REQ_JS + self.foot())
         return self.page("Requirements · Topping Out", "The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.",
                          ROLES_CSS + REQ_CSS, "requirements.html", body,
-                         subs=[("#ground", "Tested on"), ("#crew", "The crew"), ("#paper", "The paperwork"), ("#site", "Optional"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
+                         subs=[("#ground", "Tested on"), ("#crew", "The crew"), ("#paper", "The paperwork"), ("#site", "The workshop"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
 
     def logbook(self) -> str:
         """The Logbook on one screen, like the other sheets: the three card types (sections read from their templates), a card's

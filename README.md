@@ -62,7 +62,7 @@ The name comes from the building site: the ceremony held when the last beam goes
 1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>.md` (`/f-sketch` helps write one).
 2. It walks the site, then asks for your **"go"**.
 3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done.
-4. On your word ("open the PR") it opens the PR, and on "greploop" runs up to three Greptile rounds. You say **"merge"** when the evidence satisfies you.
+4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
 5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
 
 ---
@@ -92,7 +92,7 @@ In your project, **between jobs**, start a session and type `/f-setup`. It pulls
 3. **Everything goes through files.** Work orders are files, reports are files, reviews are files. The builder gets a one-line pointer (from the owner, or sent over a pane link by the foreman), never pasted text.
 4. **Disk before words.** After every builder step, the foreman checks commits, captures and files on disk *before* it reads the builder's report.
 5. **Every claim carries its evidence:** a command and its output, a commit hash, a test name. A claim without evidence counts as not done.
-6. **Some acts need the owner's word.** These are approval boundaries, not all of them irreversible: merging and pushes, tracker transitions, messages, branch and worktree deletion, edits outside the ticket's files, migrations, and the "greploop" grant for at most three Greptile rounds on one PR. The full list, and the exceptions (the job's own cleanup and records push after a verified merge, an autonomous run's grants), are in `RULES.md`.
+6. **Some acts need the owner's word.** These are approval boundaries, not all of them irreversible: merging and pushes, tracker transitions, messages, branch and worktree deletion, edits outside the ticket's files, migrations, and a fourth Greptile round on one PR ("greploop"; rounds 1 to 3 come with opening the PR). The full list, and the exceptions (the job's own cleanup and records push after a verified merge, an autonomous run's grants), are in `RULES.md`.
 7. **Every reply ends with the 5-line status block** (`templates/J-STATUS.md`).
 
 ---
@@ -136,7 +136,7 @@ In your project, **between jobs**, start a session and type `/f-setup`. It pulls
  FINAL RE-RUN  all captures, probes, both base-vs-head again at the final head
  ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE to open the PR; every row PASS (the foreman's own run done) to merge
                                           │
- PR opened (owner watches it in the browser) ──> [owner: "greploop"] /f-greploop: ≤3 Greptile rounds
+ PR opened (owner watches it in the browser) ──> /f-greploop: ≤3 Greptile rounds
       (adjudicate → builder repairs → tests + both base-vs-head + ledger re-run → push) ──> PR description check
                                           │
  [owner: "merge"]

@@ -111,7 +111,7 @@ Only when the owner says "you take over". **Nothing relaxes for you**:
 - **Adjudicate every review claim by reproducing it first.** "Ship with follow-ups" becomes: fixed now, or rejected with a reason. No follow-ups.
 - **You run the lens inspection (`/f-inspect`) yourself**, in your session, with fresh lens agents; the builder never reviews its own branch. You check each finding and decide what the builder fixes. It isn't independent of you (QUICK skips it). The independent round is the cross-model one: **you pack it** (`/pack-review`, `templates/PACK-REVIEW.md`) and check the brief before it goes out, a fresh session of another family runs `/xreview`, you run `/adjudicate`.
 - **Scan the PR body for builder names** before anyone opens it.
-- **Greptile rounds, when the repo profile has it** (`/f-greploop`, on the owner's "greploop"): at most three, each adjudicated, repaired by the builder, and re-run (tests, both base-vs-head, ledger) before the push; then stop for the owner.
+- **Greptile rounds, on every PR** (`/f-greploop`, right after the PR opens; the owner's word that opened it covers them): at most three, each adjudicated, repaired by the builder, and re-run (tests, both base-vs-head, ledger) before the push; then stop for the owner.
 - **The PR description check, every job:** before asking for "merge", re-read the body against the final diff and results, and rewrite anything stale.
 
 ---
@@ -121,7 +121,7 @@ Only when the owner says "you take over". **Nothing relaxes for you**:
 | Do | Why |
 |---|---|
 | **Decide on evidence and record what you rejected.** No menus of options | the owner can't arbitrate technical choices, and shouldn't have to |
-| **Ask only for the acts listed in `RULES.md`** (merge, any push, tracker, messages, deletions, out-of-scope edits, migrations, the "greploop" grant; the records push needs your word too, except the one after a verified merge, which the foreman makes itself). The job's own cleanup after a verified merge is not on that list: do it, then stop at the next-ticket discussion | everything else is yours to decide |
+| **Ask only for the acts listed in `RULES.md`** (merge, any push, tracker, messages, deletions, out-of-scope edits, migrations, a fourth Greptile round ("greploop"); the records push needs your word too, except the one after a verified merge, which the foreman makes itself). The job's own cleanup after a verified merge is not on that list: do it, then stop at the next-ticket discussion | everything else is yours to decide |
 | **Report exactly what happened, including your own mistakes** | a foreman once told the owner "nothing was pushed" when the push had completed. Check the remote before you claim anything about it |
 | **A directional "yes" approves the goal, not the act** | ask again for each act that needs your word |
 | **The owner confirms the next job before the handover** | the foreman recommends, the owner says yes or picks another, then the ground investigation, the board and the handover; under a `/goal` the foreman decides itself and records the goal |
@@ -129,7 +129,7 @@ Only when the owner says "you take over". **Nothing relaxes for you**:
 | **Every job starts with work order 1** | an audit or research job too: no job file, no later work order, inspection or PR |
 | **Every build job merges, code or not** | documents and research go through the PR too; `/f-signoff` refuses an unmerged job, and nothing new starts until the end-game lock clears |
 | **A standing goal is not a word** | an autonomous goal ends at "ready for your word"; while waiting on the owner, say so once and stop |
-| **Except an autonomous run** | the owner's own `/goal autonomous run: <path to the opener>` (or a night shift the owner started) covers the "go", the survey (its starred picks), the PR, greploop, the walkthrough (`METHOD.md` §10, within its spend cap), the merge and the records pushes for that job only; any failure stops it (`RULES.md`) |
+| **Except an autonomous run** | the owner's own `/goal autonomous run: <path to the opener>` (or a night shift the owner started) covers the "go", the survey (its starred picks), the PR and its Greptile rounds, the walkthrough (`METHOD.md` §10, within its spend cap), the merge and the records pushes for that job only; any failure stops it (`RULES.md`) |
 | **Explain plainly before any word.** When something truly needs the owner, one plain paragraph on why, before the word itself. Better still, don't need them: post-merge cleanup and guard blocks are the agents' | twice in one job the owner had to ask why something needed them |
 | **Settled stays settled.** Once a question is answered, by you on evidence or by the owner, treat it as done. Reopen it only on new evidence, and name the evidence | long sessions and compaction tempt re-deciding, and the owner shouldn't be asked twice |
 | **End every reply with the 5-line status block**, `state` measured, `owed` complete | it's how the owner (and a compacted you) finds the place |
