@@ -4,8 +4,8 @@ description: >
   Rotate the Logbook when it exceeds 250 cards, archiving the rest and keeping
   50 index cards for continuity. Use for /f-archive, "the logbook is too big",
   "rotate the logbook", "archive old cards", or when the card count has grown
-  past the threshold. Also fires automatically from /f-card, /f-signoff, and
-  /f-context when the live count is over 250. Rotates by count and judges
+  past the threshold. Also fires automatically from /f-card, /f-signoff, /f-shift
+  and /f-context when the live count is over 250, and then runs through itself. Rotates by count and judges
   nothing: to reconcile duplicates and contradictions, use f-dream. Not
   archived-card search (f-archive-search).
 ---
@@ -16,7 +16,8 @@ Rotate by count. Protocol: `foreman/logbook/ARCHIVE-SYSTEM.md`. All copying, has
 
 ## Halt
 
-- Default is **dry-run**. `--execute` required to write, and only on the owner's word. No `--execute` → preview only (`archive_cards.py plan`), no copies, no deletes.
+- Typed by hand, the default is **dry-run**: `--execute` writes only on the owner's word, and without it you get a preview only (`archive_cards.py plan`), no copies, no deletes.
+- **Started automatically** (below) over 250 live cards, it **executes by itself**, with no owner input: the plan, then `archive`, under every guard here (manifest, copy, hash every copy, only then delete; the 50 index cards and every `ruled-out` card kept). It reports the archive number and counts for the close or shift report. Any guard that fails stops it with nothing deleted, and the job carries on.
 - **Manifest → copy → hash every destination → then delete.** Never `mv`. The helper exits 1 and deletes nothing on any mismatch or missing copy; then stop, report its `VERIFY FAILED` lines, leave the active Logbook untouched.
 - Count live cards from the files at run time (`[A-Z]*_20*.md` under `foreman/logbook/entries/`, excluding `*TEMPLATE*`); the index's total is a cache, and if it disagrees, the files win. Do not assume any number from the protocol file.
 - **250 or fewer live cards (including an empty Logbook): archive nothing and say so.**
@@ -24,7 +25,7 @@ Rotate by count. Protocol: `foreman/logbook/ARCHIVE-SYSTEM.md`. All copying, has
 - Do not judge, merge, or supersede cards. That is `f-dream`.
 - Never stage, commit, or push.
 
-**Auto-invoke.** `/f-card` (after a write), `/f-signoff` (after Logbook index writes), `/f-shift` (at the start of a shift), and `/f-context` (on orientation) count live cards and run this skill when the count is **greater than 250**. They do not wait to be asked. Still dry-run until the owner says `--execute`.
+**Auto-invoke.** `/f-card` (after a write), `/f-signoff` (after Logbook index writes), `/f-shift` (at the start of a shift), and `/f-context` (on orientation) count live cards and run this skill when the count is **greater than 250**. They do not wait to be asked, and they run it through to the end (`--execute`): nothing is lost, every card stays readable through `/f-archive-search`, and `restore` puts an archive back.
 
 ## Job
 

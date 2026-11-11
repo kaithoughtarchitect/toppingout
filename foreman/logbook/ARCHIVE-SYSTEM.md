@@ -34,7 +34,7 @@ At 250+ cards:
 │         ├──► archive_cards.py plan: what would be copied/deleted │
 │         │                                                        │
 │         ▼                                                        │
-│   /f-archive --execute  (only on the owner's word)               │
+│   /f-archive --execute  (automatic past 250; by hand: your word) │
 │         │                                                        │
 │         ├──► 1. archive_cards.py archive: manifest, copy,        │
 │         │       hash every destination, then delete the          │
@@ -133,7 +133,7 @@ Run from the repository root. Exit codes: **0** ok, **1** verification failure o
 **Flags**:
 
 - `--dry-run` (default): Preview what will happen
-- `--execute`: Actually perform the archive, only on the owner's word
+- `--execute`: Actually perform the archive. Started automatically past 250 cards (`/f-card`, `/f-signoff`, `/f-shift`, `/f-context`), it executes by itself under the same guards; typed by hand, only on the owner's word
 
 **Process**:
 
@@ -332,7 +332,7 @@ Archive search is a case-insensitive substring search over `foreman/logbook/arch
 
 ```
 /f-archive           → Shows dry-run (default)
-/f-archive --execute → Archives (only on the owner's word, after the dry run)
+/f-archive --execute → Archives (automatically past 250 cards; by hand, on the owner's word after the dry run)
 ```
 
 ### 2. Manifest, copy, verify destinations, then delete

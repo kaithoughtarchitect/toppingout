@@ -11,7 +11,7 @@
 
 ### Will it archive cards without asking me?
 
-No. Other skills start it automatically when the live count passes 250, but it stays a dry run until you say `--execute`.
+Yes, once the live count passes 250: the skills that count cards start it and it runs through, copying and checking every card before removing any. Nothing is lost: archived cards stay searchable with `/f-archive-search`, and an archive can be restored. Typed by hand, it previews first and moves cards only on your `--execute`.
 
 ### What stops it losing cards?
 

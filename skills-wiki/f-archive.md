@@ -15,7 +15,7 @@ Slash: `/f-archive`. Folder: `skills/f-archive/SKILL.md`.
 
 Move old Logbook cards to the archive when there are too many, keeping a summary set.
 
-**On site:** The Logbook: [[f-shift]] runs it by itself once there are more than 250 cards.
+**On site:** The Logbook: [[f-shift]] and the other card-counting skills run it through by themselves once there are more than 250 cards.
 
 Moves older cards to `foreman/logbook/archived/` and keeps a short summary set, as `ARCHIVE-SYSTEM.md` describes.
 

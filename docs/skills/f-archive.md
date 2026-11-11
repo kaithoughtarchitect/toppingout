@@ -9,7 +9,7 @@ Source: `skills/f-archive/SKILL.md`
 
 ## On site
 
-The Logbook: f-shift runs it by itself once there are more than 250 cards. Moves older cards to foreman/logbook/archived/ and keeps a short summary set, as ARCHIVE-SYSTEM.md describes.
+The Logbook: f-shift and the other card-counting skills run it through by themselves once there are more than 250 cards. Moves older cards to foreman/logbook/archived/ and keeps a short summary set, as ARCHIVE-SYSTEM.md describes.
 
 ## Say it
 
@@ -34,7 +34,7 @@ When the Logbook passes 250 cards (f-shift does it for you).
 
 ### Will it archive cards without asking me?
 
-No. Other skills start it automatically when the live count passes 250, but it stays a dry run until you say `--execute`.
+Yes, once the live count passes 250: the skills that count cards start it and it runs through, copying and checking every card before removing any. Nothing is lost: archived cards stay searchable with `/f-archive-search`, and an archive can be restored. Typed by hand, it previews first and moves cards only on your `--execute`.
 
 ### What stops it losing cards?
 
