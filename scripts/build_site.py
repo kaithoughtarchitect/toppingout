@@ -1130,7 +1130,7 @@ SKILLS_DESK_CSS = r"""
 
 COPY_JS = '<script>(function(){var tip;function say(t){if(!tip){tip=document.createElement("div");tip.className="cptip";tip.setAttribute("role","status");document.body.appendChild(tip)}tip.textContent="Copied: "+t;tip.classList.add("on");clearTimeout(say.t);say.t=setTimeout(function(){tip.classList.remove("on")},1400)}function copy(t){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}a.remove();return Promise.resolve()}function go(el){var t=el.getAttribute("data-copy");Promise.resolve(copy(t)).then(function(){say(t);el.classList.add("copied");setTimeout(function(){el.classList.remove("copied")},900)},function(){say(t)})}document.addEventListener("click",function(e){var el=e.target.closest("[data-copy]");if(el)go(el)});document.addEventListener("keydown",function(e){var el=e.target.closest&&e.target.closest("[data-copy]");if(el&&(e.key==="Enter"||e.key===" ")){e.preventDefault();go(el)}})})()</script>'
 
-WELCOME_JS = '<script>(function(){var K="to-welcome";var force=/[?&]welcome(=|&|$)/.test(location.search);try{if(!force&&localStorage.getItem(K))return}catch(e){if(!force)return}if(!force&&/about\\.html$/.test(location.pathname))return;\nvar home=document.querySelector(".brand"),base=home?home.getAttribute("href").replace(/index\\.html$/,""):"";\nvar w=document.createElement("aside");w.className="welcome";w.setAttribute("role","dialog");w.setAttribute("aria-label","Welcome");\nw.innerHTML=\'<img class="wbadge" src="\'+base+\'assets/brand/kai-badge-160.png" alt="" width="96" height="96"><div class="wbub"><button type="button" class="wx" aria-label="Close">&times;</button>\'\n +\'<p><b>Yo, what\\u2019s up.</b> Glad something sparked your interest enough to pop in. I\\u2019m Kai: three years building AI coding systems, and Topping Out is the latest. Have a look around.</p>\'\n +\'<div class="wact"><button type="button" class="wgo">Show me around</button><a href="\'+base+\'about.html">Who\\u2019s Kai? &rarr;</a></div></div>\';\nfunction shut(){try{localStorage.setItem(K,"1")}catch(e){}w.classList.remove("on");setTimeout(function(){w.remove()},300)}\nw.querySelector(".wx").addEventListener("click",shut);w.querySelector(".wgo").addEventListener("click",shut);w.querySelector("a").addEventListener("click",function(){try{localStorage.setItem(K,"1")}catch(e){}});\ndocument.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.body.contains(w))shut()});\nfunction show(){var bar=[].filter.call(document.querySelectorAll(".strip"),function(b){var r=b.getBoundingClientRect();return r.top<innerHeight&&r.bottom>innerHeight-4})[0];if(bar)w.style.bottom=(innerHeight-bar.getBoundingClientRect().top+14)+"px";document.body.appendChild(w);requestAnimationFrame(function(){requestAnimationFrame(function(){w.classList.add("on")})})}\nvar oj=document.getElementById("oj");if(!oj||force){setTimeout(show,1100)}else{var done=false,chk=function(){if(!done&&oj.getBoundingClientRect().bottom<0){done=true;removeEventListener("scroll",chk);setTimeout(show,500)}};addEventListener("scroll",chk,{passive:true})}})()</script>'
+WELCOME_JS = '<script>(function(){var K="to-welcome";var force=/[?&]welcome(=|&|$)/.test(location.search);try{if(!force&&localStorage.getItem(K))return}catch(e){if(!force)return}if(!force&&/about\\.html$/.test(location.pathname))return;\nvar home=document.querySelector(".brand"),base=home?home.getAttribute("href").replace(/index\\.html$/,""):"";\nvar w=document.createElement("aside");w.className="welcome";w.setAttribute("role","dialog");w.setAttribute("aria-label","Welcome");\nw.innerHTML=\'<img class="wbadge" src="\'+base+\'assets/brand/kai-badge-160.png" alt="" width="96" height="96"><div class="wbub"><button type="button" class="wx" aria-label="Close">&times;</button>\'\n +\'<p><b>Yo, what\\u2019s up.</b> <span class="wlong">Glad something sparked your interest enough to pop in. I\\u2019m Kai: three years building AI coding systems, and Topping Out is the latest. Have a look around.</span><span class="wshort">I\\u2019m Kai, I built this. Have a look around.</span></p>\'\n +\'<div class="wact"><button type="button" class="wgo">Show me around</button><a href="\'+base+\'about.html">Who\\u2019s Kai? &rarr;</a></div></div>\';\nfunction shut(){try{localStorage.setItem(K,"1")}catch(e){}w.classList.remove("on");setTimeout(function(){w.remove()},300)}\nw.querySelector(".wx").addEventListener("click",shut);w.querySelector(".wgo").addEventListener("click",shut);w.querySelector("a").addEventListener("click",function(){try{localStorage.setItem(K,"1")}catch(e){}});\ndocument.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.body.contains(w))shut()});\nfunction show(){var bar=[].filter.call(document.querySelectorAll(".strip"),function(b){var r=b.getBoundingClientRect();return r.top<innerHeight&&r.bottom>innerHeight-4})[0];if(bar)w.style.bottom=(innerHeight-bar.getBoundingClientRect().top+14)+"px";document.body.appendChild(w);requestAnimationFrame(function(){requestAnimationFrame(function(){w.classList.add("on")})})}\nvar oj=document.getElementById("oj"),phone=matchMedia("(max-width:560px)").matches;if(force){setTimeout(show,1100)}else if(!oj&&phone){var sd=false,sc=function(){if(!sd&&scrollY>innerHeight*.6){sd=true;removeEventListener("scroll",sc);setTimeout(show,400)}};addEventListener("scroll",sc,{passive:true})}else if(!oj){setTimeout(show,1100)}else{var done=false,chk=function(){if(!done&&oj.getBoundingClientRect().bottom<0){done=true;removeEventListener("scroll",chk);setTimeout(show,500)}};addEventListener("scroll",chk,{passive:true})}})()</script>'
 
 FLIP_JS = '<script>(function(){document.addEventListener("keydown",function(e){if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey)return;var t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;var a=document.querySelector(\'.flip a[data-key="\'+e.key+\'"]\');if(a){e.preventDefault();location.href=a.href}})})()</script>'
 
@@ -2915,6 +2915,40 @@ def enforced_html() -> str:
             '<p>Most of the method is instructions the agents follow; a few checks are scripts that refuse.</p>'
             f'<ul>{"".join(lis)}</ul></div>')
 
+# The phone layer, last in every page's CSS: what hover does on a computer happens on a touch screen when it scrolls
+# into view (TOUCH_JS adds .touch to <html> and the classes below), and the layouts that crowd a phone loosen.
+PHONE_CSS = r"""
+.touch .card.inview .shot img{transform:translateY(calc(-100% + 100cqh));transition:transform 6s cubic-bezier(.45,.05,.4,1) .5s}
+.touch .card.inview .shot::after{opacity:0}
+.touch .hsign.swing{animation:sign-swing .95s linear}
+.touch .topout.lit .fl .pl{fill:#FBB401}.touch .topout.lit .fl text{fill:#101316}
+.touch .topout.lit .fl:nth-of-type(1) .pl,.touch .topout.lit .fl:nth-of-type(1) text{transition-delay:.1s}
+.touch .topout.lit .fl:nth-of-type(2) .pl,.touch .topout.lit .fl:nth-of-type(2) text{transition-delay:.35s}
+.touch .topout.lit .fl:nth-of-type(3) .pl,.touch .topout.lit .fl:nth-of-type(3) text{transition-delay:.6s}
+.touch .topout.lit .fl:nth-of-type(4) .pl,.touch .topout.lit .fl:nth-of-type(4) text{transition-delay:.85s}
+.touch .topout.lit .fl:nth-of-type(5) .pl,.touch .topout.lit .fl:nth-of-type(5) text{transition-delay:1.1s}
+.touch .topout.lit .fl:nth-of-type(n+6) .pl,.touch .topout.lit .fl:nth-of-type(n+6) text{transition-delay:1.35s}
+.touch .cut .nd:focus .hit{stroke:var(--tg)}.touch .phs[data-step]:focus .vb{color:var(--brand)}
+@media (prefers-reduced-motion:reduce){.touch .card.inview .shot img{transition:none;transform:none}.touch .hsign.swing{animation:none}}
+@media (max-width:640px){
+.tabs[role=tablist]{display:flex!important;grid-template-columns:none!important;flex-wrap:nowrap!important;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:6px;
+ -webkit-mask-image:linear-gradient(90deg,#000 86%,transparent);mask-image:linear-gradient(90deg,#000 86%,transparent)}
+.tabs[role=tablist]::-webkit-scrollbar{display:none}
+.tabs[role=tablist]>*{flex:0 0 auto!important;width:auto!important;min-width:0;max-width:80vw}
+}
+@media (max-width:480px){.ojmode{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:420px){.mbar .where{display:none}}
+@media (max-width:980px){.rq .pass{order:1}}
+"""
+
+TOUCH_JS = r"""<script>(function(){if(!window.matchMedia||!matchMedia("(hover:none)").matches)return;
+document.documentElement.classList.add("touch");if(!("IntersectionObserver" in window))return;
+if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+function once(sel,cls,th){var els=document.querySelectorAll(sel);if(!els.length)return;
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add(cls);io.unobserve(e.target)}})},{threshold:th});
+[].forEach.call(els,function(el){io.observe(el)})}
+once(".card",".inview".slice(1),.7);once(".hsign","swing",.9);once(".topout","lit",.45)})()</script>"""
+
 BASE_CSS = r"""
 
 /* the welcome: Kai's badge and a speech bubble, bottom right, first visit only */
@@ -2929,7 +2963,11 @@ BASE_CSS = r"""
 .welcome .wact{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:12px}
 .welcome .wgo{font:700 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 12px;background:#101316;color:#FBB401;border:2px solid #101316;cursor:pointer}
 .welcome .wact a{font:700 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#101316}
-@media (max-width:560px){.welcome{left:10px;right:10px;bottom:10px;max-width:none}.welcome .wbadge{width:64px;height:64px}.welcome .wbub{margin-bottom:22px}}
+.welcome .wshort{display:none}
+@media (max-width:560px){.welcome{left:10px;right:10px;bottom:10px;max-width:none;align-items:center;gap:8px}.welcome .wbadge{width:48px;height:48px}
+.welcome .wbub{margin-bottom:0;padding:10px 12px;box-shadow:3px 3px 0 #101316;flex:1}.welcome .wbub::before,.welcome .wbub::after{display:none}
+.welcome .wlong{display:none}.welcome .wshort{display:inline}.welcome p{font-size:13.5px;margin-right:26px}.welcome p b{font-size:16px;display:inline;margin-right:4px}
+.welcome .wact{margin-top:8px;gap:6px 12px}.welcome .wgo{padding:7px 10px}}
 @media (prefers-reduced-motion:reduce){.welcome{transition:none}}
 /* the title block names who drew the plans */
 .tblock .drawn{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:2px solid var(--ink);text-decoration:none;color:var(--ink);background:var(--panel);transition:background .15s}
@@ -4988,9 +5026,9 @@ class Site:
         return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
                 f'<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
                 f'<title>{esc(title)}</title><meta name="description" content="{esc(description)}">{SHARE_MARK}'
-                f'{self.icon}{THEME_HEAD}{FONTS}<style>{BASE_CSS}{css}</style></head><body>'
+                f'{self.icon}{THEME_HEAD}{FONTS}<style>{BASE_CSS}{css}{PHONE_CSS}</style></head><body>'
                 f'<div class="site">{plan}<div class="mainc">{mbar}{body}</div></div>'
-                + SHELL_JS + THEME_TAIL + WELCOME_JS + "</body></html>\n")
+                + SHELL_JS + THEME_TAIL + WELCOME_JS + TOUCH_JS + "</body></html>\n")
 
     def foot(self) -> str:
         return '<footer class="site-foot"><span>Topping Out</span><span>MIT licence</span><span>' + DOMAIN + '</span></footer>'
