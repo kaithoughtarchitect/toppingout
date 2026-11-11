@@ -20,7 +20,7 @@ Close a merged Topping Out job: check the acceptance ledger, reconcile planned-v
 
 **Deliberately not part of this close:** any engine- or service-side capture of the job (a repo that has one runs it as its own step, named in the repo profile), an unattended `--strict` runner with ack receipts (job closes run after a verified merge, attended or under an autonomous run; there is no separate unattended runner), and completed-plan retirement: **Topping Out never retires the blueprint at a job close** (Phase 4).
 
-**Where it sits:** work orders → inspections → acceptance ledger → PR → Greptile rounds (≤3, if the profile has it) → PR description check → merge (verified) → **`/f-signoff`** → dev report → next-ticket decision → the owner confirms → next job: the ground investigation → `/f-board close` → shift handover and opener → the lock clears → records push. **At the board's head, the other branch:** close the last job → `topout` → the topping out report → the next heads, and no handover or opener (`METHOD.md` §11b).
+**Where it sits:** work orders → inspections → acceptance ledger → PR → Greptile rounds (≤3, on every PR; skipped only for a recorded `none`) → PR description check → merge (verified) → **`/f-signoff`** → dev report → next-ticket decision → the owner confirms → next job: the ground investigation → `/f-board close` → shift handover and opener → the lock clears → records push. **At the board's head, the other branch:** close the last job → `topout` → the topping out report → the next heads, and no handover or opener (`METHOD.md` §11b).
 
 ---
 

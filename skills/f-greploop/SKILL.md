@@ -6,7 +6,7 @@ description: >
   re-run the tests and the acceptance ledger, push on the owner's grant, and
   ask again. At most three rounds, then stop for the owner. Runs on every PR,
   right after it opens and before "merge" (the word that opened the PR covers it);
-  also when the owner says "greploop" (a fourth round) or /f-greploop.
+  also when the owner says "greploop" or types /f-greploop <PR> (the same word: one more round).
   Not the lens inspection (f-inspect) or the
   independent inspection (xreview); never merges.
 argument-hint: "<PR number>"

@@ -38,4 +38,5 @@ What this does NOT do, and which ticket owns it. Anything characterised as an in
 | Build review (gate 2) | |
 | Lens inspection (f-inspect, by the foreman) | <findings; accepted / rejected> or `SKIP (QUICK)` |
 | Independent inspection (xreview, another model family) | <claims; accepted / rejected> |
-| Greptile rounds (`/f-greploop`, on the open PR) | <round 1: n/5, findings accepted / rejected; round 2 …; at most three> or `none (no PR review bot)` |
+| Greptile rounds (`/f-greploop`, on the open PR) | <round 1: n/5, findings accepted / rejected; round 2 …; at most three> or `none (no PR review bot: <the owner's recorded reason, from the repo profile>)` |
+| Split under the autonomous run | `no`, or: the parent job, its children, the work-order count that triggered it, the goal's words (`RULES.md`, "Its own job's split"); for the owner to review |

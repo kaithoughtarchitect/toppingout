@@ -2555,7 +2555,7 @@ FRONT = {
         ("Python 3", "Draws the project board."),
         ("Pi, in Orca", "The builder's agent, in the pane beside the foreman."),
         ("Greptile", "Review rounds on each pull request."),
-        ("OpenRouter", "Voice, and the councils."),
+        ("OpenRouter", "The plan check, the councils, and voice."),
         ("A builder", "Any agent that can read a file, run a shell and write a report. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra."),
     ],
     # the requirements sheet: (logo, brand colour, name, its job here, why); logo None draws its initials
@@ -5475,7 +5475,7 @@ class Site:
                   ("crew", "The crew", "Who plans and who builds.", ["Claude Code"]),
                   ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"]),
                   ("site", "The workshop", "Where the builder works, who reviews each PR, and the key the outside readers use.", ["Pi", "Orca", "Greptile", "OpenRouter"])]
-        # what each workshop tool does (SETUP.md §1: all four required; Orca and Pi carry the work orders, Greptile reviews every PR)
+        # what each workshop tool does (SETUP.md §9: all four required; Orca and Pi carry the work orders, Greptile reviews every PR)
         opt_why = {"Pi": "The builder's agent, in the pane beside the foreman: the foreman sends it each work order and waits for it to finish.",
                    "Orca": "Foreman and builder side by side. Autonomous runs, the night shift and the cloud setup run through it.",
                    "Greptile": "Reviews every PR before you merge, up to three rounds, each finding checked and fixed.",

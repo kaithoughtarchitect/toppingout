@@ -29,6 +29,7 @@
 | Tests added | <n>, plus <DB proofs> |
 | Test time | <n> whole-suite runs and <m> other runs, <h:mm> in all (`python snippets/run_times.py <day folder>`); the slowest tests (the script lists them). More than about 6 whole-suite runs in a job, or a whole suite over 15 minutes, goes on the board as a speed ticket |
 | Autonomous run notes | survey answers it gave itself, any in-scope option taken over a starred pick, usage-limit pauses (when and how long), or "not an autonomous run" |
+| Split under the autonomous run | `no`, or: the parent job, its children, the work-order count, the goal's words (`RULES.md`, "Its own job's split") |
 | Extra paid spend | $<n> (a live key, a paid review seat; the command or usage reading it came from), or $0. Never the builder's own bill |
 | Probes | <n>/<n> bite |
 | Findings | gate 1 <n>, work order reviews <n>, gate 2 <n>, lens inspection <n or SKIP> (accepted <n>), independent inspection <n> (accepted <n>), Greptile <rounds, findings> (accepted <n>), fix review <n> |

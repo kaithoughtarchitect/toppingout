@@ -49,7 +49,7 @@ PHASES = [
  ]),
  ("3", "The build loop", "Build", "One work order per task, until every task is built.", [
    ("or", "Write the work order", "One verifiable outcome. Decisions labelled D-, exact commands, a pinned HEAD. Tick the pre-send checklist.", [("file", "WORK-ORDER.txt")], None),
-   ("op", "Pass the pointer", "One line: read file X, lines A to B. Or the foreman sends it over the pane link and a background watcher wakes it at the stop.", [("skill", "orca-pi-connect"), ("opt", "pane link optional, Orca")], None),
+   ("op", "Pass the pointer", "One line: read file X, lines A to B. Or the foreman sends it over the pane link and a background watcher wakes it at the stop.", [("skill", "orca-pi-connect"), ("opt", "pane link, Orca; by hand as fallback")], None),
    ("bu", "Build it", "Tests fail first, then build. Hostile inputs, coverage, probes, G1 to G6, every touched module's tests. One commit, captures, a report, stop.", [], None),
    ("or", "Review it", "Disk before words. Run the new tests on the old code. Probe it yourself. Attribute every difference. Update the job record.", [("file", "WORK-ORDER-REVIEW.md")], None),
  ]),

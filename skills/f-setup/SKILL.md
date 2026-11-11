@@ -97,11 +97,13 @@ Write `foreman/REPO-PROFILE-<product>.md` from `foreman/method/templates/REPO-PR
 | Disposable databases | `docker-compose*.yml` services and ports |
 | PR review bot | `.greptile*` config, or a Greptile comment on a recent PR (`gh pr list --state merged -L 5`, then its comments) |
 | Host merge strategy | `gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed` |
+| Builder delivery | `orca` and `pi` on PATH → `pane link`; else `hand-carried pointer` (the fallback; Step 0 already warned) |
+| Max work orders per job | `9` (the default) unless the owner names another |
 | Foreman launch command | the command running this session (`claude`, with the flags the owner uses) |
 | Runs on | `uname -s` (or the platform this session reports): Windows, macOS or Linux; on Linux with no desktop session (`$DISPLAY` and `$WAYLAND_DISPLAY` empty) and Orca running as a service (`systemctl --user is-active orca-serve`), `a Linux server through Orca (SETUP.md §8b)` |
 | Framework check | `/deep` when the add-on went in (Step 1c); otherwise `none`, or a skill the owner names that checks plans against their framework |
 
-**Then ask the owner, in one batch**, only what's left; typically: the product name (for the file name), ticket mode (`local` unless they use a tracker), board publish mode (`local` or `artifact`), the plan check seats (or leave to the first plan check), builder delivery (`hand-carried pointer` or `pane link`), the three budgets (repair work orders, default 3 per task; wall time; foreman tokens), the builders' names for Step 3, and anything the reading left ambiguous (two candidate gate commands, say). Offer the found answer as the default in each question.
+**Then ask the owner, in one batch**, only what's left; typically: the product name (for the file name), ticket mode (`local` unless they use a tracker), board publish mode (`local` or `artifact`), the plan check seats (or leave to the first plan check), the three budgets (repair work orders, default 3 per task; wall time; foreman tokens), the builders' names for Step 3, and anything the reading left ambiguous (two candidate gate commands, say). Offer the found answer as the default in each question.
 
 ## Step 3 · The names files
 
@@ -137,7 +139,7 @@ Run each, read its exit code (a crash is not a pass), and report the line:
 
 - What was installed or upgraded (counts, and any adapted files merged or left).
 - The profile path and the rows marked `not recorded`.
-- The optional add-ons and what each still needs (`SETUP.md` §1: voice, the councils, `f-comply`; the pane link, `SETUP.md` §4).
+- The optional add-ons and what each still needs (`SETUP.md` §1: voice, `f-comply`), and every `REQUIRED BUT MISSING` line from Step 0 again.
 - **For the owner's commit:** the exact paths setup created or changed (never `scratch/`). Setup doesn't commit.
 - **Next:** the first job (`SETUP.md` §7): `/f-sketch` for an idea, `/f-schedule` for a big plan, or the first-job opener.
 

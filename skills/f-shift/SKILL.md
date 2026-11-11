@@ -53,7 +53,7 @@ Search the Logbook (`/f-search`) for the job's area: its module, its ticket's te
 
 ## 4 · Then run the site walk (`METHOD.md` §2) and STOP for "go"
 
-In an **autonomous run** (the owner's `/goal autonomous run: <opener path>`, typed by the owner or by a night shift the owner started), the goal is the "go" and the survey's answers (`/f-survey` answers its own questions with its starred picks): carry on unless a question has no clear recommendation or the site walk found a scope-changing disagreement (`RULES.md`, "The one exception"). A plan over the repo profile's "Max work orders per job" splits this job at scoping, before work order 2 (`RULES.md`, "Its own job's split").
+In an **autonomous run** (the owner's `/goal autonomous run: <opener path>`, typed by the owner or by a night shift the owner started), the goal is the "go" and the survey's answers (`/f-survey` answers its own questions with its starred picks): carry on unless a question has no clear recommendation or the site walk found a scope-changing disagreement (`RULES.md`, "The one exception"). A plan over the repo profile's "Max work orders per job" may split this job at scoping, before work order 2 (`RULES.md`, "Its own job's split").
 
 ## 5 · Keep these in front of you for the whole job
 

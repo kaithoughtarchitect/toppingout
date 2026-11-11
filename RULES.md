@@ -20,7 +20,7 @@ These don't bend under deadline pressure. Each exists because breaking it once c
 7. pushing the records repo, **except** the post-merge records push (`METHOD.md` §10 step 9), which also carries any earlier records-only commits already on the records branch. An unpushed records-only commit is never a blocker for the next job (`METHOD.md` §2)
 8. any edit in the **target repo** outside the ticket's own files (the foreman's own records in the records repo are not covered by this)
 9. any `.sql` / migration / manifest change
-10. **A fourth Greptile round** on a PR (the word "greploop"). Rounds 1 to 3 are part of every job (`skills/f-greploop`): the owner's word that opened the PR also authorises, for that PR only, posting `@greptileai review` once per round, one reply on the thread of each finding it routes to another job (step 5), and pushing reviewed repair commits to its branch (never force). Merge is still its own word
+10. **A fourth Greptile round** on a PR (the word "greploop"). Rounds 1 to 3 are part of every job (`skills/f-greploop`): the owner's word that opened the PR also authorises, for that PR only, posting `@greptileai review` once per round, one reply on the thread of each finding it routes to another job (step 5), and pushing reviewed repair commits to its branch (never force). Each "greploop" grants one more round with the same permissions. Merge is still its own word
 
 A directional "yes" approves the goal, not the act. Approval for one act never extends to the next.
 
