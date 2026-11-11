@@ -385,7 +385,7 @@ A job's lessons shouldn't live only in its records. The **Logbook** (`foreman/lo
 - **`/f-card`**: one lesson, mid-job.
 - **`/f-signoff`** writes the job's INSIGHT / METHOD / BUILD cards (evidence and provenance, no duplicates) and updates the index. A routine job may warrant none.
 - **`/f-search`** / **`/f-archive-search`**: find cards. **`/f-context`**: a full cold orientation of a repo, with focus-matched cards.
-- **Upkeep at every close** (`/f-signoff` Step 3.2c, no owner input): finished jobs without cards are caught up (three per close), and every 10th close (the repo profile's "Logbook upkeep every") applies a guarded `/f-dream` and writes a `/f-distill` preview. Promoting cards into rules stays the owner's word.
+- **Upkeep at every close** (`/f-signoff` Step 3.2a, no owner input): finished jobs without cards are caught up (three per close), and every 10th close (the repo profile's "Logbook upkeep every") applies a guarded `/f-dream` and writes a `/f-distill` preview. Promoting cards into rules stays the owner's word.
 - **`/f-catchup`**: by hand, to seed the Logbook from many completed jobs at once.
 - **`/f-dream`**: by hand any time (dry run first), and automatically every 10th close with its guards.
 - **`/f-distill`** (previewed every 10th close; applied when you say): promote the best cards into halt-shaped rules: product lessons into the repo's **constitution**, method lessons into Topping Out's `RULES.md` or playbooks. **Only on the owner's word.**

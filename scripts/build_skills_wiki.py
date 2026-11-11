@@ -118,7 +118,7 @@ SKILLS = {
                          "Searches `foreman/logbook/archived/`.",
                          [], [], ["f-search"]),
     "f-catchup": ("Write Logbook cards for past jobs that never got any",
-                  "The Logbook: once to fill it from past jobs, or after a gap. It shows you what's missing and waits for a yes.",
+                  "The Logbook: by itself at every close, for up to three past jobs not yet looked at; by hand to fill it from many past jobs at once, when it shows you what's missing and waits for a yes.",
                   "Checks each lesson against its job before writing it, and skips jobs with nothing to learn.",
                   ["agents/code-explorer"], [], []),
     "f-context": ("Get a quick, complete picture of a repo before working in it",

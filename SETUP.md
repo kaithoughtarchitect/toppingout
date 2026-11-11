@@ -84,7 +84,8 @@ your-repo/
 │   │   │   ├── insights/          INSIGHT cards: a lesson or gotcha (why)
 │   │   │   ├── methods/           METHOD cards: a repeatable way of doing something (how)
 │   │   │   └── builds/            BUILD cards: what a job built
-│   │   ├── archived/              older cards moved out once there are more than 250   /f-archive
+│   │   ├── archived/              older cards moved out past 250 (/f-archive), and dreams/<id>/: each dream's proposal and retired cards
+│   │   ├── upkeep.md              one line per close: jobs looked at, cards written, dream, archive, distill preview   /f-signoff
 │   │   ├── sessions/              saved copies of past sessions
 │   │   ├── ARCHIVE-SYSTEM.md      how cards are moved to the archive
 │   │   ├── archive_cards.py       the script that moves them (with its test)

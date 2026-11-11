@@ -21,11 +21,11 @@ Rotate by count. Protocol: `foreman/logbook/ARCHIVE-SYSTEM.md`. All copying, has
 - **Manifest → copy → hash every destination → then delete.** Never `mv`. The helper exits 1 and deletes nothing on any mismatch or missing copy; then stop, report its `VERIFY FAILED` lines, leave the active Logbook untouched.
 - Count live cards from the files at run time (`[A-Z]*_20*.md` under `foreman/logbook/entries/`, excluding `*TEMPLATE*`); the index's total is a cache, and if it disagrees, the files win. Do not assume any number from the protocol file.
 - **250 or fewer live cards (including an empty Logbook): archive nothing and say so.**
-- Never delete an `archived/NNN/` folder, not even as a rollback. Any hash failure after cards were deleted: **stop and tell the owner**.
+- Never delete an `archived/NNN/` folder, not even as a rollback. Any hash failure after cards were deleted: **stop archiving and tell the owner**. Typed by hand: stop and say so. In automatic mode: write nothing more to the Logbook, report `ARCHIVE CHECK FAILED` with the helper's lines to the caller (it goes into the dev report and the close report as owed to the owner), and return; the job carries on.
 - Do not judge, merge, or supersede cards. That is `f-dream`.
-- Never stage, commit, or push.
+- Never stage, commit, or push. Report **every path** created or deleted (the cards removed from `entries/`, the new `archived/NNN/`, the rebuilt index and links), so the caller's records commit stages them all.
 
-**Auto-invoke.** `/f-card` (after a write), `/f-signoff` (after Logbook index writes), `/f-shift` (at the start of a shift), and `/f-context` (on orientation) count live cards and run this skill when the count is **greater than 250**. They do not wait to be asked, and they run it through to the end (`--execute`): nothing is lost, every card stays readable through `/f-archive-search`, and `restore` puts an archive back.
+**Auto-invoke.** `/f-card` (after a write, except during a close), `/f-signoff` (once, at the end of its Step 3.2a) and `/f-shift` (at the start of a shift) count live cards and run this skill when the count is **greater than 250**, through to the end (`--execute`): nothing is lost, every card stays readable through `/f-archive-search`, and `restore` puts an archive back. `/f-context` is a read-only orientation: it runs only the dry run and reports that an archive is due.
 
 ## Job
 

@@ -475,8 +475,9 @@ footer.site-foot{border-top:1px solid var(--line);margin-top:64px;padding:18px 3
 .touch .cut .nd:focus .hit{stroke:var(--tg)}.touch .phs[data-step]:focus .vb{color:var(--brand)}
 @media (prefers-reduced-motion:reduce){.touch .card.inview .shot img{transition:none;transform:none}.touch .hsign.swing{animation:none}}
 @media (max-width:640px){
-.tabs[role=tablist]{display:flex!important;grid-template-columns:none!important;flex-wrap:nowrap!important;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:6px;
- -webkit-mask-image:linear-gradient(90deg,#000 86%,transparent);mask-image:linear-gradient(90deg,#000 86%,transparent)}
+.tabs[role=tablist]{display:flex!important;grid-template-columns:none!important;flex-wrap:nowrap!important;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+ padding:6px 4px 8px 6px;margin-left:-6px;margin-right:-4px}
+.tabs[role=tablist].more{-webkit-mask-image:linear-gradient(90deg,#000 86%,transparent);mask-image:linear-gradient(90deg,#000 86%,transparent)}
 .tabs[role=tablist]::-webkit-scrollbar{display:none}
 .tabs[role=tablist]>*{flex:0 0 auto!important;width:auto!important;min-width:0;max-width:80vw}
 }
@@ -536,7 +537,7 @@ if(tabs.length){var fr=frames[0];var pick=function(k){tabs.forEach(function(t){v
  pick(location.hash==="#builder"?"builder":"foreman");window.addEventListener("hashchange",function(){pick(location.hash==="#builder"?"builder":"foreman")})}
 })();</script><script>(function(){var r=document.documentElement;function cur(){var t=r.getAttribute("data-theme");if(t==="light"||t==="dark")return t;return window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.querySelectorAll("[data-theme-toggle]").forEach(function(b){function lab(){var to=cur()==="dark"?"light":"dark";b.textContent=to==="dark"?"☾ Dark":"☀ Light";b.setAttribute("aria-label","Switch to "+to+" mode");b.title="Switch to "+to+" mode";}lab();b.addEventListener("click",function(){var n=cur()==="dark"?"light":"dark";r.setAttribute("data-theme",n);try{localStorage.setItem("foreman-theme",n);}catch(e){}document.querySelectorAll("[data-theme-toggle]").forEach(function(x){x.dispatchEvent(new Event("relabel"));});});b.addEventListener("relabel",lab);});})();</script><script>(function(){var K="to-welcome";var force=/[?&]welcome(=|&|$)/.test(location.search);try{if(!force&&localStorage.getItem(K))return}catch(e){if(!force)return}if(!force&&/about\.html$/.test(location.pathname))return;
 var home=document.querySelector(".brand"),base=home?home.getAttribute("href").replace(/index\.html$/,""):"";
-var w=document.createElement("aside");w.className="welcome";w.setAttribute("role","dialog");w.setAttribute("aria-label","Welcome");
+var w=document.createElement("aside");w.className="welcome";w.setAttribute("role","complementary");w.setAttribute("aria-label","Welcome");
 w.innerHTML='<img class="wbadge" src="'+base+'assets/brand/kai-badge-160.png" alt="" width="96" height="96"><div class="wbub"><button type="button" class="wx" aria-label="Close">&times;</button>'
  +'<p><b>Yo, what\u2019s up.</b> <span class="wlong">Glad something sparked your interest enough to pop in. I\u2019m Kai: three years building AI coding systems, and Topping Out is the latest. Have a look around.</span><span class="wshort">I\u2019m Kai, I built this. Have a look around.</span></p>'
  +'<div class="wact"><button type="button" class="wgo">Show me around</button><a href="'+base+'about.html">Who\u2019s Kai? &rarr;</a></div></div>';
@@ -544,10 +545,19 @@ function shut(){try{localStorage.setItem(K,"1")}catch(e){}w.classList.remove("on
 w.querySelector(".wx").addEventListener("click",shut);w.querySelector(".wgo").addEventListener("click",shut);w.querySelector("a").addEventListener("click",function(){try{localStorage.setItem(K,"1")}catch(e){}});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.body.contains(w))shut()});
 function show(){var bar=[].filter.call(document.querySelectorAll(".strip"),function(b){var r=b.getBoundingClientRect();return r.top<innerHeight&&r.bottom>innerHeight-4})[0];if(bar)w.style.bottom=(innerHeight-bar.getBoundingClientRect().top+14)+"px";document.body.appendChild(w);requestAnimationFrame(function(){requestAnimationFrame(function(){w.classList.add("on")})})}
-var oj=document.getElementById("oj"),phone=matchMedia("(max-width:560px)").matches;if(force){setTimeout(show,1100)}else if(!oj&&phone){var sd=false,sc=function(){if(!sd&&scrollY>innerHeight*.6){sd=true;removeEventListener("scroll",sc);setTimeout(show,400)}};addEventListener("scroll",sc,{passive:true})}else if(!oj){setTimeout(show,1100)}else{var done=false,chk=function(){if(!done&&oj.getBoundingClientRect().bottom<0){done=true;removeEventListener("scroll",chk);setTimeout(show,500)}};addEventListener("scroll",chk,{passive:true})}})()</script><script>(function(){if(!window.matchMedia||!matchMedia("(hover:none)").matches)return;
+var oj=document.getElementById("oj"),phone=matchMedia("(max-width:560px)").matches;if(force){setTimeout(show,1100)}else if(!oj&&phone&&(document.querySelector("iframe.frame")||document.documentElement.scrollHeight<=innerHeight*1.6)){setTimeout(show,1100)}else if(!oj&&phone){var sd=false,sc=function(){if(!sd&&scrollY>innerHeight*.6){sd=true;removeEventListener("scroll",sc);setTimeout(show,400)}};addEventListener("scroll",sc,{passive:true})}else if(!oj){setTimeout(show,1100)}else{var done=false,chk=function(){if(!done&&oj.getBoundingClientRect().bottom<0){done=true;removeEventListener("scroll",chk);setTimeout(show,500)}};addEventListener("scroll",chk,{passive:true})}})()</script><script>(function(){
+/* a tab row that scrolls (phones): fade its edge only while more tabs are hidden, and keep the selected tab in view */
+[].forEach.call(document.querySelectorAll(".tabs[role=tablist]"),function(t){
+function more(){t.classList.toggle("more",t.scrollWidth-t.clientWidth-t.scrollLeft>4)}
+function into(b){if(!b||t.scrollWidth<=t.clientWidth)return;var l=b.getBoundingClientRect().left-t.getBoundingClientRect().left+t.scrollLeft;
+if(l<t.scrollLeft||l+b.offsetWidth>t.scrollLeft+t.clientWidth)t.scrollLeft=Math.max(0,l-12);more()}
+t.addEventListener("scroll",more,{passive:true});addEventListener("resize",more);
+t.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[role=tab]");if(b)setTimeout(function(){into(b)},0)});
+function first(){into(t.querySelector("[aria-selected=true]"));more()}first();addEventListener("load",first)});
+if(!window.matchMedia||!matchMedia("(hover:none)").matches)return;
 document.documentElement.classList.add("touch");if(!("IntersectionObserver" in window))return;
 if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
 function once(sel,cls,th){var els=document.querySelectorAll(sel);if(!els.length)return;
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add(cls);io.unobserve(e.target)}})},{threshold:th});
 [].forEach.call(els,function(el){io.observe(el)})}
-once(".card",".inview".slice(1),.7);once(".hsign","swing",.9);once(".topout","lit",.45)})()</script></body></html>
+once(".card","inview",.7);once(".hsign","swing",.9);once(".topout","lit",.45)})()</script></body></html>

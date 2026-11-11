@@ -133,7 +133,7 @@ Run from the repository root. Exit codes: **0** ok, **1** verification failure o
 **Flags**:
 
 - `--dry-run` (default): Preview what will happen
-- `--execute`: Actually perform the archive. Started automatically past 250 cards (`/f-card`, `/f-signoff`, `/f-shift`, `/f-context`), it executes by itself under the same guards; typed by hand, only on the owner's word
+- `--execute`: Actually perform the archive. Started automatically past 250 cards (`/f-card` outside a close, `/f-signoff` once per close, `/f-shift`), it executes by itself under the same guards; `/f-context` only previews; typed by hand, only on the owner's word
 
 **Process**:
 

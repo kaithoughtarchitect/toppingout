@@ -23,7 +23,7 @@ foreman/logbook/
 | `/f-search`, `/f-archive-search` | find live or archived cards |
 | `/f-context` | arriving at a repo cold, or before re-scoping: a full orientation with focus-matched cards |
 | `/f-archive` | automatically past 250 live cards, run through to the end (keeps 50 index cards and every ruled-out card; copies are checked before anything is removed) |
-| `/f-catchup` | automatically at every close for up to three uncarded jobs (`/f-signoff` Step 3.2c); by hand to seed many at once |
+| `/f-catchup` | automatically at every close for up to three uncarded jobs (`/f-signoff` Step 3.2a); by hand to seed many at once |
 | `/f-dream` | automatically every 10th close, applying only what its guards allow (merges, supersessions; never a CRITICAL card); by hand any time, dry run first |
 | `/f-distill` | previewed automatically every 10th close (`DISTILL-PREVIEW.md` in the day folder); written into the repo's constitution or Topping Out's rules only **on the owner's word** |
 

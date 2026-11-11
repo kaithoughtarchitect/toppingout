@@ -194,7 +194,7 @@ A card isn't in the Logbook until the index lists it. In the same pass as the wr
 2. **Recount from the files, never by adding one:** count `[A-Z]*_20*.md` under each of `entries/insights`, `entries/methods`, `entries/builds`, excluding `*TEMPLATE*`, and write `**Total Cards**: <sum> (<m> METHOD, <i> INSIGHT, <b> BUILD)` and `**Last Updated**`.
 3. If the card names related cards (`related:`), add each edge to `foreman/logbook/logbook_links.md` (`| From | Type | To |`) and recount `**Total Links**` from the table rows.
 
-If the live count is **greater than 250**, run `/f-archive` (dry-run). Do not `--execute` unless the owner says go.
+If the live count is **greater than 250**, run `/f-archive` through to the end (its automatic mode, under its guards). **Except during a close:** when `/f-signoff` runs these steps (its Steps 2.4 and 3.2), don't start it; the close archives once, at the end of its Step 3.2a.
 
 ---
 

@@ -21,7 +21,7 @@ Score Logbook cards. Preview halt-shaped bullets. **Write nothing until the owne
 
 - Preview first. No write until the owner approves the exact bullets.
 - No auto-synced "distillation" section, no HUD, no "run /f-distill to refresh" inside the constitution or the rules.
-- **Preview mode** (from `/f-signoff` Step 3.2c): steps 1 to 3 only, written to `<day folder>/DISTILL-PREVIEW.md` with its date and the cards it read; it asks nothing and writes nowhere else. The owner applies it later with `/f-distill`, which re-scores before showing the bullets (cards may have changed).
+- **Preview mode** (from `/f-signoff` Step 3.2a): steps 1 to 3 only, written to `<day folder>/DISTILL-PREVIEW.md` with its date and the cards it read; it asks nothing and writes nowhere else. The owner applies it later with `/f-distill`, which re-scores before showing the bullets (cards may have changed).
 - A card never overrides a rule by itself: a bullet that contradicts an existing rule is shown as a proposed change to that rule, with both texts.
 - Not `f-card`. Not `f-dream`.
 

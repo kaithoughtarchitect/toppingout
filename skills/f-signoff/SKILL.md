@@ -188,7 +188,7 @@ Only after every Phase 1–2 check passes, and the drift resolutions and card li
 - finalization: pending|complete                 targets: <job file JOB COMPLETE section>        sha256: <job file after>
 - logbook_cards: pending|complete|skipped        targets: <each card path>                        sha256: <per card>
 - logbook_index_links: pending|complete|skipped  targets: logbook_index.md, logbook_links.md       sha256: <per file>
-- logbook_upkeep: pending|complete|skipped       targets: <cards caught up; cards a dream changed and its manifest; logbook_index.md; logbook_links.md; foreman/logbook/upkeep.md; the distill preview>  sha256: <per target>
+- logbook_upkeep: pending|complete              targets: <cards caught up; cards a dream wrote, its proposal and manifest under archived/dreams/<id>/; an archive's archived/NNN/ MANIFEST.json; logbook_index.md; logbook_links.md; foreman/logbook/upkeep.md; the distill preview>  sha256: <per target>  moved: <each card a dream retired or the archive moved: from -> to>
 - board_record: pending|complete|skipped         target: <the project's BOARD.json>               sha256: <file after>
 - archive: pending|complete                      target: foreman/completed-jobs/YYYY-MM/JOB_<date>_<slug>.md
 - current: <one line per target: path  sha256>   (the latest verified hash of every file written so far)
@@ -199,7 +199,7 @@ Only after every Phase 1–2 check passes, and the drift resolutions and card li
 - **Before the archive stage:** if the `archive_target` already exists and isn't this job file (same bytes, or an earlier attempt of this close with the same checkpoint block), **refuse**: `F-SIGNOFF: HALTED archive target exists`. Never overwrite it.
 - **On a retry**, read the block; re-hash every target listed under `current` against its **current** hash (a later stage legitimately changes a file an earlier stage wrote, so an earlier stage's receipt is history, not the check); skip verified stages and resume from the first `pending` one, re-checking its targets before writing. A mismatch, a missing target or a partial write you can't verify: **stop** and report every stage's state and hashes. Never roll forward silently and never repeat a completed write.
 
-**Stage by stage:** `drift_corrections` applies Step 2.4's resolutions (job file corrections, and each ruled-out card through `/f-card`'s steps, index included) and re-validates the job file; `finalization` is Phase 3 Steps 3.1, 3.3 and 3.4; `logbook_cards` and `logbook_index_links` are Step 3.2; `logbook_upkeep` is Step 3.2c; `board_record` is Step 3.2b (never skipped: every project has a board); `archive` is Phase 4.
+**Stage by stage:** `drift_corrections` applies Step 2.4's resolutions (job file corrections, and each ruled-out card through `/f-card`'s steps, index included) and re-validates the job file; `finalization` is Phase 3 Steps 3.1, 3.3 and 3.4; `logbook_cards` and `logbook_index_links` are Step 3.2; `logbook_upkeep` is Step 3.2a; `board_record` is Step 3.2b (never skipped: every project has a board); `archive` is Phase 4.
 
 ### Phase 3: Update Job File
 
@@ -231,17 +231,20 @@ Compare the job's discoveries (the job file's Key Discoveries, the work-order re
 
 **First compute the job file's final path** (Phase 4: `foreman/completed-jobs/<YYYY-MM>/JOB_<date>_<slug>.md`) and use *that* as every card's `job:`, so no card points at `foreman/jobs/`. Use the templates in `foreman/logbook/entries/*/`, set `job:` and the evidence, avoid duplicates (refine an existing card instead), and update `logbook_index.md` and `logbook_links.md` in the same pass, as `/f-card` Step 9 does (counts recounted from the files). A routine job may warrant no cards: say so. Cards are the foreman's records (no owner word needed); promoting a card into rules is `/f-distill`, which needs it.
 
-#### Step 3.2c: Logbook upkeep (no owner input; the job's own cards come first, Step 3.2)
+#### Step 3.2a: Logbook upkeep (no owner input; the job's own cards come first, Step 3.2)
 
-The Logbook stays tidy without anyone remembering to tidy it. Read `foreman/logbook/upkeep.md` (create it on the first run: one line per run, `<date> · J<n> · catch-up <n> · dream <proposal id or none> · distill preview <path or none>`).
+The Logbook stays tidy without anyone remembering to tidy it. Read `foreman/logbook/upkeep.md` (create it on the first run). **Every close appends exactly one line**, even when nothing was due, so the count of closes is always right: `<date> · J<n> · looked at: <job paths, or none> · cards <n> · dream <proposal id, or not due> · archive <NNN, or not due> · distill preview <path, or not due>`. This stage is never `skipped`.
 
-1. **Catch-up, every close.** Completed jobs (`foreman/completed-jobs/*/JOB_*.md`) that **no card names in its `job:`** get their cards now, following `/f-catchup`'s automatic mode (its skill file, read and followed: it is never invoked by its description). At most **three jobs per close**, oldest first; the rest wait for the next close. None: `skipped` for this part.
+1. **Catch-up, every close.** Completed jobs (`foreman/completed-jobs/*/JOB_*.md`) that **no card names in its `job:`** and that **no earlier `upkeep.md` line lists under `looked at`** get their cards now, following `/f-catchup`'s automatic mode (its skill file, read and followed: it is never invoked by its description). At most **three jobs per close**, oldest first; the rest wait for the next close. A job looked at once is never looked at again, whether it got cards, warranted none (a routine job), or couldn't be verified.
 2. **Every Nth close** (the repo profile's "Logbook upkeep every", default 10, counted in `upkeep.md` since the last dream line):
    - **Dream, applied with guards:** `/f-dream`'s automatic mode over the jobs since the last dream: it saves its proposal under `foreman/logbook/archived/dreams/<id>/` and applies only the items its guards allow (its skill file). Everything it changes is listed in the dev report.
    - **Distill, preview only:** `/f-distill`'s preview mode writes `<day folder>/DISTILL-PREVIEW.md` (the scored, halt-shaped bullets and their destinations). **Nothing is written to the constitution, `RULES.md` or a playbook.** The dev report's "Logbook upkeep" line says how many bullets wait; the owner applies them with `/f-distill` on their word, whenever they like.
-3. Append the run's line to `upkeep.md`. Recount the index and links from the card files (`/f-card` Step 9) if anything changed.
+3. **The archive, once, last:** count live cards; over 250, run `/f-archive` here through to the end (its automatic mode). This is the only place a close archives: `/f-card` steps run during a close (Step 2.4, Step 3.2) don't start it.
+4. **Retry-safe:** every card a dream retired or the archive moved leaves `current` and is written under `moved:` (from, to), so a retry doesn't read it as a missing target. Every file written or removed here is a target.
+5. Append the run's line to `upkeep.md`. Recount the index and links from the card files (`/f-card` Step 9) if anything changed.
+6. **Every path this step created, changed or deleted** (cards, `archived/dreams/<id>/`, `archived/NNN/`, the index, links, `upkeep.md`, the preview) goes into the close's records commit, staged by explicit path (`git add -A -- <path>`, so deletions are staged too).
 
-This step never blocks the close: a guard that stops the dream, or a catch-up job whose evidence can't be verified, is recorded in the dev report and skipped, and the close goes on.
+This step never blocks the close: a guard that stops the dream, a catch-up job whose evidence can't be verified, or an archive check that fails is recorded in the dev report and the close report (an archive failure as owed to the owner, `ARCHIVE CHECK FAILED: <lines>`), and the close goes on. The skills it follows report and return here; none of them stops the job.
 
 #### Step 3.2b: The board's record of this job
 
@@ -325,6 +328,10 @@ _(From Step 2.4)_
 - `path/to/file1.ts`
 - `path/to/file2.tsx`
 
+## Logbook upkeep
+
+- Looked at: [job paths or none] · cards written: [n] · dream: [proposal id, n changes, n left for the owner, or not due] · archive: [NNN or not due] · distill preview: [path, n bullets waiting, or not due] · anything owed to the owner
+
 ## Archive Location
 
 `foreman/completed-jobs/YYYY-MM/JOB_YYYY-MM-DD_[name].md`
@@ -362,7 +369,7 @@ merge verified (METHOD §10 step 3)
         ├─ Preflight, writes nothing: find the job file, LOC over the pinned range,
         │  the acceptance ledger (every row PASS), the drift audit and card list (proposed)
         ├─ Checkpoint block written, then in order:
-        │    drift_corrections → finalization → logbook_cards → logbook_index_links → board_record → archive
+        │    drift_corrections → finalization → logbook_cards → logbook_index_links → logbook_upkeep → board_record → archive
         │  (each stage pending → written → verified by hash → complete; the blueprint is never retired)
         └─ Output the close report, ending F-SIGNOFF: SIGNED OFF <archive path>
         ↓
