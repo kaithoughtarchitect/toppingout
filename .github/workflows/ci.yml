@@ -41,5 +41,7 @@ jobs:
         run: python snippets/test_import_scan.py
       - name: Test-time tests
         run: python snippets/test_run_times.py
+      - name: Site walk grader self-test
+        run: node snippets/site_walk_grade.mjs --self-test
       - name: Snippet shell syntax
         run: bash -n snippets/run-gates.sh && bash -n snippets/parallel_proof.sh

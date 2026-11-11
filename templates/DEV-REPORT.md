@@ -13,7 +13,7 @@
 
 | When | What |
 |---|---|
-| | Site walk: <score, re-answers, disagreements with the shift handover> |
+| | Site walk: <score, re-answers, disagreements with the shift handover>; outside grade: <grader, right / partial / wrong, points re-answered, `KEY-WRONG` questions for the next key, or not graded: why> |
 | | Scoping: <forks settled, notable measurements> |
 | | Work order <m> (the builder): <what, commits, captures> |
 | | Gate <1/2>: <findings count, blocking ones> |

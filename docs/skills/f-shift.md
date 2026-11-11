@@ -32,7 +32,7 @@ The builder's side (the builder gets work orders, never this skill), not for cut
 - Its first reply confirms the job's facts: the ticket and project, the builder, form A or B, the delivery, the repos and day folder, the gates, and what needs your word this job (and, if you started an autonomous run, which of those acts its goal covers).
 - Anything unclear is measured or listed as an owed question, not assumed.
 - It lists the Logbook cards in force for the job's area, CRITICAL and HIGH first.
-- It runs the site walk, then stops and waits for your "go".
+- It runs the site walk, including the outside grade (a model from the other family grades its cold answers), then stops and waits for your "go".
 - Every reply ends with the 5-line status block.
 
 ## Common questions

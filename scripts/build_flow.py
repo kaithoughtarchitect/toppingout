@@ -37,7 +37,7 @@ PHASES = [
  ("1", "Start a job", "Start", "Every job, one ticket.", [
    ("op", "Open a fresh session", "Paste the opener the last job left beside its handover. The first job on a board has its own opener.", [("file", "foreman/handovers/OPENER-JOB-<N>.txt")], None),
    ("or", "Stand up as foreman", "Loads the role, the rules and the playbook in full, the lessons that apply to this job, and checks the project's board (none yet: start it with init).", [("skill", "f-shift"), ("skill", "f-search"), ("file", "REPO-PROFILE.md")], None),
-   ("or", "Site walk", "Answer the questions cold, then check the key. Measure the machine. Read the live ticket. Report every owed decision. Stop.", [("file", "METHOD §2")], None),
+   ("or", "Site walk", "Answer the questions cold, then check the key; a model from the other family grades the answers too, and every point it finds is re-read. Measure the machine. Read the live ticket. Report every owed decision. Stop.", [("file", "METHOD §2"), ("file", "snippets/site_walk_grade.mjs")], None),
    ("bu", "Pre-flight", "No product writes: proves Bash, git, writing outside its folder, the tools and its permissions. READY or BLOCKED.", [("file", "BUILDER-PREFLIGHT.txt"), ("skill", "f-comply"), ("opt", "f-comply optional")], None),
    ("op", "Say go", "Choosing the ticket is not authorising the build.", [], "go"),
    ("or", "Mark it started", "The job goes in progress on the board.", [("tool", "render_board.py start")], None),

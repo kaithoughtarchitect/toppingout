@@ -48,7 +48,7 @@ For each: the question, the evidence for each side (file:line), and what must NO
 The acts listed in `RULES.md`, plus this ticket's own: files outside scope, defaults that must not change.
 
 ## The site walk
-12 site-walk questions, each testing a fact that would cause a wrong plan if missed; at least 3 test judgment in a new situation.
+12 site-walk questions, each testing a fact that would cause a wrong plan if missed; at least 3 test judgment in a new situation. The key is checked too: the new session's outside grader (`METHOD.md` §2 step 1a) marks any key answer the handover or the repo contradicts, so write each key answer from what you measured, with its source.
 
 ## How we work
 Mode 1; the builder (strong / light / on audition); the pre-flight; work order 1's scope; both base-vs-head runs; never naming the builder. **The new session writes its readiness answers and all its own files in its own day folder** (the date it starts), and reads the shift handover and answer key from `foreman/handovers/`.
