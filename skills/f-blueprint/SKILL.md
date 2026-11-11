@@ -65,7 +65,7 @@ File hygiene only (not job lifecycle): if deliberately postponed before any buil
 3. **In scope / Out of scope**, explicit fence; do not add “while we’re here.”
 4. **Assumptions**, marked as assumptions, not decisions.
 5. **Unresolved**, only rows that must not be invented at build; each has **default if silent** or `HALT until decided`.
-6. **Done-When and verification**, checkable acceptance from the agreement; positive and negative verification points with stable ids when useful; map to real repo commands where they exist.
+6. **Done-When and verification**, checkable acceptance from the agreement; positive and negative verification points with stable ids when useful; map to real repo commands where they exist. **Each VP gets a risk level**, so the strongest proof goes where a failure costs most: **P0** breaks safety, money, privacy or data (proof: executed, plus a mutation probe on its guard); **P1** breaks the main thing the work delivers (proof: executed; a code read never passes it); **P2** a lesser path (the usual proof); **P3** cosmetic or nice to have (a code read is enough). Write it as `VP4 (P0): …`; the tickets quote it verbatim and the acceptance ledger carries it.
 7. **Grounding (descriptive)**, inventory: files to **modify** vs **create** (path + role); patterns to mirror with file/symbol evidence. Current state only.
 8. **Interfaces (prescriptive)**, types, shapes, migrations, flags, boundary/error contracts **required by** the agreed work. Label clearly as future state. Omit speculative architecture.
 9. **Ordered tasks** `T0…`, implementation of the **agreed** commission only. Each task:

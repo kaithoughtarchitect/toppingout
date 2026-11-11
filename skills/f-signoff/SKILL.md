@@ -147,7 +147,7 @@ Verify completion metrics:
 | All Phases    | Complete     | X/Y      | ✅/❌  |
 ```
 
-**The acceptance ledger** (`templates/ACCEPTANCE-LEDGER.md`, written before the PR) is the completion record: every requirement and VP PASS at the final reviewed head, with its achieved mode and the one safety fact. **There is no percentage threshold and no deferral:** a row that isn't PASS blocks close. The only way to drop a requirement is the owner's quoted scope decision, recorded in the ledger.
+**The acceptance ledger** (`templates/ACCEPTANCE-LEDGER.md`, written before the PR) is the completion record: every requirement and VP PASS at the final reviewed head, with its achieved mode at least the proof its risk level asks for, and the one safety fact. The non-functional checks are each PASS or `not touched` with a reason (never blank), and the behaviour row is a recorded base and head result, `not applicable`, or `not measured: no harness` (then owed to the owner). **There is no percentage threshold and no deferral:** a requirement or VP row that isn't PASS blocks close, and so does a non-functional row that is FAIL or blank. The only way to drop a requirement is the owner's quoted scope decision, recorded in the ledger.
 
 #### Step 2.3: Completion Decision
 
