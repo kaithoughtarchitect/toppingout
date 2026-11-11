@@ -48,6 +48,7 @@ END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md), in this order:
    the handover and the opener point to it)
 3. board close event     -> endgame.mjs tick board --file <project>/BOARD.json   (every project has one; none yet: render_board.py … init)
 4. shift handover + opener -> endgame.mjs tick handover --file <handover> --opener foreman/handovers/OPENER-JOB-<next>.txt, then endgame.mjs clear
+   (the session brief's "Last key's mistakes" is filled from this job's dev report: the KEY-WRONG items of its own site walk's outside grade, so the new key doesn't repeat them)
    (then give the owner the opener's path and **three ways to start the next job, each ready to paste**:
     normal: paste the opener's text into a fresh session;
     autonomous run: /goal autonomous run: <absolute opener path>, until done or stopped;

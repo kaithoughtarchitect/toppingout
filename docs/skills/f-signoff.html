@@ -490,6 +490,7 @@ a.nb:hover{border-color:var(--c)}
    the handover and the opener point to it)
 3. board close event     -&gt; endgame.mjs tick board --file &lt;project&gt;/BOARD.json   (every project has one; none yet: render_board.py … init)
 4. shift handover + opener -&gt; endgame.mjs tick handover --file &lt;handover&gt; --opener foreman/handovers/OPENER-JOB-&lt;next&gt;.txt, then endgame.mjs clear
+   (the session brief&#x27;s &quot;Last key&#x27;s mistakes&quot; is filled from this job&#x27;s dev report: the KEY-WRONG items of its own site walk&#x27;s outside grade, so the new key doesn&#x27;t repeat them)
    (then give the owner the opener&#x27;s path and **three ways to start the next job, each ready to paste**:
     normal: paste the opener&#x27;s text into a fresh session;
     autonomous run: /goal autonomous run: &lt;absolute opener path&gt;, until done or stopped;

@@ -61,6 +61,7 @@ You cannot see the conversation that just happened. The invoking session MUST pa
 | Likely next asks     | In order, what the owner will probably want first                                         |
 | Outward / DB state   | What was pushed or sent and to whom, any migration applied (and to which database, disposable or production), any data re-ingest or baseline re-freeze; anything owed |
 | Trap candidates      | Mistakes the session almost made or corrected, questionnaire fuel                         |
+| Last key's mistakes  | The questions the previous answer key got wrong (the outside grade's `KEY-WRONG` items, from the session's dev report), or none. Write the new key from measurements, and never repeat these |
 | Key file pointers    | The session's artifacts: the job file (`foreman/jobs/JOB_*.md`), the job's `PLAN.md`, work orders and reviews, blueprints (`foreman/blueprints/`), source files and tests touched, gate runners |
 
 **Output paths come from the caller.** The caller names where the handoff and its answer key go (see Output). If it names none, use the Topping Out convention given there.
@@ -116,7 +117,7 @@ Header line: `MODE: full`, written-when, started-when, repo root, platform and s
 - **At least 3 questions must test JUDGMENT in a novel situation, not recall**, e.g. "the owner says 'looks good, ship it' about a change to a gated module, what runs before any push (the repo profile's gates), and is the push itself authorized yet?", "a migration the session wrote is ready, where is it proven first, and whose word applies it to production?" Build these from the brief's trap candidates and the session's near-mistakes
 - **One ⚠️ question MUST test mid-session decay**: a deep-in-the-session scenario ("40 turns in, about to push a fix the owner liked an hour ago, what runs first?") whose ✓ answer is the §0.5 pre-action check. This is the rule most likely to erode; the questionnaire plants it
 - Cover: process rules (stage by filename, never stage gitignored files, any standing tool preference), current state, what's pending vs approved, the change discipline, the riskiest standing decision, the red lines (the owner's-word acts, protected data scopes, never re-freeze a baseline to turn a red gate green, migrations proven on a branch or disposable database first)
-- End with the ready ritual: "All ⚠️ answered cold → open the answer key and score honestly → the outside grade (METHOD.md §2 step 1a), re-answering every point it lists → verify state (git log, git status, the gates) → ask the owner what they want first and WAIT for their go"
+- End with the ready ritual: "Every §8 question answered cold → open the answer key, score honestly, re-answer misses below each cold answer → the outside grade (METHOD.md §2 step 1a), re-answering every point it lists → verify state (git log, git status, the gates) → ask the owner what they want first and WAIT for their go (under an autonomous run, the goal is the go: RULES.md)"
 
 ### 4. Self-verify before writing (the gate: run as a revision loop)
 
@@ -132,6 +133,7 @@ Draft the handoff and the answer key, then fill this critique block against the 
   "gate_state_verified_and_statuses_match_session_docs": true,
   "questionnaire_checks_each_answer_derivable_from_body_plus_constitution": true,
   "answer_key_in_separate_file_and_absent_from_handoff": true,
+  "last_key_mistakes_not_repeated": true,
   "sections_duplicating_constitution_outside_s0_and_s0_5": "none | <which, §0/§0.5 restate red lines by design and are exempt>",
   "ready_to_write": false
 }
@@ -179,7 +181,7 @@ Target: scannable in one or two screens, typically ≤150 lines. If you are writ
 | 5 | Discipline | Omit standing rules. Session-specific WHEN→DON'T only, and only if the brief has them. |
 | 6 | Gotchas | Session traps from the brief only, as `WHEN … → DO …` rows. Do not carry forward unread prior handoffs. Do not copy the constitution's warnings. |
 | 7 | Next steps | The 1–3 likely asks. Compact TRIGGER / EXECUTE / DONE-WHEN. Add PRECONDITIONS + IF-IT-FAILS only for state-changing steps (a push, a migration, a data re-ingest, a baseline re-freeze), those stay "propose → the owner confirms → execute → re-run the relevant gate". |
-| 8 | Questionnaire | 4–5 questions; each ✓ answer in the separate answer-key file. §0 always ⚠️. One pending-vs-approved. One mid-session decay ⚠️ whose ✓ answer is §0.5. One session trap from the brief. No 8–12 quota, no 3-judgment quota. End: "⚠️ answered cold → open the answer key → the outside grade (METHOD.md §2 step 1a) → verify git log + git status → ask the owner what they want first and WAIT." |
+| 8 | Questionnaire | 4–5 questions; each ✓ answer in the separate answer-key file. §0 always ⚠️. One pending-vs-approved. One mid-session decay ⚠️ whose ✓ answer is §0.5. One session trap from the brief. No 8–12 quota, no 3-judgment quota. End: "Every §8 question answered cold → open the answer key, score honestly, re-answer misses below each cold answer → the outside grade (METHOD.md §2 step 1a), re-answering every point it lists → verify state (git log, git status, the gates) → ask the owner what they want first and WAIT for their go (under an autonomous run, the goal is the go: RULES.md)" |
 
 ### Q3. Self-verify once, then write
 
@@ -193,6 +195,7 @@ One pass, not a 3-revision loop. Fill this block against the draft:
   "git_state_from_commands": true,
   "pending_vs_approved_ambiguities": "none | <each place the next agent could execute something the owner only heard about>",
   "answer_key_in_separate_file_and_absent_from_handoff": true,
+  "last_key_mistakes_not_repeated": true,
   "ready_to_write": false
 }
 ```
