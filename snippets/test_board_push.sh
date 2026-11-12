@@ -9,8 +9,12 @@ set -u
 here=$(cd "$(dirname "$0")" && pwd)
 pkg=$(cd "$here/.." && pwd)
 PUSH="$here/board_push.sh"; PULL="$here/board_pull.sh"
-REAL_TOOL="$pkg/skills/f-board/render_board.py"
-FIXTURE="$pkg/skills/f-schedule/templates/BOARD.json"
+# the package's layout (snippets/ beside skills/), or an install's (foreman/method/snippets/, skills in .claude/skills/)
+skills=""
+for s in "$pkg/skills" "$pkg/../../.claude/skills"; do [ -f "$s/f-board/render_board.py" ] && { skills=$(cd "$s" && pwd); break; }; done
+[ -n "$skills" ] || { echo "FAIL setup: render_board.py not found beside $pkg (package or installed layout)"; exit 1; }
+REAL_TOOL="$skills/f-board/render_board.py"
+FIXTURE="$skills/f-schedule/templates/BOARD.json"
 for p in python3 python; do
   if command -v "$p" >/dev/null 2>&1 && "$p" -c "import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)" >/dev/null 2>&1; then
     PY=$p; break
