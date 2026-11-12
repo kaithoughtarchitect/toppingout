@@ -23,6 +23,10 @@
 
 **Held as correct and kept:** <what the plan got right; say so explicitly>.
 
+## 2b · The footprint (lane mode only)
+
+The module folders of the plan in force against the job's `footprint` on the board: <the same / widened to `<folders>` with `render_board.py BOARD.json footprint <job> --set "<folders>"` through `snippets/board_push.sh` / refused: it reaches into the other lane's job `<id>`, so re-plan or halt and wait>. Folders, never a file list.
+
 ## 3 · What the next work order carries
 
 The decisions of `<your scoping file>`, with G1–Gn applied. <Self-contained for a fresh builder, if a switch is possible.>

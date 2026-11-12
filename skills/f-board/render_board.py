@@ -26,6 +26,18 @@ summaries), then run `render`.
                                      --rewire: which child(ren) each dependent of the parent needs, by what it uses;
                                      a dependent not named needs every child, or the last one with --chain)
   render_board.py BOARD.json covered <job> --by <job> --quote "<the owner's words>"   (an open job made redundant: it leaves the board)
+  render_board.py BOARD.json promote <job> --ticket <path> --footprint a/,b/ --est n [--title ...] [--summary ...]
+                                     (a placeholder becomes a build job, at a re-cut point)
+  render_board.py BOARD.json footprint-check <job> --missed "a.py,b.md" --unused "tests/x/"
+                                     (a merged job's real diff against its footprint, at /f-signoff Step 3.2b)
+  render_board.py BOARD.json check --land <job>         may this job land now? refuses while a gate is open
+  render_board.py BOARD.json width [--lanes 2]          the cut's width: waves, longest chain, a two-lane
+                                                        estimate and its ceiling, pairs now, warnings
+  render_board.py BOARD.json accuracy                   footprints against the landed diffs, summed
+  add and promote take the v2 fields: --ticket, --footprint, --barriers, --consumes, --gates, --requires
+  (comma lists), --uses "03=what it uses; 04=..." (or a JSON object), --est n; add also --placeholder.
+  split takes --est "a=3,b=4" and --ticket "a=path,b=path"; on a v2 board --est and --rewire for every
+  dependent are required.
   render_board.py BOARD.json set-next <job>
   render_board.py BOARD.json summary <job> --text "..."   (what the job builds, in plain words; check warns on a summary of plan references only)
   render_board.py BOARD.json topout --report <path to the topping out report> [--quote "<the owner's words>"] [--head yes|partly|no]
@@ -41,8 +53,14 @@ Jobs have a `kind`: `build` (default: delivered by a run and a PR) or `decision`
 (delivered by the owner's decision). Stored states:
   build:    open | in-progress | merged | decision (halted for an owner question)
   decision: decision | resolved
+  placeholder: open (an area not yet detailed: never ready, never started; `promote` makes it a build job)
 `open` jobs are shown as ready (every need satisfied) or blocked; a need is satisfied
 when its job is `merged` or `resolved`. At most one job is in progress at a time.
+A `gate` is an order-only rule: the job may not land (close) before its gate is merged or resolved.
+With one lane, an open build gate also holds the job back from starting (it shows as blocked); a gate
+on a decision does so only while that decision can't yet be decided. A board with project.schedule 2
+(cut by /f-schedule v2) also requires `uses` for every need, and ticket, footprint and est_work_orders
+on every open build job.
 
 Exit codes: 0 ok · 1 the data is invalid (BOARD ERROR) · 2 bad usage or an impossible
 event (USAGE ERROR) · 3 crash · 4 the event was recorded but the page wasn't written.
@@ -56,12 +74,18 @@ import datetime
 import html
 import json
 import os
+import posixpath
 import re
 import sys
 from pathlib import Path
 
-KINDS = ("build", "decision")
-STORED = {"build": ("open", "in-progress", "merged", "decision"), "decision": ("decision", "resolved")}
+KINDS = ("build", "decision", "placeholder")
+STORED = {"build": ("open", "in-progress", "merged", "decision"), "decision": ("decision", "resolved"),
+          "placeholder": ("open",)}
+LANE_NAMES = ("A", "B")
+LANE_MODE = False   # set by validate(): the board has project.lanes (two jobs at once, PLAN-lanes)
+REQUIRES = ("screen", "browser", "owner", "windows", "macos", "linux", "docker", "postgres", "gpu")
+LIST_FIELDS = ("gates", "footprint", "barriers", "consumes", "requires")
 SHOWN = ("merged", "resolved", "in-progress", "ready", "blocked", "decision")
 LABEL = {"merged": "merged", "resolved": "decided", "in-progress": "in progress", "ready": "ready to build",
          "blocked": "blocked", "decision": "needs a decision"}
@@ -105,11 +129,105 @@ def stored(b):
     return s
 
 
+def v2(board):
+    return (board.get("project") or {}).get("schedule") == 2
+
+
+def lanes_on(board):
+    return bool((board.get("project") or {}).get("lanes"))
+
+
+def next_ids(board):
+    """The job(s) marked next: one id, or in lane mode one per lane."""
+    n = board.get("next")
+    if isinstance(n, dict):
+        return {v for v in n.values() if v}
+    return {n} if n else set()
+
+
+def lane_caps(board, lane):
+    caps = ((board.get("project") or {}).get("lane_caps") or {}).get(lane)
+    return None if caps is None else set(caps)
+
+
+def lane_holds(board, lane):
+    """The jobs a lane holds: its job in progress and its reservation."""
+    return [b for b in board["jobs"] if b.get("lane") == lane and stored(b) == "in-progress"
+            or (b.get("reserved") or {}).get("lane") == lane]
+
+
+def other_lane(lane):
+    return "B" if lane == "A" else "A"
+
+
+def retire(board, run, why):
+    """Lane mode: a J-number that may never be used again (one-lane boards keep their old shape)."""
+    if run and lanes_on(board):
+        board.setdefault("retired_runs", [])
+        if run not in board["retired_runs"]:
+            board["retired_runs"].append(run)
+        board.setdefault("log", []).append(f"v{board['version'] + 1}: {run} retired: {why}")
+
+
+def runs_used(board):
+    used = set(board.get("retired_runs", []))
+    for b in board["jobs"]:
+        if b.get("run"):
+            used.add(b["run"])
+        if (b.get("reserved") or {}).get("run"):
+            used.add(b["reserved"]["run"])
+        for n in b.get("notes", []):
+            m = re.match(r"HALTED in (\S+):", n)
+            if m:
+                used.add(m.group(1))
+    return used
+
+
+def lane_refusal(board, b, lane, overlap_ok=False):
+    """Why lane may not take job b (start or reserve), or None."""
+    other = other_lane(lane)
+    res = b.get("reserved") or {}
+    if res and res.get("lane") != lane:
+        return f"job {b['id']} is reserved by Lane {res['lane']}"
+    caps = lane_caps(board, lane)
+    if caps is not None and not set(b.get("requires", [])) <= caps:
+        return f"Lane {lane}'s machine lacks {sorted(set(b.get('requires', [])) - caps)} that job {b['id']} requires"
+    if not overlap_ok:
+        noise = ((board["project"].get("cut") or {}).get("noise", []))
+        for x in lane_holds(board, other):
+            if x["id"] == b["id"]:
+                return f"job {b['id']} is held by Lane {other}"
+            why = clash(b, x, noise)
+            if why:
+                return f"job {b['id']} overlaps Lane {other}'s job {x['id']} ({why}); --overlap-ok --quote \"<the owner's words>\" is the only way past"
+    return None
+
+
+def open_gates(b, by_id):
+    """The job's gates not yet merged or resolved."""
+    return [g for g in b.get("gates", []) if g in by_id and stored(by_id[g]) not in DONE]
+
+
+def gate_blocks(g, by_id):
+    """An open gate holds a job back from starting when one lane can't clear it first: a build job (or a
+    placeholder) still to be built, or a decision that can't be decided yet (its own needs unfinished)."""
+    x = by_id[g]
+    if LANE_MODE and kind(x) != "decision":
+        return False
+    if kind(x) == "decision":
+        return not all(stored(by_id[n]) in DONE for n in x.get("needs", []) + x.get("gates", []) if n in by_id)
+    return True
+
+
 def shown_state(b, by_id):
     s = stored(b)
     if s != "open":
         return s
-    return "ready" if all(stored(by_id[n]) in DONE for n in b.get("needs", [])) else "blocked"
+    if kind(b) == "placeholder":
+        return "blocked"
+    if not all(stored(by_id[n]) in DONE for n in b.get("needs", [])):
+        return "blocked"
+    return "blocked" if any(gate_blocks(g, by_id) for g in open_gates(b, by_id)) else "ready"
 
 
 def eligible(board):
@@ -122,9 +240,11 @@ def is_str(v):
 
 
 def validate(board):
+    global LANE_MODE
     e = []
     if not isinstance(board, dict):
         raise SpineError(["BOARD.json is not an object"])
+    LANE_MODE = isinstance(board.get("project"), dict) and bool(board["project"].get("lanes"))
     if type(board.get("schema")) is not int or board.get("schema") != 1:
         e.append(f"schema must be 1, got {board.get('schema')!r}")
     project = board.get("project")
@@ -153,6 +273,37 @@ def validate(board):
             e.append(f"project.{f} must be a string")
     if project.get("mode") not in (None, "iteration"):
         e.append(f"project.mode must be 'iteration' when present, got {project.get('mode')!r}")
+    if project.get("schedule") not in (None, 2) or type(project.get("schedule", 2)) is not int:
+        e.append(f"project.schedule must be 2 when present (a board cut by /f-schedule v2), got {project.get('schedule')!r}")
+    ln = project.get("lanes")
+    if ln is not None and ln != list(LANE_NAMES):
+        e.append(f"project.lanes must be exactly [\"A\", \"B\"] (two lanes, never more), got {ln!r}")
+    lc = project.get("lane_caps")
+    if ln and not (isinstance(lc, dict) and set(lc) == set(LANE_NAMES)):
+        e.append("a board with lanes needs project.lane_caps for both A and B (what each lane's machine has, "
+                 "from the repo profile's Lanes row; an empty list means nothing special)")
+    rr = board.get("retired_runs", [])
+    if not isinstance(rr, list) or not all(is_str(x) for x in rr):
+        e.append("retired_runs must be a list of J-numbers")
+    if lc is not None:
+        if not (isinstance(lc, dict) and set(lc) <= set(LANE_NAMES) and all(
+                isinstance(v, list) and all(isinstance(x, str) and (x in REQUIRES or re.match(r"^reach:\S+$", x)) for x in v)
+                for v in lc.values())):
+            e.append(f"project.lane_caps must map A and B to lists from {', '.join(REQUIRES)}, reach:<name>")
+    cut = project.get("cut")
+    if cut is not None or project.get("schedule") == 2:
+        if not isinstance(cut, dict):
+            e.append("project.cut must be {noise: [files], hot: [files], reproof: 0-9, max_work_orders: n} on a v2 board "
+                     "(/f-schedule copies it from the repo profile)")
+        else:
+            for f in ("noise", "hot"):
+                if not isinstance(cut.get(f, []), list) or not all(is_str(x) for x in cut.get(f, [])):
+                    e.append(f"project.cut.{f} must be a list of file paths")
+            rp, mx = cut.get("reproof"), cut.get("max_work_orders")
+            if type(rp) is not int or not 0 <= rp <= 9:
+                e.append(f"project.cut.reproof must be a whole number of work orders, 0 to 9, got {rp!r}")
+            if type(mx) is not int or mx < 1:
+                e.append(f"project.cut.max_work_orders must be a positive whole number, got {mx!r}")
     top = board.get("topped_out")
     if top is not None:
         if not (isinstance(top, dict) and isinstance(top.get("date"), str) and DATE.match(top["date"])
@@ -189,7 +340,12 @@ def validate(board):
         except ValueError:
             e.append(f"updated {up!r} is not a real date")
     nxt = board.get("next")
-    if nxt is not None and not isinstance(nxt, str):
+    if LANE_MODE:
+        if not (nxt is None or isinstance(nxt, dict) and set(nxt) <= set(LANE_NAMES)
+                and all(v is None or isinstance(v, str) for v in nxt.values())):
+            e.append(f"in lane mode next is {{\"A\": job or null, \"B\": job or null}}, got {nxt!r}")
+        nxt = None
+    elif nxt is not None and not isinstance(nxt, str):
         e.append(f"next must be a job id or null, got {nxt!r}")
         nxt = None
     jobs = board.get("jobs")
@@ -246,17 +402,64 @@ def validate(board):
             e.append(f"job {bid}: resolved but no 'resolution' (the owner's decision, quoted)")
         if st == "in-progress" and not is_str(b.get("run")):
             e.append(f"job {bid}: in-progress but no run recorded")
+        for f in LIST_FIELDS:
+            v = b.get(f, [])
+            if not isinstance(v, list) or not all(is_str(x) for x in v):
+                e.append(f"job {bid}: {f} must be a list of non-empty strings")
+        for x in b.get("footprint", []) if isinstance(b.get("footprint", []), list) else []:
+            if isinstance(x, str) and (x.strip().startswith("/") or re.match(r"^[A-Za-z]:", x.strip())
+                                       or norm_path(x).split("/")[0] in ("..", "")):
+                e.append(f"job {bid}: footprint {x!r} must be a folder or file inside the repo (no '..', not absolute, not the root)")
+        for r in (b.get("requires", []) if isinstance(b.get("requires", []), list) and project.get("schedule") == 2 else []):
+            if isinstance(r, str) and r not in REQUIRES and not re.match(r"^reach:\S+$", r):
+                e.append(f"job {bid}: requires {r!r} is not one of {', '.join(REQUIRES)} or reach:<name>")
+        uses = b.get("uses", {})
+        if not isinstance(uses, dict) or not all(isinstance(k, str) and is_str(v) for k, v in uses.items()):
+            e.append(f"job {bid}: uses must map a needed job id to what this job uses from it")
+        est = b.get("est_work_orders")
+        if est is not None and (type(est) is not int or est < 1):
+            e.append(f"job {bid}: est_work_orders must be a positive whole number, got {est!r}")
+        if "lane" in b and (not LANE_MODE or b["lane"] not in LANE_NAMES or st != "in-progress"):
+            e.append(f"job {bid}: lane {b['lane']!r} is only for a job in progress on a board with lanes (A or B)")
+        res = b.get("reserved")
+        if res is not None and not (LANE_MODE and isinstance(res, dict) and res.get("lane") in LANE_NAMES
+                                    and is_str(res.get("run")) and st == "open" and kind(b) == "build"):
+            e.append(f"job {bid}: reserved must be {{lane: A|B, run: J<n>}} on an open build job, in lane mode")
+        fc = b.get("footprint_check")
+        if fc is not None and not (isinstance(fc, dict) and all(
+                isinstance(fc.get(k, []), list) and all(isinstance(x, str) for x in fc.get(k, [])) for k in ("missed", "unused"))):
+            e.append(f"job {bid}: footprint_check must be {{missed: [files], unused: [folders]}}")
     if len(ids) != len(set(ids)):
         e.append("duplicate job ids")
     if e:
         raise SpineError(e)
     known = set(ids)
     for b in jobs:
-        for n in b.get("needs", []):
-            if n not in known:
-                e.append(f"job {b['id']}: needs unknown job {n!r}")
-            if n == b["id"]:
-                e.append(f"job {b['id']}: needs itself")
+        fc = b.get("footprint_check")
+        if isinstance(fc, dict):
+            decl = {norm_dir(x) for x in b.get("footprint", [])}
+            un = [norm_dir(x) for x in fc.get("unused", [])]
+            if len(un) != len(set(un)) or not set(un) <= decl:
+                e.append(f"job {b['id']}: footprint_check.unused must name each unused folder of its footprint once")
+        for f in ("needs", "gates"):
+            for n in b.get(f, []):
+                if n not in known:
+                    e.append(f"job {b['id']}: {f} unknown job {n!r}")
+                if n == b["id"]:
+                    e.append(f"job {b['id']}: {f} itself")
+        for n in (b.get("uses", {}) if v2(board) else {}):
+            if n not in b.get("needs", []):
+                e.append(f"job {b['id']}: uses names {n!r}, which it doesn't need (uses explains a need)")
+    if v2(board):
+        for b in jobs:
+            missing = [n for n in b.get("needs", []) if n not in b.get("uses", {})]
+            if missing:
+                e.append(f"job {b['id']}: needs {missing} without uses (a v2 board: say what it uses from each, "
+                         f"or drop the need, or make it a gate)")
+            if kind(b) == "build" and stored(b) in ("open", "in-progress"):
+                for f in ("ticket", "footprint", "est_work_orders"):
+                    if not b.get(f):
+                        e.append(f"job {b['id']}: an open build job on a v2 board needs {f}")
     sup = board.get("superseded", [])
     if not isinstance(sup, list):
         e.append("superseded must be a list")
@@ -278,12 +481,12 @@ def validate(board):
         e.append("publish.standalone must be true or false")
     if e:
         raise SpineError(e)
-    graph = {b["id"]: b.get("needs", []) for b in jobs}
+    graph = {b["id"]: b.get("needs", []) + [g for g in b.get("gates", []) if g not in b.get("needs", [])] for b in jobs}
     mark = {}
 
     def visit(n, path):
         if mark.get(n) == 1:
-            e.append("dependency cycle: " + " -> ".join(path + [n]))
+            e.append("dependency cycle (needs and gates): " + " -> ".join(path + [n]))
             return
         if mark.get(n) == 2:
             return
@@ -300,8 +503,29 @@ def validate(board):
             for n in b.get("needs", []):
                 if stored(by_id[n]) not in DONE:
                     e.append(f"job {b['id']}: is {b['state']} but its need {n} is not merged/resolved")
+        if stored(b) in DONE and open_gates(b, by_id):
+            e.append(f"job {b['id']}: is {b['state']} but its gate {open_gates(b, by_id)} is not merged/resolved")
     in_j = [b["id"] for b in jobs if stored(b) == "in-progress"]
-    if len(in_j) > 1:
+    if LANE_MODE:
+        for lane in LANE_NAMES:
+            mine = [b["id"] for b in jobs if stored(b) == "in-progress" and b.get("lane") == lane]
+            if len(mine) > 1:
+                e.append(f"more than one job in progress on Lane {lane}: {mine} (one per lane)")
+            held = [b["id"] for b in jobs if (b.get("reserved") or {}).get("lane") == lane]
+            if len(held) > 1:
+                e.append(f"Lane {lane} reserves more than one job: {held}")
+            want = held[0] if held else (mine[0] if mine else None)
+            if (board.get("next") or {}).get(lane) != want:
+                e.append(f"next for Lane {lane} must be {want!r} (its reservation, else its job in progress), "
+                         f"got {(board.get('next') or {}).get(lane)!r}")
+        for b in jobs:
+            if stored(b) == "in-progress" and b.get("lane") not in LANE_NAMES:
+                e.append(f"job {b['id']}: in progress on a board with lanes but no lane recorded")
+        runs = [b["run"] for b in jobs if b.get("run")] + [b["reserved"]["run"] for b in jobs if isinstance(b.get("reserved"), dict) and b["reserved"].get("run")]
+        dup = sorted({r for r in runs if runs.count(r) > 1})
+        if dup:
+            e.append(f"run numbers used twice: {dup} (each J-number once, across lanes)")
+    elif len(in_j) > 1:
         e.append(f"more than one job in progress: {in_j} (one at a time)")
     if nxt is not None:
         if nxt not in known:
@@ -311,7 +535,7 @@ def validate(board):
             if s not in ("ready", "in-progress"):
                 cands = sorted(b["id"] for b in eligible(board))
                 e.append(f"next {nxt!r} is {s}; it must be ready or in-progress. eligible: {cands or 'none'}")
-    if in_j and nxt != in_j[0]:
+    if in_j and not LANE_MODE and nxt != in_j[0]:
         e.append(f"job {in_j[0]} is in progress but next is {nxt!r}; next must be the job being built")
     if e:
         raise SpineError(e)
@@ -320,6 +544,18 @@ def validate(board):
         said = m.group(1).rstrip(".")
         if said in by_id and stored(by_id[said]) == "merged":
             WARNINGS.append(f"the standfirst still names job {said} as next, but it is merged; update it with --standfirst")
+    caps = (board.get("project") or {}).get("lane_caps")
+    if LANE_MODE and caps:
+        for b in board["jobs"]:
+            req = set(b.get("requires", []))
+            if stored(b) not in DONE and req and not any(req <= set(caps.get(l, [])) for l in LANE_NAMES):
+                WARNINGS.append(f"job {b['id']} is unrunnable: no lane's machine has {sorted(req)}; add the capability or reshape the job")
+    if not v2(board) and not board.get("topped_out"):
+        bare = sorted(b["id"] for b in board["jobs"] if stored(b) not in DONE
+                      and any(n not in b.get("uses", {}) for n in b.get("needs", [])))
+        if bare:
+            WARNINGS.append(f"jobs {bare} need others without saying what they use from them (uses); "
+                            f"a board cut by /f-schedule v2 requires it")
     for b in board["jobs"]:
         if stored(b) in DONE:
             continue
@@ -390,19 +626,56 @@ def after_close(board, bid):
 
 
 def ev_start(board, args):
-    pos, vals, _ = parse(args, ("--run", "--standfirst"))
+    pos, vals, flags = parse(args, ("--run", "--standfirst", "--lane", "--quote"), ("--overlap-ok",))
     bid = one_job(pos, "start")
     b = job(board, bid)
     by_id = {x["id"]: x for x in board["jobs"]}
-    busy = [x["id"] for x in board["jobs"] if stored(x) == "in-progress"]
-    if busy:
-        raise Usage(f"job {busy[0]} is already in progress; close or halt it first (one at a time)")
+    lane = vals.get("--lane")
+    if lanes_on(board):
+        if lane not in LANE_NAMES:
+            raise Usage("this board has lanes: start needs --lane A or --lane B")
+        busy = [x["id"] for x in board["jobs"] if stored(x) == "in-progress" and x.get("lane") == lane]
+        if busy:
+            raise Usage(f"Lane {lane} already has job {busy[0]} in progress; close or halt it first (one per lane)")
+        if "--overlap-ok" in flags and not vals.get("--quote"):
+            raise Usage("--overlap-ok needs the owner's own words: --quote \"...\"")
+        why = lane_refusal(board, b, lane, "--overlap-ok" in flags)
+        if why:
+            raise Usage(why)
+        res = b.get("reserved") or {}
+        run = need(vals, "--run")
+        if res and res.get("run") != run:
+            raise Usage(f"job {bid} is reserved with {res['run']}; start it with --run {res['run']}")
+        if not res and run in runs_used(board):
+            raise Usage(f"run {run} is already used on this board; J-numbers are never reused")
+        other_res = [x for x in board["jobs"] if (x.get("reserved") or {}).get("lane") == lane and x["id"] != bid]
+        if other_res:
+            raise Usage(f"Lane {lane} reserved job {other_res[0]['id']}; start that one (or drop the reservation with unreserve)")
+    elif lane:
+        raise Usage("--lane is for a board with lanes (project.lanes)")
+    else:
+        busy = [x["id"] for x in board["jobs"] if stored(x) == "in-progress"]
+        if busy:
+            raise Usage(f"job {busy[0]} is already in progress; close or halt it first (one at a time)")
+    if kind(b) == "placeholder":
+        raise Usage(f"job {bid} is a placeholder; promote it to a build job with its ticket first (promote {bid} --ticket ... --footprint ... --est n)")
     if kind(b) != "build":
         raise Usage(f"job {bid} is a decision job; it is resolved with 'decided', not built")
+    held = [g for g in open_gates(b, by_id) if gate_blocks(g, by_id)]
+    if held and all(stored(by_id[n]) in DONE for n in b.get("needs", [])):
+        raise Usage(f"job {bid} is held by its gate {held}: one lane can't build it and clear the gate first "
+                    f"(a gate on a decision lets it start once that decision can be decided)")
     if shown_state(b, by_id) != "ready":
         raise Usage(f"job {bid} is {shown_state(b, by_id)}; only a ready job can start")
     b["state"], b["run"] = "in-progress", need(vals, "--run")
-    board["next"] = bid
+    if lanes_on(board):
+        b["lane"] = lane
+        b.pop("reserved", None)
+        if "--overlap-ok" in flags:
+            b.setdefault("notes", []).append(f"started beside the other lane's overlapping job, on the owner's word: {vals['--quote']}")
+        board["next"] = dict(board.get("next") or {}, **{lane: bid})
+    else:
+        board["next"] = bid
     bump(board, vals.get("--standfirst"))
 
 
@@ -418,10 +691,34 @@ def ev_close(board, args):
     merge = need(vals, "--merge")
     if not SHA.match(merge):
         raise Usage(f"--merge {merge!r} is not a 7-40 char hex sha")
+    gates = open_gates(b, {x["id"]: x for x in board["jobs"]})
+    if gates:
+        raise Usage(f"job {bid} has an open gate {gates}: it may not land before them "
+                    f"(check --land {bid} before asking for the merge)")
     cands = after_close(board, bid)
     nxt = vals.get("--next")
     if nxt and "--no-next" in flags:
         raise Usage("use --next or --no-next, not both")
+    if lanes_on(board):
+        lane = b.get("lane")
+        mine = [x["id"] for x in board["jobs"] if (x.get("reserved") or {}).get("lane") == lane]
+        if nxt and nxt not in mine:
+            raise Usage(f"in lane mode --next is the job Lane {lane} reserved ({mine[0] if mine else 'none'}: reserve it first, before the next-ticket decision)")
+        if nxt is None and "--no-next" not in flags:
+            raise Usage(f"choose this lane's reserved job with --next, or --no-next --reason \"...\"")
+        if nxt is None and mine:
+            raise Usage(f"Lane {lane} reserved {mine[0]}: close with --next {mine[0]}, or unreserve {mine[0]} --lane {lane} first")
+        if "--no-next" in flags and not vals.get("--reason"):
+            raise Usage("--no-next needs --reason")
+        b.update(state="merged", pr=need(vals, "--pr"), merge=merge)
+        b.pop("lane", None)
+        if vals.get("--note"):
+            b.setdefault("notes", []).append(vals["--note"])
+        board["next"] = dict(board.get("next") or {}, **{lane: nxt})
+        if nxt is None:
+            board.setdefault("log", []).append(f"v{board['version'] + 1}: Lane {lane}: no next chosen: {vals['--reason']}")
+        bump(board, vals.get("--standfirst"))
+        return
     if nxt is None:
         if cands and "--no-next" not in flags:
             raise Usage(f"jobs {cands} become eligible; choose one with --next, or --no-next --reason \"...\"")
@@ -453,7 +750,18 @@ def ev_halt(board, args):
     b["state"] = to
     if to == "decision":
         b["decision"] = need(vals, "--decision")
-    board["next"] = None
+    retire(board, b.get("run"), f"job {bid} halted")
+    if lanes_on(board):
+        lane = b.pop("lane", None)
+        for x in board["jobs"]:
+            res = x.get("reserved") or {}
+            if res.get("lane") == lane:
+                x.pop("reserved")
+                retire(board, res.get("run"), f"Lane {lane}'s reservation of {x['id']} dropped when {bid} halted")
+                x.setdefault("notes", []).append(f"reservation {res.get('run')} for Lane {lane} dropped: {bid} halted")
+        board["next"] = dict(board.get("next") or {}, **{lane: None})
+    else:
+        board["next"] = None
     bump(board, vals.get("--standfirst"))
 
 
@@ -469,6 +777,9 @@ def ev_decided(board, args):
         unmet = [n for n in b.get("needs", []) if stored(by_id[n]) not in DONE]
         if unmet:
             raise Usage(f"decision job {bid} needs {unmet} first (merged or resolved); deciding without them is a re-plan: change its needs and record why")
+        gates = open_gates(b, by_id)
+        if gates:
+            raise Usage(f"decision job {bid} has an open gate {gates}: it may not be decided before them")
         b["state"], b["resolution"] = "resolved", note
     else:
         b["state"] = "open"
@@ -477,8 +788,55 @@ def ev_decided(board, args):
     bump(board, vals.get("--standfirst"))
 
 
+def csv(s):
+    return [x.strip() for x in (s or "").split(",") if x.strip()]
+
+
+def parse_uses(s):
+    """--uses as a JSON object {"03": "what it uses"}, or "03=what it uses; 04=..." (no ';' inside a reason)."""
+    s = (s or "").strip()
+    if not s:
+        return {}
+    if s.startswith("{"):
+        try:
+            u = json.loads(s)
+        except json.JSONDecodeError as ex:
+            raise Usage(f"--uses is not valid JSON: {ex}")
+        if not isinstance(u, dict):
+            raise Usage("--uses must be a JSON object of job id to what it uses")
+        return {str(k): str(v) for k, v in u.items()}
+    out = {}
+    for item in [x for x in s.split(";") if x.strip()]:
+        if "=" not in item:
+            raise Usage(f"--uses items are job=what it uses, got {item!r}")
+        k, v = item.split("=", 1)
+        out[k.strip()] = v.strip()
+    return out
+
+
+V2_OPTS = ("--ticket", "--footprint", "--barriers", "--consumes", "--uses", "--gates", "--requires", "--est")
+
+
+def apply_v2_opts(nb, vals):
+    """The v2 fields from add/promote options onto a job."""
+    if vals.get("--ticket"):
+        nb["ticket"] = vals["--ticket"]
+    for f, o in (("footprint", "--footprint"), ("barriers", "--barriers"), ("consumes", "--consumes"),
+                 ("gates", "--gates"), ("requires", "--requires")):
+        if o in vals:
+            nb[f] = csv(vals[o])
+    if "--uses" in vals:
+        nb["uses"] = parse_uses(vals["--uses"])
+    if "--est" in vals:
+        try:
+            nb["est_work_orders"] = int(vals["--est"])
+        except ValueError:
+            raise Usage(f"--est must be a whole number of work orders, got {vals['--est']!r}")
+
+
 def ev_add(board, args):
-    pos, vals, flags = parse(args, ("--title", "--needs", "--decision", "--summary", "--standfirst", "--pr", "--merge", "--run"), ("--merged",))
+    pos, vals, flags = parse(args, ("--title", "--needs", "--decision", "--summary", "--standfirst", "--pr", "--merge", "--run") + V2_OPTS,
+                             ("--merged", "--placeholder"))
     bid = one_job(pos, "add")
     if not ID.match(bid):
         raise Usage(f"job id {bid!r} must be 1-16 letters/digits/._-")
@@ -486,18 +844,22 @@ def ev_add(board, args):
         raise Usage(f"job {bid} already exists")
     if any(x.get("id") == bid for x in board.get("superseded", [])):
         raise Usage(f"job id {bid} belonged to a split job; ids are never reused")
-    needs = [n for n in vals.get("--needs", "").split(",") if n]
+    needs = csv(vals.get("--needs"))
     dec = vals.get("--decision")
-    nb = {"id": bid, "title": need(vals, "--title"), "kind": "decision" if dec else "build",
+    if dec and "--placeholder" in flags:
+        raise Usage("a job is a decision or a placeholder, not both")
+    k = "decision" if dec else ("placeholder" if "--placeholder" in flags else "build")
+    nb = {"id": bid, "title": need(vals, "--title"), "kind": k,
           "state": "decision" if dec else "open", "needs": needs, "notes": []}
     if dec:
         nb["decision"] = dec
     if vals.get("--summary"):
         nb["summary"] = vals["--summary"]
+    apply_v2_opts(nb, vals)
     backfill = [o for o in ("--pr", "--merge", "--run") if o in vals]
     if "--merged" in flags:
         # backfill: a job merged before the board existed (its PR, merge commit and run, from the records)
-        if dec:
+        if k != "build":
             raise Usage("--merged is for a build job; a decided job is added with --decision, then 'decided'")
         merge = need(vals, "--merge")
         if not SHA.match(merge):
@@ -519,12 +881,16 @@ def child_id(bid, suf):
 
 
 def ev_split(board, args):
-    pos, vals, flags = parse(args, ("--into", "--active", "--standfirst", "--rewire"), ("--chain",))
+    pos, vals, flags = parse(args, ("--into", "--active", "--standfirst", "--rewire", "--est", "--ticket"), ("--chain",))
     bid = one_job(pos, "split")
     b = job(board, bid)
     st = stored(b)
     if kind(b) != "build" or st not in ("open", "in-progress"):
         raise Usage(f"only an open or in-progress build job can be split; {bid} is {kind(b)}/{st}")
+    if b.get("reserved"):
+        raise Usage(f"job {bid} is reserved by Lane {b['reserved']['lane']}: unreserve it first (its J-number is retired)")
+    if st == "open" and b.get("run"):
+        retire(board, b["run"], f"job {bid} was split")
     parts = []
     for item in need(vals, "--into").split(","):
         if "=" not in item:
@@ -545,39 +911,96 @@ def ev_split(board, args):
     elif active:
         raise Usage("--active only applies when splitting the job in progress")
     idx = board["jobs"].index(b)
+    child_ids = [p[0] for p in parts]
+
+    def per_child(opt):
+        """'a=3,b=4' (a suffix or the full child id) into {child id: value}."""
+        out = {}
+        for item in csv(vals.get(opt)):
+            if "=" not in item:
+                raise Usage(f"{opt} items are child=value, got {item!r}")
+            c, v = (s.strip() for s in item.split("=", 1))
+            cid = child_id(bid, c)
+            if cid not in child_ids:
+                raise Usage(f"{opt} names {c!r}, not one of the children {child_ids}")
+            out[cid] = v
+        return out
+
+    ests, tickets = per_child("--est"), per_child("--ticket")
+    if v2(board):
+        missing = [c for c in child_ids if c not in ests]
+        if missing:
+            raise Usage(f"on a v2 board each child needs its estimate: --est \"{','.join(c + '=<n>' for c in child_ids)}\" (missing {missing})")
+    if v2(board):
+        missing = [c for c in child_ids if c not in tickets]
+        if missing:
+            raise Usage(f"on a v2 board each child needs its own ticket: --ticket \"{','.join(c + '=<path>' for c in child_ids)}\" (missing {missing})")
     children = []
     for k, (cid, title) in enumerate(parts):
         needs = list(b.get("needs", []))
+        uses = {n: t for n, t in b.get("uses", {}).items() if n in needs}
         if "--chain" in flags and k > 0:
             needs = [parts[k - 1][0]]
+            uses = {parts[k - 1][0]: f"{parts[k - 1][0]}: split from {bid}"}
         c = {"id": cid, "title": title, "kind": "build", "state": "open", "needs": needs,
              "notes": [f"split from {bid}"]}
+        if uses:
+            c["uses"] = uses
+        for f in ("footprint", "barriers", "gates", "requires", "consumes"):
+            if b.get(f):
+                c[f] = list(b[f])
+        if b.get("ticket") or cid in tickets:
+            c["ticket"] = tickets.get(cid, b.get("ticket"))
+            if cid not in tickets:
+                WARNINGS.append(f"child {cid} keeps the parent's ticket {b.get('ticket')}; write its own and move its VPs across")
+        if cid in ests:
+            try:
+                c["est_work_orders"] = int(ests[cid])
+            except ValueError:
+                raise Usage(f"--est {cid}={ests[cid]!r} is not a whole number")
         if st == "in-progress" and cid == bid + active:
             c["state"], c["run"] = "in-progress", b["run"]
+            if b.get("lane"):
+                c["lane"] = b["lane"]
         children.append(c)
     tail = [children[-1]["id"]] if "--chain" in flags else [c["id"] for c in children]
     dependents = {x["id"] for x in board["jobs"] if bid in x.get("needs", [])}
+    gated = {x["id"] for x in board["jobs"] if bid in x.get("gates", [])}
+    nameable = dependents | gated
     rewire = {}
     for item in [s for s in vals.get("--rewire", "").split(",") if s.strip()]:
         if "=" not in item:
             raise Usage(f"--rewire items are dependent=child[+child], got {item!r}")
         dep, kids = (s.strip() for s in item.split("=", 1))
-        if dep not in dependents:
-            raise Usage(f"--rewire names {dep!r}, which doesn't need {bid}; dependents: {sorted(dependents) or 'none'}")
+        if dep not in nameable:
+            raise Usage(f"--rewire names {dep!r}, which doesn't need {bid} or land after it; dependents: {sorted(nameable) or 'none'}")
         ids = [child_id(bid, k) for k in kids.split("+") if k.strip()]
         if not ids or any(i not in [p[0] for p in parts] for i in ids):
             raise Usage(f"--rewire {dep}={kids}: each must be one of the children {[p[0] for p in parts]}")
         rewire[dep] = ids
+    if v2(board):
+        unnamed = sorted(dependents - set(rewire))
+        if unnamed:
+            raise Usage(f"on a v2 board name the child each dependent uses: --rewire \"{','.join(d + '=<child>' for d in unnamed)}\"")
     for x in board["jobs"]:
         if x["id"] in dependents:
             to = rewire.get(x["id"], tail)
             x["needs"] = [n for n in x["needs"] if n != bid] + [t for t in to if t not in x["needs"]]
+            if bid in x.get("uses", {}):
+                why = x["uses"].pop(bid)
+                for t in to:
+                    x["uses"].setdefault(t, why)
             if x["id"] in rewire:
                 x.setdefault("notes", []).append(f"needs {', '.join(to)} after {bid} was split (what it uses)")
+        if x["id"] in gated:
+            to = rewire.get(x["id"], child_ids)
+            x["gates"] = [g for g in x["gates"] if g != bid] + [c for c in to if c not in x["gates"]]
     board["jobs"][idx:idx + 1] = children
     board.setdefault("superseded", []).append({"id": bid, "title": b["title"], "by": [c["id"] for c in children],
                                                "at_version": board["version"] + 1})
-    if board.get("next") == bid:
+    if isinstance(board.get("next"), dict):
+        board["next"] = {k: (bid + active if active else None) if v == bid else v for k, v in board["next"].items()}
+    elif board.get("next") == bid:
         board["next"] = bid + active if active else None
     bump(board, vals.get("--standfirst"))
 
@@ -587,8 +1010,11 @@ def ev_covered(board, args):
     pos, vals, _ = parse(args, ("--by", "--quote", "--standfirst"))
     bid = one_job(pos, "covered")
     b = job(board, bid)
-    if kind(b) != "build" or stored(b) != "open":
-        raise Usage(f"only an open build job can be marked covered; {bid} is {kind(b)}/{stored(b)}")
+    if kind(b) not in ("build", "placeholder") or stored(b) != "open":
+        raise Usage(f"only an open build job or a placeholder can be marked covered; {bid} is {kind(b)}/{stored(b)}")
+    if b.get("reserved"):
+        raise Usage(f"job {bid} is reserved by Lane {b['reserved']['lane']}: unreserve it first")
+    retire(board, b.get("run"), f"job {bid} was covered")
     by = need(vals, "--by")
     if by == bid:
         raise Usage("a job can't be covered by itself")
@@ -597,10 +1023,18 @@ def ev_covered(board, args):
     for x in board["jobs"]:
         if bid in x.get("needs", []):
             x["needs"] = [n for n in x["needs"] if n != bid] + ([by] if by not in x["needs"] and by != x["id"] else [])
+        if bid in x.get("uses", {}):
+            why = x["uses"].pop(bid)
+            if by in x["needs"] and by not in x["uses"]:
+                x["uses"][by] = f"covered by {by}: {why}"
+        if bid in x.get("gates", []):
+            x["gates"] = [g for g in x["gates"] if g != bid] + ([by] if by not in x["gates"] and by != x["id"] else [])
     board["jobs"].remove(b)
     board.setdefault("superseded", []).append({"id": bid, "title": b["title"], "by": [by],
                                                "at_version": board["version"] + 1, "reason": f"covered by {by}: {quote}"})
-    if board.get("next") == bid:
+    if isinstance(board.get("next"), dict):
+        board["next"] = {k: (None if v == bid else v) for k, v in board["next"].items()}
+    elif board.get("next") == bid:
         board["next"] = None
     bump(board, vals.get("--standfirst"))
 
@@ -623,10 +1057,12 @@ def ev_topout(board, args):
     head = vals.get("--head", "yes" if not carried else None)
     if head not in ("yes", "partly", "no"):
         raise Usage("--head must be yes, partly or no (whether the head's test passes); it is required when jobs are carried over")
+    for b in board["jobs"]:
+        b.pop("reserved", None)
     board["topped_out"] = {"date": today, "version": board["version"] + 1, "report": report, "carried": carried, "head_reached": head}
     if vals.get("--quote"):
         board["topped_out"]["owner"] = vals["--quote"]
-    board["next"] = None
+    board["next"] = {"A": None, "B": None} if lanes_on(board) else None
     jobs_done = f"{merged} job{'' if merged == 1 else 's'} done"
     board.setdefault("log", []).append(f"v{board['version'] + 1}: topped out ({jobs_done}, {len(carried)} carried over: {', '.join(carried) or 'none'}); report {report}")
     bump(board, vals.get("--standfirst") or f"Topped out on {today}: {jobs_done}, {len(carried)} carried over to the next head.")
@@ -642,14 +1078,326 @@ def ev_summary(board, args):
     bump(board, None)
 
 
+def ev_promote(board, args):
+    """A placeholder becomes a build job, with its ticket, footprint and estimate (at a re-cut point)."""
+    pos, vals, _ = parse(args, ("--title", "--summary", "--standfirst") + V2_OPTS)
+    bid = one_job(pos, "promote")
+    b = job(board, bid)
+    if kind(b) != "placeholder":
+        raise Usage(f"job {bid} is a {kind(b)} job; only a placeholder is promoted")
+    for o in ("--ticket", "--footprint", "--est"):
+        need(vals, o)
+    b["kind"] = "build"
+    if vals.get("--title"):
+        b["title"] = vals["--title"]
+    if vals.get("--summary"):
+        b["summary"] = vals["--summary"]
+    apply_v2_opts(b, vals)
+    b.setdefault("notes", []).append(f"promoted from a placeholder at v{board['version'] + 1}")
+    bump(board, vals.get("--standfirst"))
+
+
+def ev_footprint_check(board, args):
+    """At /f-signoff Step 3.2b: the landed diff against the declared footprint (files missed, folders unused)."""
+    pos, vals, _ = parse(args, ("--missed", "--unused"))
+    bid = one_job(pos, "footprint-check")
+    b = job(board, bid)
+    if stored(b) not in ("in-progress", "merged"):   # /f-signoff runs it after the merge, before the board's close
+        raise Usage(f"job {bid} is {b['state']}; the footprint check records a landed job's real diff")
+    b["footprint_check"] = {"missed": sorted({norm_path(x) for x in csv(vals.get("--missed"))}),
+                            "unused": sorted({norm_dir(x) for x in csv(vals.get("--unused"))})}
+    bump(board, None)
+
+
+def ev_reserve(board, args):
+    """Lane mode, the end game: take the lane's next job and its J-number before anything carries them."""
+    pos, vals, _ = parse(args, ("--run", "--lane", "--standfirst"))
+    bid = one_job(pos, "reserve")
+    if not lanes_on(board):
+        raise Usage("reserve is for a board with lanes (project.lanes); with one lane, close --next chooses")
+    lane = vals.get("--lane")
+    if lane not in LANE_NAMES:
+        raise Usage("reserve needs --lane A or --lane B")
+    b = job(board, bid)
+    if kind(b) != "build" or stored(b) != "open":
+        raise Usage(f"only an open build job can be reserved; {bid} is {kind(b)}/{stored(b)}")
+    if b.get("reserved"):
+        raise Usage(f"job {bid} is already reserved by Lane {b['reserved']['lane']}")
+    if [x for x in board["jobs"] if (x.get("reserved") or {}).get("lane") == lane]:
+        raise Usage(f"Lane {lane} already holds a reservation; one per lane")
+    run = need(vals, "--run")
+    if run in runs_used(board):
+        raise Usage(f"run {run} is already used on this board; J-numbers are never reused")
+    mine = [x["id"] for x in board["jobs"] if stored(x) == "in-progress" and x.get("lane") == lane]
+    ok = [x["id"] for x in eligible(board)] + (after_close(board, mine[0]) if mine else [])
+    if bid not in ok:
+        raise Usage(f"job {bid} is not eligible for Lane {lane} (now or after its job in progress closes); eligible: {sorted(set(ok)) or 'none'}")
+    why = lane_refusal(board, b, lane)
+    if why:
+        raise Usage(why)
+    b["reserved"] = {"lane": lane, "run": run}
+    board["next"] = dict(board.get("next") or {}, **{lane: bid})
+    bump(board, vals.get("--standfirst"))
+
+
+def ev_unreserve(board, args):
+    pos, vals, _ = parse(args, ("--reason", "--lane"))
+    b = job(board, one_job(pos, "unreserve"))
+    res = b.get("reserved")
+    if not res:
+        raise Usage(f"job {b['id']} is not reserved")
+    if vals.get("--lane") != res["lane"]:
+        raise Usage(f"job {b['id']} is reserved by Lane {res['lane']}: only that lane drops it (--lane {res['lane']})")
+    b.pop("reserved")
+    retire(board, res["run"], f"Lane {res['lane']}'s reservation of {b['id']} dropped")
+    b.setdefault("notes", []).append(f"reservation {res['run']} for Lane {res['lane']} dropped: {need(vals, '--reason')}")
+    mine = [x["id"] for x in board["jobs"] if stored(x) == "in-progress" and x.get("lane") == res["lane"]]
+    board["next"] = dict(board.get("next") or {}, **{res["lane"]: mine[0] if mine else None})
+    bump(board, None)
+
+
+def ev_requires(board, args):
+    """A need found at scoping (before work order 2): the machine the job needs."""
+    pos, vals, _ = parse(args, ("--set",))
+    b = job(board, one_job(pos, "requires"))
+    if kind(b) != "build" or stored(b) not in ("open", "in-progress"):
+        raise Usage(f"requires --set is for an open or in-progress build job; {b['id']} is {kind(b)}/{stored(b)}")
+    b["requires"] = csv(need(vals, "--set"))
+    res = b.get("reserved") or {}
+    if res:
+        caps = lane_caps(board, res["lane"])
+        if caps is not None and not set(b["requires"]) <= caps:
+            raise Usage(f"job {b['id']} is reserved by Lane {res['lane']}, whose machine lacks {sorted(set(b['requires']) - caps)}: "
+                        f"unreserve it (--lane {res['lane']}) and let the other lane take it")
+    b.setdefault("notes", []).append(f"requires set to {', '.join(b['requires']) or 'any machine'} at v{board['version'] + 1}")
+    bump(board, None)
+
+
+def ev_footprint(board, args):
+    """Gate 1 in lane mode: the plan in force widens the job's footprint, by folder."""
+    pos, vals, _ = parse(args, ("--set",))
+    b = job(board, one_job(pos, "footprint"))
+    if kind(b) != "build" or stored(b) not in ("open", "in-progress"):
+        raise Usage(f"footprint --set is for an open or in-progress build job; {b['id']} is {kind(b)}/{stored(b)}")
+    new = csv(need(vals, "--set"))
+    dropped = {norm_dir(x) for x in b.get("footprint", [])} - {norm_dir(x) for x in new}
+    if dropped:
+        raise Usage(f"footprint --set widens a footprint; it would drop {sorted(dropped)}")
+    old = b.get("footprint")
+    b["footprint"] = new
+    held_by = b.get("lane") or (b.get("reserved") or {}).get("lane")
+    if lanes_on(board) and held_by:
+        noise = ((board["project"].get("cut") or {}).get("noise", []))
+        for x in lane_holds(board, other_lane(held_by)):
+            why = clash(b, x, noise)
+            if why:
+                b["footprint"] = old
+                raise Usage(f"the wider footprint reaches into Lane {other_lane(held_by)}'s job {x['id']} ({why}): re-plan, or halt and wait")
+    bump(board, None)
+
+
 def ev_set_next(board, args):
+    if lanes_on(board):
+        raise Usage("in lane mode each lane's next is its reservation: use reserve")
     pos, vals, _ = parse(args, ("--standfirst",))
     board["next"] = one_job(pos, "set-next")
     bump(board, vals.get("--standfirst"))
 
 
 EVENTS = {"start": ev_start, "close": ev_close, "halt": ev_halt, "decided": ev_decided,
-          "add": ev_add, "split": ev_split, "covered": ev_covered, "set-next": ev_set_next, "summary": ev_summary, "topout": ev_topout}
+          "add": ev_add, "split": ev_split, "covered": ev_covered, "set-next": ev_set_next, "summary": ev_summary, "topout": ev_topout,
+          "promote": ev_promote, "footprint-check": ev_footprint_check, "reserve": ev_reserve, "unreserve": ev_unreserve,
+          "requires": ev_requires, "footprint": ev_footprint}
+
+
+# ---------------------------------------------------------------- width and accuracy (read-only)
+
+def norm_path(p):
+    """A repo-relative path in one canonical form: forward slashes, no './', no trailing slash."""
+    q = posixpath.normpath(p.strip().replace("\\", "/"))
+    return "" if q == "." else q
+
+
+def norm_dir(p):
+    return norm_path(p).rstrip("/") + "/"
+
+
+def clash(a, b, noise):
+    """Why two jobs may not run side by side, or None. A job with no footprint never pairs."""
+    if not a.get("footprint") or not b.get("footprint"):
+        return "no footprint declared"
+    nz = {norm_dir(x) for x in noise}
+    fa = [norm_dir(x) for x in a["footprint"] if norm_dir(x) not in nz]
+    fb = [norm_dir(x) for x in b["footprint"] if norm_dir(x) not in nz]
+    for x in fa:
+        for y in fb:
+            if x.startswith(y) or y.startswith(x):
+                return (x if len(x) >= len(y) else y).rstrip("/")
+    shared = sorted(set(a.get("barriers", [])) & set(b.get("barriers", [])))
+    return f"barrier {shared[0]}" if shared else None
+
+
+def width_report(board, lanes=2):
+    by_id = {b["id"]: b for b in board["jobs"]}
+    cut = board["project"].get("cut") or {}
+    noise, reproof, cap = cut.get("noise", []), cut.get("reproof", 2), cut.get("max_work_orders", 9)
+    notes = []
+    todo = [b for b in board["jobs"] if stored(b) not in DONE]
+    dur, guessed = {}, []
+    for b in todo:
+        if kind(b) == "decision":
+            dur[b["id"]] = 0
+        elif b.get("est_work_orders"):
+            dur[b["id"]] = b["est_work_orders"]
+        else:
+            dur[b["id"]] = cap if kind(b) == "placeholder" else 1
+            guessed.append(b["id"])
+    if guessed:
+        notes.append(f"no estimate: {', '.join(guessed)} (placeholders count as the cap, {cap}; build jobs as 1)")
+    ids = [b["id"] for b in todo]
+    pre = {i: [n for n in by_id[i].get("needs", []) if n in dur] for i in ids}
+    gat = {i: [g for g in by_id[i].get("gates", []) if g in dur] for i in ids}
+    after = {i: [j for j in ids if i in pre[j]] for i in ids}
+    gated_by = {i: [j for j in ids if i in gat[j]] for i in ids}
+    memo, ef = {}, {}
+
+    def chain(i):
+        """Work from i's start to the end: a needs-successor adds its work; a job gated on i only has to finish
+        after i, so it adds what is left of its chain after its own work."""
+        if i not in memo:
+            memo[i] = dur[i] + max([chain(j) for j in after[i]] + [chain(j) - dur[j] for j in gated_by[i]], default=0)
+        return memo[i]
+
+    def finish(i):
+        """Earliest finish with unlimited lanes: its needs' finish plus its work, and not before its gates."""
+        if i not in ef:
+            ef[i] = max([max((finish(n) for n in pre[i]), default=0) + dur[i]] + [finish(g) for g in gat[i]])
+        return ef[i]
+
+    total = sum(dur.values())
+    longest = max((finish(i) for i in ids), default=0)
+    build = [i for i in ids if kind(by_id[i]) != "decision"]
+    # waves: depth by needs among the work left
+    depth = {}
+
+    def level(i):
+        if i not in depth:
+            depth[i] = 1 + max((level(n) for n in pre[i]), default=0)
+        return depth[i]
+
+    waves = {}
+    for i in build:
+        waves.setdefault(level(i), []).append(i)
+    # one pass of list scheduling on two lanes: longest remaining chain first, ties by id
+    done_at, running, t = {}, [], 0          # running: [job id, time its work ends]
+    left = set(ids)
+    while True:
+        settled = True
+        while settled:                        # decisions take no lane: decided once their needs and gates are done
+            settled = False
+            for i in sorted(left):
+                if kind(by_id[i]) == "decision" and all(done_at.get(n, t + 1) <= t for n in pre[i] + gat[i]):
+                    done_at[i] = t
+                    left.discard(i)
+                    settled = True
+            for r in list(running):   # and any job whose work is done and whose gates have now landed
+                if r[1] <= t and all(done_at.get(g, t + 1) <= t for g in gat[r[0]]):
+                    done_at[r[0]] = t
+                    running.remove(r)
+                    settled = True
+        started = True
+        while started and len(running) < lanes:
+            started = False
+            busy = [r[0] for r in running]
+            ready = sorted((i for i in left if kind(by_id[i]) != "decision"
+                            and all(done_at.get(n, t + 1) <= t for n in pre[i])
+                            and all(g in done_at or g in busy for g in gat[i])      # never wait on a gate not yet started
+                            and not any(clash(by_id[i], by_id[r], noise) for r in busy)),
+                           key=lambda i: (-chain(i), i))
+            if ready:
+                i = ready[0]
+                running.append([i, t + dur[i] + (reproof if busy else 0)])  # started beside another job: it may land second
+                left.discard(i)
+                started = True
+        if not running:
+            if left:
+                notes.append(f"the schedule can't place {sorted(left)} (a gate or a decision nothing clears)")
+            break
+        # a job lands when its work is done and its gates have landed; it holds its lane until then
+        ends = [max([r[1]] + [done_at[g] for g in gat[r[0]] if g in done_at]) if all(g in done_at for g in gat[r[0]]) else None
+                for r in running]
+        if all(x is None for x in ends):
+            notes.append(f"the schedule can't land {sorted(r[0] for r in running)} (gates wait on each other)")
+            break
+        t = min(x for x in ends if x is not None)
+        for r, x in list(zip(running, ends)):
+            if x is not None and x <= t:
+                done_at[r[0]] = t
+                running.remove(r)
+    est = max(done_at.values(), default=0)
+    estimate = round(total / est, 2) if est else 1.0
+    ceiling = round(min(lanes, total / longest), 2) if longest else 1.0
+    # pairs that could run now
+    now = [b for b in todo if shown_state(b, by_id) in ("ready", "in-progress")]
+    pairs, apart = [], []
+    for k, a in enumerate(now):
+        for c in now[k + 1:]:
+            why = clash(a, c, noise)
+            (apart if why else pairs).append(f"{a['id']}+{c['id']}" + (f" ({why})" if why else ""))
+    warns = []
+    for i in build:
+        b = by_id[i]
+        if not pre[i] and not after[i] and len(build) > 3:
+            warns.append(f"{i} waits on nothing and nothing left needs it (fine for a sweep job; otherwise check its edges)")
+        if not b.get("needs") and len(b.get("consumes", [])) >= 3:
+            warns.append(f"{i} needs nothing but reads {len(b['consumes'])} interfaces")
+        e = b.get("est_work_orders")
+        if e and e > cap:
+            warns.append(f"{i} is estimated at {e} work orders, over the cap of {cap}: split it")
+        elif e and e < 3 and kind(b) == "build":
+            warns.append(f"{i} is estimated at {e}: consider merging it into a neighbour")
+    lines = [f"build jobs {len(build)} · estimated work orders {total} · longest chain {longest} work orders",
+             "waves: " + " | ".join(str(len(waves[w])) for w in sorted(waves)) if waves else "waves: none (nothing left to build)",
+             f"two lanes: {estimate}x by a longest-chain-first schedule (estimate, re-proof {reproof} per second lander) "
+             f"· ceiling {ceiling}x (work over longest chain)",
+             "pairs now: " + (", ".join(pairs) or "none") + " · held apart: " + (", ".join(apart) or "none")]
+    if estimate < 1.5:
+        lines.append("under 1.5x: look at the longest chain for an interface-first re-cut before writing the board; "
+                     "a board that is truly sequential is fine with one lane")
+    lines.append("warnings: " + ("; ".join(warns) if warns else "none"))
+    caps = board["project"].get("lane_caps") if lanes_on(board) else None
+    if caps:
+        only, none = {}, []
+        for i in build:
+            req = set(by_id[i].get("requires", []))
+            can = [l for l in LANE_NAMES if req <= set(caps.get(l, []))]
+            if not can:
+                none.append(i)
+            elif len(can) == 1:
+                only.setdefault(can[0], []).append(i)
+        parts = [f"{len(v)} of {len(build)} jobs need Lane {k}" for k, v in sorted(only.items())]
+        lines.insert(len(lines) - 1,
+                     "one lane only: " + ("; ".join(parts) or "none") + " · unrunnable: " + (", ".join(none) or "none"))
+    lines += [f"note: {n}" for n in notes]
+    return lines
+
+
+def accuracy_report(board):
+    checked = [b for b in board["jobs"] if isinstance(b.get("footprint_check"), dict)]
+    if not checked:
+        return ["no footprint checks recorded yet (footprint-check <job> --missed ... --unused ... at /f-signoff)"]
+    declared = sum(len({norm_dir(x) for x in b.get("footprint", [])}) for b in checked)
+    unused = sum(len(b["footprint_check"].get("unused", [])) for b in checked)
+    missed = sum(len(b["footprint_check"].get("missed", [])) for b in checked)
+    clean = [b["id"] for b in checked if not b["footprint_check"].get("missed")]
+    out = [f"jobs checked {len(checked)} · held to their footprint {len(clean)} of {len(checked)}",
+           f"declared folders {declared} · used {declared - unused} · over-claimed {unused}",
+           f"files outside the footprint {missed}"]
+    for b in checked:
+        m = b["footprint_check"].get("missed", [])
+        if m:
+            out.append(f"  {b['id']}: missed {', '.join(m)}")
+    return out
 
 
 # ---------------------------------------------------------------- render
@@ -690,7 +1438,8 @@ RANK = {"in-progress": 0, "ready": 1, "decision": 2, "blocked": 3, "merged": 4, 
 def fishbone(board, by_id):
     """The drawing as the page first draws it (its script redraws it to fit the screen): the spine runs left to
     right into an arrow; ribs alternate above and below, each with its number and its name in plain sight."""
-    jobs, nxt = board["jobs"], board.get("next")
+    jobs, nset = board["jobs"], next_ids(board)
+    nxt = min(nset) if nset else None
     SPINE, GAP, X0, RISE, RUN = 300, 150, 170, 190, 120
     n = len(jobs)
     slot = 0 if (nxt or board.get("topped_out")) else 1   # a dashed "next: not chosen" slot when nothing is next (never on a topped-out board)
@@ -706,7 +1455,7 @@ def fishbone(board, by_id):
         bx = X0 + i * GAP + (0 if up else GAP / 2)
         tx, ty = bx - RUN, SPINE + d * RISE
         st = shown_state(b, by_id)
-        cls = st + (" next" if b["id"] == nxt else "")
+        cls = st + (" next" if b["id"] in nset else "")
         p.append(f'<g class="rib {cls}" data-i="{i}" aria-label="{esc(b["id"])} {esc(b["title"])}, {esc(LABEL[st])}">'
                  f'<title>{esc(b["id"])} · {esc(b["title"])}</title>')
         p.append(f'<line class="tick" x1="{bx:.0f}" y1="{SPINE - 7}" x2="{bx:.0f}" y2="{SPINE + 7}"/>')
@@ -751,12 +1500,22 @@ def need_spans(b, by_id):
 
 
 def job_detail(i, b, by_id, nxt):
+    nxt = nxt if isinstance(nxt, (set, frozenset)) else ({nxt} if nxt else set())
     """One job's card. Every card is in the page, so it reads without script; the script shows one at a time."""
     st = shown_state(b, by_id)
     cells = [(k, esc(v)) for k, v in (("Key", b.get("key")), ("Run", b.get("run"))) if v]
     needs = need_spans(b, by_id)
     if needs:
         cells.append(("Needs", "<br>".join(needs)))
+    gates = [f'<span class="{"ok" if g not in open_gates(b, by_id) else "no"}">{esc(g)} '
+             f'{"✓" if g not in open_gates(b, by_id) else "✗"} {esc(by_id[g]["title"])}</span>'
+             for g in b.get("gates", []) if g in by_id]
+    if gates:
+        cells.append(("Lands after", "<br>".join(gates)))
+    if b.get("footprint"):
+        cells.append(("Footprint", "<br>".join(esc(x) for x in b["footprint"] + b.get("barriers", []))))
+    if b.get("est_work_orders"):
+        cells.append(("Estimate", f'{b["est_work_orders"]} work orders'))
     cells += [(k, esc(v)) for k, v in (("PR", b.get("pr")), ("Merge", b.get("merge"))) if v]
     spec = "".join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in cells)
     flags = []
@@ -773,7 +1532,7 @@ def job_detail(i, b, by_id, nxt):
     side = "".join(flags) or '<p class="flag none">Nothing recorded against this job.</p>'
     return (f'<article class="jobp" id="job-{esc(b["id"])}" data-i="{i}" data-state="{st}"><div class="jobmain">'
             f'<div class="jobhead"><span class="jn">{esc(b["id"])}</span><h3 class="jt">{esc(b["title"])}</h3>'
-            f'<span class="pill {st}">{"next · " if b["id"] == nxt else ""}{esc(LABEL[st])}</span></div>'
+            f'<span class="pill {st}">{"next · " if b["id"] in nxt else ""}{(" Lane " + esc(b["lane"]) + " · ") if b.get("lane") else ""}{esc(LABEL[st])}</span></div>'
             f'<dl class="spec">{spec}</dl>'
             f'<p class="jbody">{esc(b.get("summary") or "")}</p>{parts}{figs}{lesson}{ticket}</div>'
             f'<div class="jside"><div class="lbl">Notes and flags · {len(flags) or "none"}</div><div class="flags">{side}</div></div>'
@@ -782,22 +1541,27 @@ def job_detail(i, b, by_id, nxt):
 
 def job_rows(jobs, by_id, nxt):
     """Every job in board order: number, name, state, and what stands in its way."""
+    nxt = nxt if isinstance(nxt, (set, frozenset)) else ({nxt} if nxt else set())
     out = []
     for b in jobs:
         st = shown_state(b, by_id)
-        if st == "blocked":
+        if st == "blocked" and kind(b) == "placeholder":
+            detail = "Placeholder: detailed and promoted at a re-cut"
+        elif st == "blocked":
             waits = [x for x in b.get("needs") or [] if x in by_id and shown_state(by_id[x], by_id) not in DONE]
-            detail = "Waits on " + "; ".join(f'{esc(x)} · {esc(by_id[x]["title"])}' for x in waits)
+            held = [g for g in open_gates(b, by_id) if gate_blocks(g, by_id) and g not in waits]
+            detail = "; ".join([f'Waits on {esc(x)} · {esc(by_id[x]["title"])}' for x in waits]
+                               + [f'Held by gate {esc(g)} · {esc(by_id[g]["title"])}' for g in held])
         elif st == "decision":
             detail = f'<b>To decide:</b> {esc(b.get("decision") or "")}'
         elif st in DONE:
             detail = " · ".join(x for x in (b.get("pr") and f'PR {esc(b["pr"])}', b.get("merge") and f'merge {esc(b["merge"])}',
                                             b.get("resolution") and esc(b["resolution"])) if x)
         elif st == "in-progress":
-            detail = " · ".join(x for x in (b.get("run") and esc(b["run"]), b.get("pr") and f'PR {esc(b["pr"])}') if x)
+            detail = " · ".join(x for x in (b.get("lane") and f'Lane {esc(b["lane"])}', b.get("run") and esc(b["run"]), b.get("pr") and f'PR {esc(b["pr"])}') if x)
         else:
             detail = "Needs met: " + ", ".join(esc(x) for x in b.get("needs") or []) if b.get("needs") else "Needs nothing first"
-        isn = b["id"] == nxt
+        isn = b["id"] in nxt
         out.append(f'<li class="cr {st}{" isnext" if isn else ""}" data-job="{esc(b["id"])}"><span class="ck">{esc(b["id"])}</span>'
                    f'<span class="cn">{esc(b["title"])}</span><span class="cb">{detail}</span>'
                    f'<span class="pill {st}">{"next · " if isn else ""}{esc(LABEL[st])}</span></li>')
@@ -1077,8 +1841,9 @@ def render(board, standalone=False):
     """One page that answers, top to bottom: where is this going (the head), what needs the owner, what's
     happening now, how far along (the spine), each job (its card), every job (the list). Nothing is cut short
     except a rib's name on the drawing, whose full name is on its card and in the list."""
-    jobs, nxt = board["jobs"], board.get("next")
+    jobs, nset = board["jobs"], next_ids(board)
     by_id = {b["id"]: b for b in jobs}
+    nxt = min(nset) if nset else None   # the one the page may open on; every next is marked
     count = {s: 0 for s in SHOWN}
     for b in jobs:
         count[shown_state(b, by_id)] += 1
@@ -1091,7 +1856,7 @@ def render(board, standalone=False):
         start = [b["id"] for b in jobs].index(nxt)
     if start is None:
         start = max((i for i, b in enumerate(jobs) if shown_state(b, by_id) in DONE), default=0)
-    segs = "".join(f'<i class="{shown_state(b, by_id)}{" isnext" if b["id"] == nxt else ""}" title="{esc(b["id"])} · {esc(LABEL[shown_state(b, by_id)])}"></i>' for b in jobs)
+    segs = "".join(f'<i class="{shown_state(b, by_id)}{" isnext" if b["id"] in nset else ""}" title="{esc(b["id"])} · {esc(LABEL[shown_state(b, by_id)])}"></i>' for b in jobs)
     gauge = (f'<div class="gauge"><div class="gnum"><b>{done}</b><span>/ {len(jobs)} done</span></div>'
              f'<div class="gbar" aria-hidden="true">{segs}</div></div>')
     status = "".join(f'<span><b>{count[st]}</b> {word}</span>' for st, word in
@@ -1119,7 +1884,23 @@ def render(board, standalone=False):
 
     # 3 · what's happening now
     run = next((b for b in jobs if shown_state(b, by_id) == "in-progress"), None)
-    if run:
+    if lanes_on(board) and not board.get("topped_out"):
+        rows = []
+        for lane in LANE_NAMES:
+            cur = next((b for b in jobs if stored(b) == "in-progress" and b.get("lane") == lane), None)
+            res = next((b for b in jobs if (b.get("reserved") or {}).get("lane") == lane), None)
+            if cur:
+                meta = " · ".join(x for x in (cur.get("run"), cur.get("pr") and f'PR {cur["pr"]}') if x)
+                rows.append(f'<div class="nowrow" data-job="{esc(cur["id"])}"><span class="ck">{esc(cur["id"])}</span><span class="nt">Lane {lane}: {esc(cur["title"])}</span>'
+                            f'<span class="nm">in progress{(" · " + esc(meta)) if meta else ""}</span></div>')
+            if res:
+                rows.append(f'<div class="nowrow next" data-job="{esc(res["id"])}"><span class="ck">{esc(res["id"])}</span><span class="nt">Lane {lane}: {esc(res["title"])}</span>'
+                            f'<span class="nm">reserved · {esc(res["reserved"]["run"])}</span></div>')
+            if not cur and not res:
+                rows.append(f'<p class="calm">Lane {lane}: no job running, none reserved.</p>')
+        now = "".join(rows)
+        run = True   # the lane rows say what's next
+    elif run:
         meta = " · ".join(x for x in (run.get("run"), run.get("pr") and f'PR {run["pr"]}') if x)
         now = (f'<div class="nowrow" data-job="{esc(run["id"])}"><span class="ck">{esc(run["id"])}</span><span class="nt">{esc(run["title"])}</span>'
                f'<span class="nm">in progress{(" · " + esc(meta)) if meta else ""}</span></div>')
@@ -1139,7 +1920,7 @@ def render(board, standalone=False):
     built_to = max((i for i, b in enumerate(jobs) if shown_state(b, by_id) in DONE), default=-1)
     dim = (f'<div class="dim{" short" if built_to + 1 < 3 else ""}" style="grid-column:1 / span {built_to + 1}" aria-hidden="true"><span>{done} of {len(jobs)} built</span></div>'
            if built_to >= 0 else "")
-    chips = "".join(f'<button type="button" class="jc {shown_state(b, by_id)}{" isnext" if b["id"] == nxt else ""}" id="jc-{esc(b["id"])}" '
+    chips = "".join(f'<button type="button" class="jc {shown_state(b, by_id)}{" isnext" if b["id"] in nset else ""}" id="jc-{esc(b["id"])}" '
                     f'aria-pressed="{str(i == start).lower()}" aria-label="{esc(b["id"])} {esc(b["title"])}">{esc(b["id"])}</button>' for i, b in enumerate(jobs))
     spine_html = (f'<section class="fishwrap" aria-label="The spine">'
                   f'<div class="fishbar"><div class="leg"><span><i></i>merged / decided</span><span class="l-run"><i></i>in progress</span><span class="l-ready"><i></i>ready</span>'
@@ -1152,10 +1933,10 @@ def render(board, standalone=False):
     cards_html = (f'<section class="cards" id="cards" aria-label="Job card" aria-live="polite">'
                   f'<div class="jnav" id="jnav" hidden><button type="button" id="prev">← earlier</button>'
                   f'<span class="jpos" id="jpos">{start + 1} of {len(jobs)}</span><button type="button" id="nextb">later →</button></div>'
-                  f'{"".join(job_detail(i, b, by_id, nxt) for i, b in enumerate(jobs))}</section>')
+                  f'{"".join(job_detail(i, b, by_id, nset) for i, b in enumerate(jobs))}</section>')
 
     # 6 · every job
-    list_html = f'<section aria-label="All jobs" class="list"><div class="lbl" style="margin-bottom:8px">All jobs · {len(jobs)}</div>{job_rows(jobs, by_id, nxt)}</section>'
+    list_html = f'<section aria-label="All jobs" class="list"><div class="lbl" style="margin-bottom:8px">All jobs · {len(jobs)}</div>{job_rows(jobs, by_id, nset)}</section>'
 
     # footer
     foot = [f'<p>{"Iteration board" if project.get("mode") == "iteration" else "Project board"} v{esc(board["version"])}'
@@ -1300,7 +2081,7 @@ def main(argv):
     cmd = args.pop(0) if args and not args[0].startswith("--") else "render"
     if cmd == "init":
         return init(path, args)
-    if cmd not in ("render", "check", "next", "report") and cmd not in EVENTS:
+    if cmd not in ("render", "check", "next", "report", "width", "accuracy") and cmd not in EVENTS:
         raise Usage(f"unknown command {cmd!r}; see --help")
     try:
         board = json.loads(path.read_text(encoding="utf-8"))
@@ -1308,8 +2089,31 @@ def main(argv):
         raise SpineError([f"BOARD.json is not valid JSON: {ex}"])
     validate(board)
     out = path.with_name(board.get("publish", {}).get("local_html", "board.html"))
-    if cmd == "check":
+    if cmd == "width":
+        _, vals, _ = parse(args, ("--lanes",))
+        if vals.get("--lanes", "2") != "2":
+            raise Usage("--lanes: the design is for exactly two lanes")
+        for w in WARNINGS:
+            print("WARNING:", w, file=sys.stderr)
+        print("\n".join(width_report(board)))
+        return 0
+    if cmd == "accuracy":
         parse(args, ())
+        print("\n".join(accuracy_report(board)))
+        return 0
+    if cmd == "check":
+        pos, vals, _ = parse(args, ("--land",))
+        if pos:
+            raise Usage(f"unexpected arguments {pos}")
+        if "--land" in vals:
+            by_id = {b["id"]: b for b in board["jobs"]}
+            b = job(board, vals["--land"])
+            gates = open_gates(b, by_id)
+            if gates:
+                named = ", ".join(g + " (" + by_id[g]["title"] + ")" for g in gates)
+                raise Usage(f"job {b['id']} may not land yet: its gate {named} is not merged or resolved")
+            print(f"LAND OK: job {b['id']} has no open gate")
+            return 0
         for w in WARNINGS:
             print("WARNING:", w, file=sys.stderr)
         top = board.get("topped_out")
@@ -1336,9 +2140,27 @@ def main(argv):
         print("\n".join(out))
         return 0
     if cmd == "next":
-        pos, vals, _ = parse(args, ("--after-close",))
+        pos, vals, _ = parse(args, ("--after-close", "--lane"))
         if pos:
             raise Usage(f"unexpected arguments {pos}")
+        if "--lane" in vals:
+            lane = vals["--lane"]
+            if not lanes_on(board) or lane not in LANE_NAMES:
+                raise Usage("next --lane A|B is for a board with lanes (project.lanes)")
+            if board.get("topped_out"):
+                print("topped out: no next job on this board")
+                return 0
+            ids = after_close(board, vals["--after-close"]) if "--after-close" in vals else [b["id"] for b in eligible(board)]
+            by_id = {b["id"]: b for b in board["jobs"]}
+            shown = 0
+            for i in ids:
+                why = lane_refusal(board, by_id[i], lane)
+                if why is None:
+                    print(i, "-", by_id[i]["title"])
+                    shown += 1
+            if not shown:
+                print(f"no job Lane {lane} can take now (nothing ready that the other lane doesn't hold or overlap, and its machine can run)")
+            return 0
         if board.get("topped_out"):
             print(f"topped out on {board['topped_out']['date']}: no next job on this board (the next head gets a new board)")
             return 0

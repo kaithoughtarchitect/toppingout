@@ -18,7 +18,7 @@
 // Upgrade: needs the package as a git checkout and the receipt's revision. Per file: missing -> add; unchanged since
 //   the receipt -> replace; differs from both the old and the new package (adapted) -> kept, listed for a hand merge;
 //   removed from the package -> deleted if unadapted, else listed. Refuses while a job is open (foreman/jobs/JOB_*.md
-//   or foreman/ENDGAME-PENDING.md). With --apply it writes, then rewrites the receipt's revision line, and prints
+//   or foreman/ENDGAME-PENDING.md, or any lane's foreman/ENDGAME-PENDING-<lane>.md). With --apply it writes, then rewrites the receipt's revision line, and prints
 //   every path to commit (new files included) under "== to commit".
 // What's new: the plan and --check print the lines CHANGELOG.md gained between the receipt's revision and the package's.
 // A git package must be clean: only its tracked files are copied, so the receipt's revision is exactly what was copied.
@@ -233,7 +233,11 @@ function ignoreScratch(repo, log) {
 }
 
 export function openJob(repo) {
-  if (existsSync(join(repo, "foreman/ENDGAME-PENDING.md"))) return "foreman/ENDGAME-PENDING.md exists (an end game is still owed)";
+  // the one-lane lock and every lane's (foreman/ENDGAME-PENDING-<lane>.md, endgame.mjs --lane); any one blocks
+  const fm = join(repo, "foreman");
+  const locks = existsSync(fm) ? readdirSync(fm).filter((f) => /^ENDGAME-PENDING(-.+)?\.md$/.test(f)).sort().map((f) => `foreman/${f}`) : [];
+  if (locks.length === 1) return `${locks[0]} exists (an end game is still owed)`;
+  if (locks.length) return `${locks.join(", ")} exist (end games are still owed)`;
   const jobs = join(repo, "foreman/jobs");
   const open = existsSync(jobs) ? readdirSync(jobs).filter((f) => /^JOB_.*\.md$/.test(f)) : [];
   return open.length ? `a job is open (foreman/jobs/${open[0]})` : null;
@@ -367,6 +371,15 @@ function selfTest() {
     put(join(repo, "foreman/jobs/JOB_2026-01-01_x.md"), "open\n");
     check("upgrade refuses while a job is open", upgrade(pkg, repo, { apply: true, log: quiet }) === 1 && readFileSync(join(repo, "foreman/method/METHOD.md"), "utf8") === "method v1\n");
     unlinkSync(join(repo, "foreman/jobs/JOB_2026-01-01_x.md"));
+    put(join(repo, "foreman/ENDGAME-PENDING.md"), "job: 1\n");
+    check("upgrade refuses while the one-lane end-game lock is open", openJob(repo) === "foreman/ENDGAME-PENDING.md exists (an end game is still owed)" && upgrade(pkg, repo, { apply: true, log: quiet }) === 1);
+    unlinkSync(join(repo, "foreman/ENDGAME-PENDING.md"));
+    put(join(repo, "foreman/ENDGAME-PENDING-B.md"), "job: 2\nlane: B\n");
+    check("upgrade refuses while one lane's end-game lock is open, naming it", openJob(repo) === "foreman/ENDGAME-PENDING-B.md exists (an end game is still owed)" && upgrade(pkg, repo, { apply: true, log: quiet }) === 1);
+    put(join(repo, "foreman/ENDGAME-PENDING-A.md"), "job: 3\nlane: A\n");
+    check("upgrade names every lane's open lock", openJob(repo) === "foreman/ENDGAME-PENDING-A.md, foreman/ENDGAME-PENDING-B.md exist (end games are still owed)" && upgrade(pkg, repo, { apply: true, log: quiet }) === 1 && readFileSync(join(repo, "foreman/method/METHOD.md"), "utf8") === "method v1\n");
+    unlinkSync(join(repo, "foreman/ENDGAME-PENDING-A.md"));
+    unlinkSync(join(repo, "foreman/ENDGAME-PENDING-B.md"));
     check("what's new: the whole changelog when the old revision had none", whatsNew(pkg, v1).join("|") === "## v2|- two");
     const out = [];
     const applied = upgrade(pkg, repo, { apply: true, log: (l) => out.push(l) });

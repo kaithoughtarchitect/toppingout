@@ -1,7 +1,7 @@
 # TICKET-<nn>: <title>
 
 **Project:** `<project-slug>` · **Board:** <nn> · **Tracker key:** <an existing key, or "none (this file is the ticket)"> · **State:** see `BOARD.json` / the board page (never kept here)
-**Needs:** <job ids that must be merged first, or "none"> · **Unblocks:** <job ids>
+**Needs:** <each job that must be merged first, with what this job uses from it: `03` (RECORD_SYSTEM in runtime/records.py); or "none"> · **Lands after (gates):** <order-only rules: a job or decision that must land first though nothing is used from it; or "none"> · **Unblocks:** <job ids>
 
 ## Why this job
 <What it makes possible for the head, in two or three sentences.>
@@ -16,6 +16,12 @@
 ## Scope
 **In:** <the module area and files it owns>.
 **Out:** <what neighbouring jobs own, with their ids>.
+**Footprint:** <module folders, `src` and `tests` together, e.g. `src/blocks/almanac/`, `tests/blocks/almanac/`; never a file list>.
+**Barriers:** <`migrations`, `deps`, `ci`, `config`, `schema`, `outside:<name>`, a hot file; or "none">.
+**Consumes:** <interfaces read from other modules: a function, a type, a table; or "none">.
+**Requires:** <what its machine must have: `screen`, `browser`, `owner`, `windows`, `macos`, `linux`, `docker`, `postgres`, `gpu`, `reach:<name>`; or "any machine">.
+**Estimated work orders:** <n>, under the repo profile's "Max work orders per job".
+**Decisions this job owns:** <the shared questions it settles (a name, a format, an error policy), from the project's decision list; or "none">.
 
 ## Starting point (measured, with the commands)
 <What the repository already holds for this job: files, partial work, tests. Updated whenever the ticket is picked.>
@@ -27,4 +33,4 @@ One PR, one module area, roughly 8–9 work orders at most. If scoping shows it'
 **To decide:** <the question>. **Owner:** <who>. **Options and evidence:** <each option, what it costs, what it unblocks>. **Until decided:** <what stays visibly unavailable>.
 
 ## Record (filled at close)
-Job: <J-number, archived job file> · PR: <#n> · Merge: <sha> · Verified: `M^{tree}` `<tree>` = the reviewed / merge-preview tree `<tree>` (`METHOD.md` §10 step 3)
+Job: <J-number, archived job file> · PR: <#n> · Merge: <sha> · Verified: `M^{tree}` `<tree>` = the reviewed / merge-preview tree `<tree>` (`METHOD.md` §10 step 3) · Footprint misses: <files, or none>

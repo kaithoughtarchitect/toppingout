@@ -39,7 +39,7 @@ SKILLS = {
                   ["agents/plan-validator"], [], ["f-blueprint"]),
     "f-schedule": ("Split a big plan into jobs, in order, and draw the project board",
                     "Before a job, step 4: it won't start on a plan that hasn't passed the plan check, and it waits for your go before writing anything.",
-                    "Anything that needs research or your decision becomes its own job, every requirement belongs to a job, and the ticket wording is copied exactly. It writes the project's folder and its board.",
+                    "Anything that needs research or your decision becomes its own job, every requirement belongs to a job, and the ticket wording is copied exactly. Each dependency says what it uses, order-only rules become gates, and each job declares the folders it will change and its size in work orders, so a width report can show how much two jobs at once would gain before you say go. It writes the project's folder and its board.",
                     ["f-board", "agents/simplicity-critic"], [], ["f-plancheck"]),
     "f-shift": ("Start a session as the foreman: read the role, the rules and the playbook first",
                       "Job start: the first command of every new session. It loads the lessons from past jobs that apply to this one.",

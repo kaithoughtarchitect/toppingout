@@ -38,8 +38,13 @@ Committing or pushing (the owner's word).
 The close report ends with this checklist, exactly as the skill prints it, so the next steps are read, not remembered.
 
 ```
-END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md), in this order:
+END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md; in lane mode foreman/ENDGAME-PENDING-<X>.md), in this order:
 1. dev report            -> endgame.mjs tick dev-report --file <path>
+   (lane mode, before the decision: render_board.py BOARD.json reserve <next job> --run J<next> --lane <X>, through snippets/board_push.sh;
+    every board event below goes through board_push.sh; after merging <remote>/<main> into the records branch,
+    python foreman/logbook/rebuild_index.py && python foreman/logbook/rebuild_index.py --check rebuilds
+    the Logbook index and links from the cards (it refuses on a summary the two sides wrote differently); the records push refreshes
+    main's copy of BOARD.json and the board page from foreman-lanes first)
 2. next-ticket decision  -> endgame.mjs tick next-ticket-decision --file <path>
    then the owner confirms (or, under a /goal, the foreman records the goal): the file's
    "Owner confirmed:" line must be filled before step 2b

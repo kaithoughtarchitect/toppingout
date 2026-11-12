@@ -32,6 +32,7 @@
 | Logbook upkeep | catch-up: <n jobs, n cards, or none>; dream: <proposal id, n merges / supersessions, n left for the owner, or not due>; distill preview: <path, n bullets waiting for `/f-distill`, or not due> |
 | Split under the autonomous run | `no`, or: the parent job, its children, the work-order count, the goal's words (`RULES.md`, "Its own job's split") |
 | Extra paid spend | $<n> (a live key, a paid review seat; the command or usage reading it came from), or $0. Never the builder's own bill |
+| Footprint misses | files the merge changed outside the job's `footprint`, `barriers` and the board's noise files, and declared folders it never touched (`/f-signoff` Step 3.2b, recorded with `footprint-check`), or `none`, or `no footprint on this board` |
 | Probes | <n>/<n> bite |
 | Findings | gate 1 <n>, work order reviews <n>, gate 2 <n>, lens inspection <n or SKIP> (accepted <n>), independent inspection <n> (accepted <n>), Greptile <rounds, findings> (accepted <n>), fix review <n> |
 

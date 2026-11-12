@@ -250,6 +250,8 @@ This step never blocks the close: a guard that stops the dream, a catch-up job w
 
 Give the job's entry in the project's `BOARD.json` (the same text edit the board allows) up to three `twigs` (short lines from the key discoveries), its `figures` (the few numbers that matter, with a label and `good` / `warn`), and its `lesson` (one paragraph, the same lesson its Logbook card carries). Update `project.owed`, and `project.alerts` / `project.facts` if they changed. The board's **close** event then renders them (`skills/f-board`, "The page").
 
+**The footprint check, when the job has a `footprint`** (every build job on a board cut by `/f-schedule` v2, `project.schedule: 2`): list the merge's real diff with the records left out, `git diff --name-only <M>^1 <M> -- . ':!foreman' ':!work-sessions'`, and compare it with the job's `footprint` folders, its `barriers` and the board's noise files (`project.cut.noise`). Files under none of them are **footprint misses**; declared folders the diff never touched are **unused**. Write both in the dev report's "Footprint misses" line, then record them on the board: `render_board.py <project>/BOARD.json footprint-check <job> --missed "<files>" --unused "<folders>"` (empty lists are fine: they are the good result). `render_board.py <project>/BOARD.json accuracy` sums them across the project. A miss is a fact about the forecast, never a failure of the job.
+
 **Board text is plain prose with no em dashes (, ).** Everything written into `BOARD.json` shows on the page, so use a comma, a colon or a full stop instead. This covers twigs, figure labels, the lesson, notes, `owed`, `alerts` and `facts`.
 
 #### Step 3.3: Ensure Key Discovery Section
@@ -277,7 +279,7 @@ foreman/jobs/JOB_2026-06-04_login-rate-limit.md
 
 #### Then: open the end-game lock
 
-Once the archive is `complete`, run `node <skills>/f-signoff/endgame.mjs open --job <NN> --root <records root>`. It writes `foreman/ENDGAME-PENDING.md`; nothing new starts until the end-game clears it.
+Once the archive is `complete`, run `node <skills>/f-signoff/endgame.mjs open --job <NN> --root <records root>` (in lane mode add `--lane <X>` here and on every `tick` and `clear`: each lane has its own lock, `foreman/ENDGAME-PENDING-<X>.md`). It writes `foreman/ENDGAME-PENDING.md`; nothing new starts until the end-game clears it.
 
 #### The blueprint is never retired here
 
@@ -380,8 +382,13 @@ dev report → next-ticket decision → owner confirms → ground investigation 
 **End the close report with the end-game checklist, verbatim, so the next steps are read, not remembered:**
 
 ```
-END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md), in this order:
+END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md; in lane mode foreman/ENDGAME-PENDING-<X>.md), in this order:
 1. dev report            -> endgame.mjs tick dev-report --file <path>
+   (lane mode, before the decision: render_board.py BOARD.json reserve <next job> --run J<next> --lane <X>, through snippets/board_push.sh;
+    every board event below goes through board_push.sh; after merging <remote>/<main> into the records branch,
+    python foreman/logbook/rebuild_index.py && python foreman/logbook/rebuild_index.py --check rebuilds
+    the Logbook index and links from the cards (it refuses on a summary the two sides wrote differently); the records push refreshes
+    main's copy of BOARD.json and the board page from foreman-lanes first)
 2. next-ticket decision  -> endgame.mjs tick next-ticket-decision --file <path>
    then the owner confirms (or, under a /goal, the foreman records the goal): the file's
    "Owner confirmed:" line must be filled before step 2b

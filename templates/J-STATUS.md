@@ -6,7 +6,7 @@ Every reply from the foreman ends with this. It is how the owner finds their pla
 
 ```
 f-status
-where: <J-number and board number (e.g. J21, board 01 on the <board slug> board), ticket, which stage (work order m running / gate 1 / PR open ...)>
+where: <J-number and board number (e.g. J21, board 01 on the <board slug> board; in lane mode the lane too: J21, Lane B), ticket, which stage (work order m running / gate 1 / PR open ...)>
 done:  <what this reply did>
 state: <branch commits, pushed or not, captures, anything uncommitted>
 owed:  <every decision or word the owner owes, and every pending act that needs the owner's word>

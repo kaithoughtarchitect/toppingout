@@ -23,6 +23,7 @@ FILES YOU MAY READ IN THIS STEP - ONLY THESE
 
 PART 0 - STATE CHECK
 0.0  node "<skills>/f-signoff/endgame.mjs" check --root "$REC"     expected: ENDGAME_CLEAR (exit 0).
+     (lane mode: add --lane <X>, this lane's lock)
      Any other result: STOP and report it. The last job's end-game isn't finished.
 0.1  git -C "$SUT" fetch <remote> --prune
 0.2  (separate call) git -C "$SUT" rev-parse <remote>/<main>    expected: <sha>
@@ -106,7 +107,7 @@ RULES THAT ARE NOT NEGOTIABLE
 1. No product code, no commits, no push, no merge, no ticket change, no
    messages, no branch or worktree deletion.
 2. Never name a model, agent, vendor or tool. Only "the builder".
-3. Every test run strips the paid keys first. One test run at a time.
+3. Every test run strips the paid keys first. One test run at a time on this machine.
    Never touch a container. Never point a roles test at the shared database.
 
 ### END OF WORK ORDER 1. WRITE THE REPORT FILE, THEN STOP.

@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "project": {
+    "slug": "example-project",
+    "title": "Example Project",
+    "eyebrow": "Example product · project from BLUEPRINT-2026-11-12, cut by /f-schedule v2",
+    "standfirst": "One sentence on where the project stands today.",
+    "head": {
+      "outcome": "The outcome every job feeds: the one thing the project exists to make true",
+      "test": "how that outcome is judged (e.g. the owner's walkthrough verdict), never a green gate alone"
+    },
+    "repo": "<target repo path>",
+    "project_file": "foreman/projects/example-project/PROJECT.md",
+    "schedule": 2,
+    "cut": {
+      "noise": ["CHANGELOG.md", "README.md"],
+      "hot": [],
+      "reproof": 2,
+      "max_work_orders": 9
+    },
+    "owed": [],
+    "alerts": [],
+    "facts": []
+  },
+  "publish": {
+    "url": null,
+    "granted": false,
+    "local_html": "board.html"
+  },
+  "version": 1,
+  "updated": "2026-11-12",
+  "next": "01",
+  "jobs": [
+    {
+      "id": "01",
+      "title": "Shared record types (the interface job)",
+      "ticket": "tickets/TICKET-01-record-types.md",
+      "kind": "build",
+      "state": "open",
+      "needs": [],
+      "summary": "Fixes the record types every later job reads, so they can be built side by side. (T1, VP-1)",
+      "footprint": ["src/records/", "tests/records/"],
+      "barriers": ["schema"],
+      "est_work_orders": 4,
+      "notes": []
+    },
+    {
+      "id": "02",
+      "title": "Import from the old store",
+      "ticket": "tickets/TICKET-02-import.md",
+      "kind": "build",
+      "state": "open",
+      "needs": ["01"],
+      "uses": {"01": "Record and RecordId in src/records/types.py"},
+      "summary": "Reads the old store into the new records. (T2, VP-2)",
+      "footprint": ["src/importer/", "tests/importer/"],
+      "consumes": ["Record", "RecordId"],
+      "est_work_orders": 7,
+      "notes": []
+    },
+    {
+      "id": "03",
+      "title": "Search page",
+      "ticket": "tickets/TICKET-03-search-page.md",
+      "kind": "build",
+      "state": "open",
+      "needs": ["01"],
+      "uses": {"01": "Record in src/records/types.py"},
+      "gates": ["04"],
+      "summary": "Lets the owner find a record by name; lands only after the privacy decision. (T3, VP-3)",
+      "footprint": ["src/search/", "tests/search/"],
+      "requires": ["screen", "browser"],
+      "est_work_orders": 6,
+      "notes": []
+    },
+    {
+      "id": "04",
+      "title": "What search may show",
+      "ticket": "tickets/TICKET-04-search-privacy.md",
+      "kind": "decision",
+      "state": "decision",
+      "needs": [],
+      "summary": "The owner decides which fields search may show.",
+      "decision": "Which record fields may the search page show, and to whom? The owner decides.",
+      "notes": []
+    },
+    {
+      "id": "05",
+      "title": "Reports (not yet detailed)",
+      "kind": "placeholder",
+      "state": "open",
+      "needs": ["02"],
+      "uses": {"02": "the imported records"},
+      "summary": "Reports over the imported records, detailed at a re-cut once the import lands.",
+      "est_work_orders": 8,
+      "notes": []
+    },
+    {
+      "id": "06",
+      "title": "Sweep: owed docs and small guards",
+      "ticket": "tickets/TICKET-06-sweep.md",
+      "kind": "build",
+      "state": "open",
+      "needs": [],
+      "summary": "Owed docs and small guards that fall outside the other jobs' footprints.",
+      "footprint": ["docs/"],
+      "est_work_orders": 3,
+      "notes": []
+    }
+  ]
+}

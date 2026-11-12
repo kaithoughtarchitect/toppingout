@@ -53,7 +53,8 @@ The owner types `/f-setup`; everything below is this skill's work. Say what each
 2. **The package on this machine:** the receipt's `package:` path if it exists here and is a git checkout of the receipt's URL; otherwise `scratch/topping-out-package` (clone it from the receipt's URL, full clone, if it isn't there).
 3. **Is there anything new?** `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --check` (read-only: it fetches the package's remote). `UP TO DATE`: say so and stop with `F-SETUP: READY`.
 4. **The plan, with the newest package:** `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --upgrade --pull`. It fast-forwards the package checkout, then prints the plan and **what's new** (the `CHANGELOG.md` lines this install hasn't seen), writing nothing in the repo.
-   - Exit 1: a job is open (`foreman/jobs/JOB_*.md`) or an end game is owed (`foreman/ENDGAME-PENDING.md`). Report it and HALT.
+   - Exit 1: a job is open (`foreman/jobs/JOB_*.md`) or an end game is owed (`foreman/ENDGAME-PENDING.md`, or a lane's `foreman/ENDGAME-PENDING-<lane>.md`). Report it and HALT.
+   - **Lane mode** (the repo profile has a "Lanes" row): the installer sees only this machine's files, so before applying also read the board through `snippets/board_pull.sh <remote> <board path>` for every board on `foreman-lanes`, and run `endgame.mjs check --all`. Any job in progress on either lane, or any lock open: report it and HALT. Upgrade only when both lanes are idle.
    - Exit 2: report the installer's line. A diverged package checkout: clone a fresh one into `scratch/`. A receipt without a git revision, or a package without that revision: upgrade by hand (`SETUP.md` §1, "Upgrade by hand").
    - **Run the package's installer**, never the installed copy in `.claude/skills/f-setup/`: the package's is the new one.
 5. **Show the owner** what's new in plain words, then the plan's counts (added, replaced, kept for a hand merge, removed). On the owner's yes: `… --upgrade --apply`.
@@ -99,6 +100,7 @@ Write `foreman/REPO-PROFILE-<product>.md` from `foreman/method/templates/REPO-PR
 | Host merge strategy | `gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed` |
 | Builder delivery | `orca` and `pi` on PATH → `pane link`; else `hand-carried pointer` (the fallback; Step 0 already warned) |
 | Max work orders per job | `9` (the default) unless the owner names another |
+| Cutting a plan (`/f-schedule` v2) | noise files: `CHANGELOG.md` and `README.md` where they exist, plus any docs test every job appends to (`tests/test_docs.py`); hot files: `none` until a job finds one; re-proof allowance `2` |
 | Foreman launch command | the command running this session (`claude`, with the flags the owner uses) |
 | Runs on | `uname -s` (or the platform this session reports): Windows, macOS or Linux; on Linux with no desktop session (`$DISPLAY` and `$WAYLAND_DISPLAY` empty) and Orca running as a service (`systemctl --user is-active orca-serve`), `a Linux server through Orca (SETUP.md §8b)` |
 | Framework check | `/deep` when the add-on went in (Step 1c); otherwise `none`, or a skill the owner names that checks plans against their framework |

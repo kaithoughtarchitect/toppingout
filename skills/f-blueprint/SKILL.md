@@ -29,7 +29,7 @@ Write **one plan file** that a later agent can execute. Do not implement, open a
 
 ## Preconditions
 
-0. **First, the end-game lock:** run `node <skills>/f-signoff/endgame.mjs check --root <records root>`. Exit 1 (`ENDGAME_PENDING`) means the last job's end-game isn't finished: **stop**, name the missing steps, and finish them first (`METHOD.md` §10). Exit 2 or 3 is an error, never a pass.
+0. **First, the end-game lock:** run `node <skills>/f-signoff/endgame.mjs check --root <records root>` (in lane mode, this lane's: add `--lane <X>`). Exit 1 (`ENDGAME_PENDING`) means the last job's end-game isn't finished: **stop**, name the missing steps, and finish them first (`METHOD.md` §10). Exit 2 or 3 is an error, never a pass.
 1. Extract the commission, locked decisions, constraints, exclusions, actors/boundaries, acceptance, and open items from the conversation and any survey block.
 2. If load-bearing choices are still open (architecture, data model, API, acceptance, or scope that changes the solution), **stop** and use `f-survey`. Do not invent them to finish the plan.
 3. Open items may remain only when they are empirical checks or **explicitly labeled deferred** with a default-if-silent or `HALT until decided`.

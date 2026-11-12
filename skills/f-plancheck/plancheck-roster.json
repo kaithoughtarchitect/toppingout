@@ -27,6 +27,18 @@
   "models": [
     {
       "id": "sol",
+      "name": "GPT-6.1 Sol",
+      "vendor": "OpenAI",
+      "door": "codex CLI",
+      "cliModel": "gpt-6.1-sol",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "subscription",
+      "blurb": "OpenAI flagship for long-horizon analysis, software engineering, and agentic work. Reached headless via the codex CLI on the operator's ChatGPT subscription. Row id `sol`, model gpt-6.1-sol (it pointed at gpt-6-astra until 2026-11-12).",
+      "note": "codex exec -m gpt-6.1-sol -c model_reasoning_effort=\"high\" --sandbox read-only --skip-git-repo-check -   |   $0 (ChatGPT subscription). The seat runs gpt-6.1-sol (codex-cli 0.160.0 lists it); it ran gpt-6-astra until 2026-11-12; check yours with codex --version. --ignore-user-config removed 2026-09-23: it discarded ~/.codex/config.toml's global sandbox = \"elevated\", which is what permits CreateProcess on Windows, so with the flag the seat could reach the network but read nothing. The seat now inherits the operator's ~/.codex/config.toml (model, effort, MCP servers, hooks, plugins) — less hermetic than the other doors."
+    },
+    {
+      "id": "astra",
       "name": "GPT-6 Astra",
       "vendor": "OpenAI",
       "door": "codex CLI",
@@ -34,7 +46,7 @@
       "effort": "high",
       "pickableAs": ["panel"],
       "cost": "subscription",
-      "blurb": "OpenAI flagship for long-horizon analysis, software engineering, and agentic work. Reached headless via the codex CLI on the operator's ChatGPT subscription. Row id stays `sol` so existing --player/--host keywords still resolve.",
+      "blurb": "OpenAI flagship for long-horizon analysis, software engineering, and agentic work. Reached headless via the codex CLI on the operator's ChatGPT subscription. Kept beside `sol` (GPT-6.1 Sol) as its own seat.",
       "note": "codex exec -m gpt-6-astra -c model_reasoning_effort=\"high\" --sandbox read-only --skip-git-repo-check -   |   $0 (ChatGPT subscription). Codex default at the roster snapshot was gpt-6-astra (codex-cli 0.154.0); check yours with codex --version. --ignore-user-config removed 2026-09-23: it discarded ~/.codex/config.toml's global sandbox = \"elevated\", which is what permits CreateProcess on Windows, so with the flag the seat could reach the network but read nothing. The seat now inherits the operator's ~/.codex/config.toml (model, effort, MCP servers, hooks, plugins) — less hermetic than the other doors."
     },
     {

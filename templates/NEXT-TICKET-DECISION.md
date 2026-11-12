@@ -1,4 +1,4 @@
-# Next-ticket decision after J<N>: J<N+1> (board <id>), or topping out
+# Next-ticket decision after J<N>: J<next> (board <id>), or topping out
 
 **By:** the foreman, <date>, after J<N> merged (`<merge sha>`).
 
@@ -9,6 +9,8 @@
 
 ## Decision
 **<KEY>: <title>.** <One sentence: why this one is the next job.> Chosen from the project board **v<n>** (`render_board.py BOARD.json check` gives the version; read it before the close, with `next --after-close <closing job>`) (`METHOD.md` §11). The end-game lock refuses a decision that doesn't name it.
+
+**Lane mode only** (the board has `project.lanes`): written **after** `render_board.py BOARD.json reserve <job> --run J<next> --lane <X>` (through `snippets/board_push.sh`), which takes the job and its J-number before anything carries them. **Lane:** <X>. **The other lane:** <its job in progress and its reservation, or none>. **Reserved:** J<next>, board <id>, on board v<n>. With one lane, J<next> is J<N+1>.
 
 **Topping out:** no | yes (yes when every job is merged or resolved: the board's head is reached; or on the owner's own words with jobs left, never a goal's. Then replace the KEY line above with "No next job: the head is reached" and keep "Chosen from the project board **v<n>**"; the end game tops the project out, `METHOD.md` §11b. Nothing to build because the rest wait on the owner is not a topping out: say so and ask)
 

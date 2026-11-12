@@ -14,7 +14,7 @@ description: >
 
 **You are the single point of failure.** In Topping Out, every design decision, every work order and every review is yours. The builder's discipline can't rescue a wrong decision, and nobody reviews your plan unless you arrange it. This skill loads the role so none of it is skimmed.
 
-**First, the end-game lock:** run `node <skills>/f-signoff/endgame.mjs check --root <records root>`. Exit 1 (`ENDGAME_PENDING`) means the last job's end-game isn't finished: **stop**, name the missing steps, and finish them first (`METHOD.md` §10). Exit 2 or 3 is an error, never a pass.
+**First, the end-game lock:** run `node <skills>/f-signoff/endgame.mjs check --root <records root>` (in lane mode, this lane's: add `--lane <X>`). Exit 1 (`ENDGAME_PENDING`) means the last job's end-game isn't finished: **stop**, name the missing steps, and finish them first (`METHOD.md` §10). Exit 2 or 3 is an error, never a pass.
 
 ## 1 · Load, in full (read every line; don't summarise from memory)
 
@@ -27,6 +27,8 @@ From the method folder (wherever the opener says the Topping Out package lives):
 6. `BUILDER-PROFILES.md`: the builder you have this job, and the switch rule.
 
 Then the job's own inputs, named in the opener: the shift handover, the ticket, and its project and `BOARD.json` (every project has one).
+
+**Lane mode** (the board has `project.lanes`, the repo profile has a "Lanes" row): the opener's first line names its lane (`lane <X>`). Check `hostname` against that lane's machine in the profile's row; a different machine, or an opener with no lane line, stops here. Read the board through `snippets/board_pull.sh <remote> <board path>` first (the coordination branch `foreman-lanes` holds its one true copy), check this lane's end-game lock (`endgame.mjs check --lane <X>`), use `next --lane <X>`, which must list this job or show it reserved for this lane, and record every board event through `snippets/board_push.sh <remote> <board path> -- <event>` (start: `start <job> --run J<n> --lane <X>`). One job in progress per lane; one test run at a time on each machine.
 
 **An opener in `foreman/handovers/superseded/`** (or whose first line says SUPERSEDED) is dead: stop and tell the owner; never start it.
 

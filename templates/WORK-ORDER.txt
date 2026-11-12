@@ -192,7 +192,7 @@ RULES THAT ARE NOT NEGOTIABLE
    producer of work, anywhere.
 4. Every test run strips the paid keys first; every -u before every
    VAR=value.
-5. One test run at a time (a run may use the workers the adapter sets).
+5. One test run at a time on this machine (a run may use the workers the adapter sets).
    Never restart, stop or remove a container.
 6. A new red test anywhere is a finding: report it, never retry it to
    green.

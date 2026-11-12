@@ -6,15 +6,23 @@
  *        Lock 1, run by /f-signoff before it writes anything: a build job closes only on a merge
  *        commit that exists and is reachable from <remote>/<main> (default origin/main). Fetch first.
  *
- *   node endgame.mjs open  --job <id> [--root <records root>]
- *   node endgame.mjs tick  <step> --file <path> [--opener <path>, handover only] [--root <records root>]
- *   node endgame.mjs check [--root <records root>]
- *   node endgame.mjs clear [--root <records root>]
+ *   node endgame.mjs open  --job <id> [--lane <A|B>] [--root <records root>]
+ *   node endgame.mjs tick  <step> --file <path> [--opener <path>, handover only] [--lane <A|B>] [--root <records root>]
+ *   node endgame.mjs check [--lane <A|B> | --all] [--root <records root>]
+ *   node endgame.mjs clear [--lane <A|B>] [--root <records root>]
  *        Lock 2, the end-game: /f-signoff opens foreman/ENDGAME-PENDING.md listing the steps the job
  *        still owes; each step ticks its line with the file it wrote (it must exist; the board step's is the
  *        project's BOARD.json: every project has a board, no step is skippable); the handover step clears
  *        it once every line is ticked. /f-survey,
  *        /f-blueprint, /f-schedule, /f-shift and work order 1 run `check` first and stop while it exists.
+ *
+ *        Lane mode (the repo profile's "Lanes" row): each lane has its own lock, foreman/ENDGAME-PENDING-<lane>.md,
+ *        named by --lane A or --lane B (nothing else), and the file records "lane: <lane>". Two lanes' locks are
+ *        independent: one lane's open, tick, check and clear never read or touch the other's. `open --lane` refuses
+ *        while the one-lane lock exists, and the one-lane `open` refuses while any lane's lock exists (a project
+ *        part way through switching). Without --lane everything is exactly the one-lane behaviour.
+ *        `check --all` exits 1 while any lock is open (the one-lane lock or any lane's, every step ticked or not),
+ *        naming each: the installer and anything that must wait for every lane use it.
  *
  *   node endgame.mjs hash <job file>
  *        f-signoff's job-file hash: the checkpoint block removed, CRLF to LF, blank-line runs collapsed (job files
@@ -34,14 +42,22 @@
  */
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const SELF = fileURLToPath(import.meta.url);
 
 export const STEPS = ["dev-report", "next-ticket-decision", "ground-investigation", "board", "handover"];
 // a lock opened before a step existed reads that step as done, so an end game in flight is never blocked by an upgrade
 const ADDED_LATER = ["ground-investigation"];
-const LOCK = (root) => join(root, "foreman", "ENDGAME-PENDING.md");
+export const LANES = ["A", "B"];
+const LOCK_NAME = (lane) => (lane ? `ENDGAME-PENDING-${lane}.md` : "ENDGAME-PENDING.md");
+const LOCK = (root, lane) => join(root, "foreman", LOCK_NAME(lane));
+const LOCK_FILE = /^ENDGAME-PENDING(?:-(.+))?\.md$/;
+// " (lane A)" in messages; nothing at all in one-lane mode, so its messages stay as they were
+const IN = (lane) => (lane ? ` (lane ${lane})` : "");
 const LINE = /^- \[( |x)\] ([a-z-]+)(?: · (.*))?$/;
 // step 7a: the next-ticket decision carries the owner's confirmation (or the standing goal's words); the template's "<…>" placeholder doesn't count
 export function confirmed(text) {
@@ -65,28 +81,43 @@ function arg(name, fallback, argv = process.argv) {
   return v;
 }
 
-/** Pure. Parse the lock file into {job, steps:{name:{done, note}}}; throws on a malformed file. */
-export function parseLock(text) {
+// --lane is exactly A or B; absent means one-lane mode
+function laneArg(argv) {
+  const v = arg("lane", undefined, argv);
+  if (v !== undefined && !LANES.includes(v)) throw new Usage(`--lane must be one of ${LANES.join(", ")}, not '${v}'`);
+  return v;
+}
+
+/** Pure. Parse the lock file into {job, lane, steps:{name:{done, note}}}; throws on a malformed file.
+ *  `lane` is the lane the file's name says (undefined for the one-lane lock); the file's "lane:" line must match it. */
+export function parseLock(text, lane) {
   const job = (text.match(/^job: (.+)$/m) || [])[1];
-  if (!job) throw new Error("ENDGAME-PENDING.md has no 'job:' line");
+  if (!job) throw new Error(`${LOCK_NAME(lane)} has no 'job:' line`);
+  const recorded = (text.match(/^lane: (.*?)\s*$/m) || [])[1];
+  if (recorded !== lane)
+    throw new Error(lane
+      ? `${LOCK_NAME(lane)} records ${recorded === undefined ? "no lane" : `lane '${recorded}'`}, not lane ${lane}`
+      : `ENDGAME-PENDING.md is the one-lane lock but records lane '${recorded}'`);
   const steps = {};
   for (const l of text.split(/\r?\n/)) {
     const m = LINE.exec(l);
     if (m) steps[m[2]] = { done: m[1] === "x", note: m[3] || "" };
   }
   for (const s of ADDED_LATER) if (!steps[s]) steps[s] = { done: true, note: "(lock opened before this step existed)" };
-  for (const s of STEPS) if (!steps[s]) throw new Error(`ENDGAME-PENDING.md is missing the step '${s}'`);
-  return { job, steps };
+  for (const s of STEPS) if (!steps[s]) throw new Error(`${LOCK_NAME(lane)} is missing the step '${s}'`);
+  return lane ? { job, lane, steps } : { job, steps };
 }
 
-/** Pure. The lock file's text for {job, steps}. */
-export function renderLock({ job, steps }) {
+/** Pure. The lock file's text for {job, lane, steps} (no lane: the one-lane lock, unchanged). */
+export function renderLock({ job, lane, steps }) {
   return [
     "# End-game pending",
     "",
     `job: ${job}`,
+    ...(lane ? [`lane: ${lane}`] : []),
     "",
-    "Written by /f-signoff. No survey, blueprint, schedule, shift or work order 1 runs until every",
+    lane ? `Written by /f-signoff for lane ${lane}. No survey, blueprint, schedule, shift or work order 1 runs in this lane until every`
+      : "Written by /f-signoff. No survey, blueprint, schedule, shift or work order 1 runs until every",
     "line is ticked and the handover step clears this file (`skills/f-signoff/endgame.mjs`).",
     "",
     ...STEPS.map((s) => `- [${steps[s].done ? "x" : " "}] ${s}${steps[s].note ? ` · ${steps[s].note}` : ""}`),
@@ -94,18 +125,30 @@ export function renderLock({ job, steps }) {
   ].join("\n");
 }
 
-function read(root) {
-  const p = LOCK(root);
-  return existsSync(p) ? parseLock(readFileSync(p, "utf8")) : null;
+function read(root, lane) {
+  const p = LOCK(root, lane);
+  return existsSync(p) ? parseLock(readFileSync(p, "utf8"), lane) : null;
 }
 
-export function open(root, job) {
-  const cur = read(root);
-  if (cur) throw new Refused(`an end-game is already pending for job ${cur.job}; finish it first`);
+// every lock file in foreman/, the one-lane lock and each lane's (any suffix, so a stray lane name is still seen)
+function lockFiles(root) {
+  const dir = join(root, "foreman");
+  return existsSync(dir) ? readdirSync(dir).filter((f) => LOCK_FILE.test(f)).sort() : [];
+}
+
+export function open(root, job, lane) {
+  const cur = read(root, lane);
+  if (cur) throw new Refused(`an end-game is already pending for job ${cur.job}${IN(lane)}; finish it first`);
+  if (lane && existsSync(LOCK(root)))
+    throw new Refused("foreman/ENDGAME-PENDING.md (the one-lane lock) is open: finish that end game before a lane opens its own");
+  if (!lane) {
+    const lanes = lockFiles(root).filter((f) => f !== LOCK_NAME());
+    if (lanes.length) throw new Refused(`a lane's end game is open (${lanes.map((f) => `foreman/${f}`).join(", ")}): this project runs in lanes, open with --lane`);
+  }
   mkdirSync(join(root, "foreman"), { recursive: true });
   const steps = Object.fromEntries(STEPS.map((s) => [s, { done: false, note: "" }]));
-  writeFileSync(LOCK(root), renderLock({ job, steps }));
-  return `opened the end-game for job ${job}: ${STEPS.join(" -> ")}`;
+  writeFileSync(LOCK(root, lane), renderLock(lane ? { job, lane, steps } : { job, steps }));
+  return `opened the end-game for job ${job}${IN(lane)}: ${STEPS.join(" -> ")}`;
 }
 
 // the next-ticket decision names the board version it was chosen from (the template's "v<n>" doesn't count)
@@ -138,9 +181,9 @@ export function openerBlanks(text) {
   return [...text.matchAll(/<[^<>\r\n]{1,80}>/g)].map((m) => m[0]);
 }
 
-export function tick(root, step, { file, na, opener }) {
-  const cur = read(root);
-  if (!cur) throw new Refused("no end-game is pending");
+export function tick(root, step, { file, na, opener, lane }) {
+  const cur = read(root, lane);
+  if (!cur) throw new Refused(`no end-game is pending${IN(lane)}`);
   if (!STEPS.includes(step)) throw new Usage(`unknown step '${step}' (one of ${STEPS.join(", ")})`);
   const before = STEPS.slice(0, STEPS.indexOf(step)).filter((s) => !cur.steps[s].done);
   if (before.length) throw new Refused(`'${step}' is out of order: still owed first: ${before.join(", ")}`);
@@ -186,23 +229,34 @@ export function tick(root, step, { file, na, opener }) {
       throw new Refused(`'${step}' waits for step 7a: ${ntdPath} has no filled "Owner confirmed:" line (the owner's words, or the standing goal's)`);
   }
   cur.steps[step] = { done: true, note };
-  writeFileSync(LOCK(root), renderLock(cur));
-  return `ticked ${step} for job ${cur.job}`;
+  writeFileSync(LOCK(root, lane), renderLock(cur));
+  return `ticked ${step} for job ${cur.job}${IN(lane)}`;
 }
 
-export function check(root) {
-  const cur = read(root);
+export function check(root, lane) {
+  const cur = read(root, lane);
   if (!cur) return { pending: [] };
   return { job: cur.job, pending: STEPS.filter((s) => !cur.steps[s].done) };
 }
 
-export function clear(root) {
-  const cur = read(root);
-  if (!cur) throw new Refused("no end-game is pending");
+/** Every open lock, the one-lane lock and each lane's: [{file, job, pending}]. A lock is open until it is cleared,
+ *  so one with every step ticked still counts. A lock this tool can't read is an error, never "nothing open". */
+export function checkAll(root) {
+  return lockFiles(root).map((f) => {
+    const lane = LOCK_FILE.exec(f)[1];
+    if (lane !== undefined && !LANES.includes(lane)) return { file: `foreman/${f}`, job: "?", pending: [], stray: true };
+    const cur = read(root, lane);
+    return { file: `foreman/${f}`, job: cur.job, pending: STEPS.filter((s) => !cur.steps[s].done) };
+  });
+}
+
+export function clear(root, lane) {
+  const cur = read(root, lane);
+  if (!cur) throw new Refused(`no end-game is pending${IN(lane)}`);
   const owed = STEPS.filter((s) => !cur.steps[s].done);
-  if (owed.length) throw new Refused(`can't clear job ${cur.job}: still owed: ${owed.join(", ")}`);
-  rmSync(LOCK(root));
-  return `end-game complete for job ${cur.job}; lock cleared`;
+  if (owed.length) throw new Refused(`can't clear job ${cur.job}${IN(lane)}: still owed: ${owed.join(", ")}`);
+  rmSync(LOCK(root, lane));
+  return `end-game complete for job ${cur.job}${IN(lane)}; lock cleared`;
 }
 
 export function verifyMerge(repo, merge, main) {
@@ -311,6 +365,69 @@ function selfTest() {
     });
     rmSync(LOCK(root));
     t("a repeated flag is refused", () => { try { arg("root", undefined, ["--root", "a", "--root", "b"]); return false; } catch (e) { return e instanceof Usage; } });
+    // lanes: one lock per lane, the one-lane lock unchanged
+    const lr = join(root, "lanes");
+    mkdirSync(lr);
+    const cli = (...a) => { try { execFileSync(process.execPath, [SELF, ...a, "--root", lr], { stdio: "pipe" }); return 0; } catch (e) { return e.status; } };
+    const cliOut = (...a) => { try { return execFileSync(process.execPath, [SELF, ...a, "--root", lr], { encoding: "utf8", stdio: "pipe" }); } catch (e) { return String(e.stdout); } };
+    t("the one-lane lock's text is byte for byte as before", () => {
+      open(lr, "07");
+      const want = "# End-game pending\n\njob: 07\n\nWritten by /f-signoff. No survey, blueprint, schedule, shift or work order 1 runs until every\n"
+        + "line is ticked and the handover step clears this file (`skills/f-signoff/endgame.mjs`).\n\n"
+        + STEPS.map((s) => `- [ ] ${s}`).join("\n") + "\n";
+      return readFileSync(join(lr, "foreman", "ENDGAME-PENDING.md"), "utf8") === want && !lockFiles(lr).some((f) => f !== "ENDGAME-PENDING.md");
+    });
+    t("the one-lane CLI messages carry no lane", () => cliOut("check").startsWith("ENDGAME_PENDING job 07: still owed: dev-report,"));
+    t("a lane can't open while the one-lane lock is open (mid-switch)", () => refuses(() => open(lr, "08", "A")) && !existsSync(LOCK(lr, "A")));
+    rmSync(LOCK(lr));
+    t("a lane's lock is its own file and records its lane", () => !!open(lr, "11", "A") && existsSync(join(lr, "foreman", "ENDGAME-PENDING-A.md"))
+      && /^lane: A$/m.test(readFileSync(LOCK(lr, "A"), "utf8")) && parseLock(readFileSync(LOCK(lr, "A"), "utf8"), "A").lane === "A");
+    t("the one-lane open refuses while a lane's lock is open", () => refuses(() => open(lr, "12")) && !existsSync(LOCK(lr)));
+    t("two lanes' locks are open at once", () => !!open(lr, "12", "B") && check(lr, "A").job === "11" && check(lr, "B").job === "12");
+    t("a second open in the same lane is refused", () => refuses(() => open(lr, "13", "B")));
+    t("the one-lane check doesn't read the lanes' locks", () => check(lr).pending.length === 0);
+    writeFileSync(join(lr, "devA.md"), "x");
+    t("a tick in lane A leaves lane B untouched", () => { const b = readFileSync(LOCK(lr, "B"), "utf8"); tick(lr, "dev-report", { file: "devA.md", lane: "A" }); return check(lr, "A").pending[0] === "next-ticket-decision" && readFileSync(LOCK(lr, "B"), "utf8") === b; });
+    t("check --lane reports only that lane", () => cliOut("check", "--lane", "B").startsWith("ENDGAME_PENDING job 12 (lane B): still owed: dev-report,") && cli("check", "--lane", "B") === 1);
+    t("check --all exits 1 and names every open lock", () => { const o = cliOut("check", "--all"); return cli("check", "--all") === 1 && o.includes("foreman/ENDGAME-PENDING-A.md job 11") && o.includes("foreman/ENDGAME-PENDING-B.md job 12") && o.includes("ENDGAME_OPEN 2 locks"); });
+    t("a lock whose lane line doesn't match its file name is an error", () => {
+      const a = readFileSync(LOCK(lr, "A"), "utf8");
+      writeFileSync(LOCK(lr, "A"), a.replace("lane: A", "lane: B"));
+      let ok = false;
+      try { check(lr, "A"); } catch (e) { ok = !(e instanceof Refused) && cli("check", "--lane", "A") === 3 && cli("check", "--all") === 3; }
+      writeFileSync(LOCK(lr, "A"), a.replace("lane: A\n", ""));
+      try { check(lr, "A"); ok = false; } catch (e) { ok = ok && !(e instanceof Refused); }
+      writeFileSync(LOCK(lr, "A"), a);
+      return ok;
+    });
+    t("a one-lane lock that records a lane is an error", () => { try { parseLock("job: 1\nlane: A\n" + STEPS.map((s) => `- [ ] ${s}`).join("\n")); return false; } catch (e) { return !(e instanceof Refused); } });
+    t("clearing lane A early is refused", () => refuses(() => clear(lr, "A")));
+    t("clearing lane A leaves lane B open", () => {
+      const ticked = parseLock(readFileSync(LOCK(lr, "A"), "utf8"), "A");
+      for (const s of STEPS) ticked.steps[s] = { done: true, note: "x" };
+      writeFileSync(LOCK(lr, "A"), renderLock(ticked));
+      return !!clear(lr, "A") && !existsSync(LOCK(lr, "A")) && existsSync(LOCK(lr, "B")) && check(lr, "B").job === "12";
+    });
+    t("check --all still sees lane B, then clears when it's gone", () => {
+      const one = cli("check", "--all") === 1 && cliOut("check", "--all").includes("ENDGAME_OPEN 1 lock open");
+      rmSync(LOCK(lr, "B"));
+      return one && cli("check", "--all") === 0 && cliOut("check", "--all").startsWith("ENDGAME_CLEAR nothing pending in any lane");
+    });
+    t("check --all sees the one-lane lock and a lock with every step ticked", () => {
+      open(lr, "14");
+      const one = cli("check", "--all") === 1;
+      const all = parseLock(readFileSync(LOCK(lr), "utf8"));
+      for (const s of STEPS) all.steps[s] = { done: true, note: "x" };
+      writeFileSync(LOCK(lr), renderLock(all));
+      const ticked = cli("check", "--all") === 1 && cliOut("check", "--all").includes("every step ticked, not cleared");
+      rmSync(LOCK(lr));
+      return one && ticked;
+    });
+    t("check --all names a stray lane file it can't read", () => { writeFileSync(join(lr, "foreman", "ENDGAME-PENDING-C.md"), "x"); const ok = cli("check", "--all") === 1; rmSync(join(lr, "foreman", "ENDGAME-PENDING-C.md")); return ok; });
+    t("a bad lane name is a usage error", () => ["open", "check", "clear"].every((c) => cli(c, "--job", "1", "--lane", "C") === 2) && cli("tick", "dev-report", "--file", "x", "--lane", "a") === 2
+      && cli("check", "--lane", "AB") === 2 && cli("check", "--lane") === 2 && cli("check", "--all", "--lane", "A") === 2 && !existsSync(join(lr, "foreman", "ENDGAME-PENDING-C.md")));
+    t("the CLI opens, ticks and clears a lane; a plain check refuses while a lane lock is open", () => cli("open", "--job", "15", "--lane", "B") === 0 && cliOut("check", "--lane", "B").includes("(lane B)") && cli("check", "--lane", "A") === 0 && cli("check") === 1 && cliOut("check").includes("runs in lanes") && cli("clear", "--lane", "B") === 1);
+    rmSync(LOCK(lr, "B"));
     // lock 1 against a throwaway repo
     const repo = join(root, "repo");
     mkdirSync(repo);
@@ -340,13 +457,27 @@ function main() {
     const root = resolve(arg("root", ".", argv));
     let out;
     if (cmd === "verify-merge") out = verifyMerge(arg("repo", ".", argv), arg("merge", undefined, argv), arg("main", "origin/main", argv));
-    else if (cmd === "open") { const job = arg("job", undefined, argv); if (!job) throw new Usage("open needs --job"); out = open(root, job); }
-    else if (cmd === "tick") out = tick(root, argv[1], { file: arg("file", undefined, argv), na: arg("na", undefined, argv), opener: arg("opener", undefined, argv) });
-    else if (cmd === "clear") out = clear(root);
-    else if (cmd === "check") {
-      const r = check(root);
-      if (r.pending.length) { console.log(`ENDGAME_PENDING job ${r.job}: still owed: ${r.pending.join(", ")}. Finish the end-game first (METHOD §10).`); process.exit(1); }
-      out = "ENDGAME_CLEAR nothing pending";
+    else if (cmd === "open") { const lane = laneArg(argv); const job = arg("job", undefined, argv); if (!job) throw new Usage("open needs --job"); out = open(root, job, lane); }
+    else if (cmd === "tick") { const lane = laneArg(argv); out = tick(root, argv[1], { file: arg("file", undefined, argv), na: arg("na", undefined, argv), opener: arg("opener", undefined, argv), lane }); }
+    else if (cmd === "clear") out = clear(root, laneArg(argv));
+    else if (cmd === "check" && argv.includes("--all")) {
+      if (argv.includes("--lane")) throw new Usage("check takes --lane or --all, not both");
+      const locks = checkAll(root);
+      if (locks.length) {
+        for (const r of locks) console.log(`ENDGAME_PENDING ${r.file}${r.stray ? ": not a lane this tool knows (A or B); read it by hand" : ` job ${r.job}: ${r.pending.length ? `still owed: ${r.pending.join(", ")}` : "every step ticked, not cleared"}`}`);
+        console.log(`ENDGAME_OPEN ${locks.length} lock${locks.length > 1 ? "s" : ""} open. Finish ${locks.length > 1 ? "those end games" : "that end game"} first (METHOD §10).`);
+        process.exit(1);
+      }
+      out = "ENDGAME_CLEAR nothing pending in any lane";
+    } else if (cmd === "check") {
+      const lane = laneArg(argv);
+      if (!lane) {   // a project running in lanes: a plain check would read clear while a lane's lock is open
+        const lanes = lockFiles(root).filter((f) => f !== LOCK_NAME());
+        if (lanes.length) { console.log(`ENDGAME_PENDING a lane's end game is open (${lanes.map((f) => `foreman/${f}`).join(", ")}): this project runs in lanes, check with --lane <X> (or --all)`); process.exit(1); }
+      }
+      const r = check(root, lane);
+      if (r.pending.length) { console.log(`ENDGAME_PENDING job ${r.job}${IN(lane)}: still owed: ${r.pending.join(", ")}. Finish the end-game first (METHOD §10).`); process.exit(1); }
+      out = `ENDGAME_CLEAR nothing pending${IN(lane)}`;
     } else if (cmd === "hash") {
       const f = argv[1];
       if (!f || f.startsWith("--")) throw new Usage("hash needs a job file path");

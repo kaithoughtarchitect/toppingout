@@ -20,11 +20,23 @@ Every verification point in the plan maps to at least one job. A VP no job carri
 |---|---|
 | VP0 … | 01, 05 |
 
+## Decision list (interface first)
+
+The decisions and files several jobs consume, and the one job that owns each. Two jobs never decide the same question.
+
+| Decision or shared file | Owned by | Consumed by |
+|---|---|---|
+| <e.g. the record type in src/records/types.py> | 01 | 02, 03 |
+
+## The cut's width
+
+`render_board.py BOARD.json width` at the cut, word for word, and at each re-cut with its date: waves, longest chain, the two-lane estimate and its ceiling, pairs, warnings. The repo profile's values copied onto the board (`project.cut`): noise files, hot files, re-proof allowance, max work orders.
+
 ## Jobs
 
-| Job | Ticket | Tracker key | Needs | One line |
-|---|---|---|---|---|
-| 00 | `tickets/TICKET-00-….md` | <key or , > | none | |
+| Job | Ticket | Tracker key | Needs (uses) | Gates | Footprint | Est. | One line |
+|---|---|---|---|---|---|---|---|
+| 00 | `tickets/TICKET-00-….md` | <key or , > | none | none | `src/x/`, `tests/x/` | 4 | |
 
 **State is not kept here.** It lives only in `BOARD.json` (and on the board page), so it can't go stale in three places.
 

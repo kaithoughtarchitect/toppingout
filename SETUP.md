@@ -18,7 +18,7 @@ It copies skills to `.claude/skills/`, agents to `.claude/agents/`, the dispatch
 
 **Names file after an upgrade:** the check matches each line as a literal whole word; `names-check.mjs` refuses (exit 2) a line with regex characters, so rewrite alternations and `?` as one plain name per line.
 
-**Upgrade** (a newer package over an existing install; only with the records checkout on `<main>`, no job worktree open and no end game pending; if a sync lands mid-job anyway, the foreman re-reads the method files it changed, listed in the sync commit, before its next step): `node <package>/skills/f-setup/install.mjs --repo <repo> --upgrade` prints the plan from the receipt's revision and what's new from `CHANGELOG.md` (add `--pull` to fast-forward the package checkout first, `--apply` to write; `--apply` ends with every path to commit, new files included). `--check` alone says, read-only, whether the package's remote has anything an upgrade would install: a file unchanged here since the receipt is replaced, one adapted here is kept and listed, to merge by hand with a diff. It refuses while a job is open or an end game is owed. **Files the package added** are copied; **files it removed** are deleted when unadapted here, else listed. The Logbook's cards, index and links are never touched. With `--apply` it rewrites the receipt's revision line. Then update any repo-profile row naming a removed path.
+**Upgrade** (a newer package over an existing install; only with the records checkout on `<main>`, no job worktree open and no end game pending (in lane mode: no lane has a job in progress on the board, read through `snippets/board_pull.sh`, and `endgame.mjs check --all` is clear); if a sync lands mid-job anyway, the foreman re-reads the method files it changed, listed in the sync commit, before its next step): `node <package>/skills/f-setup/install.mjs --repo <repo> --upgrade` prints the plan from the receipt's revision and what's new from `CHANGELOG.md` (add `--pull` to fast-forward the package checkout first, `--apply` to write; `--apply` ends with every path to commit, new files included). `--check` alone says, read-only, whether the package's remote has anything an upgrade would install: a file unchanged here since the receipt is replaced, one adapted here is kept and listed, to merge by hand with a diff. It refuses while a job is open or an end game is owed. **Files the package added** are copied; **files it removed** are deleted when unadapted here, else listed. The Logbook's cards, index and links are never touched. With `--apply` it rewrites the receipt's revision line. Then update any repo-profile row naming a removed path.
 
 **Upgrade by hand** (a receipt without a git revision, a package without git, or an install from before receipts): for each file the package changed since the old revision, `diff` the repo's copy against the package's. Replace it where the repo's copy is unadapted; merge by hand where it carries adaptations. Copy the files the package added; delete the ones it removed once a diff shows no local adaptation. Never touch the Logbook's cards, index or links (its card templates, `README.md`, `ARCHIVE-SYSTEM.md` and scripts upgrade the same way). Then write the new revision into the receipt.
 
@@ -92,6 +92,7 @@ your-repo/
 │   │   └── README.md              which skill reads or writes which part
 │   ├── templates/                 the job file, by size: JOB-QUICK.md, JOB-STANDARD.md, JOB-FULL.md   install
 │   ├── ENDGAME-PENDING.md         only while a closed job still owes its end-game steps   /f-signoff
+│   ├── ENDGAME-PENDING-<lane>.md  the same, one per lane, in lane mode                    /f-signoff
 │   └── INSTALL-RECEIPT.txt        which Topping Out version is installed, and when   install
 ├── work-sessions/<Month-Year>/Work-<date>/   one folder per working day
 │   ├── JOB-<N>-SITE-WALK-ANSWERS.md, JOB-<N>-SCOPING.md, JOB-<N>-PLAN.md      before work order 1
@@ -100,7 +101,7 @@ your-repo/
 │   ├── captures                    test and gate outputs, from the first run and each work order
 │   ├── JOB-<N>-LENS-INSPECTION.md, blind-pack/ (the outside review's brief)  the two reviews
 │   ├── JOB-<N>-ACCEPTANCE-LEDGER.md, the PR body                              before the pull request
-│   └── the dev report, JOB-<N+1>-NEXT-TICKET-DECISION.md, the next session's brief (at a topping out: TOPPING-OUT-REPORT.md, NEXT-HEADS.md)   after the merge
+│   └── the dev report, JOB-<next>-NEXT-TICKET-DECISION.md (J<N+1> with one lane; in lane mode the J-number the lane reserved), the next session's brief (at a topping out: TOPPING-OUT-REPORT.md, NEXT-HEADS.md)   after the merge
 ├── .claude/skills/deep/, deepagents-ref/, .mcp.json   the Deep Agents add-on (only on yes); its agent skeleton (src/agent/, tests/ …) only for a new project   /f-setup
 └── scratch/                       working files (plan checks, councils, voice) and names-kept-out.txt + names-allowed.txt (the names the records push checks for); keep it in .gitignore
 ```

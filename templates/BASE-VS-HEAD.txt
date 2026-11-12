@@ -92,7 +92,7 @@ REPORT - ONE FILE, LF ENDINGS: $DAY/JOB-<N>-WORK-ORDER-<m>-REPORT.md
 
 RULES THAT ARE NOT NEGOTIABLE
 1. No code change, no commit, no push. 2. Paid keys stripped on every
-run. 3. One test run at a time; never touch a container. 4. Never retry a
+run. 3. One test run at a time on this machine; never touch a container. 4. Never retry a
 red test to green. 5. Never name a model, agent, vendor or tool.
 
 ### END OF WORK ORDER <m>. WRITE THE REPORT FILE, THEN STOP.

@@ -20,6 +20,16 @@ description: >
 4. **The foreman launch command** comes from the repo profile ("Foreman launch command", e.g. `claude`, with whatever flags the owner runs foremen with). None recorded: stop and ask; never guess flags.
 5. **Orca:** this session runs inside Orca (`orca` on PATH; on a Linux server the Orca service puts it in `~/.local/bin`), on your computer or on a server Orca runs (`SETUP.md` §8b; the repo profile's **Runs on**). Otherwise stop: the night shift needs Orca to open each job's tab. On a server the shift goes on with the owner's computer closed.
 
+## 0b · Lane mode (the board has `project.lanes`)
+
+The goal names its lane: `/goal night shift: lane A, 2 jobs, auto-pick, until done or stopped` (or a planned list, `lane B, jobs 13, 17`). Either lane can run a night shift, on whatever machine the repo profile's "Lanes" row gives it. Then:
+- **This machine must be that lane's:** `hostname` against the row. Otherwise stop.
+- **Openers:** the boss starts only openers whose line 1 is `lane <X>` for its lane. In auto mode "the newest opener" is the newest **for its lane**.
+- **The board** is read through `snippets/board_pull.sh <remote> <board path>`, never from main's copy. The lock is this lane's: `endgame.mjs check --lane <X>`.
+- **Clean start and "done":** `<main>` may be **behind** `<remote>/<main>` by the other lane's commits (fast-forward it); ahead still means only records commits.
+- **The next opener** is the one for the J-number **this lane reserved** at its end game (the board's `reserved` on the next job, `run`), not `OPENER-JOB-<N+1>.txt`: the next number may be the other lane's.
+- **A listed job this machine can't run** (its `requires` names something the lane's machine lacks, `render_board.py BOARD.json next --lane <X>` doesn't offer it): planned mode skips it, starts the next listed job it can run, and writes the skip in the shift record; the skipped job stays ready for the other lane.
+
 ## 1 · Each job
 
 1. **Open a fresh foreman in its own tab** in this checkout:

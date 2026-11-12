@@ -484,5 +484,340 @@ class Board(unittest.TestCase):
         self.assertEqual(self.digest(), before)
 
 
+V2_TEMPLATE = next(p for p in [HERE.parent / "f-schedule" / "templates" / "BOARD-v2.json",
+                               HERE.parent.parent / "templates" / "project" / "BOARD-v2.json"] if p.exists())
+
+
+class BoardV2(unittest.TestCase):
+    """A board cut by /f-schedule v2 (project.schedule: 2): uses, gates, footprints, placeholders, width."""
+    tearDown, run_tool, data, digest, edit, ok, refused = (Board.tearDown, Board.run_tool, Board.data, Board.digest,
+                                                           Board.edit, Board.ok, Board.refused)
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "BOARD.json"
+        shutil.copy(V2_TEMPLATE, self.path)
+
+    def jobs(self):
+        return {j["id"]: j for j in self.data()["jobs"]}
+
+    def bad(self, fn, needle):
+        self.edit(fn)
+        rc, out = self.run_tool("check")
+        self.assertEqual(rc, 1, out)
+        self.assertIn(needle, out)
+
+    def test_v2_template_is_valid(self):
+        self.assertIn("BOARD OK", self.ok("check"))
+
+    def test_v2_needs_without_uses_is_refused(self):
+        self.bad(lambda s: s["jobs"][1].pop("uses"), "without uses")
+
+    def test_v2_open_build_job_needs_footprint_ticket_estimate(self):
+        for f in ("footprint", "ticket", "est_work_orders"):   # each one alone, the others present
+            shutil.copy(V2_TEMPLATE, self.path)
+            self.bad(lambda s: s["jobs"][1].pop(f), f"needs {f}")
+
+    def test_v1_board_keeps_old_metadata(self):
+        shutil.copy(TEMPLATE, self.path)   # no project.schedule: requires outside the v2 list is left alone
+        self.edit(lambda s: s["jobs"][1].update(requires=["network"], uses={"zz": "old note"}))
+        self.ok("check")
+
+    def test_footprint_paths_are_canonical(self):
+        self.edit(lambda s: s["jobs"][5].update(footprint=["./src/records/"]))
+        self.assertIn("01+06 (src/records)", self.ok("width"))
+        self.bad(lambda s: s["jobs"][5].update(footprint=["../elsewhere/"]), "inside the repo")
+
+    def test_uses_must_explain_a_need(self):
+        self.bad(lambda s: s["jobs"][5].update(uses={"01": "x"}), "which it doesn't need")
+
+    def test_requires_vocabulary(self):
+        self.bad(lambda s: s["jobs"][2].update(requires=["teleport"]), "requires 'teleport'")
+
+    def test_schedule_and_cut_are_checked(self):
+        self.bad(lambda s: s["project"]["cut"].update(reproof=12), "reproof")
+
+    def test_gate_cycle_is_refused(self):
+        self.bad(lambda s: s["jobs"][0].update(gates=["03"]), "cycle")
+
+    def test_add_on_v2_needs_the_fields(self):
+        self.refused(1, "add", "07", "--title", "New", "--needs", "01", "--uses", "01=Record")
+        self.ok("add", "07", "--title", "New", "--needs", "01", "--uses", "01=Record; ", "--ticket", "tickets/T-07.md",
+                "--footprint", "src/new/,tests/new/", "--est", "5")
+        j = self.jobs()["07"]
+        self.assertEqual((j["footprint"], j["est_work_orders"], j["uses"]), (["src/new/", "tests/new/"], 5, {"01": "Record"}))
+        self.ok("add", "08", "--title", "Later area", "--placeholder")   # a placeholder is exempt
+        self.ok("add", "09", "--title", "Old work", "--merged", "--pr", "#9", "--merge", "abc1234", "--run", "J9")
+
+    def test_placeholder_is_never_offered_and_is_promoted(self):
+        self.ok("start", "01", "--run", "J1")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.ok("start", "02", "--run", "J2")
+        out = self.ok("next", "--after-close", "02")
+        self.assertNotIn("05", out)
+        self.ok("close", "02", "--pr", "#2", "--merge", "abc1235", "--next", "06")
+        self.assertIn("placeholder", self.refused(2, "start", "05", "--run", "J3"))
+        self.refused(2, "promote", "05", "--ticket", "tickets/T-05.md")
+        self.ok("promote", "05", "--ticket", "tickets/T-05.md", "--footprint", "src/reports/", "--est", "6")
+        self.assertEqual(self.jobs()["05"]["kind"], "build")
+        self.assertIn("05", self.ok("next"))
+
+    def test_build_gate_holds_start_next_and_close(self):
+        self.edit(lambda s: s["jobs"][2].update(gates=["06"]))   # 03 lands after the sweep job, a build job
+        self.ok("start", "01", "--run", "J1")
+        out = self.ok("next", "--after-close", "01")
+        self.assertIn("02", out)
+        self.assertNotIn("03 ", out)
+        self.refused(2, "close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "03")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.assertIn("blocked", self.refused(1, "set-next", "03"))
+
+    def test_decision_gate_lets_build_start_but_not_land(self):
+        self.ok("start", "01", "--run", "J1")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "03")
+        self.ok("start", "03", "--run", "J2")   # its gate is decision 04, which can be decided at once
+        self.refused(2, "check", "--land", "03")
+        self.refused(2, "close", "03", "--pr", "#2", "--merge", "abc1235", "--next", "02")
+        self.ok("decided", "04", "--note", "name and town only")
+        self.assertIn("LAND OK", self.ok("check", "--land", "03"))
+        self.ok("close", "03", "--pr", "#2", "--merge", "abc1235", "--next", "02")
+
+    def test_decision_gate_that_cant_be_decided_yet_holds_start(self):
+        self.edit(lambda s: s["jobs"][3].update(needs=["02"], uses={"02": "the import's counts"}))   # decision 04 now waits on build job 02
+        self.ok("start", "01", "--run", "J1")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.assertIn("gate", self.refused(2, "start", "03", "--run", "J3"))
+        self.assertNotIn("03", self.ok("next"))
+
+    def test_decided_refuses_a_decision_with_an_open_gate(self):
+        self.edit(lambda s: s["jobs"][3].update(gates=["06"]))
+        self.assertIn("gate", self.refused(2, "decided", "04", "--note", "x"))
+
+    def test_split_on_v2_names_every_dependent_and_estimate(self):
+        self.refused(2, "split", "02", "--into", "a=Read,b=Write", "--est", "a=3,b=4")      # 05 not named
+        self.refused(2, "split", "02", "--into", "a=Read,b=Write", "--rewire", "05=b")       # no estimates
+        self.refused(2, "split", "02", "--into", "a=Read,b=Write", "--rewire", "05=b", "--est", "a=3,b=4")   # no tickets
+        self.ok("split", "02", "--into", "a=Read,b=Write", "--rewire", "05=b", "--est", "a=3,b=4", "--chain",
+                "--ticket", "a=tickets/T-02a.md,b=tickets/T-02b.md")
+        j = self.jobs()
+        self.assertEqual(j["02a"]["footprint"], ["src/importer/", "tests/importer/"])
+        self.assertEqual(j["02a"]["uses"], {"01": "Record and RecordId in src/records/types.py"})
+        self.assertEqual(j["02b"]["uses"], {"02a": "02a: split from 02"})
+        self.assertEqual((j["05"]["needs"], j["05"]["uses"]), (["02b"], {"02b": "the imported records"}))
+
+    def test_covered_rewires_uses_and_gates(self):
+        self.edit(lambda s: s["jobs"][5].update(needs=["02"], uses={"02": "the importer"}, gates=["02"]))
+        self.edit(lambda s: s["jobs"][4].update(needs=["02"]))
+        self.ok("covered", "02", "--by", "01", "--quote", "01 does it")
+        j = self.jobs()["06"]
+        self.assertEqual((j["needs"], j["uses"], j["gates"]), (["01"], {"01": "covered by 01: the importer"}, ["01"]))
+
+    def test_width_reports_estimate_ceiling_and_pairs(self):
+        out = self.ok("width")
+        self.assertIn("two lanes:", out)
+        self.assertIn("ceiling", out)
+        self.assertIn("pairs now: 01+06", out)
+        self.edit(lambda s: s["jobs"][5].update(footprint=["src/records/sub/"]))
+        self.assertIn("01+06 (src/records/sub)", self.ok("width"))
+        self.edit(lambda s: s["jobs"][5].update(footprint=["README.md"]) or s["jobs"][0].update(footprint=["src/records/", "README.md"]))
+        self.assertIn("pairs now: 01+06", self.ok("width"))   # both touch README.md, a noise file: they still pair
+        self.edit(lambda s: s["project"]["cut"].update(noise=[]))
+        self.assertIn("01+06 (README.md)", self.ok("width"))
+        self.refused(2, "width", "--lanes", "3")
+
+    def test_width_matches_hand_schedules(self):
+        # two independent jobs of 4: one lane 8, two lanes 4 plus the second lander's re-proof of 2 = 6 -> 1.33x
+        self.edit(lambda s: s.update(jobs=[s["jobs"][0], s["jobs"][5]]) or s["jobs"][1].update(est_work_orders=4))
+        self.assertIn("two lanes: 1.33x", self.ok("width"))
+        self.edit(lambda s: s["project"]["cut"].update(reproof=0))
+        self.assertIn("two lanes: 2.0x", self.ok("width"))
+
+    def test_decision_gate_with_its_own_open_gate_holds_start(self):
+        self.edit(lambda s: s["jobs"][3].update(gates=["06"]))   # decision 04 can't be decided before build 06
+        self.ok("start", "01", "--run", "J1")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.assertIn("gate", self.refused(2, "start", "03", "--run", "J2"))
+
+    def two_jobs(self, a, b, reproof, gate=False, extra=None):
+        def fn(s):
+            j1 = dict(s["jobs"][0], id="01", est_work_orders=a, footprint=["src/a/"], needs=[], uses={})
+            j2 = dict(s["jobs"][5], id="02", est_work_orders=b, footprint=["src/b/"], needs=[], gates=["01"] if gate else [])
+            s["jobs"] = [j1, j2] + ([dict(s["jobs"][5], id="03", est_work_orders=extra, footprint=["src/c/"])] if extra else [])
+            s["next"] = "01"
+            s["project"]["cut"]["reproof"] = reproof
+        self.edit(fn)
+
+    def test_width_gate_is_a_finish_rule_not_work(self):
+        self.two_jobs(4, 4, 0, gate=True)
+        out = self.ok("width")
+        self.assertIn("two lanes: 2.0x", out)
+        self.assertIn("ceiling 2", out)
+
+    def test_width_lands_gated_job_before_filling_the_lane(self):
+        self.two_jobs(6, 1, 2, gate=True, extra=1)   # 02 lands at 6 with 01, so 03 starts on a free lane
+        self.assertIn("two lanes: 1.14x", self.ok("width"))   # 8 work orders, makespan 7: 01 and 02 land at 6, then 03 with no re-proof
+
+    def test_split_rewires_gates_by_rewire(self):
+        self.edit(lambda s: s["jobs"][5].update(needs=["02"], uses={"02": "the importer"}, gates=["02"]))
+        self.ok("split", "02", "--into", "a=Read,b=Write", "--rewire", "05=b,06=a", "--est", "a=3,b=4",
+                "--ticket", "a=tickets/T-02a.md,b=tickets/T-02b.md")
+        j = self.jobs()["06"]
+        self.assertEqual((j["needs"], j["gates"]), (["02a"], ["02a"]))
+
+    def test_footprint_check_unused_must_come_from_the_footprint(self):
+        self.ok("start", "01", "--run", "J1")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.refused(1, "footprint-check", "01", "--unused", "x/,y/,z/")
+        self.ok("footprint-check", "01", "--unused", "./tests/records,tests/records/")
+        self.assertEqual(self.jobs()["01"]["footprint_check"]["unused"], ["tests/records/"])
+
+    def test_footprint_check_and_accuracy(self):
+        self.assertIn("no footprint checks", self.ok("accuracy"))
+        self.refused(2, "footprint-check", "01", "--missed", "x.py")   # not merged yet
+        self.ok("start", "01", "--run", "J1")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.ok("footprint-check", "01", "--missed", "docs/a.md", "--unused", "tests/records/")
+        out = self.ok("accuracy")
+        self.assertIn("held to their footprint 0 of 1", out)
+        self.assertIn("over-claimed 1", out)
+        self.assertIn("01: missed docs/a.md", out)
+
+
+
+class BoardLanes(unittest.TestCase):
+    """Lane mode (project.lanes: two jobs at once, PLAN-lanes): start --lane, reserve, next --lane, overlaps, machines."""
+    tearDown, run_tool, data, digest, edit, ok, refused = (Board.tearDown, Board.run_tool, Board.data, Board.digest,
+                                                           Board.edit, Board.ok, Board.refused)
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.path = self.dir / "BOARD.json"
+        shutil.copy(V2_TEMPLATE, self.path)
+
+        def on(s):
+            s["project"]["lanes"] = ["A", "B"]
+            s["project"]["lane_caps"] = {"A": ["linux", "docker"], "B": ["windows", "screen", "browser", "owner", "docker"]}
+            s["next"] = {"A": None, "B": None}
+        self.edit(on)
+
+    def jobs(self):
+        return {j["id"]: j for j in self.data()["jobs"]}
+
+    def test_lanes_are_exactly_a_and_b(self):
+        self.edit(lambda s: s["project"].update(lanes=["A", "B", "C"]))
+        rc, out = self.run_tool("check")
+        self.assertEqual(rc, 1, out)
+        self.assertIn("two lanes, never more", out)
+
+    def test_two_lanes_run_two_jobs_one_each(self):
+        self.refused(2, "start", "01", "--run", "J1")                       # no --lane
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.refused(2, "start", "06", "--run", "J2", "--lane", "A")         # one per lane
+        self.ok("start", "06", "--run", "J2", "--lane", "B")
+        s = self.data()
+        self.assertEqual(s["next"], {"A": "01", "B": "06"})
+        self.assertEqual((self.jobs()["01"]["lane"], self.jobs()["06"]["lane"]), ("A", "B"))
+        page = (self.dir / "board.html").read_text(encoding="utf-8")
+        self.assertIn("Lane A: Shared record types", page)
+        self.assertIn("Lane B: Sweep", page)
+
+    def test_overlap_is_refused_unless_the_owner_says(self):
+        self.edit(lambda s: s["jobs"][5].update(footprint=["src/records/notes/"]))
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.assertIn("overlaps", self.refused(2, "start", "06", "--run", "J2", "--lane", "B"))
+        self.assertNotIn("06", self.ok("next", "--lane", "B"))
+        self.refused(2, "start", "06", "--run", "J2", "--lane", "B", "--overlap-ok")
+        self.ok("start", "06", "--run", "J2", "--lane", "B", "--overlap-ok", "--quote", "run them together")
+
+    def test_reserve_takes_the_next_job_and_its_number(self):
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.refused(2, "reserve", "02", "--run", "J1", "--lane", "A")      # J1 is used
+        self.ok("reserve", "02", "--run", "J3", "--lane", "A")               # eligible once 01 closes
+        self.assertEqual(self.data()["next"]["A"], "02")
+        self.refused(2, "reserve", "06", "--run", "J4", "--lane", "A")       # one reservation per lane
+        self.assertIn("reserved by Lane A", self.refused(2, "start", "02", "--run", "J4", "--lane", "B"))
+        self.refused(2, "close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "06")   # not its reservation
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--next", "02")
+        self.refused(2, "start", "02", "--run", "J9", "--lane", "A")         # must use its reserved number
+        self.ok("start", "02", "--run", "J3", "--lane", "A")
+        j = self.jobs()["02"]
+        self.assertEqual((j["run"], j.get("reserved")), ("J3", None))
+
+    def test_machines_decide_who_can_run_a_job(self):
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--no-next", "--reason", "pick by lane")
+        self.assertNotIn("03", self.ok("next", "--lane", "A"))              # 03 needs screen and browser
+        self.assertIn("03", self.ok("next", "--lane", "B"))
+        self.assertIn("lacks", self.refused(2, "start", "03", "--run", "J2", "--lane", "A"))
+        self.assertIn("one lane only: 1 of 4 jobs need Lane B", self.ok("width"))
+
+    def test_unrunnable_job_is_flagged(self):
+        self.edit(lambda s: s["jobs"][1].update(requires=["gpu"]))
+        self.assertIn("unrunnable", self.ok("check"))
+
+    def test_requires_set_and_footprint_widening(self):
+        self.ok("requires", "02", "--set", "docker")
+        self.assertEqual(self.jobs()["02"]["requires"], ["docker"])
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.ok("start", "06", "--run", "J2", "--lane", "B")
+        self.refused(2, "footprint", "06", "--set", "other/")                # drops docs/
+        self.ok("footprint", "06", "--set", "docs/,tools/")
+        self.assertIn("reaches into", self.refused(2, "footprint", "06", "--set", "docs/,tools/,src/records/x/"))
+
+    def test_halt_frees_the_lane(self):
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.ok("halt", "01", "--reason", "needs a screen", "--to", "open")
+        j = self.jobs()["01"]
+        self.assertNotIn("lane", j)
+        self.assertEqual(self.data()["next"]["A"], None)
+        self.refused(2, "start", "01", "--run", "J1", "--lane", "B")         # J1 is retired
+
+    def test_a_build_gate_does_not_hold_the_start_with_two_lanes(self):
+        self.edit(lambda s: s["jobs"][2].update(gates=["06"]))
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.ok("close", "01", "--pr", "#1", "--merge", "abc1234", "--no-next", "--reason", "x")
+        self.ok("start", "03", "--run", "J2", "--lane", "B")                 # the other lane can build 06 meanwhile
+        self.refused(2, "check", "--land", "03")
+
+    def test_lane_caps_are_required_for_both_lanes(self):
+        self.edit(lambda s: s["project"].update(lane_caps={"A": ["linux"]}))
+        rc, out = self.run_tool("check")
+        self.assertEqual(rc, 1, out)
+        self.assertIn("lane_caps for both A and B", out)
+
+    def test_a_reserved_job_cant_be_split_or_covered_and_numbers_stay_retired(self):
+        self.ok("reserve", "06", "--run", "J3", "--lane", "A")
+        self.assertIn("unreserve", self.refused(2, "split", "06", "--into", "a=X,b=Y", "--est", "a=1,b=1",
+                                                 "--ticket", "a=t/a.md,b=t/b.md"))
+        self.assertIn("unreserve", self.refused(2, "covered", "06", "--by", "01", "--quote", "x"))
+        self.assertIn("only that lane", self.refused(2, "unreserve", "06", "--reason", "x", "--lane", "B"))
+        self.ok("unreserve", "06", "--reason", "re-cut", "--lane", "A")
+        self.assertIn("J3", self.data()["retired_runs"])
+        self.refused(2, "start", "06", "--run", "J3", "--lane", "B")
+
+    def test_halt_drops_the_lanes_reservation(self):
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+        self.ok("reserve", "02", "--run", "J3", "--lane", "A")
+        self.assertIn("unreserve 02", self.refused(2, "close", "01", "--pr", "#1", "--merge", "abc1234", "--no-next", "--reason", "x"))
+        self.ok("halt", "01", "--reason", "stuck", "--to", "open")
+        self.assertNotIn("reserved", self.jobs()["02"])
+        self.assertEqual(sorted(self.data()["retired_runs"]), ["J1", "J3"])
+        self.ok("start", "01", "--run", "J4", "--lane", "A")                 # the lane is not locked out
+
+    def test_reserved_job_is_checked_on_footprint_and_requires(self):
+        self.ok("start", "01", "--run", "J1", "--lane", "B")
+        self.ok("reserve", "06", "--run", "J2", "--lane", "A")
+        self.assertIn("reaches into", self.refused(2, "footprint", "06", "--set", "docs/,src/records/"))
+        self.assertIn("lacks", self.refused(2, "requires", "06", "--set", "owner"))
+
+    def test_one_lane_halt_keeps_the_old_shape(self):
+        shutil.copy(V2_TEMPLATE, self.path)
+        self.ok("start", "01", "--run", "J1")
+        self.ok("halt", "01", "--reason", "x", "--to", "open")
+        self.assertNotIn("retired_runs", self.data())
+
+    def test_set_next_is_replaced_by_reserve(self):
+        self.refused(2, "set-next", "01")
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
