@@ -77,9 +77,30 @@ out=$(cd "$root/a" && bash "$tool" land origin main "$headF" "Merge job f" 2>&1)
 after=$(git -C "$root/remote.git" rev-parse main)
 [ $rc -eq 6 ] && [ "$before" = "$after" ] && pass "(m) land refuses an unproven tree when main moved after the check" || fail "(m) rc $rc, main moved: $out"
 
-# verify refuses a main that isn't the proven head's merge
+# verify finds the job's own merge even after main moved on; refuses a head that never landed
 out=$(cd "$root/a" && bash "$tool" verify origin main "$headA" 2>&1); rc=$?
-[ $rc -eq 1 ] && pass "(k) verify refuses when M^2 isn't the proven head" || fail "(k) rc $rc $out"
+[ $rc -eq 0 ] && pass "(k) verify finds A's merge though main moved on since" || fail "(k) rc $rc $out"
+out=$(cd "$root/a" && bash "$tool" verify origin main "$headF" 2>&1); rc=$?
+[ $rc -eq 1 ] && pass "(k2) verify refuses a proven head that never landed" || fail "(k2) rc $rc $out"
+
+# run from a subfolder: the paths are still the repo's, so a product change is still seen
+git -C "$root/a" fetch -q && git -C "$root/a" switch -qc job-n origin/main
+echo n > "$root/a/src/n.txt" && git -C "$root/a" add -A && git -C "$root/a" commit -qm "job n"
+headN=$(git -C "$root/a" rev-parse HEAD); baseN=$(git -C "$root/a" rev-parse origin/main)
+(cd "$root/b" && git switch -q main && git pull -q origin main && echo o > src/o.txt && git add -A && git commit -qm "other lane, product" && git push -q origin main)
+mkdir -p "$root/a/work-sessions/J1"
+out=$(cd "$root/a/work-sessions/J1" && bash "$tool" moved origin main "$baseN"); [ "$out" = product ] && pass "(n) from a subfolder, a product change still reads product" || fail "(n) got $out"
+before=$(git -C "$root/remote.git" rev-parse main)
+out=$(cd "$root/a/work-sessions/J1" && bash "$tool" land origin main "$headN" "Merge job n" 2>&1); rc=$?
+[ $rc -eq 6 ] && [ "$before" = "$(git -C "$root/remote.git" rev-parse main)" ] && pass "(n2) from a subfolder, land still refuses the unproven tree" || fail "(n2) rc $rc $out"
+
+# code inside the records folders counts as product
+base2=$(git -C "$root/remote.git" rev-parse main)
+(cd "$root/b" && git pull -q origin main && mkdir -p foreman/tools && echo "print(1)" > foreman/tools/run.py && git add -A && git commit -qm "a tool" && git push -q origin main)
+out=$(cd "$root/a" && bash "$tool" moved origin main "$base2"); [ "$out" = product ] && pass "(p) a .py file under foreman/ counts as product" || fail "(p) got $out"
+base3=$(git -C "$root/remote.git" rev-parse main)
+(cd "$root/b" && echo note >> foreman/notes.md && git commit -qam "records" && git push -q origin main)
+out=$(cd "$root/a" && bash "$tool" moved origin main "$base3"); [ "$out" = records-only ] && pass "(p2) a notes file under foreman/ is still records-only" || fail "(p2) got $out"
 out=$(bash "$tool" land origin main x $'two\nlines' 2>&1); [ $? -eq 2 ] && pass "(l) a two-line message is refused" || fail "(l) $out"
 
 [ $fails -eq 0 ] && echo "ALL PASS" || { echo "$fails FAILED"; exit 1; }

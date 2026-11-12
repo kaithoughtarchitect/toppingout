@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for board_pull.sh and board_push.sh (PLAN-lanes §3). Self-contained: temp folders only, a bare repo as
+# Tests for board_pull.sh and board_push.sh (METHOD.md §13, two lanes). Self-contained: temp folders only, a bare repo as
 # the remote, two clones (two lanes), the v1 board template as the fixture.
 #
 #   bash snippets/test_board_push.sh
@@ -145,6 +145,19 @@ if [ "$rc_close" -eq 0 ] && [ "$rc_c" -eq 1 ] && [ "$commits" = 1 ] && [ "$runc"
   pass "(c) race to start 02: lane A's start lands (J3), lane B's push is refused, its replay is refused by the tool (exit 1), B pushes nothing and its local board is unchanged"
 else
   fail "(c) race" "close rc=$rc_close" "B rc=$rc_c" "new commits=$commits run on branch=$runc B local state=$localb" "B said: $out_c"
+fi
+
+# ---- (c2) two sessions push the very same event: the second is refused, never "landed" ---------------
+tip2=$(rtip)
+hook="cd '$A' && bash '$PUSH' origin '$B' -- add 09 --title Same > '$root/hook-c2.txt' 2>&1"
+out=$(cd "$BB" && BOARD_PUSH_TEST_HOOK="$hook" bash "$PUSH" origin "$B" -- add 09 --title Same 2>&1); rc_c2=$?
+printf '%s
+' "$out" >> "$log"
+n2=$(git --git-dir="$root/remote.git" rev-list --count "$tip2..foreman-lanes")
+if [ "$rc_c2" -eq 1 ] && [ "$n2" = 1 ] && ! printf '%s' "$out" | grep -q "LANDED"; then
+  pass "(c2) the same event pushed twice: one lands, the second is refused (exit 1), not read as a lost reply"
+else
+  fail "(c2) same event" "rc=$rc_c2 commits=$n2" "said: $out" "the other session said: $(cat "$root/hook-c2.txt" 2>/dev/null)"
 fi
 
 # ---- (d) a refused push replays and lands when the event is still valid -----------------------------

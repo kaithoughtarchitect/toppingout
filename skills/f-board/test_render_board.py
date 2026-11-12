@@ -685,7 +685,7 @@ class BoardV2(unittest.TestCase):
 
 
 class BoardLanes(unittest.TestCase):
-    """Lane mode (project.lanes: two jobs at once, PLAN-lanes): start --lane, reserve, next --lane, overlaps, machines."""
+    """Lane mode (project.lanes: two jobs at once, METHOD.md §13): start --lane, reserve, next --lane, overlaps, machines."""
     tearDown, run_tool, data, digest, edit, ok, refused = (Board.tearDown, Board.run_tool, Board.data, Board.digest,
                                                            Board.edit, Board.ok, Board.refused)
 

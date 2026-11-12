@@ -36,8 +36,8 @@ summaries), then run `render`.
   render_board.py BOARD.json accuracy                   footprints against the landed diffs, summed
   add and promote take the v2 fields: --ticket, --footprint, --barriers, --consumes, --gates, --requires
   (comma lists), --uses "03=what it uses; 04=..." (or a JSON object), --est n; add also --placeholder.
-  split takes --est "a=3,b=4" and --ticket "a=path,b=path"; on a v2 board --est and --rewire for every
-  dependent are required.
+  split takes --est "a=3,b=4" and --ticket "a=path,b=path"; on a v2 board --est and --ticket for every
+  child and --rewire for every dependent are required.
   render_board.py BOARD.json set-next <job>
   render_board.py BOARD.json summary <job> --text "..."   (what the job builds, in plain words; check warns on a summary of plan references only)
   render_board.py BOARD.json topout --report <path to the topping out report> [--quote "<the owner's words>"] [--head yes|partly|no]
@@ -83,7 +83,7 @@ KINDS = ("build", "decision", "placeholder")
 STORED = {"build": ("open", "in-progress", "merged", "decision"), "decision": ("decision", "resolved"),
           "placeholder": ("open",)}
 LANE_NAMES = ("A", "B")
-LANE_MODE = False   # set by validate(): the board has project.lanes (two jobs at once, PLAN-lanes)
+LANE_MODE = False   # set by validate(): the board has project.lanes (two jobs at once, METHOD.md §13)
 REQUIRES = ("screen", "browser", "owner", "windows", "macos", "linux", "docker", "postgres", "gpu")
 LIST_FIELDS = ("gates", "footprint", "barriers", "consumes", "requires")
 SHOWN = ("merged", "resolved", "in-progress", "ready", "blocked", "decision")
@@ -1550,8 +1550,9 @@ def job_rows(jobs, by_id, nxt):
         elif st == "blocked":
             waits = [x for x in b.get("needs") or [] if x in by_id and shown_state(by_id[x], by_id) not in DONE]
             held = [g for g in open_gates(b, by_id) if gate_blocks(g, by_id) and g not in waits]
-            detail = "; ".join([f'Waits on {esc(x)} · {esc(by_id[x]["title"])}' for x in waits]
-                               + [f'Held by gate {esc(g)} · {esc(by_id[g]["title"])}' for g in held])
+            parts = (["Waits on " + "; ".join(f'{esc(x)} · {esc(by_id[x]["title"])}' for x in waits)] if waits else [])
+            parts += [f'Held by gate {esc(g)} · {esc(by_id[g]["title"])}' for g in held]
+            detail = "; ".join(parts)
         elif st == "decision":
             detail = f'<b>To decide:</b> {esc(b.get("decision") or "")}'
         elif st in DONE:

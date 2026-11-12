@@ -413,6 +413,12 @@ function selfTest() {
       rmSync(LOCK(lr, "B"));
       return one && cli("check", "--all") === 0 && cliOut("check", "--all").startsWith("ENDGAME_CLEAR nothing pending in any lane");
     });
+    t("check --lane refuses while the one-lane lock is open", () => {
+      open(lr, "07");
+      const ok = cli("check", "--lane", "A") === 1 && cliOut("check", "--lane", "A").includes("one-lane lock");
+      rmSync(LOCK(lr));
+      return ok && cli("check", "--lane", "A") === 0;
+    });
     t("check --all sees the one-lane lock and a lock with every step ticked", () => {
       open(lr, "14");
       const one = cli("check", "--all") === 1;
@@ -471,6 +477,10 @@ function main() {
       out = "ENDGAME_CLEAR nothing pending in any lane";
     } else if (cmd === "check") {
       const lane = laneArg(argv);
+      if (lane && existsSync(LOCK(root))) {   // a one-lane end game still open: no lane starts on top of it
+        console.log("ENDGAME_PENDING foreman/ENDGAME-PENDING.md (the one-lane lock) is open: finish that end game before a lane goes on (METHOD §10)");
+        process.exit(1);
+      }
       if (!lane) {   // a project running in lanes: a plain check would read clear while a lane's lock is open
         const lanes = lockFiles(root).filter((f) => f !== LOCK_NAME());
         if (lanes.length) { console.log(`ENDGAME_PENDING a lane's end game is open (${lanes.map((f) => `foreman/${f}`).join(", ")}): this project runs in lanes, check with --lane <X> (or --all)`); process.exit(1); }

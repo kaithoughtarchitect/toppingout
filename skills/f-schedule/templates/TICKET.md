@@ -1,7 +1,7 @@
 # TICKET-<nn>: <title>
 
 **Project:** `<project-slug>` · **Board:** <nn> · **Tracker key:** <an existing key, or "none (this file is the ticket)"> · **State:** see `BOARD.json` / the board page (never kept here)
-**Needs:** <each job that must be merged first, with what this job uses from it: `03` (RECORD_SYSTEM in runtime/records.py); or "none"> · **Lands after (gates):** <order-only rules: a job or decision that must land first though nothing is used from it; or "none"> · **Unblocks:** <job ids>
+**Needs:** <each job that must be merged first, with what this job uses from it: `03` (RecordStore in src/records/store.py); or "none"> · **Lands after (gates):** <order-only rules: a job or decision that must land first though nothing is used from it; or "none"> · **Unblocks:** <job ids>
 
 ## Why this job
 <What it makes possible for the head, in two or three sentences.>
@@ -16,7 +16,7 @@
 ## Scope
 **In:** <the module area and files it owns>.
 **Out:** <what neighbouring jobs own, with their ids>.
-**Footprint:** <module folders, `src` and `tests` together, e.g. `src/blocks/almanac/`, `tests/blocks/almanac/`; never a file list>.
+**Footprint:** <module folders, `src` and `tests` together, e.g. `src/catalogue/`, `tests/catalogue/`; never a file list>.
 **Barriers:** <`migrations`, `deps`, `ci`, `config`, `schema`, `outside:<name>`, a hot file; or "none">.
 **Consumes:** <interfaces read from other modules: a function, a type, a table; or "none">.
 **Requires:** <what its machine must have: `screen`, `browser`, `owner`, `windows`, `macos`, `linux`, `docker`, `postgres`, `gpu`, `reach:<name>`; or "any machine">.

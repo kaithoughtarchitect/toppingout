@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Read the board in lane mode: fetch the coordination branch and copy its board into the records folder.
-# (PLAN-lanes §3: in lane mode the branch foreman-lanes holds the board's one true copy; every reader pulls first.)
+# (METHOD.md §13, two lanes: in lane mode the branch foreman-lanes holds the board's one true copy; every reader pulls first.)
 #
 #   bash board_pull.sh <remote> <board path>
 #

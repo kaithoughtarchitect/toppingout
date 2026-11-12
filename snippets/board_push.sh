@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Every board event in lane mode goes through this helper (PLAN-lanes §3): the event runs against the newest board
+# Every board event in lane mode goes through this helper (METHOD.md §13, two lanes): the event runs against the newest board
 # on the coordination branch foreman-lanes and lands there by a push git can refuse, never by force.
 #
 #   bash board_push.sh [--tool <render_board.py>] <remote> <board path> -- <event args...>
@@ -18,7 +18,8 @@
 #      line and nothing else, e.g. "Board: start 02 (Lane B, J52)";
 #   4. git push <remote> <commit>:refs/heads/foreman-lanes, never force. Refused: back to step 1, at most 3
 #      attempts in all, then stop and report. A push whose reply was lost (the push failed, but the branch tip
-#      now is our commit, has it in its history, or holds an identical BOARD.json) counts as landed;
+#      now is our commit or has it in its history) counts as landed (an identical BOARD.json is not proof: another
+#      session may have pushed the same event, and then ours was refused);
 #   5. on success, copy the two files into the local records folder (uncommitted: the job's records push
 #      commits them).
 # --init puts a board on foreman-lanes when lanes are switched on for its head: the first one creates the branch
@@ -197,6 +198,15 @@ while :; do
   if [ "$attempt" -eq 1 ] && [ -n "${BOARD_PUSH_TEST_HOOK:-}" ]; then
     ( h=$BOARD_PUSH_TEST_HOOK; unset BOARD_PUSH_TEST_HOOK BOARD_PUSH_TEST_LOSE_REPLY; eval "$h" ) >> "$tmp/hook.txt" 2>&1
   fi
+  # Two sessions making the same event in the same second build the very same commit (same tree, parent,
+  # message, author and time), so a push of ours would "succeed" as a no-op on the other's. If the tip is
+  # already exactly our commit before we push, it is theirs: replay, and the tool refuses the repeat.
+  pre=$(git -C "$dir" ls-remote "$remote" "refs/heads/$BRANCH" 2>/dev/null | cut -f1)
+  if [ "$pre" = "$commit" ]; then
+    echo "the branch already holds this exact event from another session: replaying"
+    attempt=$((attempt + 1)); [ "$attempt" -gt "$ATTEMPTS" ] && { echo "STOPPED after $ATTEMPTS attempts"; exit 6; }
+    continue
+  fi
   push_commit "$commit"; code=$?                                                              # step 4
   if [ "$attempt" -eq 1 ] && [ "${BOARD_PUSH_TEST_LOSE_REPLY:-}" = 1 ] && [ "$code" -eq 0 ]; then
     echo "(test: the push's reply is treated as lost)" > "$tmp/push.txt"; code=1
@@ -209,10 +219,7 @@ while :; do
   # the push failed: was it refused, or did only its reply get lost?
   if git -C "$dir" fetch -q "$remote" "+refs/heads/$BRANCH:$ref" >/dev/null 2>&1; then
     tip=$(git -C "$dir" rev-parse --verify -q "$ref^{commit}")
-    ours=$(git -C "$dir" rev-parse "$commit:$prefix$name")
-    theirs=$(git -C "$dir" rev-parse -q --verify "$tip:$prefix$name" 2>/dev/null)
-    was=$(git -C "$dir" rev-parse -q --verify "$base:$prefix$name" 2>/dev/null)
-    if [ "$tip" = "$commit" ] || git -C "$dir" merge-base --is-ancestor "$commit" "$tip" 2>/dev/null        || { [ "$ours" = "$theirs" ] && [ "$ours" != "$was" ]; }; then
+    if [ "$tip" = "$commit" ] || git -C "$dir" merge-base --is-ancestor "$commit" "$tip" 2>/dev/null; then
       install_local "$work"
       echo "LANDED $BRANCH ${commit:0:7}: $subject (the push's reply was lost; the branch already holds it)"
       exit 0
