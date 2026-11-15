@@ -34,7 +34,7 @@
 - [f-setup](skills/f-setup.md): Install the method into a repo or upgrade it, write the repo profile, and prove the install.
 - [model-council](skills/model-council.md): Ask a panel of AI models, each answering on its own, to help settle a design choice.
 - [agent-council](skills/agent-council.md): Ask AI agents that can read the code to help settle a design choice.
-- [orca-pi-connect](skills/orca-pi-connect.md): Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes.
+- [orca-pi-connect](skills/orca-pi-connect.md): Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes.
 - [f-night-shift](skills/f-night-shift.md): Run several jobs one after another without you: a shift boss opens a fresh foreman for each.
 - [f-status](skills/f-status.md): Tell you in plain words where things stand and what's next.
 - [f-comply](skills/f-comply.md): Check whether the agent really follows a rule when it's tempted to break it.

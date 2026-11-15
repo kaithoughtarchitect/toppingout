@@ -12,7 +12,7 @@ updated: 2026-09-25
 
 Slash: `/orca-pi-connect`. Folder: `skills/orca-pi-connect/SKILL.md`.
 
-Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes.
+Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes.
 
 **On site:** Handing work to the builder in Orca: the foreman sends each work order itself and is woken up when the builder finishes.
 

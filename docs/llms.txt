@@ -61,7 +61,7 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 - [f-status](https://toppingout.dev/skills/f-status.md): Tell you in plain words where things stand and what's next.
 - [f-survey](https://toppingout.dev/skills/f-survey.md): Turn a rough request into clear decisions, one round of questions at a time.
 - [model-council](https://toppingout.dev/skills/model-council.md): Ask a panel of AI models, each answering on its own, to help settle a design choice.
-- [orca-pi-connect](https://toppingout.dev/skills/orca-pi-connect.md): Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes.
+- [orca-pi-connect](https://toppingout.dev/skills/orca-pi-connect.md): Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes.
 - [pack-review](https://toppingout.dev/skills/pack-review.md): Bundle the goal, the rules and the changes into one brief for an outside reviewer.
 - [speak](https://toppingout.dev/skills/speak.md): Read one reply out loud as a short spoken summary.
 - [xreview](https://toppingout.dev/skills/xreview.md): Review another session's work with fresh eyes: list each claim, never rewrite it.

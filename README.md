@@ -192,7 +192,7 @@ When two sources disagree: **the owner's own words → `RULES.md` → `METHOD.md
 
 - **Not autonomous by default.** By default you give the word for every push, PR, review round and merge (except the job's own cleanup and records push after a verified merge): the owner is the one piece a confident report can't talk round. **Autonomy comes only from an explicit grant:** an autonomous run (`/goal autonomous run: <path to the job's opener>`) or a night shift covers exactly the acts `RULES.md` ("The one exception") lists, for the jobs it names, and repairs what goes red and stops only on the conditions `RULES.md` ("The one exception") lists. A standing goal never covers the other gated acts.
 - **Not a second judge on top of the foreman.** Reviews are layered by *independence* (a fresh session, a different reader), not by stacking graders. Separate reviewers reduce some failure modes; they don't guarantee correct code.
-- **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build. How much the work order has to spell out depends on the builder (see `BUILDER-PROFILES.md`).
+- **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build. How much the work order has to spell out depends on the builder (see `BUILDER-PROFILES.md`). In Orca the foreman drives it in the pane beside it: Pi, or Claude Code running whichever Claude model you choose (`SETUP.md` §4).
 
 ## What software enforces, and what is only instructed
 

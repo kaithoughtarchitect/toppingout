@@ -1,6 +1,6 @@
 # orca-pi-connect
 
-Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes.
+Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes.
 
 Command: `/orca-pi-connect` (old name `/pi`)
 
@@ -14,6 +14,7 @@ Handing work to the builder in Orca: the foreman sends each work order itself an
 ## Say it
 
 - "connect to pi"
+- "connect to the claude builder"
 - "set up the builder pane"
 
 ## When to use it

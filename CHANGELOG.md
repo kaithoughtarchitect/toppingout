@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-15
+
+- **The builder can be Claude Code, running any Claude model, over the pane link.** Until now the pane link drove only a Pi builder. Now `orca-pi-connect` also drives Claude Code in the Orca pane, with whichever model you choose (Haiku, Sonnet, Opus, Fable), so a Claude plan with room to spare can do the building. Set it up once: `node .claude/skills/orca-pi-connect/claude-code/claude-builder.mjs --model <model>` writes the builder's settings and a Stop hook under `~/.claude/foreman-builder/`, outside every repo (the model never lands in a record). The hook writes one line per finished turn, as Pi's extension does, so the same watcher wakes the foreman. Trust the folder your job worktrees live in once, and every new worktree opens without asking. The repo profile's "Builder delivery" row says `pane link (pi)` or `pane link (claude-code)`. Proven in a real Orca pane: both handshake rounds, one line per turn (three tool calls, one line) and a resume. A Claude builder uses the same Claude limit as the foreman.
+
 ## 2026-11-12
 
 - **Two lanes, after a second review:** `land_tested.sh` takes every path from the repository's top (run from a subfolder it could land a tree nobody proved), finds the job's own merge on main even after main moved on, and counts code inside the records folders (`.py`, `.sh`, `.mjs`) as product; `board_push.sh` never reads an identical board as a landed push; `check --lane` refuses while a one-lane end game is open.

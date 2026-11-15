@@ -85,7 +85,7 @@ SKILLS = {
                       "When you type /goal night shift with a list of jobs, or a number of jobs to pick: usually before you sleep.",
                       "Each job is its own autonomous run; the boss only starts it and checks the repo. Any stop ends the shift, and so does a completed topping out (the next head is yours to pick); the morning summary is one file. It runs wherever Orca runs: on your computer, or on a Linux server of your own (`SETUP.md` §8b), so your computer can sleep too.",
                       [], [], ["f-signoff"]),
-    "orca-pi-connect": ("Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes",
+    "orca-pi-connect": ("Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes",
                         "Handing work to the builder in Orca: the foreman sends each work order itself and is woken up when the builder finishes.",
                         "Comes with Pi's finish signal, starts Pi inside the job's folder without the trust question, and binds a pane it opened itself without asking.",
                         [], [], []),

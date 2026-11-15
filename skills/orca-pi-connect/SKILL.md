@@ -1,10 +1,11 @@
 ---
 name: orca-pi-connect
 description: >
-  Connect the foreman's session to a Pi builder in an Orca pane and PROVE the link (a pane the
-  foreman opened itself (or one the owner confirmed) + assigned Pi session id, two-round
-  handshake, Stop-log and session-file evidence), then send work-order pointers and wait on Pi's
-  real turn-end signal. Use for /orca-pi-connect, "connect to pi", "set up the builder pane", or
+  Connect the foreman's session to a builder in an Orca pane, Pi or Claude Code (any Claude
+  model), and PROVE the link (a pane the foreman opened itself (or one the owner confirmed) +
+  assigned session id, two-round handshake, Stop-log and session-file evidence), then send
+  work-order pointers and wait on the builder's real turn-end signal. Use for /orca-pi-connect,
+  "connect to pi", "connect to the claude builder", "set up the builder pane", or
   before a Topping Out job whose repo profile says builder delivery = pane link. Orca only
   (another pane host: hand-carry the pointers). Proves and uses the channel; never decides or
   approves anything for the owner. Also answers to its old name, /pi.
@@ -23,6 +24,22 @@ Evidence, not vibes. Every claim is proven by an observable (a Stop-log line, a 
 4 replies   Pi answers, runs tools, and the reply is readable
 5 session   the on-disk session file records the turn under the bound id
 ```
+
+## A Claude Code builder (any Claude model)
+
+The repo profile's "Builder delivery" row says which harness the pane runs: `pane link (pi)`, the default, or `pane link (claude-code)`. Everything in this skill holds for both; with Claude Code, read these in place of the Pi parts. Proven with Claude Code 2.1.325 and orca 1.4 (a real pane: both handshake rounds, one line per turn, a resume).
+
+- **One-time setup, by the owner** (it names the model, so it lives outside every repo): `node .claude/skills/orca-pi-connect/claude-code/claude-builder.mjs --model <model> [--permission-mode <mode>]`. It writes `~/.claude/foreman-builder/settings.json` (the model, the permission mode, the Stop hook) and a copy of the hook beside it. Any Claude model works, by name or alias (`claude-haiku-5-5`, `sonnet`, `opus`). Run it again to change the model. **Permission mode:** `auto` (the default: routine actions run, risky ones are refused) suits a builder; `acceptEdits` asks before shell commands, so an unattended run stalls; `bypassPermissions` asks nothing.
+- **Trust, once:** Claude Code asks "Do you trust this folder?" in a folder it hasn't seen, and the answer covers every folder inside it. Each job's worktree is new, so the owner trusts the folder the worktrees live in once (Orca's: `~/orca/workspaces/<repo>`): start `claude` there and answer yes. If the prompt shows in the builder pane anyway, surface it to the owner; never answer it with keystrokes.
+- **The wake signal:** the hook (`claude-code/foreman-stop.mjs`) runs on Claude Code's `Stop` event, once per finished turn of the builder (a subagent's end is `SubagentStop`, which it doesn't hear). Same line format, its own log: `LOG="$HOME/.claude/foreman-stops.log"`. Only a session started with `--settings <that file>` loads it, never the foreman. If another Stop hook of the owner's can block a stop, a line can come before the turn really ends: the report-file rule (§6 step 4) catches it.
+- **§0 preconditions:** `claude --version`, then `node .claude/skills/orca-pi-connect/claude-code/claude-builder.mjs --check` (READY, with the model and mode; MISSING: stop and ask the owner to run the setup), in place of the `pi` and extension checks.
+- **§1 split command:** `--command "cd '$WT'; claude --settings '$HOME/.claude/foreman-builder/settings.json' --session-id $SID"` (the `--check` output prints it with the real path). No `--approve`: trust and the permission mode cover it.
+- **§1b resume:** `claude --settings '<same file>' --resume <old SID>`: the session and its lines keep the old `SID`.
+- **§3 model check:** the pane's banner names the model under the version line (`Haiku 5.5 · …`); it must be the one `--check` printed.
+- **§5 session file:** `ls -l ~/.claude/projects/*/"$SID".jsonl`.
+- **§6 step 7:** close the pane the same way; `/exit` alone leaves an empty shell.
+- **Usage:** a Claude builder draws on the owner's Claude plan, the same limit as a Claude foreman. Its first job is an audition (`BUILDER-PROFILES.md`).
+- **What it loads:** the worktree's own `CLAUDE.md`, `.claude/settings.json`, skills and agents, and the owner's user settings. The work order is still the whole instruction (`METHOD.md` §12): it never asks the builder to run a Topping Out skill or agent.
 
 ## The wake signal
 

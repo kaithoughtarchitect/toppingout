@@ -78,7 +78,7 @@ The method itself: `../README.md` → `../METHOD.md`. The whole flow as a pictur
 
 - [[f-shift]]: Start a session as the foreman: read the role, the rules and the playbook first
 - [[f-board]]: Update the project board when a job starts, merges, gets stuck or is added
-- [[orca-pi-connect]]: Link the foreman to a Pi builder in the Orca pane beside it, and know when it finishes
+- [[orca-pi-connect]]: Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes
 
 ## The end game: two inspections
 
