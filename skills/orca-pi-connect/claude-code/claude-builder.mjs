@@ -75,6 +75,8 @@ function selfTest() {
     const c = check(home)
     ok('check passes after writing', c.problems.length === 0)
     ok('the settings carry the model and mode', c.s.model === 'claude-haiku-5-5' && c.s.permissions.defaultMode === 'auto')
+    const out = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--home', home, '--check'], { encoding: 'utf8' }).stdout
+    ok('--check prints the settings path the split command takes', out.split(/\r?\n/).includes(`settings: ${slash(p.settings)}`))
     const log = join(home, 'stops.log')
     const run = (input) => spawnSync(process.execPath, [p.hook], { input, env: { ...process.env, FOREMAN_CC_STOP_LOG: log }, encoding: 'utf8' })
     const sid = '0f8fad5b-d9cb-469f-a165-70867728950e'
@@ -114,6 +116,7 @@ if (opt.check) {
   const { p, s, problems } = check(home)
   if (problems.length) { for (const x of problems) console.log(`MISSING: ${x}`); process.exit(1) }
   console.log(`READY: model ${s.model}, permission mode ${s.permissions?.defaultMode ?? 'default'}`)
+  console.log(`settings: ${slash(p.settings)}`)
   console.log(`stop log: ${slash(p.log)}`)
   console.log(`launch: ${launchLine(p)}`)
   process.exit(0)
@@ -124,5 +127,6 @@ if (!MODES.includes(mode)) { console.error(`claude-builder: permission mode must
 if (!/^[A-Za-z0-9._\[\]-]+$/.test(opt.model)) { console.error('claude-builder: a model is a name or id such as claude-haiku-5-5, haiku or opus'); process.exit(2) }
 const p = write(home, opt.model, mode)
 console.log(`WROTE ${slash(p.settings)}: model ${opt.model}, permission mode ${mode}`)
+console.log(`settings: ${slash(p.settings)}`)
 console.log(`stop log: ${slash(p.log)}`)
 console.log(`launch: ${launchLine(p)}`)
