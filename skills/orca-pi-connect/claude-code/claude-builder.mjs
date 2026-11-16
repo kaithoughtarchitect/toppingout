@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // claude-builder.mjs: set up Claude Code as the builder behind the pane link (orca-pi-connect, "Claude Code builder").
 //
-//   node claude-builder.mjs --model <model> [--permission-mode <mode>]   write the builder's settings
+//   node claude-builder.mjs --model <model> [--permission-mode <mode>] [--mcp all|none]   write the builder's settings
 //   node claude-builder.mjs --check                                      read-only: is it set up, and with what
 //   node claude-builder.mjs --self-test                                  tests in a temporary home
 //   (--home <dir> replaces your home folder, for tests)
@@ -14,6 +14,10 @@
 // Permission modes: auto (the default: routine actions run, risky ones are refused), acceptEdits (shell
 // commands ask, so an unattended run stalls), bypassPermissions (asks nothing, the owner confirms it once in
 // the pane), or any other mode Claude Code accepts.
+// MCP servers: a repo's .mcp.json makes Claude Code ask "New MCP server found" in every new folder, and each
+// job's worktree is new, so an unattended builder would stop there. --mcp all (the default) loads the repo's
+// servers without asking (enableAllProjectMcpServers); --mcp none loads none (the launch adds
+// --strict-mcp-config, which --check prints as `flags:`). Re-running without --mcp keeps the earlier choice.
 //
 // Exit codes: 0 ok · 1 --check found it missing or stale · 2 bad usage · 3 self-test failed.
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -25,6 +29,7 @@ import { spawnSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const HOOK_SRC = join(here, 'foreman-stop.mjs')
 const MODES = ['auto', 'acceptEdits', 'bypassPermissions', 'default', 'manual', 'dontAsk', 'plan']
+const MCPS = ['all', 'none']
 
 function paths(home) {
   const dir = join(home, '.claude', 'foreman-builder')
@@ -32,13 +37,20 @@ function paths(home) {
 }
 const slash = (p) => p.replace(/\\/g, '/')
 
-function write(home, model, mode) {
+function mcpOf(s) {
+  const v = s?.enableAllProjectMcpServers
+  return v === true ? 'all' : v === false ? 'none' : null
+}
+const flagsFor = (mcp) => (mcp === 'none' ? '--strict-mcp-config' : '')
+
+function write(home, model, mode, mcp) {
   const p = paths(home)
   mkdirSync(p.dir, { recursive: true })
   copyFileSync(HOOK_SRC, p.hook)
   const settings = {
     model,
     permissions: { defaultMode: mode },
+    enableAllProjectMcpServers: mcp === 'all',
     hooks: { Stop: [{ hooks: [{ type: 'command', command: `node "${slash(p.hook)}"` }] }] },
   }
   writeFileSync(p.settings, JSON.stringify(settings, null, 2) + '\n')
@@ -58,11 +70,13 @@ function check(home) {
   const cmd = s?.hooks?.Stop?.[0]?.hooks?.[0]?.command
   if (s && cmd !== `node "${slash(p.hook)}"`) problems.push('the settings file does not run the stop hook')
   if (s && !s.model) problems.push('the settings file names no model')
+  if (s && !mcpOf(s)) problems.push('the settings file makes no MCP choice, so a repo\'s .mcp.json would stop the builder at a prompt: run this again with --model')
   return { p, s, problems }
 }
 
-function launchLine(p) {
-  return `cd '<job worktree>'; claude --settings '${slash(p.settings)}' --session-id <SID>`
+function launchLine(p, mcp) {
+  const f = flagsFor(mcp)
+  return `cd '<job worktree>'; claude --settings '${slash(p.settings)}'${f ? ' ' + f : ''} --session-id <SID>`
 }
 
 function selfTest() {
@@ -71,12 +85,24 @@ function selfTest() {
   const home = mkdtempSync(join(tmpdir(), 'ccbuilder-'))
   try {
     ok('check reports a missing setup', check(home).problems.length > 0)
-    const p = write(home, 'claude-haiku-5-5', 'auto')
+    const p = write(home, 'claude-haiku-5-5', 'auto', 'all')
     const c = check(home)
     ok('check passes after writing', c.problems.length === 0)
     ok('the settings carry the model and mode', c.s.model === 'claude-haiku-5-5' && c.s.permissions.defaultMode === 'auto')
     const out = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--home', home, '--check'], { encoding: 'utf8' }).stdout
-    ok('--check prints the settings path the split command takes', out.split(/\r?\n/).includes(`settings: ${slash(p.settings)}`))
+    const outLines = out.split(/\r?\n/)
+    ok('--check prints the settings path the split command takes', outLines.includes(`settings: ${slash(p.settings)}`))
+    ok('--mcp all: the repo\'s MCP servers load without a prompt, no extra flag', c.s.enableAllProjectMcpServers === true && outLines.includes('flags: ') && outLines.includes('mcp: all'))
+    const cli = (...a) => spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--home', home, ...a], { encoding: 'utf8' })
+    cli('--model', 'haiku', '--mcp', 'none')
+    let outN = cli('--check').stdout.split(/\r?\n/)
+    ok('--mcp none: the launch skips every MCP server', outN.includes('flags: --strict-mcp-config') && outN.some((l) => l.startsWith('launch: ') && l.includes('--strict-mcp-config --session-id')))
+    cli('--model', 'sonnet')
+    outN = cli('--check').stdout.split(/\r?\n/)
+    ok('re-running without --mcp keeps the earlier choice', outN.includes('mcp: none') && outN.some((l) => l.startsWith('READY: model sonnet')))
+    const old = JSON.parse(readFileSync(p.settings, 'utf8')); delete old.enableAllProjectMcpServers; writeFileSync(p.settings, JSON.stringify(old))
+    ok('check flags settings that make no MCP choice', check(home).problems.some((x) => x.includes('MCP')))
+    write(home, 'claude-haiku-5-5', 'auto', 'all')
     const log = join(home, 'stops.log')
     const run = (input) => spawnSync(process.execPath, [p.hook], { input, env: { ...process.env, FOREMAN_CC_STOP_LOG: log }, encoding: 'utf8' })
     const sid = '0f8fad5b-d9cb-469f-a165-70867728950e'
@@ -107,7 +133,7 @@ const opt = {}
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
   if (a === '--check' || a === '--self-test') opt[a.slice(2)] = true
-  else if (['--model', '--permission-mode', '--home'].includes(a) && argv[i + 1] !== undefined) opt[a.slice(2)] = argv[++i]
+  else if (['--model', '--permission-mode', '--mcp', '--home'].includes(a) && argv[i + 1] !== undefined) opt[a.slice(2)] = argv[++i]
   else { console.error(`claude-builder: unknown argument ${a}`); process.exit(2) }
 }
 if (opt['self-test']) process.exit(selfTest())
@@ -117,16 +143,27 @@ if (opt.check) {
   if (problems.length) { for (const x of problems) console.log(`MISSING: ${x}`); process.exit(1) }
   console.log(`READY: model ${s.model}, permission mode ${s.permissions?.defaultMode ?? 'default'}`)
   console.log(`settings: ${slash(p.settings)}`)
+  console.log(`mcp: ${mcpOf(s)}`)
+  console.log(`flags: ${flagsFor(mcpOf(s))}`)
   console.log(`stop log: ${slash(p.log)}`)
-  console.log(`launch: ${launchLine(p)}`)
+  console.log(`launch: ${launchLine(p, mcpOf(s))}`)
   process.exit(0)
 }
-if (!opt.model) { console.error('usage: claude-builder.mjs --model <model> [--permission-mode <mode>] | --check | --self-test'); process.exit(2) }
+if (!opt.model) { console.error('usage: claude-builder.mjs --model <model> [--permission-mode <mode>] [--mcp all|none] | --check | --self-test'); process.exit(2) }
 const mode = opt['permission-mode'] || 'auto'
 if (!MODES.includes(mode)) { console.error(`claude-builder: permission mode must be one of ${MODES.join(', ')}`); process.exit(2) }
 if (!/^[A-Za-z0-9._\[\]-]+$/.test(opt.model)) { console.error('claude-builder: a model is a name or id such as claude-haiku-5-5, haiku or opus'); process.exit(2) }
-const p = write(home, opt.model, mode)
-console.log(`WROTE ${slash(p.settings)}: model ${opt.model}, permission mode ${mode}`)
+let mcp = opt.mcp
+if (mcp === undefined) {
+  let prev = null
+  try { prev = mcpOf(JSON.parse(readFileSync(paths(home).settings, 'utf8'))) } catch {}
+  mcp = prev || 'all'
+}
+if (!MCPS.includes(mcp)) { console.error('claude-builder: --mcp must be all or none'); process.exit(2) }
+const p = write(home, opt.model, mode, mcp)
+console.log(`WROTE ${slash(p.settings)}: model ${opt.model}, permission mode ${mode}, mcp ${mcp}`)
 console.log(`settings: ${slash(p.settings)}`)
+console.log(`mcp: ${mcp}`)
+console.log(`flags: ${flagsFor(mcp)}`)
 console.log(`stop log: ${slash(p.log)}`)
-console.log(`launch: ${launchLine(p)}`)
+console.log(`launch: ${launchLine(p, mcp)}`)

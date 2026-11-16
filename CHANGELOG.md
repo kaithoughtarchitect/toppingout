@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-16
+
+- **A Claude Code builder no longer stops at "New MCP server found".** A repo with a `.mcp.json` made Claude Code ask about its servers in every new folder, and each job's worktree is new, so the builder waited at that prompt and an unattended run would have lost hours. `claude-builder.mjs --mcp all`, the default, now loads the repo's servers without asking; `--mcp none` loads none. If you set up a Claude builder before this, `--check` reads MISSING: run `claude-builder.mjs --model <model>` once more. Proven in a real Orca pane: with no choice the prompt shows; with `all` the pane opens straight to the input with the repo's server loaded; with `none` it opens with no repo server.
+
 ## 2026-11-15
 
 - **The builder can be Claude Code, running any Claude model, over the pane link.** Until now the pane link drove only a Pi builder. Now `orca-pi-connect` also drives Claude Code in the Orca pane, with whichever model you choose (Haiku, Sonnet, Opus, Fable), so a Claude plan with room to spare can do the building. Set it up once: `node .claude/skills/orca-pi-connect/claude-code/claude-builder.mjs --model <model>` writes the builder's settings and a Stop hook under `~/.claude/foreman-builder/`, outside every repo (the model never lands in a record). The hook writes one line per finished turn, as Pi's extension does, so the same watcher wakes the foreman. Trust the folder your job worktrees live in once, and every new worktree opens without asking. The repo profile's "Builder delivery" row says `pane link (pi)` or `pane link (claude-code)`. Proven in a real Orca pane: both handshake rounds, one line per turn (three tool calls, one line) and a resume. A Claude builder uses the same Claude limit as the foreman.
