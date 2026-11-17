@@ -112,7 +112,7 @@ Right before every send:
 
 ```bash
 orca terminal show --terminal <handle> --json    # worktreePath, branch, tabId, incarnationId unchanged since binding
-SEEN=$(grep -c "session=$SID" "$LOG" 2>/dev/null || echo 0)
+SEEN=$(node "$WATCH" --session "$SID" --count --log "$LOG")   # never `grep -c … || echo 0`: on a log with no line for this session grep prints 0 AND exits 1, so the fallback adds a second 0 and the waiter exits 3
 ```
 
 If anything moved, go back to §1. Count only the bound session's lines, because the log is global.
