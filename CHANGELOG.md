@@ -2,6 +2,12 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-17
+
+- **An autonomous run clears blockers itself, within its budget.** A night shift was lost because CI would not start (the Actions budget had run out) and nothing was allowed to fix it. Now a blocker in the environment (CI that won't start, a service down, a quota, a key's credit, a missing tool) is the run's to clear: it names the cause with evidence, tries free and reversible fixes, then, when the goal names a cap, the smallest paid step (raising the Actions budget, counted against the cap), and stops only after two tries or 45 minutes. Each fix is recorded with its cost and undone before the run ends (in a night shift a raised budget stays for the shift and its undo is owed to the owner in the morning). Payment methods, cards, plans, credentials, anything irreversible and anything that makes a gate easier to pass stay the owner's. The repo profile has a new "Blocker fixes" row; `/f-setup` adds it.
+- **A question with no clear recommendation gets a cold second opinion** from the other model family before it stops the run; the run takes the pick only when it stays inside the board's entry, and marks it for the owner's review.
+- **The night shift checks before the first job** that CI can start and the month's CI minutes fit the shift, that the paid keys and seats answer and that the machine is ready, and tells the owner the shortfall while they are still there. The minutes check needs `gh auth refresh -h github.com -s user` once.
+
 ## 2026-11-16
 
 - **A Claude Code builder no longer stops at "New MCP server found".** A repo with a `.mcp.json` made Claude Code ask about its servers in every new folder, and each job's worktree is new, so the builder waited at that prompt and an unattended run would have lost hours. `claude-builder.mjs --mcp all`, the default, now loads the repo's servers without asking; `--mcp none` loads none. If you set up a Claude builder before this, `--check` reads MISSING: run `claude-builder.mjs --model <model>` once more. Proven in a real Orca pane: with no choice the prompt shows; with `all` the pane opens straight to the input with the repo's server loaded; with `none` it opens with no repo server.

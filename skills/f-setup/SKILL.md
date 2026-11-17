@@ -93,6 +93,7 @@ Write `foreman/REPO-PROFILE-<product>.md` from `foreman/method/templates/REPO-PR
 | Gates and test runner | `package.json` scripts (`test`, `lint`, `typecheck`, `build`), `pyproject.toml`/`pytest.ini`/`setup.cfg`, `go.mod`, `Cargo.toml`, `Makefile` targets, CI workflow files (`.github/workflows/*`: the commands CI runs are the gates) |
 | Dirty-file allowlist | after the dependency install the gates need, `git status --porcelain` in a fresh worktree: the files that show up and are never staged (an untracked lockfile, say); else `none` |
 | CI runner shape | the CI workflow's `runs-on` and install steps (system packages it adds); else `not recorded` |
+| Blocker fixes | the template's default: `pages` the budget page of the account that pays for the repo's Actions (`gh repo view --json owner,isInOrganization`: the personal page, or the organization's), `fallbacks` `none` |
 | Paid keys to strip | key **names** in `.env`, `.env.example`, the code's environment reads (`process.env.X`, `os.environ["X"]`) that look like provider keys (`*_API_KEY`, `*_TOKEN`) |
 | Database change paths | `migrations/`, `db/`, `alembic/`, `prisma/`, `supabase/migrations/` |
 | Disposable databases | `docker-compose*.yml` services and ports |
