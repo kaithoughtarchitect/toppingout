@@ -35,6 +35,8 @@ jobs:
         run: node skills/agent-council/scripts/agent-council.mjs self-test
       - name: Comply tests
         run: node skills/f-comply/comply.test.mjs
+      - name: Plan-check dispatcher tests
+        run: node skills/f-plancheck/plancheck-dispatch.test.mjs
       - name: Loose-ends lens tests
         run: node skills/f-inspect/loose-ends/loose-ends.test.mjs
       - name: Board renderer tests

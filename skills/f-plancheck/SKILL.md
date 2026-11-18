@@ -185,12 +185,44 @@ codex seat, which is why the reason lives on this page and not only in a work re
 node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment {scratch}/assignment.md --seats {scratch}/seats.json --out {scratch} --cwd <repo-root>
 ```
 
+**OpenRouter seats run in a pi folder of their own.** Set `PI_CODING_AGENT_DIR` to the
+absolute path of a plan-check folder (for example `foreman/plancheck-pi-agent/`; git-ignore
+its `auth.json`, `models-store.json` and `bin/`), never the owner's `~/.pi`. The folder holds:
+
+- `models.json`, the output cap for every OpenRouter model the roster seats:
+  `{ "providers": { "openrouter": { "modelOverrides": { "<slug>": { "maxTokens": 65536 } } } } }`.
+  Without it pi asks for the model's full output size on every call (942,756 tokens for
+  `google/gemini-4-carbon`), and OpenRouter refuses any call the key can't cover in full:
+  `402 You requested up to 942756 tokens, but can only afford 695816`.
+- `settings.json`, when the seats need longer than pi's own HTTP limits:
+  `{ "httpIdleTimeoutMs": <ms>, "retry": { "enabled": true, "provider": { "timeoutMs": <ms> } } }`.
+
+At the start of each run the dispatcher refreshes that folder's model catalog once
+(`pi update --models`: a few seconds, no cost). A failed refresh is said
+(`PLANCHECK_PI_CATALOG not refreshed: …`) and the run carries on with the cached list. With
+`PI_CODING_AGENT_DIR` unset it does not refresh. Then each OpenRouter seat's preflight runs
+`pi --list-models <slug>` and **fails the seat** when the model is not in the catalog (pi
+would run it as a "custom model id" on guessed settings: on 2026-11-18 such a seat ran 90
+minutes, billed, and returned nothing) or when its output cap is above 65,536 (the
+`models.json` line to add is in the reason).
+
+**Size `--timeout` from a measured read, not a guess.** Each attempt's `duration_ms` is in
+`dispatch.json`. Take the longest finished read of that seat on a plan of similar size, add
+half again, and keep at least 30 minutes. A seat with no finished read yet gets 60 minutes.
+
+**Before re-running a seat, say what it already cost.** `dispatch.json` records each
+OpenRouter seat's `spend_usd` (summed from pi's own usage events, killed attempts included)
+and the run's `openrouter_spend_usd`; the dispatcher prints `PLANCHECK_DISPATCH_SPEND $…`.
+Before any re-run of an omitted seat, the foreman tells the owner what that seat already
+spent and what the re-run may cost. Then it waits for the word, unless an autonomous run's
+cap covers both.
+
 | Door | Dispatch | Log |
 |---|---|---|
 | codex CLI | `codex exec -m <cliModel> -c model_reasoning_effort="high" --sandbox read-only --skip-git-repo-check -o {scratch}/read-codex-<model>.attempt<n>.last.md -` (assignment on stdin; codex streams its transcript to stderr and writes the final message to the per-attempt `-o` file, the winner is copied to `read-codex-<model>.last.md` and becomes the `.log`) | `read-codex-<model>.log` (+ `.last.md`) |
 | claude CLI | `claude -p --model <cliModel> --effort high --permission-mode plan --tools Read,Grep,Glob,Bash --disallowedTools Edit,Write,NotebookEdit --no-session-persistence --output-format text` (stdin; plan mode blocks writes, probed 2026-09-02) | `read-claude-<model>.log` |
 | grok CLI | `grok --prompt-file <assignment> --output-format json --cwd <repo> --permission-mode plan --disallowed-tools Edit,Write,MultiEdit,NotebookEdit --allow "Bash(<exact read-only command>)" … --reasoning-effort high --no-subagents -m <cliModel>`, plan mode supplies the built-in read-only shell set and blocks writes; the `--allow` rules (`GROK_READ_ONLY_ALLOW_RULES` in the dispatcher: node/npm version, codex/claude/grok/pi help+version, `grok models`, `pi --list-models:*`) admit the extra read-only commands a cold read needs; headless grok cancels the whole turn on any command outside that set, so an attempt counts only when `stopReason` is `end_turn` | `read-grok-<model>.log` (+ raw `read-grok-<model>.json`) |
-| OpenRouter | `pi -p --no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-mcp --no-approve --tools read,grep,find,ls --model openrouter/<slug> --thinking high @<assignment> "<one-line instruction>"`, pi's read-only tool allowlist (`--no-mcp` because pi 1.x keeps MCP tools through `--tools`); `OPENROUTER_API_KEY` inherited from the environment, never printed; `pi -p` prints only when the model finishes, so a long silence is not a hang | `read-openrouter-<sanitized slug>.log` |
+| OpenRouter | `pi -p --mode json --no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-mcp --no-approve --tools read,grep,find,ls --model openrouter/<slug> --thinking high @<assignment> "<one-line instruction>"`, pi's read-only tool allowlist (`--no-mcp` because pi 1.x keeps MCP tools through `--tools`); `OPENROUTER_API_KEY` inherited from the environment, never printed. `--mode json` streams pi's events as they happen; the seat's answer is the final assistant text, and the raw stream stays in the `.attempt<n>.log`. A seat killed at its timeout leaves `.attempt<n>.partial.md`, its thinking, tool calls and text so far, and its spend | `read-openrouter-<sanitized slug>.log` (+ `.attempt<n>.partial.md` when killed) |
 
 **2026-09-23, codex door lost `--ignore-user-config`.** A live cold read failed: the
 seat could reach the network but read nothing, refusing `blocked by policy`. Cause, proven
@@ -203,20 +235,22 @@ the other three**, a reader trusting a codex seat's independence should weigh th
 
 Log names: `read-<door>-<model>.log`, model lowercased with `/` and anything outside
 `[a-z0-9.-]` → `-`. The dispatcher preflights every seat (executable, `--version`, key
-presence for OpenRouter, `grok models`), runs all preflight-ok seats in parallel, retries a
-failed seat once, except a quota or rate-limit error, a timeout, or an output overflow,
+presence, catalog entry and output cap for OpenRouter, `grok models`), runs all preflight-ok seats in parallel, retries a
+failed seat once, except a quota or rate-limit error, a timeout, an output overflow, an
+OpenRouter 402, or pi running an unknown model as a custom id,
 which are surfaced and omitted at once (reason `usage limit: …`; a quota error is never
 silently retried), then omits it and names it, pointing at the per-attempt
 `.attempt<n>.log` / `.stderr.log` evidence; `dispatch.json` records `assignment_sha256`,
 per-seat argv (no secrets), preflight, attempts with `started_at`/`ended_at`, exit code,
-bytes, `log_bytes`, `shape_ok`, status. An attempt counts only when its text carries the
+bytes, `log_bytes`, `shape_ok`, `duration_ms`, status, and for OpenRouter seats `spend_usd`,
+`partial_log` and `pi_catalog`. An attempt counts only when its text carries the
 findings shape (a line-start `[SEVERITY]` marker plus a location payload, or a
 `no findings` line with no unread-refusal veto, a mention of either token in
 prose, or a bare token, does not count), a CLI that exits 0 with an
 error sentence is a failed attempt, not a seat. Stderr artefacts are secret-scrubbed; the
 receipt is written even when a seat's artefact write or an interrupt (`Ctrl-C`) cuts the run
-short. Stdout sentinels: `PLANCHECK_DISPATCH_ASSIGNMENT_SHA256=`, `PLANCHECK_SEAT
-…`, `PLANCHECK_DISPATCH_OK n/m` (≥1 ok), `PLANCHECK_DISPATCH_NONE 0/m` (exit 3),
+short. Stdout sentinels: `PLANCHECK_DISPATCH_ASSIGNMENT_SHA256=`, `PLANCHECK_PI_CATALOG …`, `PLANCHECK_SEAT
+…`, `PLANCHECK_DISPATCH_SPEND $…`, `PLANCHECK_DISPATCH_OK n/m` (≥1 ok), `PLANCHECK_DISPATCH_NONE 0/m` (exit 3),
 `PLANCHECK_DISPATCH_ERR` (exit 1, on stderr), `PLANCHECK_DISPATCH_INTERRUPTED` (exit 130);
 the picker warns `PLANCHECK_PICK_WARN …` on stderr when it cannot open a browser (open the
 printed URL by hand). Root owns the shell. A run that lost seats down to one is a

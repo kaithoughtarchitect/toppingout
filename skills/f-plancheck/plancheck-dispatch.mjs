@@ -170,6 +170,126 @@ export function detectUsageLimit(stdoutText, stderrText) {
   return null;
 }
 
+// An OpenRouter seat may ask for at most this many output tokens per call.
+// pi asks for the model's full output size by default (942,756 for
+// google/gemini-4-carbon), and OpenRouter refuses a call it can't cover in
+// full up front: 402 "You requested up to 942756 tokens, but can only afford
+// 695816". The cap goes in the plan-check folder's models.json
+// (providers.openrouter.modelOverrides["<slug>"].maxTokens); the preflight
+// refuses a seat that would ask for more. 65.5K in `pi --list-models` is
+// 65,536, so the compare allows for the one-decimal rounding.
+export const MAX_SEAT_OUTPUT_TOKENS = 65_536;
+const PI_CATALOG_TIMEOUT_MS = 60_000;
+// pi's warning when a slug is not in its catalog: it then runs the model on
+// guessed settings (seen 2026-11-18 on google/gemini-4-carbon, 90 minutes, 0 bytes).
+export const PI_CUSTOM_MODEL_ID_RE = /not found for provider "openrouter"\. Using custom model id/;
+
+/** Pure. "65.5K" -> 65500, "1.0M" -> 1000000, "16384" -> 16384, else null. */
+export function parseTokenCount(cell) {
+  const m = /^(\d+(?:\.\d+)?)([KkMm]?)$/.exec(String(cell || "").trim());
+  if (!m) return null;
+  const mult = m[2] === "" ? 1 : /k/i.test(m[2]) ? 1_000 : 1_000_000;
+  return Math.round(Number(m[1]) * mult);
+}
+
+/**
+ * Pure. Finds the exact `openrouter <slug>` row in `pi --list-models <slug>`
+ * output (a fuzzy search, which also lists `<slug>:batch` and exits 0 when
+ * nothing matches). Returns { found, maxOut } (maxOut null when unreadable).
+ */
+export function findPiModelRow(listText, slug) {
+  for (const line of String(listText || "").split(/\r?\n/)) {
+    const cols = line.trim().split(/\s+/);
+    if (cols[0] === "openrouter" && cols[1] === slug) return { found: true, maxOut: parseTokenCount(cols[3]) };
+  }
+  return { found: false, maxOut: null };
+}
+
+/** Pure. Whether a `pi --list-models` max-out reading is over the seat cap (one-decimal rounding allowed). */
+export function overSeatOutputCap(maxOut) {
+  return maxOut != null && maxOut > MAX_SEAT_OUTPUT_TOKENS + 100;
+}
+
+function textOfPiMessage(message) {
+  if (!message || !Array.isArray(message.content)) return "";
+  return message.content.filter((c) => c && c.type === "text" && typeof c.text === "string").map((c) => c.text).join("");
+}
+
+function toolCallLine(call) {
+  let args = "";
+  try { args = JSON.stringify(call.arguments || {}); } catch { args = ""; }
+  return `> ${call.name || "tool"} ${args.length > 200 ? `${args.slice(0, 200)}…` : args}`;
+}
+
+/** The trace of one assistant message: thinking, tool calls and text, in order. */
+function traceOfPiMessage(message) {
+  if (!message || !Array.isArray(message.content)) return [];
+  const out = [];
+  for (const c of message.content) {
+    if (!c) continue;
+    if (c.type === "thinking" && typeof c.thinking === "string" && c.thinking.trim()) out.push(`(thinking) ${c.thinking.trim()}`);
+    else if (c.type === "toolCall") out.push(toolCallLine(c));
+    else if (c.type === "text" && typeof c.text === "string" && c.text.trim()) out.push(c.text);
+  }
+  return out;
+}
+
+/**
+ * Pure. Reads the JSONL event stream of `pi --mode json` (an OpenRouter seat).
+ * Returns:
+ * - finalText: the text of the last finished assistant message (stopReason
+ *   "stop"), or null;
+ * - partialText: the seat's trace so far (its thinking, the tool calls it
+ *   made and its text, finished messages plus one still streaming), for a
+ *   seat killed at its timeout; tool results (the files it read) are left out;
+ * - spendUsd: the summed `usage.cost.total` of the assistant messages,
+ *   including the latest running total of one still streaming;
+ * - errorMessage: the last assistant error (a 402, say), or null.
+ * A line that is not JSON (a cut-off last line) is skipped.
+ */
+export function parsePiJsonEvents(text) {
+  let finalText = null;
+  let errorMessage = null;
+  let spend = 0;
+  const done = [];
+  // An assistant message still streaming: its blocks by contentIndex, and its running cost.
+  let open = null;
+  for (const raw of String(text || "").split("\n")) {
+    const line = raw.replace(/\r$/, "");
+    if (!line.trim()) continue;
+    let e;
+    try { e = JSON.parse(line); } catch { continue; }
+    if (e.type === "message_start" && e.message && e.message.role === "assistant") {
+      open = { blocks: [], cost: 0 };
+    } else if (e.type === "message_update" && open) {
+      const ev = e.assistantMessageEvent || {};
+      const i = Number.isInteger(ev.contentIndex) ? ev.contentIndex : open.blocks.length;
+      if (ev.type === "text_delta" && typeof ev.delta === "string") open.blocks[i] = (open.blocks[i] || "") + ev.delta;
+      else if (ev.type === "thinking_delta" && typeof ev.delta === "string") open.blocks[i] = (open.blocks[i] || "(thinking) ") + ev.delta;
+      else if (ev.type === "toolcall_end" && ev.toolCall) open.blocks[i] = toolCallLine(ev.toolCall);
+      const c = e.usage && e.usage.cost && Number(e.usage.cost.total);
+      if (Number.isFinite(c)) open.cost = c;
+    } else if (e.type === "message_end" && e.message && e.message.role === "assistant") {
+      const m = e.message;
+      const c = m.usage && m.usage.cost && Number(m.usage.cost.total);
+      spend += Number.isFinite(c) ? c : (open ? open.cost : 0);
+      done.push(...traceOfPiMessage(m));
+      const t = textOfPiMessage(m);
+      if (m.stopReason === "stop" && t.trim()) finalText = t;
+      if (m.stopReason === "error" && m.errorMessage) errorMessage = String(m.errorMessage);
+      open = null;
+    }
+  }
+  if (open) spend += open.cost;
+  const parts = open ? [...done, ...open.blocks.filter((b) => typeof b === "string" && b.trim())] : done;
+  return {
+    finalText,
+    partialText: parts.join("\n\n"),
+    spendUsd: Math.round(spend * 1e6) / 1e6,
+    errorMessage,
+  };
+}
+
 /** Pure. No I/O. Lowercase; every char outside [a-z0-9.-] becomes "-". */
 export function sanitizeModel(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9.-]/g, "-");
@@ -330,7 +450,10 @@ export function buildArgvForSeat(seat, ctx) {
       ];
     case "openrouter":
       return [
-        "-p", "--no-session", "--no-context-files", "--no-extensions", "--no-skills",
+        // --mode json streams events as they happen (text mode prints only at
+        // the end), so a seat killed at its timeout still leaves its text so
+        // far and what it cost; dispatchSeat reads the final text out of it.
+        "-p", "--mode", "json", "--no-session", "--no-context-files", "--no-extensions", "--no-skills",
         "--no-prompt-templates", "--no-mcp", "--no-approve", "--tools", "read,grep,find,ls",
         "--model", `openrouter/${seat.model}`, "--thinking", "high", `@${assignmentPathArg}`,
         "Execute the attached cold-seat f-plancheck assignment exactly as written. Output findings only, in the shape it specifies.",
@@ -497,6 +620,34 @@ function appendStderrHint(reason, stderrBuffer) {
 }
 
 /**
+ * Runs `pi update --models` once for the run, when PI_CODING_AGENT_DIR names
+ * a plan-check folder of its own. Never throws; returns the one line the
+ * receipt and stdout carry ("refreshed", "not refreshed: <why>").
+ */
+async function refreshPiCatalog(env, cwd) {
+  if (!env.PI_CODING_AGENT_DIR) {
+    return "not refreshed: PI_CODING_AGENT_DIR is not set (the owner's own ~/.pi is never written); using pi's cached list";
+  }
+  const invocation = resolveCli("pi", env);
+  if (!invocation.command) return `not refreshed: ${invocation.reason || "pi not found"}`;
+  const r = await spawnCapture({
+    command: invocation.command,
+    args: [...invocation.argsPrefix, "update", "--models"],
+    cwd,
+    env,
+    shell: invocation.shell,
+    input: null,
+    timeoutMs: PI_CATALOG_TIMEOUT_MS,
+    maxBytes: PREFLIGHT_MAX_BYTES,
+  });
+  if (r.spawnError) return `not refreshed: spawn error: ${r.spawnError}; using pi's cached list`;
+  if (r.timedOut || r.exitCode !== 0) {
+    return appendStderrHint(`not refreshed: pi update --models exit ${r.exitCode}, timed_out=${r.timedOut}; using pi's cached list`, r.stderr);
+  }
+  return "refreshed";
+}
+
+/**
  * Bounded per-seat preflight. Returns { ok, version?, reason?, invocation }.
  * `invocation` is carried for the dispatch step, never serialized as-is.
  */
@@ -512,9 +663,9 @@ async function runPreflight(seat, ctx) {
 
   // Both preflight probes below share every spawnCapture option except the
   // trailing CLI arg — capture invocation/ctx once and vary just that.
-  const probe = (extraArg) => spawnCapture({
+  const probe = (...extraArgs) => spawnCapture({
     command: invocation.command,
-    args: [...invocation.argsPrefix, extraArg],
+    args: [...invocation.argsPrefix, ...extraArgs],
     cwd: ctx.cwd,
     env: ctx.env,
     shell: invocation.shell,
@@ -536,6 +687,22 @@ async function runPreflight(seat, ctx) {
 
   if (seat.doorSlug === "openrouter") {
     if (!ctx.env.OPENROUTER_API_KEY) return { ok: false, reason: "OPENROUTER_API_KEY missing", invocation, version };
+    // The model must be in pi's catalog (main() refreshed it first), or pi
+    // runs it as a "custom model id" on guessed settings; and its output cap
+    // must be set, or OpenRouter refuses every call with a 402.
+    const listResult = await probe("--list-models", seat.model);
+    if (listResult.spawnError) return { ok: false, reason: `pi --list-models spawn error: ${listResult.spawnError}`, invocation, version };
+    if (listResult.timedOut || listResult.exitCode !== 0) {
+      return { ok: false, reason: appendStderrHint(`pi --list-models failed (exit ${listResult.exitCode}, timed_out=${listResult.timedOut})`, listResult.stderr), invocation, version };
+    }
+    const row = findPiModelRow(listResult.stdout.toString("utf8"), seat.model);
+    const agentDir = ctx.env.PI_CODING_AGENT_DIR || "~/.pi/agent";
+    if (!row.found) {
+      return { ok: false, reason: `model ${seat.model} is not in pi's model catalog (${agentDir}), even after the refresh: pi would run it as a custom model id on guessed settings`, invocation, version };
+    }
+    if (overSeatOutputCap(row.maxOut)) {
+      return { ok: false, reason: `model ${seat.model} would ask for ${row.maxOut} output tokens a call (OpenRouter refuses with 402 unless the key can cover them all): set providers.openrouter.modelOverrides["${seat.model}"].maxTokens to ${MAX_SEAT_OUTPUT_TOKENS} in ${agentDir}/models.json`, invocation, version };
+    }
   }
 
   if (seat.doorSlug === "grok") {
@@ -615,6 +782,10 @@ function computeLogText(seat, result, lastMessageText) {
     text = parsedText != null ? parsedText : result.stdout.toString("utf8");
   } else if (seat.doorSlug === "codex") {
     text = lastMessageText != null ? lastMessageText : result.stdout.toString("utf8");
+  } else if (seat.doorSlug === "openrouter") {
+    // pi --mode json: the final assistant text, never the raw event stream
+    // (which also holds every file the seat read).
+    text = parsePiJsonEvents(result.stdout.toString("utf8")).finalText || "";
   } else {
     text = result.stdout.toString("utf8");
   }
@@ -801,6 +972,22 @@ async function dispatchSeat(seat, ctx) {
       attemptOk = true;
     }
 
+    // OpenRouter (pi --mode json): the stream always has bytes, so success
+    // needs a finished final text; the attempt's spend and, on failure, its
+    // text so far are kept.
+    let pi = null;
+    let piTerminal = null;
+    if (seat.doorSlug === "openrouter") {
+      pi = parsePiJsonEvents(result.stdout.toString("utf8"));
+      if (attemptOk && !(pi.finalText && pi.finalText.trim())) attemptOk = false;
+      if (PI_CUSTOM_MODEL_ID_RE.test(result.stderr.toString("utf8"))) {
+        attemptOk = false;
+        piTerminal = `pi ran ${seat.model} as a custom model id (not in its catalog)`;
+      } else if (pi.errorMessage && /\b402\b|can only afford/i.test(pi.errorMessage)) {
+        piTerminal = `OpenRouter refused the call: ${pi.errorMessage}`;
+      }
+    }
+
     // INC: content floor — transport success still has to look like findings
     // (line-start [SEVERITY] plus payload, or a "no findings" line without
     // unread-refusal words); a transport-clean refusal or chatter does not count.
@@ -814,7 +1001,10 @@ async function dispatchSeat(seat, ctx) {
     // ones — a quota message mid-answer makes an otherwise "successful"
     // transport a failed, terminal attempt (the seat hit its limit and the
     // text is a refusal, not real findings).
-    const usageLine = detectUsageLimit(result.stdout.toString("utf8"), result.stderr.toString("utf8"));
+    // An OpenRouter seat's raw stream holds every file it read (and its
+    // thinking), so it is judged on its final text and errors instead.
+    const usageStdout = pi ? [pi.finalText || "", pi.errorMessage ? `error: ${pi.errorMessage}` : ""].join("\n") : result.stdout.toString("utf8");
+    const usageLine = detectUsageLimit(usageStdout, result.stderr.toString("utf8"));
     if (usageLine) attemptOk = false;
 
     success = attemptOk;
@@ -841,11 +1031,22 @@ async function dispatchSeat(seat, ctx) {
     if (result.stdinError) attemptRecord.stdin_error = scrubSecrets(result.stdinError);
     if (stopReason != null) attemptRecord.stop_reason = stopReason;
     if (shapeOk != null) attemptRecord.shape_ok = shapeOk;
+    attemptRecord.duration_ms = new Date(result.endedAt).getTime() - new Date(result.startedAt).getTime();
+    if (pi) {
+      attemptRecord.spend_usd = pi.spendUsd;
+      if (pi.errorMessage) attemptRecord.pi_error = scrubSecrets(pi.errorMessage).slice(0, 300);
+      if (!success && pi.partialText.trim()) {
+        const partialName = `${base}.attempt${attemptNum}.partial.md`;
+        if (writeAttemptArtifact(ctx.outDir, partialName, pi.partialText, artifactErrors)) attemptRecord.partial_log = partialName;
+      }
+    }
     if (artifactErrors.length) attemptRecord.artifact_error = scrubSecrets(artifactErrors.join("; "));
     seat.attempts.push(attemptRecord);
 
     if (!success) {
-      if (usageLine) {
+      if (piTerminal) {
+        terminalReason = `${scrubSecrets(piTerminal).slice(0, 300)} — not retried`;
+      } else if (usageLine) {
         terminalReason = `usage limit: ${scrubSecrets(usageLine)}`;
       } else if (result.timedOut) {
         terminalReason = "timed out — not retried (a second attempt against a genuinely slow read or a runaway stream is waste)";
@@ -855,9 +1056,14 @@ async function dispatchSeat(seat, ctx) {
     }
   }
 
+  if (seat.doorSlug === "openrouter") {
+    seat.spend_usd = Math.round(seat.attempts.reduce((sum, a) => sum + (a.spend_usd || 0), 0) * 1e6) / 1e6;
+  }
+
   if (!success) {
     seat.status = "omitted";
     const last = seat.attempts[seat.attempts.length - 1];
+    if (last.partial_log) seat.partial_log = last.partial_log;
     if (last.stderr_log) seat.stderr_log = last.stderr_log;
     if (terminalReason) seat.reason = terminalReason;
     else if (lastResult && lastResult.spawnError) seat.reason = `spawn error: ${lastResult.spawnError}`;
@@ -865,6 +1071,8 @@ async function dispatchSeat(seat, ctx) {
     else if (seat.doorSlug === "grok" && lastGrokEmptyText) seat.reason = "grok returned no text";
     else if (seat.doorSlug === "grok" && lastGrokStopReason) seat.reason = `grok stopReason=${lastGrokStopReason}`;
     else if (last.shape_ok === false) seat.reason = "output lacks the findings shape";
+    else if (last.pi_error) seat.reason = `pi error: ${last.pi_error}`;
+    else if (seat.doorSlug === "openrouter" && last.exit_code === 0 && !last.timed_out) seat.reason = "pi finished with no final text";
     else if (last.timed_out) seat.reason = `timed out after ${seat.attempts.length} attempt(s)`;
     else if (last.output_limited) seat.reason = "output limit exceeded";
     else if (last.bytes === 0) seat.reason = `empty stdout (exit ${last.exit_code})`;
@@ -916,12 +1124,17 @@ async function dispatchSeat(seat, ctx) {
     } else {
       fs.writeFileSync(path.join(ctx.outDir, seat.log), scrubbedArtifact(lastResult.stdout));
     }
+  } else if (seat.doorSlug === "openrouter") {
+    // Success required a non-empty final text, so this is the seat's answer;
+    // the raw event stream stays in `<base>.attempt<N>.log`.
+    fs.writeFileSync(path.join(ctx.outDir, seat.log), scrubbedArtifact(parsePiJsonEvents(lastResult.stdout.toString("utf8")).finalText), "utf8");
   } else {
     fs.writeFileSync(path.join(ctx.outDir, seat.log), scrubbedArtifact(lastResult.stdout));
   }
 }
 
-function buildReceipt({ assignmentArg, assignmentSha256, cwd, startedAt, endedAt, seats }) {
+function buildReceipt({ assignmentArg, assignmentSha256, cwd, startedAt, endedAt, seats, piCatalog }) {
+  const spent = seats.filter((s) => s.spend_usd != null);
   return {
     version: 1,
     assignment: assignmentArg,
@@ -929,6 +1142,8 @@ function buildReceipt({ assignmentArg, assignmentSha256, cwd, startedAt, endedAt
     cwd,
     started_at: startedAt,
     ended_at: endedAt,
+    ...(piCatalog ? { pi_catalog: scrubSecrets(piCatalog) } : {}),
+    ...(spent.length ? { openrouter_spend_usd: Math.round(spent.reduce((sum, s) => sum + s.spend_usd, 0) * 1e6) / 1e6 } : {}),
     seats: seats.map((seat) => {
       const preflight = { ok: !!(seat.preflight && seat.preflight.ok) };
       if (seat.preflight && seat.preflight.version) preflight.version = scrubSecrets(seat.preflight.version);
@@ -964,6 +1179,8 @@ function buildReceipt({ assignmentArg, assignmentSha256, cwd, startedAt, endedAt
       if (seat.reason) entry.reason = scrubSecrets(seat.reason);
       if (seat.raw_unparsed) entry.raw_unparsed = true;
       if (seat.log_bytes != null) entry.log_bytes = seat.log_bytes;
+      if (seat.spend_usd != null) entry.spend_usd = seat.spend_usd;
+      if (seat.partial_log) entry.partial_log = seat.partial_log;
       if (seat.canonical_copy_error) entry.canonical_copy_error = scrubSecrets(seat.canonical_copy_error);
       if (seat.canonical_stderr_error) entry.canonical_stderr_error = scrubSecrets(seat.canonical_stderr_error);
       return entry;
@@ -1023,6 +1240,7 @@ async function main() {
 
   const env = process.env;
   const startedAt = new Date().toISOString();
+  let piCatalog = null;
 
   // H3: `dispatch.json` must survive a throw or an interrupt, not just the
   // clean-exit path. `writeReceiptOnce` is the single place that writes it;
@@ -1033,7 +1251,7 @@ async function main() {
     if (receiptWritten) return;
     receiptWritten = true;
     const endedAt = new Date().toISOString();
-    writeReceipt(outDir, { assignmentArg, assignmentSha256, cwd, startedAt, endedAt, seats: seatsSnapshot });
+    writeReceipt(outDir, { assignmentArg, assignmentSha256, cwd, startedAt, endedAt, seats: seatsSnapshot, piCatalog });
   }
   function handleInterrupt(signal) {
     // S3: kill every in-flight child FIRST — a programmatic SIGTERM to this
@@ -1062,6 +1280,16 @@ async function main() {
   }
   process.once("SIGINT", () => handleInterrupt("SIGINT"));
   process.once("SIGTERM", () => handleInterrupt("SIGTERM"));
+
+  // OpenRouter seats: refresh pi's model catalog once, before any preflight,
+  // so models released since the last run are known (Carbon was not). Only
+  // in a plan-check folder of its own (PI_CODING_AGENT_DIR): the owner's own
+  // ~/.pi is never written. A failed refresh is said and the run carries on
+  // with the list it has; each seat's preflight still refuses a missing model.
+  if (seats.some((s) => s.doorSlug === "openrouter")) {
+    piCatalog = await refreshPiCatalog(env, cwd);
+    console.log(`PLANCHECK_PI_CATALOG ${piCatalog}`);
+  }
 
   await Promise.all(seats.map(async (seat) => {
     seat.preflight = await runPreflight(seat, { env, cwd });
@@ -1142,9 +1370,12 @@ async function main() {
     // non-ok seat still has diagnostic evidence (the last attempt's raw
     // stdout capture), so fall back to that instead of `seat.log`, which
     // for a non-ok seat names a file that was never written.
-    const logLabel = seat.status === "ok" ? seat.log : ((last && last.stdout_log) || "—");
-    console.log(`PLANCHECK_SEAT ${seat.id} ${seat.doorSlug} ${seat.model} → ${seat.status} (${ms} ms, ${bytes} B) ${logLabel}${reasonSuffix}`);
+    const logLabel = seat.status === "ok" ? seat.log : ((last && (last.partial_log || last.stdout_log)) || "—");
+    const spendLabel = seat.spend_usd != null ? `, spent $${seat.spend_usd.toFixed(4)}` : "";
+    console.log(`PLANCHECK_SEAT ${seat.id} ${seat.doorSlug} ${seat.model} → ${seat.status} (${ms} ms, ${bytes} B${spendLabel}) ${logLabel}${reasonSuffix}`);
   }
+  const totalSpend = seats.reduce((sum, s) => sum + (s.spend_usd || 0), 0);
+  if (seats.some((s) => s.spend_usd != null)) console.log(`PLANCHECK_DISPATCH_SPEND $${totalSpend.toFixed(4)} (OpenRouter seats, from pi's own usage)`);
 
   const okCount = seats.filter((s) => s.status === "ok").length;
   if (okCount === 0) {
