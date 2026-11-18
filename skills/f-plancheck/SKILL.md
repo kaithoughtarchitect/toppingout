@@ -68,6 +68,11 @@ Anthropic · excluded: Anthropic`.
 
 ## 2. Pick the seats (Law A: every attended run has the owner's pick: the standing choice, or the picker)
 
+**A good default, when the owner asks for one:** `sol` (codex CLI, $0) · `gemini-hydrogen` ·
+`qwen4-max` (both OpenRouter, metered), one seat per vendor. On one plan check (2026-11-18,
+one assignment) Sol took 6 minutes with 34 findings, Hydrogen 6 minutes with 15 (8 the others
+missed) and Qwen4 Max 15 minutes with 25 (8 new); Gemini 4 Carbon returned nothing twice.
+
 **The owner's standing choice comes first.** If the repo profile's **Plan check seats** row, or the job's opener, names the seats (e.g. "codex, the $0 seat"), that is the owner's pick. **Before dispatch, apply §1's exclusions and the distinct-vendor rule to it:** drop any seat from the host's or the Player's vendor family, keep one seat per vendor, and echo what was dropped (a saved seat can become self-review when the host or the plan's author changes). Write `{scratch}/seats.json` as `{"seats":[{"id":"<roster id>","door":"<roster door>"}]}` from the row's **roster ids**, echo each seat as the picker path does, and dispatch without the picker. If no seat remains, an attended run opens the picker for this run (the row stays as it is) and an unattended run uses the resolver. Otherwise (no standing choice yet), the attended run opens the one-shot HTML picker.
 - **The first pick becomes the standing choice.** After the owner's first pick in this repo (no Plan check seats row yet), write it into the repo profile's **Plan check seats** row (the roster ids, the date, "the owner's pick in the picker"; add the row if the profile predates it) and **leave it uncommitted**: the foreman commits it with the job's records (`METHOD.md` §10 step 9); outside a job (a blueprint read), whoever ran the read commits it by explicit path with the blueprint's records, subject only. Tell the owner in one line: "Plan check seats saved as <seats>; say 'change the plan check seats' to pick again."
 - **To change it later:** the owner says "change the plan check seats" (or runs `/f-plancheck` and asks for the picker to change them): open the picker, and the new pick **replaces** the row, with its date.
@@ -333,7 +338,7 @@ One block per unique defect, stable id, **actionable findings first**:
 ```markdown
 ### F3 · critical · mechanism
 **Where**      plan §4c, line 128
-**Seats**      sol · dsflash
+**Seats**      sol · gemini-hydrogen
 **Defect**     Claims the `claude` CLI has no `--effort` flag.
 **Verified**   `claude --help` (2.1.222) lists `--effort <level>`;
                `agent-council.mjs:827` already passes it.

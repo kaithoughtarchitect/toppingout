@@ -163,7 +163,7 @@
       "mods": ["text", "image", "video", "file", "audio"],
       "released": "2026-10-13",
       "blurb": "Google's flagship reasoning model for complex software engineering and autonomous multi-step agents.",
-      "note": "OpenRouter id google/gemini-4-argon. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-argon --thinking high."
+      "note": "OpenRouter id google/gemini-4-argon. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-argon --thinking high. Not a standing seat from 2026-11-18: Hydrogen is newer and cheaper; kept for history."
     },
     {
       "id": "gemini-carbon",
@@ -180,7 +180,7 @@
       "priceOut": 10.0,
       "released": "2026-11-10",
       "blurb": "Google's Gemini 4 Carbon, newer than Argon at the same price. Added 2026-11-18.",
-      "note": "OpenRouter id google/gemini-4-carbon. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-carbon --thinking high. Shares vendor Google with gemini and gemini-hydrogen — the picker seats one of them."
+      "note": "OpenRouter id google/gemini-4-carbon. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-carbon --thinking high. Shares vendor Google with gemini and gemini-hydrogen — the picker seats one of them. Not a standing seat from 2026-11-18: on one plan check it returned 0 bytes twice (killed at 90 min, then stopped at 25 min) while Hydrogen answered in 6 min; kept for history."
     },
     {
       "id": "gemini-hydrogen",

@@ -106,7 +106,7 @@ Write `foreman/REPO-PROFILE-<product>.md` from `foreman/method/templates/REPO-PR
 | Runs on | `uname -s` (or the platform this session reports): Windows, macOS or Linux; on Linux with no desktop session (`$DISPLAY` and `$WAYLAND_DISPLAY` empty) and Orca running as a service (`systemctl --user is-active orca-serve`), `a Linux server through Orca (SETUP.md §8b)` |
 | Framework check | `/deep` when the add-on went in (Step 1c); otherwise `none`, or a skill the owner names that checks plans against their framework |
 
-**Then ask the owner, in one batch**, only what's left; typically: the product name (for the file name), ticket mode (`local` unless they use a tracker), board publish mode (`local` or `artifact`), the plan check seats (or leave to the first plan check), the three budgets (repair work orders, default 3 per task; wall time; foreman tokens), the builders' names for Step 3, and anything the reading left ambiguous (two candidate gate commands, say). Offer the found answer as the default in each question.
+**Then ask the owner, in one batch**, only what's left; typically: the product name (for the file name), ticket mode (`local` unless they use a tracker), board publish mode (`local` or `artifact`), the plan check seats (suggest `sol · gemini-hydrogen · qwen4-max`, or leave to the first plan check), the three budgets (repair work orders, default 3 per task; wall time; foreman tokens), the builders' names for Step 3, and anything the reading left ambiguous (two candidate gate commands, say). Offer the found answer as the default in each question.
 
 ## Step 3 · The names files
 
