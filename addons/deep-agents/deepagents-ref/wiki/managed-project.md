@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA project layout, agent.py, instructions.md, define_deep_agent, agent factory, per-run configuration, shared local package, project structure, system prompt, Context Hub, managed context, skills folder, tools folder, middleware folder, interrupt_on, agent name, assistant_id, .env, hatchling
 read_when: Read when unsure where a file goes in an MDA project, what define_deep_agent accepts, or when the name-is-required error appears.
-updated: 2026-11-09
-sources_hash: c579523c2e36
+updated: 2026-11-18
+sources_hash: b2c4b4b1537b
 ---
 
 # MDA project structure, agent definition and instructions
@@ -29,6 +29,8 @@ my-agent/
 ├── sandbox/__init__.py   # managed config, exports `sandbox` (+ optional setup.sh)
 ├── identity.py           # managed config, exports `identity`
 ├── memory.py             # managed config, exports `memory`
+├── browser.py            # managed config, exports `browser` (0.10.0; root file only)
+├── AGENTS.md             # scaffolded by mda init for coding agents (0.10.2); left out of build and deploy
 ├── pyproject.toml        # deps; [tool.mda] python-version
 ├── .env                  # local + deploy secrets (never archived)
 └── evals/                # Harbor workspace (harbor-job.json, <task>/...)
@@ -40,12 +42,13 @@ Three classes of path:
 | - | - | - |
 | Managed context | `instructions.md`, `skills/` | Synced to Context Hub on deploy; read-only to the agent |
 | Application code | `tools/*` (except `mcp.py`), `middleware/`, any other module | Ordinary imports from `agent.py`; ships in build, not in Context Hub |
-| Managed configuration | `identity.py`, `memory.py`, `channels/<name>.py`, `tools/mcp.py`, `schedules/<name>.py`, `sandbox/__init__.py` | Discovered by path; presence enables the capability |
+| Managed configuration | `identity.py`, `memory.py`, `channels/<name>.py`, `tools/mcp.py`, `schedules/<name>.py`, `sandbox/__init__.py`, `browser.py` | Discovered by path; presence enables the capability |
 
 Rules:
 - One agent entry per project. Export name must be exactly `agent`; the `define_deep_agent(...)` call must be written in `agent.py` itself (re-export fails with a misleading "`name` is required" error). Since 0.9.0 `agent` may also be a sync or async factory function returning `define_deep_agent(...)` per run ([[managed]]); `name` must still be an inline string there.
 - For `channels/` and `schedules/` only **direct children** are declarations; nested modules are not. File stem = channel/schedule name.
-- Each managed module exports a fixed variable: `agent`, `mcp`, `channel`, `schedule`, `sandbox`, `identity`, `memory`.
+- Each managed module exports a fixed variable: `agent`, `mcp`, `channel`, `schedule`, `sandbox`, `identity`, `memory`, `browser` (`browser.py` is the browser-use page's file, not listed on the project-structure page; see [[managed-capabilities]]).
+- `connectors/` is gone: since 0.10.0 `mda` fails the build when a module under it still exports `connector`. Declare MCP servers in `tools/mcp.py`.
 - `src/` layout is fine; keep packages where they are and import them from root `agent.py`.
 - Evals-generated files live under `.mda/evals/` and are excluded from the deployed build.
 - The build copies only the project directory. Code from a sibling directory must be its own package (`pyproject.toml` with `[project]` and `[build-system]`) added as a local dependency, e.g. `uv add ../shared`; MDA then copies it into the build, `mda dev` reloads on edits, and `mda deploy` ships it (0.9.2).
@@ -61,7 +64,7 @@ from tools.customer import lookup_customer
 
 agent = define_deep_agent(
     name="support-agent",                  # required
-    model="openai:gpt-5.5",                # or a BaseChatModel instance
+    model="openai:gpt-6.1-sol",            # or a BaseChatModel instance
     tools=[lookup_customer],
     middleware=[ModelCallLimitMiddleware(run_limit=50)],
     interrupt_on={"lookup_customer": True},
@@ -76,13 +79,14 @@ It returns a definition, not a graph. The runtime compiles it with `create_deep_
 | `model` | `provider:model` string (key in `.env`) or chat model instance. Gateway: `"langsmith:provider/model"`. See [[models]]. |
 | `tools` | Authored tools / provider tool dicts. Not auto-discovered. |
 | `middleware` | Runs in list order. Must use async hooks. |
-| `subagents` | Same shape as OSS [[subagents]]. |
+| `subagents` | Same shape as OSS [[subagents]], plus an optional `mcp` list (>=0.10.2): omitted = inherit (sync) or inherit the agent's MCP servers (async); a list of `define_mcp` definitions = only those (a sync subagent's list must also be loaded by the agent); `[]` or `None` = no MCP tools. Sync `mode: "fork"` subagents cannot set `mcp` (0.10.2 changelog). Only a factory can set `mcp` on the agent itself. Async subagents (`async: true`, 0.10.0) run in the background on the same deployment and share the lead agent's sandbox. |
 | `permissions` | Filesystem rules ([[permissions]]). Cleared when `sandbox/` exists. |
 | `interrupt_on` | Same as OSS [[human-in-the-loop]]. Slack renders only `approve`/`reject`. |
 | `response_format` | Structured output. |
+| `routes` | `{"/prefix/": backend}` mounts Deep Agents backends at path prefixes, like `CompositeBackend` routes (>=0.10.3). Prefix must start and end with `/` and must not overlap `/instructions.md`, `/skills/`, `/memories/`. File tools only; sandbox shell commands don't see it. See [[managed-capabilities]]. |
 | `context_schema`, `cache`, `debug` | Accepted unchanged (migrate page; not in the agent-definition table). |
 
-Not accepted: `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer`, `state_schema` (Python). OSS `create_deep_agent` in 0.7.34 has all of these plus an optional `name`; MDA makes `name` required. A definition returned by an agent factory may also set `instructions`, `skills`, `mcp` and `sandbox` to override the project files for that run; static definitions can't ([[managed]]).
+Not accepted: `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer`, `state_schema` (Python). OSS `create_deep_agent` in 0.7.39 has all of these plus an optional `name` (`graph.py`); MDA makes `name` required. `backend` still cannot be replaced, but since 0.10.3 `routes` can mount extra backends under prefixes. A definition returned by an agent factory may also set `instructions`, `skills`, `mcp`, `sandbox` and `browser` to override the project files for that run; static definitions can't ([[managed]]). Wrap a factory in `@cached_agent(keyed_by=...)` (>=0.10.2) to reuse compiled graphs.
 
 ## `instructions.md`
 
@@ -122,6 +126,8 @@ keep notes, and return concise answers with citations.
 - `../sources/docs/langsmith/python/managed-deep-agents-agent-definition.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-instructions.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-migrate.md`
+- `../sources/docs/langsmith/python/managed-deep-agents-subagents.md` (subagent `mcp`)
+- `../sources/docs/langsmith/python/managed-deep-agents-browser-use.md` (`browser.py`)
 - `../sources/docs/github/managed-deepagents-CHANGELOG.md`
 - `../sources/package/deepagents/graph.py` (create_deep_agent parameters for comparison)
 

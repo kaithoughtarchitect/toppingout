@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode config, config.toml, managed_config.toml, API key, /auth, base_url, OPENAI_BASE_URL, gateway, DEEPAGENTS_CODE_, DEEPAGENTS_HOME, .env, provider, custom provider, class_path, recursion_limit, allowed models, retries
 read_when: Read when dcode uses the wrong model or API key, a setting seems ignored, you need a custom or gateway provider, or an admin must pin policy.
-updated: 2026-11-09
-sources_hash: 37f8eee4c9fc
+updated: 2026-11-18
+sources_hash: c4b27c03b6ce
 ---
 
 # dcode configuration, providers and credentials
@@ -59,7 +59,7 @@ default = "anthropic:claude-opus-4-8"      # beats recent; /model only writes re
 summarization_default = "openai:gpt-5.6-sol"  # else the main model; --summarization-model wins; in-session /offload model (was /summarization-model)
 auto_classifier = "openai:gpt-5.6-luna"    # Auto-mode reviewer
 auto_classifier_timeout = 20               # seconds, clamped 1..300
-allowed = ["anthropic:*", "openai:gpt-5.5"]  # unset = all; [] = none
+allowed = ["anthropic:*", "openai:gpt-6.1-sol"]  # unset = all; [] = none
 
 [agents]
 default = "backend-dev"                    # -a overrides; -r restores the thread's agent
@@ -106,6 +106,7 @@ auto_save = true
 retention_days = 30
 [tracing]
 langsmith_redact = true
+git_attribution = true                     # false skips the read-only Git checks that label traces (0.2.7+)
 [update]
 auto_update = true
 check = true
@@ -117,7 +118,7 @@ show_diff_line_numbers = true
 ```
 
 - Retry-budget precedence: `--max-retries` > `[retries.<p>]` > `[retries]` > 5. For an arbitrary provider, `[retries.<p>].param = "retries"` names the SDK's retry kwarg so dcode can disable the SDK-level retry.
-- Recursion limit precedence: managed > `--recursion-limit` > `DEEPAGENTS_CODE_RECURSION_LIMIT` > `[runtime]` > `LANGGRAPH_DEFAULT_RECURSION_LIMIT` > LangGraph server default. The goal-rubric limits are separate.
+- Recursion limit precedence: managed > `--recursion-limit` > `DEEPAGENTS_CODE_RECURSION_LIMIT` > `[runtime]` > `LANGGRAPH_DEFAULT_RECURSION_LIMIT` > Agent Server default (the 2026-11-18 docs say "LangSmith Agent Server default" where they used to say "LangGraph server default"; same fallback, new name). `dcode config get runtime.recursion_limit` shows the effective value and its source. The goal-rubric limits are separate.
 - `[interpreter].ptc = "all"` exposes every tool to programmatic tool calls, and those calls **bypass approvals**. It needs `ptc_acknowledge_unsafe = true`. See [[interpreters]].
 
 ## Providers
@@ -169,6 +170,8 @@ Install the package into dcode's environment with `dcode --install my_package --
 - `DEEPAGENTS_CODE_LANGSMITH_TRACING=false` (or `--no-tracing` for one launch) turns agent tracing off and beats `LANGSMITH_TRACING=true`.
 - `DEEPAGENTS_CODE_LANGSMITH_PROJECT` and `DEEPAGENTS_CODE_LANGSMITH_REPLICA_PROJECTS` now take an agent environment's `tracer_session_name` (agent-based workspaces); create the destination agent before enabling a replica.
 - An MCP tool-call timeout does not cancel the call on the server, so a retry can duplicate work.
+- Git trace attribution is on by default whenever tracing is on. In a large repo it adds latency around every tool that can change the checkout. `[tracing].git_attribution = false` or `DEEPAGENTS_CODE_GIT_ATTRIBUTION=false` (`0`, `no`, `off` or empty also work; the env var beats the user config file) skips it for the main agent and subagents. It does not turn tracing off (`config-file.md` "Disable Git trace attribution", `configuration.md`).
+- Since 0.2.8 (changelog) dcode sets `DEEPAGENTS_CODE=1` in its local shell environment, so a script or hook can detect it runs under dcode. The 2026-11-18 docs do not mention it.
 
 ## Sources
 

@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA Slack, channels.slack, channels.http, webhook, HTTP channel, define_identity, identity.py, Supabase, define_schedule, cron, schedules, runtime.schedules, reminders, scheduled agent, Slack reactions, MCP endpoint, /mcp, interrupt_on Slack, attach_file, user_prompt_response, INTERRUPT_CORRELATION_KEY
 read_when: Read when wiring a Managed Deep Agent to Slack or a webhook, controlling who can call it, adding a cron schedule, or exposing it over MCP.
-updated: 2026-11-09
-sources_hash: 54a1e7b16f2c
+updated: 2026-11-18
+sources_hash: 0d5252cb65fe
 ---
 
 # MDA channels, identity, schedules and MCP endpoint
@@ -23,6 +23,8 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 - HTTP `thread_id` must be a UUID (map external IDs with `uuid.uuid5`); 202 means accepted, not finished.
 - Identity: `define_identity(auth=...)` with `auth.langsmith_api_key()` (default), `auth.supabase(...)`, a JWT provider dict (`issuer`, `audience`, `discover` or `jwks`, `claims`), or 'backend' plus `MDA_INGRESS_SECRET`. Service API-key callers have no private threads; a personal access token counts as a person (0.10.2).
 - Channel delivery data: read `runtime.thread.origin.channel` (0.10.0); `runtime.channel` is deprecated and goes away in 0.11.
+- Steering (beta, >=0.10.2): a message from the same user during a run joins that run at its next model call instead of starting a new run.
+- Slack, GitHub (experimental) and Linear (experimental) channels; `mda channels setup` (>=0.10.1, experimental) sets up channels of a deployed agent without deploying.
 - Schedules: `define_schedule(cron=..., timezone=..., prompt=...)`; 5-field cron only, static literals only, exactly one of `prompt` or `input`.
 - Since 0.9.3 `mda dev` creates the schedules on the local server, so they fire locally (`--no-schedules` stops that); on deploy, crons are created only after `DEPLOYED` and recreated on every deploy.
 - Runtime schedules (>=0.9.0): tools you write call `runtime.schedules.create(owner=..., cron=... or at=..., prompt=...)`; max 20 per owner per agent by default.
@@ -37,6 +39,15 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 - `post({"type": "content", "content": "..."})` or `post({"type": "native", "native": {...}})` sends an *additional* message; the final agent reply is still automatic.
 - A channel thread is owned by its source conversation (`mda:source-thread:{provider}:{key}`), not by the first sender (0.7.0).
 - Channel vs MCP connector: channels start runs; connectors give tools ([[managed-capabilities]]).
+- Experimental channels (0.10.0 changelog; `mda dev`, `build` and `deploy` warn when a project declares them): `channels.github()` starts runs from GitHub App events (one thread per issue or PR; 0.10.4 lets it handle its own App's events) and `channels.linear()` answers Linear agent sessions. `mda deploy` creates or reuses the App. The 2026-11-18 Python docs fetched here have no page for either, so their Python arguments are unverified.
+- Experimental handler options (0.10.0 changelog, spelled in TypeScript case there): Slack `onEvent`, `multitaskStrategy`, `onFinish`, `status`, `reply: "none"`; HTTP `input`, `onReceived`, `onFinish`, `multitaskStrategy`, `reply`, and `parse` may return `cancel`. `resolveUser` maps a verified channel sender to one of your users. The Python names are not in the fetched docs; check `help(channels.slack)` on your install.
+
+### Steering: messages to a running agent (beta, >=0.10.2)
+
+- When the same user sends a message while the agent runs on that thread, the message waits as a queued run. Before each model call the agent cancels that queued run with reason `taken` and adds its messages to the active run. After the final answer it checks once more, so a late message sends the run back to the model.
+- It acts between steps: a tool call or model call already in progress finishes first.
+- These queued runs do not join and run after the active run ends: an interrupt response (such as an approval), a message from a different user, or a run that sets a webhook, forks from an earlier checkpoint, or sets input other than messages.
+- Only the main agent takes messages; while a subagent runs, messages wait for the main agent's next model call. If the queue cannot be read or cancelled, messages stay queued in order.
 
 ### Slack
 
@@ -59,14 +70,18 @@ channel = channels.slack(
 )
 ```
 
+- Stop (0.10.0 changelog): Slack threads get a native Stop button that cancels the thread's runs; cancelled runs report `run.cancelled`. `status=False` hides the status and the Stop button (0.10.3 changelog; not on the fetched Python Slack page).
 - Reactions (0.9.0): the bot reacts to the message that starts a run with `eyes` by default. `channels.slack(..., reactions=False)` turns it off; a short name picks another emoji; a sync or async callable gets `{"text": ...}` and returns a short name (errors, or more than five seconds, fall back to the default).
 - Trigger mode (0.10.0 changelog): Slack channels take a trigger mode, `"mention"` (default for new apps), `"thread"` (keep replying in a thread after one mention) or `"all"`; `trigger_on_all_messages` is deprecated in favor of `"all"`. The changelog spells it `triggerMode`; the fetched Python Slack page still shows only `trigger_on_all_messages`, so the Python keyword name is unverified.
-- One Slack channel per deployment. `mda deploy` provisions the Slack app; if LangSmith is not yet authorized it prints an HTTPS link, you approve, press Enter. After first deploy the bot DMs you. Cannot use `--no-wait`. Redeploy to apply name/icon changes.
+- One Slack channel per deployment. `mda deploy` provisions the Slack app. The fetched Slack page still says: if LangSmith is not yet authorized it prints an HTTPS link, you approve, then press Enter. The 0.10.0 changelog (newer) says deploy now asks which Slack app to use (one LangSmith creates and manages, a new one from a manifest, or one you already have; self-hosted offers only your own), reads `MDA_SLACK_BOT_TOKEN` and `MDA_SLACK_SIGNING_SECRET` without a terminal, and prints the link and waits (up to an hour without a terminal) instead of asking for Enter. Since 0.10.1 a Slack deploy with a service key stops and names the key to use. After first deploy the bot DMs you. Cannot use `--no-wait`. Redeploy to apply name/icon changes.
+- `mda channels setup [channel]` (>=0.10.1, experimental) runs the deploy's channel setup against the deployed agent without deploying. `--json` (or no terminal) only reports each channel's state and exits non-zero unless all are set up, so it works as a CI check. Flags: `-n/--name`, `--workspace-id`, `--agent-environment`, `--env-file`. `mda deploy` also sets up an existing deployment's channels before uploading; a channel that cannot be set up stops the deploy.
 - HITL from `interrupt_on` renders in Slack with **only `approve` and `reject`** ([[human-in-the-loop]]).
 - File transfer (>=0.8.0, requires a sandbox): incoming files land in `/workspace/attachments/`; agent sends files via the `attach_file(path)` tool (path under `/workspace`). Never automatic, so say it in `instructions.md`. 200 MiB each way; files scoped to the Slack thread's sandbox; everyone in the thread can reach them.
 - Slack user-owned connections: Slack renders the OAuth connect link and resumes the run.
 
-### HTTP webhook channel (>=0.8.0)
+### Custom (HTTP) webhook channel (>=0.8.0)
+
+The docs renamed this page "Custom (HTTP) channels"; the API is still `channels.http(...)`.
 
 ```python
 # channels/orders.py  ->  POST https://<deployment-url>/channels/orders/events
@@ -161,6 +176,7 @@ identity = define_identity(auth=auth.supabase(project_ref="your-project-ref"))
 - Adding Supabase to an existing deployment does not back-fill owner metadata on old threads.
 - Errors: 401 missing/invalid credential; 403 cross-user thread access.
 - Only persons get user memory ([[memory]]) and user-owned connections. Service API keys are services; since 0.10.2 a personal access token through `auth.langsmith_api_key()` resolves to that person.
+- Channel senders (0.10.0 changelog): a Slack user runs as their Agent Auth principal; a GitHub user as theirs for `(github, github.com, <id>)` and a Linear user for `(linear, linear.app, <id>)`. Bots and apps run as the channel. Experimental `resolveUser` (on the identity declaration or one channel) maps a sender to one of your users. User memory a GitHub sender kept under `github:<id>` is not carried over.
 
 ## Schedules (`schedules/<name>.py`)
 
@@ -172,16 +188,16 @@ schedule = define_schedule(
     timezone="America/Los_Angeles",
     prompt="Write the daily digest.",      # exactly one of prompt= / input=
     # input={"messages": [{"role": "user", "content": "..."}]},
-    # thread={"mode": "persistent", "id": "<existing-thread-uuid>"},
+    # thread={"mode": "persistent"},    # >=0.10.2; or add "id": "<uuid>"
     # deliver_to={"channel": "slack", "to": {"type": "provider_conversation", "conversation_id": "C0123456789"}},
 )
 ```
 
 - Values must be static literals or top-level literal constants: no env reads, function calls, `**kwargs`.
-- Default threads are ephemeral (new thread, deleted after run). Persistent mode: the fetched schedules page says the `id` must be the UUID of a thread that already exists (create it in Studio). The 0.10.2 changelog (2026-11-06, newer) says `thread={"mode": "persistent"}` with no `id` now works (MDA derives a stable ID from agent and schedule name and creates the thread on deploy), deploy also creates a missing thread for an explicit `id`, and an explicit `id` must be a UUID (checked at compile time). There is no MDA package code here to settle it; trust the changelog for >=0.10.2.
+- Default threads are ephemeral (new thread, deleted after run). Persistent mode (>=0.10.2; the 2026-11-18 schedules page now agrees with the 0.10.2 changelog): `thread={"mode": "persistent"}` with no `id` makes `mda deploy` create a thread keyed on the agent and schedule names, so renaming the schedule file starts a new thread. An explicit `id` must be a UUID (checked at compile time); deploy creates that thread if missing and refuses one another caller owns. Before 0.10.2 the `id` had to be the UUID of an existing thread.
 - Provisioned as LangSmith crons only after `DEPLOYED`; each deploy deletes the crons that earlier `schedules/` files created and recreates them from current files (runtime schedules are untouched). `--no-wait` skips this.
 - `mda dev` (>=0.9.3) creates a local cron for each schedule and recreates them when `schedules/` changes; pass `--no-schedules` while iterating. Before 0.9.3 schedules were listed in the banner but never fired locally.
-- Errors: `Schedule limit reached`, `must export a named schedule declaration`, `must define exactly one of prompt or input`, `cron must be a standard 5-field expression`, `schedule is not static`, `Invalid thread ID: must be a UUID (HTTP 422)`.
+- Errors: `Schedule limit reached`, `must export a named schedule declaration`, `must define exactly one of prompt or input`, `cron must be a standard 5-field expression`, `schedule is not static`, `schedule '<name>' persistent thread id must be a UUID` (before 0.10.2: `Invalid thread ID: must be a UUID (HTTP 422)` from Agent Server).
 
 ### Runtime schedules (>=0.9.0)
 
@@ -201,6 +217,7 @@ async def remind_me(prompt: str, cron: str, runtime: ManagedDeepAgentRuntime, ti
 - `owner`: `{"type": "user"}` (the authenticated person, runs as them) or `{"type": "agent"}` (runs as the agent's service identity).
 - Exactly one of `cron` (5-field, with optional `timezone`) or `at` (timezone-aware datetime or ISO 8601 with offset; rounded up to the minute; 1 minute to 365 days ahead). Exactly one of `prompt` or `input`. Also `new_thread` (default `True` for `cron`, `False` for `at`), `paused`, `metadata` (`mda_` keys reserved).
 - Created during a channel run, the schedule inherits that channel and posts each answer there. Scheduled runs can't create more schedules (0.9.0 changelog).
+- Changelog only (not in the fetched schedules page): `run_as=participant` runs a schedule as another participant of the thread (0.10.0, experimental); authenticated users can create crons that run as themselves, API-key callers can create and update untagged crons, and local `mda dev` callers can manage API crons (0.10.3); agent-owned schedules call Tool Gateway as the agent (0.10.4).
 - `list`, `get`, `update` (`cron`, `at`, `timezone`, `prompt`, `input`, `paused`, `metadata`), `delete`, each with `owner=`. Channel and thread choice are fixed at creation.
 - Limit: 20 per owner per agent, paused ones included; override with `MDA_MAX_AGENT_SCHEDULES` / `MDA_MAX_USER_SCHEDULES` (>=0.9.3).
 
@@ -234,7 +251,7 @@ Any MCP client that can send a custom header works the same way: Streamable HTTP
 - Agent-owned interrupt tools re-execute from the top on resume; guard side effects.
 - Upgrading to 0.7.0 orphaned in-flight Slack conversations (thread ownership change).
 - Supabase is no longer the only validated-token provider: the current identity page adds a generic JWT provider (Auth0, Okta, Clerk, Entra ID). Older notes that auth0/okta were removed in 0.5.0 are stale.
-- The HTTP channel docs' `parse` example imports `uuid7` from `langsmith` but calls `uuid.UUID` and `uuid.uuid5` without `import uuid`, so it fails with `NameError`. Import `uuid` as the example above does.
+- The HTTP channel docs' `parse` example imports `uuid7` from `langsmith` but calls `uuid.UUID` and `uuid.uuid5` without `import uuid`, so it fails with `NameError`. Still true in the 2026-11-18 docs. Import `uuid` as the example above does.
 
 ## Sources
 

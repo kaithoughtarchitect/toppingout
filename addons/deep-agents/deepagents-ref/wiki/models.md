@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: model, provider:model, init_chat_model, choose model, switch model, OpenRouter, Ollama, Bedrock, Azure OpenAI, harness profile, HarnessProfile, provider profile, ProviderProfile, register_harness_profile, register_provider_profile, use_responses_api, excluded_tools, runtime model switching
 read_when: Read when picking or configuring a model, tuning behaviour per model, excluding a tool or middleware for one model, or a profile does not apply.
-updated: 2026-11-09
-sources_hash: f58788fc4c4b
+updated: 2026-11-18
+sources_hash: 0fef9439c8ea
 ---
 
 # Models and profiles
@@ -30,9 +30,9 @@ Deep Agents runs on any LangChain chat model that supports tool calling. Pass a 
 ## Model strings
 
 - Format `provider:model`; only the **first** colon separates (e.g. `ollama:minimax-m2.7:cloud` -> provider `ollama`, model `minimax-m2.7:cloud`). Valid providers = `init_chat_model`'s `model_provider` values.
-- Examples from docs: `openai:gpt-5.5`, `anthropic:claude-sonnet-4-6`, `google_genai:gemini-3.6-flash`, `azure_openai:gpt-5.5`, `openrouter:z-ai/glm-5.2`, `fireworks:accounts/fireworks/models/glm-5p2`, `baseten:zai-org/GLM-5.2`, `ollama:...`.
+- Examples from docs: `openai:gpt-5.5`, `openai:gpt-6.1-sol` (the docs' new example id, 2026-11-18), `anthropic:claude-sonnet-4-6`, `google_genai:gemini-4-hydrogen` (replaced `gemini-3.6-flash` in the docs, 2026-11-18), `azure_openai:gpt-5.5`, `openrouter:z-ai/glm-5.2`, `fireworks:accounts/fireworks/models/glm-5p2`, `baseten:zai-org/GLM-5.2`, `ollama:...`.
 - Install the integration: `pip install -U "langchain[openai]"` / `[anthropic]` / `[google-genai]` / `[aws]`, `langchain-openrouter>=0.2.0`, etc. (`langchain-anthropic` and `langchain-google-genai` ship as deepagents deps.)
-- Suggested (pass the Deep Agents eval suite): Google `gemini-3.1-pro-preview`, `gemini-3.6-flash`; OpenAI `gpt-5.5`, `gpt-5.4`; Anthropic `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`; open-weight `GLM-5.2`, `Kimi-K2.7 Code`, `MiniMax-M3` (via Baseten, Fireworks, OpenRouter, Ollama).
+- Suggested (pass the Deep Agents eval suite, docs fetched 2026-11-18): Google `gemini-3.1-pro-preview`, `gemini-4-hydrogen` (was `gemini-3.6-flash`); OpenAI `gpt-5.5`, `gpt-5.4`; Anthropic `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`; open-weight `GLM-5.2`, `Kimi-K2.7 Code`, `MiniMax-M3` (via Baseten, Fireworks, OpenRouter, Ollama).
 
 ## How a string is resolved (code: `deepagents/_models.py`)
 
@@ -120,11 +120,11 @@ register_harness_profile(
 | `extra_middleware` | sequence or zero-arg factory | Appended to main, GP and declarative subagent stacks (not compiled/async) | by concrete type |
 | `general_purpose_subagent` | `GeneralPurposeSubagentProfile or None` | `enabled` (None/True/False), `description`, `system_prompt` | field-wise |
 
-Built-in harness profiles in 0.7.34 (unchanged since 0.7.29; registered lazily on first registry access):
+Built-in harness profiles in 0.7.39 (same set since 0.7.29; registered lazily on first registry access):
 - `anthropic:claude-sonnet-4-6`, `anthropic:claude-haiku-4-5`: suffix with parallel-tool-calls, investigate-before-answering, tool-result-reflection blocks.
 - `anthropic:claude-opus-4-7`: same plus `<tool_usage>` and `<subagent_usage>` blocks.
 - `openai:gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.3-codex`: Codex behaviour suffix + `extra_middleware=[TodoListMiddleware()]` (so these models get `write_todos`, see [[planning]]).
-- Nemotron 3 Ultra specs (`nvidia:`, `NVIDIA:`, `baseten:`, `fireworks:`, `openrouter:`, `nebius:`, `together:`): suffix, `read_file` description override, 12 extra middleware (retry, tool-call parsing, final-answer guards).
+- Nemotron 3 Ultra specs (`nvidia:`, `NVIDIA:`, `baseten:`, `fireworks:`, `openrouter:`, `nebius:`, `together:`): suffix, `read_file` description override, 12 extra middleware (retry, tool-call parsing, final-answer guards). Since 0.7.35 each nudge `HumanMessage` they inject (`name` = a source such as `nemotron_final_answer_guard`) also carries notification metadata (`additional_kwargs["lc_source"]` = that source, read with `langchain_core.messages.get_notification_metadata`), so a UI can tell it from user input.
 
 No provider-wide built-in for `anthropic` or `openai`; other models (e.g. `claude-sonnet-5`, `gpt-5.5`) get an empty profile.
 

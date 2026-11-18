@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode, deepagents-code, Deep Agents Code, terminal coding agent, CLI coding agent, TUI, headless mode, non-interactive, dcode -n, ACP server, slash commands, --model, --resume, --sandbox, install dcode
 read_when: Read when choosing between dcode and the SDK, installing or running dcode, scripting it headless in CI, or looking up a dcode flag or slash command.
-updated: 2026-11-09
-sources_hash: f5b3131a8404
+updated: 2026-11-18
+sources_hash: 6acc5d23371b
 ---
 
 # Deep Agents Code (dcode)
@@ -25,14 +25,14 @@ sources_hash: f5b3131a8404
 - `--sandbox` takes an optional value, so keep the bare form last on the command line.
 - Gotcha: dcode is not in the SDK source, so there are no `deepagents_code` imports to find there.
 - Gotcha: `--startup-cmd` output is not visible to the model; pipe content in instead.
-- SDK version (0.7.34 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
+- SDK version (0.7.39 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
 
 ## What it is, relative to the SDK
 
 - dcode wraps the SDK [[harness]]: planning, filesystem tools, `task` subagents, [[summarization]] and compaction, [[memory]] (`AGENTS.md`) and [[skills]]. You configure it with files and flags. You do not write Python, except for the optional experimental extensions (see [[dcode-extending]]).
 - Architecture: the TUI talks to a local LangGraph agent server (`/restart` restarts it). Threads are checkpointed to SQLite at `~/.deepagents/.state/sessions.db`.
-- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.34; see [[versions]]) separate from the dcode version (0.2.x).
-- The SDK source has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
+- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.39; see [[versions]]) separate from the dcode version (0.2.x).
+- The SDK source (0.7.39) has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
 - SDK features that dcode exposes: the JS [[interpreters]] (`js_eval`, QuickJS, on by default), which make [[dynamic-subagents]] work out of the box; `RubricMiddleware`, which backs goals and rubrics ([[rubric]], [[dcode-goals]]); forked `general-purpose` subagents; and the sandbox-as-tool pattern for [[sandboxes]].
 - For the product landscape (SDK vs dcode vs Managed), see [[products]]. To build the same thing yourself, see [[create-deep-agent]].
 
@@ -89,14 +89,14 @@ dcode -n "implement X" --rubric @acceptance.md --rubric-max-iterations 3
 | `--mcp-config PATH`, `--no-mcp`, `--trust-project-mcp` | MCP loading (see [[mcp]], [[dcode-extending]]) |
 | `-e/--extension PATH`, `--trust-project-extensions` | Python extensions (experimental) |
 | `--interpreter`, `--interpreter-tools safe/all/list` | JS interpreter toggle and PTC allowlist (default `safe`) |
-| `--recursion-limit N` | LangGraph step budget per turn |
+| `--recursion-limit N` | LangGraph step budget per turn. Unset: the LangSmith Agent Server default applies (the 2026-11-18 docs call it that; older docs said "LangGraph server") |
 | `--show-reasoning` | Show provider-visible reasoning for one launch. Since 0.1.84 it is on by default in the TUI and off in headless mode (where it goes to stderr); `DEEPAGENTS_CODE_SHOW_REASONING=0` hides it in both |
 | `--no-tracing` | Disable LangSmith agent tracing for this session |
 | `--json` | JSON envelope `{"schema_version": 1, "command": ..., "data": ...}` for management subcommands |
 
 ## Management subcommands
 
-`dcode tools list`, `agents list|reset [--target SRC]`, `skills list|create|info|delete [--project]`, `threads list|delete` (with `--sort`, `--branch`, `--cwd`, `-n/--limit`), `mcp login [NAME]`, `mcp config`, `config show|list|get|path`, `auth list|status|set|remove|path`, `plugin ...`, `doctor`, `update`, `uninstall NAME`. The destructive ones (`agents reset`, `skills delete`, `threads delete`) accept `--dry-run`. Put tool-shaping flags before the subcommand: `dcode --allow-fs-tools ls,read_file tools list --json`.
+`dcode tools list`, `agents list|reset [--target SRC]`, `skills list|create|info|delete [--project]`, `threads list|delete` (with `--sort`, `--branch`, `--cwd`, `-n/--limit`), `mcp login [NAME]`, `mcp config`, `config show|list|get|path`, `auth list|status|set|remove|path`, `plugin ...`, `doctor`, `update`, `uninstall NAME`, `completion` (shell completion scripts, 0.2.7 changelog; not in the 2026-11-18 CLI reference). The destructive ones (`agents reset`, `skills delete`, `threads delete`) accept `--dry-run`. Put tool-shaping flags before the subcommand: `dcode --allow-fs-tools ls,read_file tools list --json`.
 
 ## Most-used slash commands
 
@@ -105,6 +105,8 @@ dcode -n "implement X" --rubric @acceptance.md --rubric-max-iterations 3
 ## Tracing
 
 Store a LangSmith key via `/auth`, or set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `~/.deepagents/.env`. dcode's own traces go to `DEEPAGENTS_CODE_LANGSMITH_PROJECT` (default `deepagents-code`). Shell commands that dcode runs keep the user's `LANGSMITH_PROJECT`, so app traces stay separate. `DEEPAGENTS_CODE_LANGSMITH_REPLICA_PROJECTS` dual-writes to a second project. Client-side secret redaction is on by default. To turn agent tracing off: `dcode --no-tracing` for one session, or `DEEPAGENTS_CODE_LANGSMITH_TRACING=false`; an explicit `false` there overrides `LANGSMITH_TRACING=true`.
+
+Git trace attribution: with tracing on, dcode runs read-only Git checks around tools that can change a checkout and labels traces with the repository and branch the agent changed. It is on by default. In large repos it adds latency; turn it off with `[tracing].git_attribution = false` in `~/.deepagents/config.toml` or `DEEPAGENTS_CODE_GIT_ATTRIBUTION=false` (the env var wins). This does not turn tracing off and does not stop the agent running Git (`../sources/docs/oss/deepagents/code/config-file.md`, `../sources/docs/oss/deepagents/code/configuration.md`; added in 0.2.7).
 
 ## Changelog highlights
 
@@ -140,6 +142,11 @@ Store a LangSmith key via `/auth`, or set `LANGSMITH_TRACING=true` and `LANGSMIT
 - 0.2.3: MCP tool schemas deferred via provider-native tool search; official marketplace included by default; explicit or saved model selection required; `DEEPAGENTS_CODE_LANGSMITH_PROJECT_URL`.
 - 0.2.4: interrupt cancellation messages marked with `lc_source`.
 - 0.2.5 (2026-11-05): compaction input budget sized to the selected model; cut-off reply handling kept when the SDK's `ModelRefusalMiddleware` raises.
+- 0.2.6 (2026-11-09): Windows startup fix (server log colours off); local server traffic bypasses proxies; recovery options when server startup times out; piped stdin left available to subcommands.
+- 0.2.7 (2026-11-10): `dcode completion` (shell completion scripts); `code.cmd`-style editor launchers detected on Windows; Git attribution made cheaper and can be turned off.
+- 0.2.8 (2026-11-13): the local shell gets `DEEPAGENTS_CODE=1`, so scripts can tell they run under dcode; unencodable characters in redirected output are replaced.
+- 0.2.9 (2026-11-16): updated stable model recommendations.
+- 0.2.10 (2026-11-17): agent status reported to terminals with OSC 7501; MCP trust lists load without blocking the server event loop.
 
 ## Gotchas
 
@@ -155,6 +162,8 @@ Store a LangSmith key via `/auth`, or set `LANGSMITH_TRACING=true` and `LANGSMIT
 - `../sources/docs/oss/deepagents/code/overview.md`
 - `../sources/docs/oss/deepagents/code/quickstart.md`
 - `../sources/docs/oss/deepagents/code/cli-reference.md`
+- `../sources/docs/oss/deepagents/code/config-file.md` (Git trace attribution)
+- `../sources/docs/oss/deepagents/code/configuration.md` (`DEEPAGENTS_CODE_GIT_ATTRIBUTION`)
 - `../sources/docs/github/deepagents-code-CHANGELOG.md` (the docs changelog page now redirects to this GitHub file)
 - `../sources/package/deepagents/backends/utils.py` (only a comment mentioning the TUI)
 - `../sources/package/deepagents/middleware/summarization.py` (only a comment mentioning the CLI)

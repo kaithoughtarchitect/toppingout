@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: retrieval, RAG, retrieval augmented generation, vector store, vector search, retriever, agentic RAG, 2-step RAG, knowledge base, semantic search, embeddings, search tool, document search, RubricMiddleware
 read_when: Read when adding RAG or a vector store to a deep agent, deciding how to wire a retrieval tool, or offloading search hits to files and subagents.
-updated: 2026-11-09
-sources_hash: 72cf6ab5b1db
+updated: 2026-11-18
+sources_hash: f65221fe1226
 ---
 
 # Retrieval and RAG with Deep Agents
@@ -27,7 +27,7 @@ Existing knowledge bases (SQL, CRM, docs search, MCP servers) do not need re-ind
 ## Deep Agents RAG patterns
 
 - **Skills-guided retrieval**: a skill documents which index, how to phrase queries, how to cite.
-- **Rubric-checked grounding**: grader sub-agent with `RubricMiddleware` checks the answer against retrieved evidence; revise until pass or cap (`deepagents>=0.6.5`, beta).
+- **Rubric-checked grounding**: grader sub-agent with `RubricMiddleware` checks the answer against retrieved evidence; revise until pass or cap (`deepagents>=0.6.5`; no longer beta in code since 0.7.33, and the docs dropped the beta label by 2026-11-18).
 - **Todo-driven investigation**: `write_todos` list of queries/pages. Opt-in in 0.7: add `TodoListMiddleware` yourself ([[planning]]).
 - **Retrieve, offload, delegate** (tutorial): search tool writes chunks to files, returns only paths; subagents read one file each and return short summaries; orchestrator synthesizes.
 
@@ -95,7 +95,7 @@ Why it works: orchestrator context holds paths, not text; parallel `task` calls 
 - Retrieval results are an indirect prompt-injection channel: prompts saying "treat as data" help but are not protection; validate outputs and citations.
 
 ## Gotchas
-- The tutorial's full-code prompt says "Use write_todos", but `write_todos` is not in the 0.7.34 default stack; the model will reference a missing tool unless you add `TodoListMiddleware`.
+- The tutorial's full-code prompt says "Use write_todos", but `write_todos` is not in the 0.7.39 default stack; the model will reference a missing tool unless you add `TodoListMiddleware`.
 - Tutorial uses `StateBackend`, so `/retrieved/` files are per-thread and vanish with the thread. Route `/retrieved/` to a `StoreBackend` if you want reuse.
 - The in-memory vector store re-embeds at every process start; persist it in production.
 - `retrieval.md`'s agentic example uses LangChain `create_agent`, not `create_deep_agent`; the Deep Agents version is the tutorial above.

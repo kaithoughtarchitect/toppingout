@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: summarizer, summarization, SummarizationMiddleware, context compression, compact_conversation, conversation history, large_tool_results, context overflow, ContextOverflowError, trim history, offload, compaction, artifacts_root, context window full, summarize old messages
 read_when: Read when the context fills up, history is summarized or lost, tuning summarization triggers, finding offloaded conversation files, or hitting ContextOverflowError.
-updated: 2026-11-09
-sources_hash: 531a1d27a4ce
+updated: 2026-11-18
+sources_hash: dcce7b79361f
 ---
 
 # Summarization and offloading (context compression)
@@ -63,7 +63,7 @@ No profile:
 3. Summarize if the trigger is met or the request exceeds the input budget (`0.95 * max_input_tokens - max output tokens`).
 4. Otherwise call the model; on a recognised context-overflow error (`ContextOverflowError`, or HTTP 400/413/422 with messages like "prompt is too long", "maximum context length") fall through to summarization.
 5. Summarize: partition at cutoff, upload inline media, append the evicted messages (XML buffer string, filtered of previous summaries) under `## Summarized at <iso>` to the history file, generate the summary with the same model, or with `summarizer` when set (async path runs these concurrently).
-6. Summary message is a `HumanMessage` marked with `add_notification_metadata(..., source="summarization")` (0.7.34; it still sets `additional_kwargs["lc_source"] = "summarization"`):
+6. Summary message is a `HumanMessage` marked with `add_notification_metadata(..., source="summarization")` (0.7.34, unchanged in 0.7.39; it still sets `additional_kwargs["lc_source"] = "summarization"`). The 2026-11-18 docs now say this too, so a frontend can read it with `get_notification_metadata` to show the summary apart from user messages:
 
 ```
 You are in the middle of a conversation that has been summarized.

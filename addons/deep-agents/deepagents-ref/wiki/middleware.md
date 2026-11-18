@@ -4,10 +4,10 @@ id: middleware
 type: reference
 status: code
 product: sdk
-keywords: middleware stack, middleware order, ModelRefusalMiddleware, ModelRefusalError, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware
+keywords: middleware stack, middleware order, ModelRefusalMiddleware, ModelRefusalError, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware, BackendConsumer, bind_backend, middleware needs backend
 read_when: Read when you need the exact middleware order, where custom middleware lands, how to replace or remove a built-in, or why a hook misbehaves across subagents.
-updated: 2026-11-09
-sources_hash: 1bfe452538c6
+updated: 2026-11-18
+sources_hash: d6b83aef65c8
 ---
 
 # The middleware stack
@@ -26,10 +26,11 @@ sources_hash: 1bfe452538c6
 - Declarative subagents have their own stack; auto `general-purpose` inherits your middleware only where `.name` matches a default slot.
 - Raw `SubAgentMiddleware` specs need `model` and `tools` and get no filesystem/summarization.
 - `TodoListMiddleware` is not in the stack since 0.7.0; add it for `write_todos`.
+- Middleware that needs the agent's backend: give it a `bind_backend(self, backend)` method (`BackendConsumer`, 0.7.36+); `create_deep_agent` calls it with the agent's `backend`.
 - Gotcha: mutating `self` in hooks races across subagents/threads; use state.
 - Gotcha: where docs and `graph.py` disagree on order, code wins.
 
-## Main agent stack, exact order (0.7.34)
+## Main agent stack, exact order (0.7.39)
 
 Core (built first):
 
@@ -49,6 +50,8 @@ Tail:
 9. `_LazyAnthropicPromptCachingMiddleware()` (0.7.32+) - always. Its `.name` is `"AnthropicPromptCachingMiddleware"`, so name-based replacement and exclusion match it. It builds the real `AnthropicPromptCachingMiddleware(unsupported_model_behavior="ignore")` only on the first request whose model is a `ChatAnthropic` (`is_anthropic_chat_model` in `_utils.py`, a `sys.modules` check); any other model passes straight through. Excluding by class (`AnthropicPromptCachingMiddleware`) still works through its `excluded_as` property, read by `_exclusion_type` in `_excluded_middleware.py`.
 10. `BedrockPromptCachingMiddleware(unsupported_model_behavior="ignore")` - only if `langchain_aws.middleware.prompt_caching` imports.
 11. `FireworksPromptCachingMiddleware(unsupported_model_behavior="ignore")` - only if `langchain_fireworks.middleware.prompt_caching` imports.
+
+    Since 0.7.37 the import lookup for 10 and 11 is cached per process (`_prompt_caching_middleware_class`, `functools.cache`), including a failed lookup; each stack still gets a new instance. So installing `langchain-aws` or `langchain-fireworks` into a running process (a notebook, a dev server) has no effect until the process restarts.
 12. `MemoryMiddleware(backend, sources=memory, add_cache_control=True)` - only if `memory is not None`. Placed after caching so memory edits don't invalidate the cached prefix ([[memory]]).
 13. `HumanInTheLoopMiddleware(interrupt_on=merged)` - only if `interrupt_on` or any `mode="interrupt"` permission rule (user entries win per tool) ([[human-in-the-loop]]).
 14. `UnsupportedContentMiddleware()` - always. Replaces image/audio/video/file blocks the model's `model.profile` rejects with a text notice, per request (thread keeps originals) ([[multimodal]]).
@@ -59,7 +62,7 @@ Post-processing:
 - Profile `excluded_middleware` filter runs, then your `middleware=` is merged, then the filter runs again (so exclusions also remove your instances).
 - `_ToolExclusionMiddleware(excluded=profile.excluded_tools)` is appended **last** if the profile excludes tools, so no later `wrap_model_call` can restore them; excluded tools are also non-executable.
 
-Confirmed on 0.7.29 (2026-10-21) by capturing the list `create_deep_agent` passes to `create_agent`, with a scripted fake model, `skills`, `memory`, `interrupt_on`, one async subagent and one custom middleware: `FilesystemMiddleware, SubAgentMiddleware, _ParentNotifierMiddleware, SummarizationMiddleware, PatchToolCallsMiddleware, AsyncSubAgentMiddleware, <yours>, SkillsMiddleware, AnthropicPromptCachingMiddleware, MemoryMiddleware, HumanInTheLoopMiddleware, UnsupportedContentMiddleware`. Not re-run on 0.7.34; per `graph.py`, 0.7.34 adds `ModelRefusalMiddleware` after `UnsupportedContentMiddleware`, and the caching entry is the lazy stand-in (class `_LazyAnthropicPromptCachingMiddleware`, same name).
+Confirmed on 0.7.29 (2026-10-21) by capturing the list `create_deep_agent` passes to `create_agent`, with a scripted fake model, `skills`, `memory`, `interrupt_on`, one async subagent and one custom middleware: `FilesystemMiddleware, SubAgentMiddleware, _ParentNotifierMiddleware, SummarizationMiddleware, PatchToolCallsMiddleware, AsyncSubAgentMiddleware, <yours>, SkillsMiddleware, AnthropicPromptCachingMiddleware, MemoryMiddleware, HumanInTheLoopMiddleware, UnsupportedContentMiddleware`. Not re-run on 0.7.34; per `graph.py`, 0.7.34 adds `ModelRefusalMiddleware` after `UnsupportedContentMiddleware`, and the caching entry is the lazy stand-in (class `_LazyAnthropicPromptCachingMiddleware`, same name). The 0.7.39 `graph.py` builds the same order (read, not run).
 
 Passing a `SkillsMiddleware` in `middleware=` (its `.name` is `"SkillsMiddleware"`) replaces the default in place. If you passed no `skills=`, its `sources` become `skills`, so the default slot exists and the general-purpose subagent gets the same sources.
 
@@ -96,7 +99,28 @@ class CountTurns(AgentMiddleware):
 agent = create_deep_agent(model="openai:gpt-5.5", middleware=[log_tool_calls, CountTurns()])
 ```
 
-Merge rule (`_apply_custom_middleware`): if `m.name` matches a name in the assembled stack it **replaces in place** (keeps position); otherwise it is spliced after the last core entry (before profile extras, Skills, caching, memory, HITL, UnsupportedContent, ModelRefusal). `create_agent` rejects two middleware with the same name. A replacement `FilesystemMiddleware` without its own `permissions` inherits the agent's `permissions=`; if both have non-empty rules that differ, `create_deep_agent` raises `ValueError` (0.7.34 `graph.py`).
+Merge rule (`_apply_custom_middleware`): if `m.name` matches a name in the assembled stack it **replaces in place** (keeps position); otherwise it is spliced after the last core entry (before profile extras, Skills, caching, memory, HITL, UnsupportedContent, ModelRefusal). `create_agent` rejects two middleware with the same name. A replacement `FilesystemMiddleware` without its own `permissions` inherits the agent's `permissions=`; if both have non-empty rules that differ, `create_deep_agent` raises `ValueError` (0.7.39 `graph.py`).
+
+### Middleware that needs the backend (`BackendConsumer`, 0.7.36+)
+
+Since 0.7.36 (changelog: "Pass the agent's backend to middleware that requests it") `create_deep_agent` calls `m.bind_backend(backend)` on every middleware that has a `bind_backend` method, before the agent is built (`_bind_backend` in `graph.py`). It does this for your `middleware=` list and for each declarative subagent's own `middleware` (for a fork, merged with the inherited parent list). The backend is the agent's `backend` (the default `StateBackend()` when you pass none). The check is `isinstance(m, BackendConsumer)`, a `runtime_checkable` `Protocol` exported from `deepagents.backends`, so any object with that method matches; you don't need to subclass it.
+
+```python
+from langchain.agents.middleware import AgentMiddleware
+from deepagents.backends import BackendProtocol
+
+class AuditFiles(AgentMiddleware):
+    def __init__(self):
+        super().__init__()
+        self.backend: BackendProtocol | None = None
+
+    def bind_backend(self, backend: BackendProtocol) -> None:
+        self.backend = backend   # the same backend the file tools use
+
+agent = create_deep_agent(model=..., backend=my_backend, middleware=[AuditFiles()])
+```
+
+Probe on 0.7.39 on 2026-11-18 (fake model): a middleware with `bind_backend` in `middleware=` and another in a subagent's `middleware` both received the exact `backend` object passed to `create_deep_agent`. Not bound: middleware inside a `CompiledSubAgent` runnable, on an async subagent, or in a stack you build with `create_agent` yourself. No built-in middleware implements it in 0.7.39. Only the reference docs mention it (`../sources/docs/oss/python/reference/deepagents-python.md`).
 
 Replace recipes (all need `deepagents>=0.7`):
 
@@ -151,7 +175,7 @@ Raw `SubAgentMiddleware` specs must include `model` and `tools` (else `ValueErro
 
 ## Gotchas
 
-- Docs' full-stack list puts "your middleware" right after Patch and omits `_ParentNotifierMiddleware`, Fireworks caching and `UnsupportedContentMiddleware`. Code: user middleware goes after `AsyncSubAgentMiddleware` (the last core entry), and tool exclusion is the very last entry (the docs now agree on that one). Code wins.
+- Docs' full-stack list puts "your middleware" right after Patch and omits `_ParentNotifierMiddleware` and Fireworks caching. (The 2026-11-18 docs now list `UnsupportedContentMiddleware` before `ModelRefusalMiddleware`, which matches the code.) Code: user middleware goes after `AsyncSubAgentMiddleware` (the last core entry), and tool exclusion is the very last entry (the docs now agree on that one). Code wins.
 - Middleware you pass runs **before** Skills now. If a custom hook needs this turn's `skills_metadata`, or must rewrite the skills prompt section, replace `SkillsMiddleware` by name instead of adding a separate middleware.
 - One docs sentence says unmatched middleware lands "after `PatchToolCallsMiddleware`"; with async subagents it actually lands after `AsyncSubAgentMiddleware`.
 - `TodoListMiddleware` is no longer in the stack (removed 0.7.0) ([[planning]]).
@@ -176,6 +200,8 @@ Raw `SubAgentMiddleware` specs must include `model` and `tools` (else `ValueErro
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_utils.py`
 - `../sources/package/deepagents/_excluded_middleware.py`
+- `../sources/package/deepagents/backends/protocol.py` (`BackendConsumer`)
+- `../sources/docs/github/deepagents-CHANGELOG.md`
 
 ## See also
 

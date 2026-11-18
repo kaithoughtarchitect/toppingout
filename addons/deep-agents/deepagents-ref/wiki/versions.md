@@ -6,20 +6,21 @@ status: code
 product: sdk
 keywords: deepagents version, changelog, breaking changes, 0.7.0, upgrade, migration, dependencies, extras, public API, __all__, deprecated, BASE_AGENT_PROMPT, virtual_mode, write_file overwrite, TodoListMiddleware removed, what changed
 read_when: Read when upgrading deepagents, code behaves differently after 0.7.x, or you need to know which module exports a class or what a dependency is.
-updated: 2026-11-09
-sources_hash: 11398d3fda1b
+updated: 2026-11-18
+sources_hash: e5a6c29ff5ff
 ---
 
 # Versions, dependencies and public API map
 
-This repo targets `deepagents==0.7.34` (released 2026-11-05; `deepagents.__version__ == "0.7.34"`). Upgraded from 0.7.19 on 2026-09-30, from 0.7.20 on 2026-10-21, then from 0.7.29 on 2026-11-09. Use this page to check what changed between versions, which deps you get, and where each public class lives.
+This repo targets `deepagents==0.7.39` (released 2026-11-16; `deepagents.__version__ == "0.7.39"`). Upgraded from 0.7.19 on 2026-09-30, from 0.7.20 on 2026-10-21, from 0.7.29 on 2026-11-09, then from 0.7.34 on 2026-11-18. Use this page to check what changed between versions, which deps you get, and where each public class lives.
 
 ## Quick reference
 
-- Target is `deepagents==0.7.34` (2026-11-05); Python `>=3.11,<4.0`.
+- Target is `deepagents==0.7.39` (2026-11-16); Python `>=3.11,<4.0`.
 - **0.7.20** (2026-09-29): one fix: `StateBackend.upload_files` now tags binary content `base64` (it was stored as base64 but tagged `utf-8`). Code diff vs 0.7.19: only `backends/state.py` and `_version.py`. Minimum versions raised: `langchain>=1.4.3`, `langchain-core>=1.6.6`, `langchain-anthropic>=1.7.5`, `langsmith>=0.14.1`, quickjs extra `>=0.3.8`.
 - **0.7.21 to 0.7.29** (2026-09-30 to 2026-10-20): `SkillsMiddleware` moved to the tail of the stack, skill tools (`metadata.include_tools`, `SkillsMiddleware(tools=...)`) and `pinned_skills`, async subagents gained `mode="fork"`, a `waiting` status and push notifications to the parent (`TaskEvent`, `_ParentNotifierMiddleware`), permissions also check symlink targets on `FilesystemBackend`, `edit_file` refuses binary files, `SummarizationMiddleware(summarizer=...)`, `FilesystemMiddleware(offload_binary_content=...)`. Details in the 0.7.20 to 0.7.29 table below. Minimum versions raised: `langchain>=1.4.6`, `langchain-core>=1.6.12`, `langchain-anthropic>=1.7.6`, `langchain-google-genai>=4.4.2`, `langsmith>=0.14.11`, aws extra `langchain-aws>=1.9.0`, quickjs extra `>=0.3.9`.
 - **0.7.30 to 0.7.34** (2026-10-22 to 2026-11-05): model refusals raise an error by default and a subagent's refusal is reported to the parent; async subagents gained `notify_parent`, `webhook`, queued follow-ups and notification metadata; summaries drop reasoning blocks of the history they replace and anchor the cutoff to a message ID; the Python `grep` fallback searches only the requested file and clips long lines; rubric middleware is out of beta. Details: Changes 0.7.29 to 0.7.34 below. Minimum versions raised: `langchain>=1.4.9`, `langchain-core>=1.7.6`, `langchain-anthropic>=1.7.10`, `langchain-google-genai>=4.4.3`, `langsmith>=0.14.17`.
+- **0.7.35 to 0.7.39** (2026-11-09 to 2026-11-16): a fork keeps the parent's system prompt and gets its own `system_prompt` in the task message; middleware with a `bind_backend` method (`BackendConsumer`) receives the agent's backend; the `task` tool message records the subagent's checkpoint namespace; `ls`, `glob` and `grep` drop results that would need approval outside the call's scope; `FilesystemBackend` keeps symlink names and no longer hangs on a FIFO; `StoreBackend` stores uploads with NUL bytes as base64; async subagents on the same deployment stream like an app's own runs. Minimums now `langchain>=1.5.0`, `langchain-core>=1.8.1`.
 - Extras: `aws` (Bedrock caching), `quickjs` (`CodeInterpreterMiddleware`), `video` (frames in `read_file`); `langchain-openai` is not included.
 - 0.7.0 removed `TodoListMiddleware` from defaults; restore with `middleware=[TodoListMiddleware()]`.
 - 0.7.0 lean prompts: empty base prompt; `BASE_AGENT_PROMPT` deprecated (removal 0.9.0).
@@ -30,13 +31,13 @@ This repo targets `deepagents==0.7.34` (released 2026-11-05; `deepagents.__versi
 - Pending removals: `model=None` (1.0.0), `BASE_AGENT_PROMPT` (0.9.0).
 - `deepagents.profiles` is beta and may change in minor releases.
 
-## Package metadata (0.7.34)
+## Package metadata (0.7.39)
 
 - License MIT; "Development Status :: 4 - Beta"; Python `>=3.11,<4.0` (3.11 to 3.14).
-- Required: `langchain>=1.4.9,<2`, `langchain-core>=1.7.6,<2`, `langchain-anthropic>=1.7.10,<2`, `langchain-google-genai>=4.4.3,<5`, `langsmith>=0.14.17`, `packaging>=23.2`, `wcmatch>=11.0`. (LangGraph comes transitively via `langchain`.)
-- Extras: `aws` -> `langchain-aws>=1.9.1,<2` (Bedrock prompt caching); `quickjs` -> `langchain-quickjs>=0.3.11` (`CodeInterpreterMiddleware`); `video` -> `av>=18`, `pillow>=12.3` (video frames in `read_file`; the upper bounds `<19` and `<13` are gone).
+- Required: `langchain>=1.5.0,<2`, `langchain-core>=1.8.1,<2`, `langchain-anthropic>=1.7.10,<2`, `langchain-google-genai>=4.4.3,<5`, `langsmith>=0.14.17`, `packaging>=23.2`, `wcmatch>=11.0`. (LangGraph comes transitively via `langchain`.)
+- Extras: `aws` -> `langchain-aws>=1.9.3,<2` (Bedrock prompt caching); `quickjs` -> `langchain-quickjs>=0.3.12` (`CodeInterpreterMiddleware`); `video` -> `av>=18`, `pillow>=12.3` (video frames in `read_file`; the upper bounds `<19` and `<13` are gone).
 - Not included: `langchain-openai`, `langchain-openrouter` (need `>=0.2.0`), `langchain-fireworks`, sandbox partner packages.
-- Traces carry metadata `lc_versions.deepagents` (`"0.7.34"`, or `"0.7.34+editable"` for editable installs).
+- Traces carry metadata `lc_versions.deepagents` (`"0.7.39"`, or `"0.7.39+editable"` for editable installs; since 0.7.39 the editable check scans only the `deepagents` distribution records).
 
 ## Breaking changes in 0.7.0 (2026-07-29)
 
@@ -100,6 +101,18 @@ Code files changed between the 0.7.29 and 0.7.34 wheels: `graph.py`, `_excluded_
 | 0.7.33 | model refusals raise an error by default and subagent refusals reach the parent; notification metadata on async subagent notifications; the `task` call ID is recorded on subagent checkpoints; the Python `grep` fallback is limited to the requested file and clips long lines around the match; failed compaction reports an error status; rubric middleware leaves beta ([[fault-tolerance]], [[filesystem-tools]], [[rubric]]) |
 | 0.7.34 | the summarization cutoff is anchored to a message ID ([[summarization]]) |
 
+## Changes 0.7.34 to 0.7.39
+
+Code files changed between the 0.7.34 and 0.7.39 wheels: `graph.py`, `_version.py`; `backends/__init__.py`, `filesystem.py`, `protocol.py`, `store.py`; `middleware/_prompt_caching.py`, `async_subagents.py`, `filesystem.py`, `subagents.py`; `profiles/harness/_nvidia_nemotron_3_ultra.py`. No new files. Rows below are from the upstream changelog, each checked against the code diff; the pages linked in each area were re-checked against the code.
+
+| Version | Change |
+| - | - |
+| 0.7.35 | a declarative fork keeps the parent's system prompt unchanged, so it reuses the parent's cached prompt prefix; the fork's own `system_prompt` is now delivered in the task message after the inherited history (`_FORK_INSTRUCTIONS_KEY` in `graph.py` and `middleware/subagents.py`), not appended to the system message; `FilesystemBackend` virtual paths keep the symlink's own name (containment is still checked on the resolved target); `read_file` media messages and Nemotron nudges carry notification metadata (`add_notification_metadata`, source `read_file_media`) ([[subagents]], [[filesystem-tools]], [[multimodal]]) |
+| 0.7.36 | `BackendConsumer` (new in `deepagents.backends`): `create_deep_agent` calls `bind_backend(backend)` on every middleware that has it, a declarative subagent's own middleware included; the `task` tool message carries `artifact={"checkpoint_ns": ...}` (compiled subagents are now streamed with `values` and `checkpoints` to learn it; a `.with_retry()` subagent is still invoked, so after a retry the recorded namespace can be the failed run's); `FilesystemBackend.download_files` returns `file_not_found` for a FIFO or device instead of hanging ([[middleware]], [[subagents]], [[backends]]) |
+| 0.7.37 | the optional Bedrock and Fireworks prompt-caching classes are looked up once and cached ([[harness]]) |
+| 0.7.38 | `ls`, `glob` and `grep` remove results whose path or resolved target needs `interrupt` approval outside the roots the call was approved for (`_bulk_scope` in `middleware/filesystem.py`): a symlink can no longer list or search past an interrupt rule ([[permissions]], [[filesystem-tools]]) |
+| 0.7.39 | `StoreBackend.upload_files` stores content as UTF-8 only when it is valid UTF-8 **and** has no NUL byte, otherwise base64 (a NUL byte can't go in a Postgres JSONB store); async subagents on the same deployment (no `url`) stream `values`, `updates`, `messages-tuple` and `custom` with subgraphs and resumable streams, so an app that joins their runs sees them ([[backends]], [[async-subagents]]) |
+
 ## Earlier milestones
 
 - 0.5.2: filesystem permissions; `StateBackend.upload_files`.
@@ -132,7 +145,7 @@ Top-level `from deepagents import ...` (`__all__`): `create_deep_agent`, `DeepAg
 | `deepagents.middleware.filesystem` | tool schemas (`ReadFileSchema`, `GrepSchema`, ...), `FilesystemState` | [[filesystem-tools]] |
 | `deepagents.middleware.subagents` / `async_subagents` | `SubAgent`, `CompiledSubAgent`, `TaskToolSchema`, `AsyncTask`, async tool schemas | [[subagents]], [[async-subagents]] |
 | `deepagents.middleware.skills` / `memory` | `SkillsState`, `MemoryState` | [[skills]], [[memory]] |
-| `deepagents.backends` | `StateBackend`, `FilesystemBackend`, `LocalShellBackend`, `StoreBackend`, `CompositeBackend`, `ContextHubBackend`, `LangSmithSandbox`, `BackendProtocol`, `NamespaceFactory` | [[backends]] |
+| `deepagents.backends` | `StateBackend`, `FilesystemBackend`, `LocalShellBackend`, `StoreBackend`, `CompositeBackend`, `ContextHubBackend`, `LangSmithSandbox`, `BackendProtocol`, `BackendConsumer` (0.7.36), `NamespaceFactory` | [[backends]] |
 | `deepagents.backends.protocol` / `sandbox` | `SandboxBackendProtocol`, `BaseSandbox`, `ExecuteResponse`, result types (`ReadResult`, `WriteResult`, `EditResult`, `DeleteResult`, `LsResult`, `GrepResult`, `GlobResult`, `FileInfo`) | [[backends]] |
 | `deepagents.backends.utils` | `create_file_data`, `file_data_to_string`, path helpers | [[backends]] |
 | `deepagents.profiles` (beta) | profile classes, `apply_provider_profile`, `get_provider_profile` | [[models]] |
@@ -145,11 +158,12 @@ Also documented in the reference: the Nemotron middleware classes (`NemotronTool
 - Code written for <0.7 that relied on `write_todos`, the base prompt, `write_file` refusing overwrites, or `virtual_mode=False` default silently changes behaviour on 0.7.x.
 - README/METADATA quickstart uses `model="openai:gpt-6-astra"`; any tool-calling model works but check the provider package is installed (`langchain-openai` is not a dependency).
 - `deepagents.profiles` is explicitly beta: minor changes possible in minor releases.
-- The changelog's 0.5.4 note mentions Codex `apply_patch`/`shell_command` conventions; the Codex profile (unchanged through 0.7.34) only has a prompt suffix + `TodoListMiddleware`.
+- The changelog's 0.5.4 note mentions Codex `apply_patch`/`shell_command` conventions; the Codex profile (unchanged through 0.7.39) only has a prompt suffix + `TodoListMiddleware`.
 
 ## Sources
 
-- `../sources/package/deepagents-0.7.34.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.39.dist-info/METADATA`
+- `../sources/package/deepagents/backends/protocol.py`
 - `../sources/docs/github/deepagents-CHANGELOG.md`
 - `../sources/docs/oss/python/reference/deepagents-python.md`
 - `../sources/package/deepagents/__init__.py`

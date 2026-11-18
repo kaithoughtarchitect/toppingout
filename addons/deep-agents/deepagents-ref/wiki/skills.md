@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools
 read_when: Read when adding task-specific procedures the agent loads on demand, when skills load zero, a new or edited skill does not appear, or a subagent lacks skills.
-updated: 2026-11-09
-sources_hash: 8e09c145f552
+updated: 2026-11-18
+sources_hash: efb9fc0649c7
 ---
 
 # Skills (SKILL.md, progressive disclosure)
@@ -81,7 +81,7 @@ agent = create_deep_agent(
 
 - Paths are backend paths, POSIX, forward slashes.
 - `StateBackend` (default): seed via `agent.invoke({"messages": [...], "files": {"/skills/x/SKILL.md": create_file_data(text)}})`; raw strings are not accepted, use `deepagents.backends.utils.create_file_data`.
-- `StoreBackend` / `FilesystemBackend`: `backend.upload_files([("/skills/x/SKILL.md", text.encode())])` before creating the agent, or seed the store directly. Route prefixes are stripped: skill at `/skills/x/SKILL.md` under route `/skills/` is store key `"/x/SKILL.md"`.
+- `StoreBackend` / `FilesystemBackend`: `backend.upload_files([("/skills/x/SKILL.md", text.encode())])` before creating the agent, or seed the store directly. Route prefixes are stripped: skill at `/skills/x/SKILL.md` under route `/skills/` is store key `"/x/SKILL.md"`. The memory docs' seeding example uses these stripped keys (and a backend instance, not a factory) since the 2026-11-18 fetch.
 - `FilesystemBackend(root_dir=..., virtual_mode=True)` to keep paths under `root_dir`.
 - The SDK never auto-scans `~/.deepagents/...` or `~/.agents/...`; that is Deep Agents Code behaviour ([[dcode-extending]]). Emulate CLI layering by passing sources lowest-to-highest precedence.
 - Hand-built middleware also accepts `(path, label)` tuples: `SkillsMiddleware(backend=b, sources=[("/repo/.claude/skills", "Project Claude")])`. The label renders as `**{label} Skills**`; default label is the capitalized last path segment (a trailing `skills` climbs to its parent).
@@ -96,7 +96,7 @@ agent = create_deep_agent(
   -> Read `/skills/org/langgraph-docs/SKILL.md` for full instructions
 ```
 
-plus instructions to `read_file(path, limit=1000)` (default read is 100 lines). With no skills: "(No skills available yet. You can create skills in ...)". Source-level `ls` errors appear as an escaped `<skill_load_warnings>` block (max 20, 1000 chars each). There is no dedicated skill-reading tool; level 2/3 loading is ordinary `read_file` ([[filesystem-tools]]). Stack position (0.7.34): after your middleware and profile extras, right before prompt caching, on the main agent and in subagents ([[middleware]]). Your own middleware therefore runs before it and can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section; replace `SkillsMiddleware` by name if you need that.
+plus instructions to `read_file(path, limit=1000)` (default read is 100 lines). With no skills: "(No skills available yet. You can create skills in ...)". Source-level `ls` errors appear as an escaped `<skill_load_warnings>` block (max 20, 1000 chars each). There is no dedicated skill-reading tool; level 2/3 loading is ordinary `read_file` ([[filesystem-tools]]). Stack position (0.7.39): after your middleware and profile extras, right before prompt caching, on the main agent and in subagents ([[middleware]]). Your own middleware therefore runs before it and can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section; replace `SkillsMiddleware` by name if you need that.
 
 ## Loading lifecycle and reload
 
@@ -127,7 +127,7 @@ result = agent.invoke(
 ```
 
 - `pinned_skills` is a state key on `SkillsState` (names only, matched exactly against `skills_metadata`). In `before_model`, `SkillsMiddleware` reads each named `SKILL.md`, strips the frontmatter, and appends one `HumanMessage` per skill in the order named: `<skill name="..." path="...">body</skill>`.
-- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. In 0.7.34 (changed after 0.7.29) `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model.
+- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. Since 0.7.34 (still in 0.7.39) `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model. The docs (2026-11-18) now call this notification metadata, read with `langchain_core.messages.get_notification_metadata(message)` (returns `{"source": "pinned_skill", ...}`).
 - The message is a snapshot: editing `SKILL.md` later doesn't change it; pinning again appends a new copy. Earlier messages never change, so the prompt cache holds.
 - Unknown names and unreadable (or over 10 MB, or non-UTF-8) files are skipped with a debug log, no error. The key is cleared once used (reducer appends, so parallel tool calls can each pin).
 - Deep Agents does not parse skill names out of messages. Your app finds them (e.g. a regex for `/name`) and passes them in `pinned_skills`.

@@ -4,10 +4,10 @@ id: context-engineering
 type: concept
 status: code
 product: all
-keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context
+keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context, notification metadata, read_file_media, fork prompt cache
 read_when: Read when deciding what goes in the prompt vs files vs state, passing per-run context, debugging how the system prompt is assembled, or context bloat.
-updated: 2026-11-09
-sources_hash: a6ca680e5c8a
+updated: 2026-11-18
+sources_hash: ce56466bd3cc
 ---
 
 # Context engineering in Deep Agents
@@ -24,7 +24,7 @@ One-line truth: every `create_deep_agent` graph already manages five context lay
 | Isolation | [[subagents]] via `task` | per delegated task |
 | Long-term memory | files on a persistent route ([[memory]]) | across threads |
 
-## Input context: how the system prompt is assembled (0.7.34 code)
+## Input context: how the system prompt is assembled (0.7.39 code)
 
 Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotifier -> Summarization -> PatchToolCalls -> AsyncSubAgent (if any) -> your middleware -> harness-profile extras -> Skills (if `skills=`) -> prompt caching -> Memory (if `memory=`) -> HITL (if `interrupt_on`/interrupt permissions) -> UnsupportedContent -> ModelRefusal (0.7.33+, adds no prompt text). Each prompt-producing middleware appends to the system message, so the model sees roughly:
 
@@ -35,6 +35,8 @@ Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotif
 5. `<agent_memory>` + `<memory_guidelines>` (last, with its own cache breakpoint so memory edits do not invalidate the cached prefix)
 
 Checked on 0.7.29 with a scripted model that records its input: `system_prompt`, then a custom `wrap_model_call` fragment, then the skills index, then memory. Before 0.7.29 the skills index came right after your `system_prompt`, ahead of your own fragments. Not re-run on 0.7.34; the 0.7.34 code keeps the same order (only prompt caching and memory's Anthropic check changed).
+
+The 0.7.39 `graph.py` builds the main stack in the same order (read, not run).
 
 The docs' list puts memory before skills and includes filesystem/subagent prompt sections; the code order above wins. A skill can also keep related tool schemas out of the prompt until the skill is read (`metadata.include_tools`, [[skills]]). See [[middleware]], [[customization]], [[harness]].
 
@@ -93,10 +95,11 @@ Always on; details in [[summarization]]. Summary of defaults:
 - Opt-in `FilesystemMiddleware(backend=..., offload_binary_content=True)` (in `middleware=`) writes binary `read_file` results and inline `HumanMessage` media to `blobs/` under the artifacts root, keeps a reference in history, and rehydrates it for each model call. It has no effect (and warns) when `blobs/` routes to a `StateBackend`.
 - Images are never resized or embedded ([[multimodal]]).
 - When streaming tokens, skip `metadata.get("lc_source") == "summarization"` to hide summary generation ([[streaming]]).
+- Messages the harness adds to the history as `HumanMessage`s carry LangChain notification metadata, so a UI can tell them from the user's words with `get_notification_metadata(message)` (`langchain_core.messages`): the summary (source `"summarization"`, also in the 2026-11-18 docs), async task notifications (source `"async_subagent"`, [[async-subagents]]) and, since 0.7.35, the media message `read_file` adds for an image, audio, video or PDF (source `"read_file_media"`, `data={"path", "tool_call_id"}`, `_READ_FILE_MEDIA_SOURCE` in `middleware/filesystem.py`). The Nemotron harness profile's nudges are marked the same way since 0.7.35 (source = the nudge's name).
 
 ## Isolation with subagents
 
-`task` runs a subagent in a fresh context; only its final message returns. Tell subagents to return short summaries, and have them write bulky outputs to files the parent can `read_file`/`grep` selectively. See [[subagents]].
+`task` runs a subagent in a fresh context; only its final message returns. A `mode="fork"` subagent instead inherits the parent's history; since 0.7.35 it also keeps the parent's system prompt byte-identical (its own `system_prompt` rides in the task message), so it reuses the parent's prompt-cache prefix ([[subagents]]). Tell subagents to return short summaries, and have them write bulky outputs to files the parent can `read_file`/`grep` selectively. See [[subagents]].
 
 ## Long-term memory
 
@@ -122,6 +125,7 @@ The directory can start empty; tell the agent in the prompt what to save where (
 - Docs say the large-result preview is "first 10 lines"; code shows first 5 and last 5 lines (`_create_content_preview(head_lines=5, tail_lines=5)`).
 - Offloaded results and conversation history land on the default route (usually per-thread `StateBackend`) unless you set `CompositeBackend(artifacts_root=...)` to a routed prefix.
 - Prompt order in the docs (memory before skills) does not match code (memory last).
+- Code that treats every `HumanMessage` as the user's words will also pick up summaries, task notifications and (since 0.7.35) `read_file` media messages. Check `get_notification_metadata(message)` first.
 
 ## Sources
 - `../sources/docs/oss/python/deepagents/context-engineering.md`
@@ -131,6 +135,9 @@ The directory can start empty; tell the agent in the prompt what to save where (
 - `../sources/package/deepagents/middleware/_message_eviction.py`
 - `../sources/package/deepagents/middleware/memory.py`
 - `../sources/package/deepagents/middleware/skills.py`
+- `../sources/package/deepagents/middleware/subagents.py`
+- `../sources/package/deepagents/profiles/harness/_nvidia_nemotron_3_ultra.py`
+- `../sources/docs/github/deepagents-CHANGELOG.md`
 
 ## See also
 - [[index]]

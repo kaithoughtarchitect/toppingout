@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode extensions, AGENTS.md, memory, skills, SKILL.md, subagents, sub-agent, MCP servers, .mcp.json, hooks, hooks.json, PreToolUse, plugins, marketplace, ExtensionAPI, Python extension, register_tool, allowedTools
 read_when: Read when adding memory, skills, subagents, MCP servers, hooks, plugins or Python extensions to dcode, or when a project MCP server or extension does not load.
-updated: 2026-11-09
-sources_hash: ddc002ae14f2
+updated: 2026-11-18
+sources_hash: 6a727efcd651
 ---
 
 # Extending dcode (memory, skills, subagents, hooks, plugins, extensions, MCP)
@@ -74,7 +74,7 @@ You are a research assistant...
 
 - Frontmatter supports only `name`, `description` and optional `model`. The body becomes `system_prompt`. `tools`, `middleware`, `interrupt_on` and `skills` cannot be set, and these subagents inherit the main agent's tools. Use the SDK for full control ([[subagents]]).
 - Project subagents override user subagents with the same name. Naming one `general-purpose` overrides the built-in, for example to send delegation to a cheaper model.
-- The built-in `general-purpose` subagent runs in **fork** mode by default (since 0.1.66): it inherits the parent conversation and system prompt. `DEEPAGENTS_CODE_FORKED_SUBAGENTS=false` switches to isolated mode. Set it in the shell or global `.env`; a project `.env` cannot set it. This maps to the SDK's `mode: "fork"`, which is beta. In SDK 0.7.34, `mode` accepts `"isolated"` or `"fork"`, and fork cannot also set `skills`.
+- The built-in `general-purpose` subagent runs in **fork** mode by default (since 0.1.66): it inherits the parent conversation and system prompt. `DEEPAGENTS_CODE_FORKED_SUBAGENTS=false` switches to isolated mode. Set it in the shell or global `.env`; a project `.env` cannot set it. This maps to the SDK's `mode: "fork"`, which is beta. In SDK 0.7.39, `mode` accepts `"isolated"` or `"fork"`, and fork cannot also set `skills` (`subagents.py`). Since SDK 0.7.39 a fork keeps the parent's system prompt byte for byte (so it reuses the parent's cached prompt prefix); a fork spec's own `system_prompt` now goes into the task message after the inherited history instead of being appended to the system prompt (`graph.py`, `subagents.py` `_FORK_INSTRUCTIONS_KEY`). The dcode docs still say the fork inherits "the parent conversation and system prompt", which stays true.
 - [[dynamic-subagents]] work out of the box because `js_eval` is on. Ask for a "workflow" and the agent writes a script that calls `task()` in the interpreter. Progress shows in the dynamic subagents panel (`Ctrl+T`).
 - [[async-subagents]] are **not** available to dcode end users.
 
@@ -167,7 +167,8 @@ async def extension(d: ExtensionAPI) -> None:          # must be async and named
 - `../sources/docs/oss/deepagents/code/mcp-tools.md`
 - `../sources/docs/oss/deepagents/code/configuration.md` (data locations, precedence)
 - `../sources/package/deepagents/backends/store.py` (`StoreBackend(*, namespace, store=None)`)
-- `../sources/package/deepagents/middleware/subagents.py` (`mode: "isolated" | "fork"`)
+- `../sources/package/deepagents/middleware/subagents.py` (`mode: "isolated" | "fork"`, fork instructions in the task message)
+- `../sources/package/deepagents/graph.py` (fork keeps the parent's system prompt, 0.7.39)
 
 ## See also
 

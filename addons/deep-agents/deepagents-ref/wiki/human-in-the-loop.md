@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__
 read_when: Read when a tool needs human approval before running, when a resume fails, or when subagent interrupts do not fire.
-updated: 2026-11-09
-sources_hash: 27fa543f7153
+updated: 2026-11-18
+sources_hash: 27b1531171ad
 ---
 
 # Human-in-the-loop (interrupt_on, approve/edit/reject/respond)
@@ -101,7 +101,7 @@ if result.get("__interrupt__"):
 - A declarative `SubAgent` **inherits** the top-level `interrupt_on` unless its spec sets its own, which **overrides** the parent's (no merge).
 - The general-purpose subagent gets the top-level `interrupt_on` plus any interrupts generated from permissions.
 - `CompiledSubAgent` and `AsyncSubAgent` inherit **nothing**. Put HITL inside the compiled graph or the remote deployment ([[subagents]], [[async-subagents]]). Since 0.7.26 an async subagent paused on an interrupt reports task status `waiting`; the user answers it on the subagent's own thread, and the parent can't approve for them. An `update_async_task` on a `waiting` task drops its pending request. With `update_strategy="enqueue"` (0.7.30+, beta) a queued follow-up also drops a request the current run raises later: the follow-up still starts.
-- Subagent interrupts surface on the parent result and parent `updates` stream as `__interrupt__`. `subgraphs=True` is only needed for child tokens. Resume through the parent with the parent's checkpointer and thread.
+- Subagent interrupts surface on the parent result and parent `updates` stream as `__interrupt__`. `subgraphs=True` is only needed for child tokens. Resume through the parent with the parent's checkpointer and thread. Since 0.7.36 `task` streams the child graph instead of invoking it; probe on 0.7.39 on 2026-11-18 (fake model, `interrupt_on={"write_file": True}` inherited by the general-purpose child): the parent result held the child's `write_file` interrupt, and resuming the parent with `approve` wrote the file and finished both runs.
 - A tool inside any subagent can call `langgraph.types.interrupt({...})` directly. You then resume with an arbitrary payload, for example `Command(resume={"approved": True})`.
 - To gate delegation itself, use `interrupt_on={"task": True}`. **Dynamic** `task()` dispatch from interpreter code bypasses this, so gate `eval` instead ([[dynamic-subagents]]).
 
@@ -121,6 +121,7 @@ create_deep_agent(model=..., permissions=[
 - Bulk tools (`ls`, `glob`, `grep`, `delete`) fire when the searched subtree overlaps a rule. A pathless call (for example `grep(path=None)`) always fires. `path="."` is treated as `/`, and a `glob` `pattern` that is absolute or contains `..` is also checked.
 - Hidden paths: a rule only makes entries for the tools whose operation it covers. Of those, the exact tools (`read_file` for `"read"`; `write_file`, `edit_file` for `"write"`) match with `**` skipping hidden segments, so a `/secrets/**` rule doesn't pause them on `/secrets/.key`. The bulk tools it covers (`ls`, `glob`, `grep` for `"read"`; `delete` for `"write"`) still pause there, because their subtree overlaps the rule: under the write-only example above, only `delete` pauses on `/secrets/.key` (checked on 0.7.20, 2026-10-23).
 - When every call of a tool must pause, list the tool itself in `interrupt_on` ([[permissions]], Interrupt mode).
+- Results of an approved bulk call stay inside what was approved (since 0.7.38, `_bulk_scope` in `middleware/filesystem.py`). When any interrupt rule covers `"read"`, `ls`, `glob` and `grep` drop a result whose path or symlink-resolved target needs an interrupt but lies outside the searched path, its resolved target and (for `glob`) the pattern's anchor (`/` if the pattern climbs with `..`). Before, a symlink inside the approved folder could list or grep files under an interrupt rule elsewhere without a pause. The changelog says: "Exclude results from `ls`, `grep`, and `glob` when a symlink resolves outside the approved search scope." See [[permissions]].
 - An edited call still goes back through the tool's deny check. A preceding `deny` rule beats `interrupt` (first match wins) ([[permissions]]).
 - With `FilesystemBackend` (0.7.25+), the `when` predicate also checks the symlink-resolved target: it fires if either path hits an interrupt rule and neither hits a deny (a denied call fails in the tool instead of pausing). A path the backend can't resolve doesn't pause on that path (a `glob` pattern can still fire); the tool then returns `Error: cannot resolve <path>`.
 

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: permissions, FilesystemPermission, read-only agent, hidden paths, dotfiles, DOTGLOB, deny write, allow deny, path restrictions, restrict paths, approval, interrupt mode, HITL, human in the loop, first match wins, access control, guardrails
 read_when: Read when making paths read-only, confining the agent to a directory, requiring approval for sensitive writes, or hitting NotImplementedError combining permissions with a shell backend.
-updated: 2026-11-09
-sources_hash: 87b3017e3fa2
+updated: 2026-11-18
+sources_hash: b64c922d4b93
 ---
 
 # Filesystem permissions (FilesystemPermission)
@@ -20,7 +20,7 @@ Declarative first-match-wins allow/deny/interrupt rules on the built-in file too
 - `read` covers `ls, read_file, glob, grep`; `write` covers `write_file, edit_file, delete`; `execute` is not covered.
 - Rules are first-match-wins in order; no matching rule means allowed. Put specific rules before broad; end with a `/**` deny for an allowlist (hidden paths still pass it: Gotchas).
 - Paths must start with `/`; `..` raises `ValueError`; patterns use `**` and `{a,b}` globs on virtual paths.
-- `*` and `**` never match a path segment that starts with `.`, and no match means allowed: `deny write /**` leaves `/.x`, `/memories/.x.md` and `/a/.b/c` readable and writable (Gotchas).
+- `*` and `**` never match a path segment that starts with `.`, and no match means allowed: `deny write /**` leaves `/.x`, `/memories/.x.md` and `/a/.b/c` readable and writable (Gotchas). Still so in 0.7.39.
 - Enforced only in the built-in file tools, not custom tools, MCP tools, `execute` or direct backend calls.
 - `mode="interrupt"` needs a checkpointer and `deepagents>=0.6.8`; it merges into `interrupt_on`.
 - With an execute-capable backend, every permission path must start with a Composite route prefix or `NotImplementedError` is raised.
@@ -28,6 +28,7 @@ Declarative first-match-wins allow/deny/interrupt rules on the built-in file too
 - A `FilesystemMiddleware` you pass in `middleware=` (it replaces the default by name) inherits these rules when built without `permissions=`; different non-empty rules raise `ValueError` (0.7.31+).
 - A pathless `glob` is checked against `/`, so an allowlist can deny it; pass `path`.
 - With `FilesystemBackend` (directly or behind a Composite route), rules are matched against the requested path **and** its symlink-resolved target (0.7.25+); a deny on either blocks.
+- With a `read` interrupt rule, `ls`/`glob`/`grep` also drop results whose path or symlink target needs approval outside the folder the call was approved for (0.7.38+, `_bulk_scope`).
 
 ## API
 
@@ -53,9 +54,9 @@ class FilesystemPermission:
 ## Enforcement (where and how)
 
 - Enforced by `FilesystemMiddleware` inside each tool, before the backend is called (see [[filesystem-tools]]). Denied calls return `Error: permission denied for <op> on <path>` with `status="error"`.
-- Bulk results are filtered: `ls`, `glob`, `grep` drop entries/matches whose path is denied, so the agent never sees them.
+- Bulk results are filtered: `ls`, `glob`, `grep` drop entries/matches whose path is denied, so the agent never sees them. Since 0.7.38, when any interrupt rule covers `"read"`, they also drop entries whose path or symlink target needs approval (`interrupt`) outside the call's scope (`_bulk_scope` and `_is_denied` in `middleware/filesystem.py`, below).
 - Not enforced for direct backend calls, custom tools, MCP tools, or `execute`. For those use backend policy wrappers ([[backends]]) or [[sandboxes]].
-- Symlinks (0.7.25+): with `FilesystemBackend`, directly or behind a `CompositeBackend` route, each check also resolves the path through symlinks (`FilesystemBackend._real_path`) and matches the target. A deny on either path blocks, with `Error: permission denied for <op> on <path> (resolves to <target>)`. A path that can't be resolved (it escapes the root in virtual mode, or is a symlink loop) returns `Error: cannot resolve <path>` once any rule is set. Bulk results drop entries whose target is denied. Before 0.7.25 the backend followed symlinks after the check, so a link inside an allowed folder could reach a denied one. Other backends have no symlinks and are checked on the requested path only.
+- Symlinks (0.7.25+): with `FilesystemBackend`, directly or behind a `CompositeBackend` route, each check also resolves the path through symlinks (`FilesystemBackend._real_path`) and matches the target. A deny on either path blocks, with `Error: permission denied for <op> on <path> (resolves to <target>)`. A path that can't be resolved (it escapes the root in virtual mode, or is a symlink loop) returns `Error: cannot resolve <path>` once any rule is set. Bulk results drop entries whose target is denied (a directory entry's target is matched with and without its trailing `/` since 0.7.38). Since 0.7.35, `FilesystemBackend` in virtual mode lists a symlink under its own name, not its target's (`_to_virtual_path` checks the target stays inside the root, then formats the unresolved path), so the entry the agent sees is the link path and the filter still checks both. Before 0.7.25 the backend followed symlinks after the check, so a link inside an allowed folder could reach a denied one. Other backends have no symlinks and are checked on the requested path only.
 - `glob` without `path` is authorized against `/`. With a `/**` deny + `/workspace/**` allow, a pathless glob is denied; the error hint tells the model to pass `path`.
 
 ## Recipes
@@ -95,7 +96,8 @@ agent = create_deep_agent(
 - Works for `"read"` rules too (code builds entries for `ls/read_file/glob/grep` when an interrupt rule includes `"read"`), although docs only describe writes.
 - Scope: `read_file/write_file/edit_file` fire on exact path match. `ls/glob/grep/delete` are "bulk": they fire if their search subtree could overlap the rule's literal anchor; `grep` with no `path` fires for any interrupt rule. Unanchored patterns like `/**/secrets` collapse to `/` and over-fire. Anchor patterns (`/secrets/**`, `/projects/*/secrets/**`).
 - Interrupt rules also match the symlink-resolved target (0.7.25+); a call that a deny rule blocks on either path does not pause, it fails.
-- Approved results are not filtered afterward (interrupt paths pass the result filter); `edit`ed calls re-enter the tool and still hit deny checks.
+- Approved results inside the approved scope are not filtered afterward; `edit`ed calls re-enter the tool and still hit deny checks.
+- Bulk scope (0.7.38+): when an interrupt rule covers `"read"`, `ls`, `glob` and `grep` compute a scope (`_bulk_scope` in `middleware/filesystem.py`): the call's `path` (`/` for a pathless `grep`) and its symlink-resolved target; for `glob`, an absolute pattern adds its anchor and a pattern with `..` adds `/`. A result whose path or resolved target matches an interrupt rule outside every scope root is dropped, like a deny. This stops a symlink inside an approved folder from showing files under a folder that needs approval (changelog 0.7.38, "exclude results ... when a symlink resolves outside the approved search scope"). Without `read` interrupt rules there is no scope and only denies filter.
 - Hidden paths: `**` skips hidden segments for the exact tools, so a `/secrets/**` rule doesn't pause the ones its operations cover (`read_file` for `"read"`; `write_file`, `edit_file` for `"write"`) on `/secrets/.key` (Gotchas). The bulk tools it covers (`ls`, `glob`, `grep` for `"read"`; `delete` for `"write"`) compare the rule's anchor and still pause there: under the write rule above, only `delete` pauses on `/secrets/.key` (`_fs_interrupt.py`). When every call of a tool must pause, list the tool itself in `interrupt_on` ([[human-in-the-loop]]).
 
 ## delete semantics
@@ -157,7 +159,7 @@ create_deep_agent(model=m, backend=composite,
 ## Gotchas
 
 - Default is permissive: no matching rule = allowed. Add a trailing `/**` deny to make an allowlist; hidden paths still pass it (next bullet).
-- `**` skips hidden path segments. Patterns are matched with `wcmatch` flags `BRACE | GLOBSTAR` only (`_FS_WCMATCH_FLAGS` in `filesystem.py`, no `DOTGLOB`), and `_check_fs_permission` allows a path no rule matches, so a `/**` allow or deny rule misses `/.x`, `/memories/.notes.md` and `/a/.b/c` for reads and for writes to that path (checked on 0.7.20, 2026-10-22, and on 0.7.34). A recursive `delete` of a directory is checked differently: a deny whose pattern after its literal anchor has `**` or more than one path part (such as `/**`) refuses deleting any directory under that anchor, hidden ones included, so a `/**` write deny still refuses deleting `/a/.b`; a one-level deny such as `/memories/*` still misses `/memories/.b` (`_wildcard_delete_overlap` in `filesystem.py`; delete semantics above). An interrupt rule misses hidden paths for the exact tools (`read_file`, `write_file`, `edit_file`) too, but the bulk tools whose operation the rule covers (`ls`, `glob`, `grep` for `"read"`; `delete` for `"write"`) compare the rule's anchor and still pause on a hidden path under it (`_fs_interrupt.py`; Interrupt mode above). No glob under these flags covers every hidden path. For an agent that must not write, also refuse `write_file`, `edit_file` and `delete` in a `wrap_tool_call` / `awrap_tool_call` middleware on the agent and on every subagent: the automatic general-purpose subagent builds its own `FilesystemMiddleware` and takes only same-named middleware from the parent, so declare it (`from deepagents.middleware.subagents import GENERAL_PURPOSE_SUBAGENT`, then `{**GENERAL_PURPOSE_SUBAGENT, "middleware": [guard]}`) to give it the guard. Declaring it replaces the automatic one: it then gets skills only if its spec sets `"skills"`, and a harness profile's general-purpose settings no longer apply ([[subagents]]).
+- `**` skips hidden path segments. Patterns are matched with `wcmatch` flags `BRACE | GLOBSTAR` only (`_FS_WCMATCH_FLAGS` in `filesystem.py`, no `DOTGLOB`), and `_check_fs_permission` allows a path no rule matches, so a `/**` allow or deny rule misses `/.x`, `/memories/.notes.md` and `/a/.b/c` for reads and for writes to that path (checked on 0.7.20, 2026-10-22, on 0.7.34, and on 0.7.39, 2026-11-18, with a probe: a `/**` deny returned `allow` for `/.x`, `/memories/.x.md` and `/a/.b/c`, `deny` for `/a/b`). A recursive `delete` of a directory is checked differently: a deny whose pattern after its literal anchor has `**` or more than one path part (such as `/**`) refuses deleting any directory under that anchor, hidden ones included, so a `/**` write deny still refuses deleting `/a/.b`; a one-level deny such as `/memories/*` still misses `/memories/.b` (`_wildcard_delete_overlap` in `filesystem.py`; delete semantics above). An interrupt rule misses hidden paths for the exact tools (`read_file`, `write_file`, `edit_file`) too, but the bulk tools whose operation the rule covers (`ls`, `glob`, `grep` for `"read"`; `delete` for `"write"`) compare the rule's anchor and still pause on a hidden path under it (`_fs_interrupt.py`; Interrupt mode above). No glob under these flags covers every hidden path. Re-checked against the 0.7.39 code: `_FS_WCMATCH_FLAGS` is still `BRACE | GLOBSTAR`, `_check_fs_permission` still returns `allow` when nothing matches, and `_fs_interrupt.py` is unchanged from 0.7.34; the 0.7.38 bulk-scope filter uses the same matcher, so it never sees a hidden path as needing approval either. For an agent that must not write, also refuse `write_file`, `edit_file` and `delete` in a `wrap_tool_call` / `awrap_tool_call` middleware on the agent and on every subagent: the automatic general-purpose subagent builds its own `FilesystemMiddleware` and takes only same-named middleware from the parent, so declare it (`from deepagents.middleware.subagents import GENERAL_PURPOSE_SUBAGENT`, then `{**GENERAL_PURPOSE_SUBAGENT, "middleware": [guard]}`) to give it the guard. Declaring it replaces the automatic one: it then gets skills only if its spec sets `"skills"`, and a harness profile's general-purpose settings no longer apply ([[subagents]]).
 - Rules are ordered; specific before broad.
 - Docs say permissions "do not apply to sandbox backends"; code is stricter: combining non-route-scoped permissions with any execute-capable backend raises `NotImplementedError` at agent build time.
 - Permission matching is on the virtual path (after `validate_path` normalization). The one exception is `FilesystemBackend`: its symlink target is matched too, as a virtual path in `virtual_mode=True`, or as the real host path without its drive in `virtual_mode=False`. Write rules for the target as well as the link.
@@ -172,6 +174,7 @@ create_deep_agent(model=m, backend=composite,
 - `../sources/package/deepagents/middleware/_fs_interrupt.py`
 - `../sources/package/deepagents/middleware/permissions.py`
 - `../sources/package/deepagents/graph.py`
+- `../sources/docs/github/deepagents-CHANGELOG.md`
 
 ## See also
 

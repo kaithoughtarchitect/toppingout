@@ -4,10 +4,10 @@ id: streaming
 type: how-to
 status: sourced
 product: sdk
-keywords: streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events
+keywords: streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events, checkpoint_ns, ToolMessage artifact
 read_when: Read when streaming agent output or tokens, seeing no subagent events, or moving to stream_events v3.
-updated: 2026-11-09
-sources_hash: 58b30bded982
+updated: 2026-11-18
+sources_hash: f5f269c13205
 ---
 
 # Streaming (stream modes, subgraphs, event streaming v3)
@@ -21,7 +21,7 @@ One-line truth: a deep agent is a compiled LangGraph graph, so you stream it wit
 | `agent.stream` / `astream` with `stream_mode` + `subgraphs=True` | classic tuple chunks | branch on namespace + mode yourself |
 | `agent.stream_events(input, version="v3")` / `await agent.astream_events(...)` | "event streaming" (docs: introduced with Deep Agents v0.6) | typed projections: `.messages`, `.tool_calls`, `.values`, `.subagents`, `.subgraphs`, `.output` |
 
-Neither is implemented inside the `deepagents` package; both come from LangGraph/LangChain. Deep Agents' contribution (verified in code): each subagent runnable is compiled with `name=spec["name"]` (declarative) or `.with_config({"metadata": {"lc_agent_name": name}, "run_name": name})` (compiled), and the top-level graph gets `metadata.lc_agent_name=name` and `recursion_limit=9_999`. That metadata is what lets projections label subagents by their `subagent_type`.
+Neither is implemented inside the `deepagents` package; both come from LangGraph/LangChain. Deep Agents' contribution (verified in code): each subagent runnable is compiled with `name=spec["name"]` (declarative) or `.with_config({"metadata": {"lc_agent_name": name}, "run_name": name})` (compiled), and the top-level graph gets `metadata.lc_agent_name=name` and `recursion_limit=9_999`. That metadata is what lets projections label subagents by their `subagent_type`. Since 0.7.36 `task` runs a compiled subagent graph with its own `stream(..., stream_mode=["values", "checkpoints"])` instead of `invoke`, to learn its checkpoint namespace (`_run_subagent` in `middleware/subagents.py`). That inner call does not change what your outer stream shows: probe on 0.7.39 / langgraph 1.2.22 on 2026-11-18 (fake model, `stream_mode="updates", subgraphs=True, version="v2"`) still gave the child's `model` update under `("tools:<id>",)`.
 
 ## Classic: stream modes + subgraphs
 
@@ -88,7 +88,7 @@ for ns, mode, data in agent.stream(inp, stream_mode=["updates", "messages", "cus
 
 ## Human-in-the-loop while streaming
 
-With `interrupt_on` (or interrupt-mode `permissions`) set and a checkpointer + `thread_id` (see [[persistence]]), an `"updates"` chunk may contain `"__interrupt__"`; each item's `.value` holds the action requests. Resume by streaming again with `Command(resume={"decisions": [...]})` on the same `thread_id` — same payload as `invoke`. See [[human-in-the-loop]].
+With `interrupt_on` (or interrupt-mode `permissions`) set and a checkpointer + `thread_id` (see [[persistence]]), an `"updates"` chunk may contain `"__interrupt__"`; each item's `.value` holds the action requests. Resume by streaming again with `Command(resume={"decisions": [...]})` on the same `thread_id`, with the same payload as `invoke`. See [[human-in-the-loop]].
 
 ```python
 for mode, data in agent.stream(inp, stream_mode=["messages", "updates"], config=config):
@@ -128,7 +128,7 @@ Concurrency:
 
 ## Failed turns (for a Trace tab)
 
-Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. The refusal rows are from code, not a run (0.7.34 adds `ModelRefusalMiddleware` to the stack).
+Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. Re-run on 0.7.39 / langgraph 1.2.22 / langchain 1.5.0 on 2026-11-18 (the `task` tool now streams compiled children internally): the same four results. The refusal rows are from code, not a run (0.7.34 adds `ModelRefusalMiddleware` to the stack).
 
 | Failure | Default behaviour |
 |---|---|
@@ -168,14 +168,14 @@ Trace-row recipe with `stream_mode=["updates", "messages", "custom"]`, `subgraph
 ## Gotchas
 
 - Forgetting `subgraphs=True` in the classic API silently hides all subagent tokens/steps; you only see the final `task` `ToolMessage`.
-- The `tools:<id>` segment is the Pregel task id, **not** the `tool_call_id` of the `task` call; correlate start/finish via main-agent `tool_calls[i]["id"]` ↔ `ToolMessage.tool_call_id`.
+- The `tools:<id>` segment is the Pregel task id, **not** the `tool_call_id` of the `task` call; correlate start/finish via main-agent `tool_calls[i]["id"]` ↔ `ToolMessage.tool_call_id`. Since 0.7.36 the `task` `ToolMessage` also carries `artifact={"checkpoint_ns": "tools:<id>"}` (when a checkpointer saved the child), which names the child's namespace directly ([[subagents]]).
 - Docs are inconsistent on node names: one example filters `{"model", "tools"}`, sample output prints `model_request`, and middleware hooks add their own nodes. Print node names from your installed `langchain` before filtering.
 - `version="v2"` on `stream` gives `StreamPart` dicts (`type`, `ns`, `data`), which the current Deep Agents streaming docs use; without it you get tuples. `version="v3"` is a different API, the `stream_events` projections. Don't mix them up.
 - Subagent output returned to the parent is only the last non-empty AI text (or `structured_response` JSON, or since 0.7.33 a refusal notice); the parent never streams subagent tokens unless you subscribe to subgraph/subagent streams.
-- Async subagents ([[async-subagents]]) run on a remote deployment; they do not appear as local subgraph namespaces. On an Agent Server their status updates arrive as user-role messages marked with LangChain notification metadata of source `"async_subagent"` (read with `get_notification_metadata`, since 0.7.33) and, deprecated, `additional_kwargs["deepagents_notification"]` (since 0.7.26).
+- Async subagents ([[async-subagents]]) run on a remote deployment; they do not appear as local subgraph namespaces. On an Agent Server their status updates arrive as user-role messages marked with LangChain notification metadata of source `"async_subagent"` (read with `get_notification_metadata`, since 0.7.33) and, deprecated, `additional_kwargs["deepagents_notification"]` (since 0.7.26). Since 0.7.39 the runs they start on the same deployment, and the notification runs on the parent's thread, stream `values`, `updates`, `messages-tuple` and `custom` with subgraphs and are resumable, so an app that joins them gets tokens ([[async-subagents]]).
 - Since 0.7.33 each sync subagent run carries `metadata["lc_subagent_tool_call_id"]` (the `task` call id), which checkpointers copy into its checkpoints; that links a subagent's stored namespace to the `tool_call_id`, unlike the `tools:<id>` segment.
-- Default recursion limit is `9_999` in 0.7.34 code (frontend docs say "10,000").
-- For frontends, prefer `useStream` / AG-UI rather than hand-parsing chunks — see [[frontend]], [[protocols]].
+- Default recursion limit is `9_999` in 0.7.39 code (frontend docs say "10,000").
+- For frontends, prefer `useStream` / AG-UI rather than hand-parsing chunks (see [[frontend]], [[protocols]]).
 
 ## Sources
 - `../sources/docs/oss/python/deepagents/streaming.md`

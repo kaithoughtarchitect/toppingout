@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: custom tools, add tool, tools=, @tool, ToolRuntime, runtime.context, runtime.store, runtime.state, tool_call_id, Command update, large tool results, tool eviction, built-in tools, excluded_tools, get_stream_writer, tool returns image
 read_when: Read when adding a custom tool, a tool needs context/store/state via ToolRuntime, a tool returns Command or media, or a built-in tool is missing.
-updated: 2026-11-09
-sources_hash: eea5bfccfd35
+updated: 2026-11-18
+sources_hash: 4699d3db470f
 ---
 
 # Tools (custom tools, ToolRuntime, built-ins)
@@ -27,7 +27,7 @@ One-line truth: `create_deep_agent(tools=[...])` accepts plain callables, LangCh
 - Gotcha: `permissions=` covers only built-in fs tools; use `interrupt_on` for custom tools.
 - Gotcha: `write_todos` is absent unless you add `TodoListMiddleware()`.
 
-## Signature (0.7.34)
+## Signature (0.7.39)
 
 ```python
 create_deep_agent(
@@ -110,7 +110,7 @@ Fields used by the package's own tools / docs:
 | `str` | text `ToolMessage` |
 | `list[dict]` of standard content blocks | multimodal `ToolMessage` (text/image/audio/video/file) — see [[multimodal]] |
 | `ToolMessage(content=..., tool_call_id=runtime.tool_call_id, status="error")` | explicit error result |
-| `Command(update={...,"messages":[ToolMessage(..., tool_call_id=runtime.tool_call_id)]})` | write state + result in one step (pattern used by `task`, `read_file` video path) |
+| `Command(update={...,"messages":[ToolMessage(..., tool_call_id=runtime.tool_call_id)]})` | write state + result in one step (pattern used by `task`, `read_file` video path). Since 0.7.36 the `task` result's `ToolMessage` also sets `artifact={"checkpoint_ns": ...}`, the namespace the subagent saved its checkpoints under (so a client can load its history); `artifact` is `None` when nothing was checkpointed, and the model never sees it |
 
 ```python
 from langchain.messages import ToolMessage
@@ -172,7 +172,8 @@ Custom state keys (`page_url`) must exist in the graph schema: pass `state_schem
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/_tools.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
-- `../sources/package/deepagents/middleware/subagents.py`
+- `../sources/package/deepagents/middleware/subagents.py` (`_run_subagent`, `task` artifact)
+- `../sources/docs/github/deepagents-CHANGELOG.md` (0.7.36)
 - `../sources/package/deepagents/middleware/__init__.py`
 
 ## See also

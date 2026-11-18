@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: persistence, checkpointer, store, remember across sessions, long-term memory, InMemorySaver, SqliteSaver, PostgresSaver, PostgresStore, StoreBackend, thread_id, survive restart, durable state
 read_when: Read when state or memory is lost after a restart, when thread_id seems ignored, or when choosing a durable checkpointer and store.
-updated: 2026-11-09
-sources_hash: 67294ef65462
+updated: 2026-11-18
+sources_hash: 1489b51a24a7
 ---
 
 # Persistence (checkpointers and stores)
@@ -98,7 +98,7 @@ Postgres: `from langgraph.checkpoint.postgres import PostgresSaver` / `from lang
 
 ## SQLite locally, Postgres in production (async app)
 
-Imports were checked against the installed `langgraph-checkpoint-sqlite` 3.1.1 and `langgraph-checkpoint-postgres` 3.1.2. **Both branches ran** on 2026-09-29 (SQLite, and Postgres 17 in Docker), each through a real two-process restart with memory, history and the conversation surviving: `../scripts/check_persistence.py`. The SQLite branch ran again on `deepagents` 0.7.29 / `langgraph` 1.2.16 on 2026-10-21 with the same result; the Postgres branch was not re-run on 0.7.29. Both branches were re-run on `deepagents` 0.7.34 / `langgraph` 1.2.20 on 2026-11-09 (SQLite, and Postgres 17 in Docker) with the same result.
+Imports were checked against the installed `langgraph-checkpoint-sqlite` 3.1.1 and `langgraph-checkpoint-postgres` 3.1.2. **Both branches ran** on 2026-09-29 (SQLite, and Postgres 17 in Docker), each through a real two-process restart with memory, history and the conversation surviving: `../scripts/check_persistence.py`. The SQLite branch ran again on `deepagents` 0.7.29 / `langgraph` 1.2.16 on 2026-10-21 with the same result; the Postgres branch was not re-run on 0.7.29. Both branches were re-run on `deepagents` 0.7.34 / `langgraph` 1.2.20 on 2026-11-09, and on `deepagents` 0.7.39 / `langgraph` 1.2.22 on 2026-11-18 (SQLite, and Postgres 17 in Docker), with the same result.
 
 | Package (`pip install`) | Provides |
 |---|---|
@@ -187,15 +187,17 @@ Deployed: `await client.store.put_item((org_id,), "/compliance.md", create_file_
 
 - `MemoryMiddleware` loads `memory=` files **once per thread**: `before_agent` returns early `if "memory_contents" in state`, and that key is checkpointed. Edits to memory made later in the same thread (or by other threads) are not re-read into the system prompt for that thread; a new `thread_id` picks them up. Missing memory files are skipped silently (`file_not_found`).
 - `thread_id` without a checkpointer does nothing. Every "multi-turn" example that omits `checkpointer=` (e.g. the content-builder tutorial) is single-turn.
-- Docs seed agent-scoped memory as `store.put(("my-agent",), "/memories/AGENTS.md", ...)` while routing `/memories/` to that StoreBackend. Because `CompositeBackend` strips the prefix, the agent reads key `/AGENTS.md`; the seeded item is never found. The org example (`"/compliance.md"` under `/policies/`) is correct. Code wins.
+- Seed the stripped key. Because `CompositeBackend` strips the route prefix, an agent reading `/memories/AGENTS.md` reads store key `/AGENTS.md`; an item seeded as `"/memories/AGENTS.md"` is never found. Docs fetched before 2026-11-18 seeded the prefixed key; the 2026-11-18 memory page seeds `"/AGENTS.md"` and says why (`../sources/docs/oss/python/deepagents/memory.md`).
 - Docs show `StoreBackend()` with no args and a "legacy default namespace from assistant_id". Removed in 0.7: `namespace` is required.
-- Docs (memory.md full examples, backends.md "factory pattern still works") use `backend=lambda rt: CompositeBackend(default=StateBackend(rt), ...)`. In 0.7.34 factories raise `TypeError("backend must be an initialized backend instance. Backend factories were removed in deepagents 0.7 ...")` and `StateBackend()` takes no arguments.
+- Docs use backend factories in two places still: backends.md's migration note ("the factory pattern still works at runtime and emits a deprecation warning", with `backend=lambda rt: CompositeBackend(default=StateBackend(rt), ...)`) and going-to-production.md's `StoreBackend(rt, namespace=...)`. In 0.7.39 factories raise `TypeError("backend must be an initialized backend instance. Backend factories were removed in deepagents 0.7 ...")`, `StateBackend()` takes no arguments and `StoreBackend` is keyword-only. Code wins. (The memory page's examples were fixed in the 2026-11-18 docs.)
+- On a Postgres store, before 0.7.39 `StoreBackend.upload_files` of valid UTF-8 that contains a NUL byte saved it as text, which JSONB cannot hold. Since 0.7.39 such content is stored as base64 (`_encode_upload` in `backends/store.py`; changelog 0.7.39). Agent `write_file`/`edit_file` content is not affected by this change.
 - HITL and `ToolCallLimitMiddleware/ModelCallLimitMiddleware(thread_limit=...)` require a checkpointer; resume must reuse the same `thread_id`.
 - Concurrent writes to the same store key are last-write-wins. Prefer user-scoped namespaces or per-topic files.
 - `InMemoryStore` and `InMemoryVectorStore` in tutorials are demo-only; they vanish on restart.
 - Subagents share the parent's `files` channel (only `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `rubric` and private keys are excluded), so `StateBackend` files written by the parent are visible to [[subagents]] and vice versa.
-- Since 0.7.29 a subagent's returned state drops keys it gave back unchanged (not in 0.7.20; still so in 0.7.34). A custom state key that parallel `task` calls may each change still needs a reducer, or the step fails with `InvalidUpdateError`.
+- Since 0.7.29 a subagent's returned state drops keys it gave back unchanged (not in 0.7.20; still so in 0.7.39). A custom state key that parallel `task` calls may each change still needs a reducer, or the step fails with `InvalidUpdateError`.
 - `task` subagents (`invoke` and `ainvoke`) run with config metadata `lc_subagent_tool_call_id` set to the `task` call's id (0.7.33+), and checkpointers copy config metadata into each checkpoint, so a stored subagent checkpoint names the call that ran it (`middleware/subagents.py`).
+- Since 0.7.36 the `task` result records where the subagent checkpointed: `ToolMessage.artifact == {"checkpoint_ns": "<ns>"}` (the model never sees `artifact`). A client can load the subagent's history from that namespace. To get it, a compiled subagent graph is now run with `stream`/`astream` (`stream_mode=["values", "checkpoints"]`) instead of `invoke`/`ainvoke`; any other runnable is still invoked and reports the `task` call's own `checkpoint_ns`. With no checkpointer nothing is saved and `artifact` is `None` (`_run_subagent` in `middleware/subagents.py`). A `.with_retry()` subagent that retried records the failed run's namespace; retry `task` with `ToolRetryMiddleware` instead (code comment above `_SUBAGENT_STREAM_MODES`). A probe on 0.7.39 (fake model, `InMemorySaver`) returned `{'checkpoint_ns': 'tools:<uuid>'}` for the general-purpose subagent.
 
 ## Sources
 

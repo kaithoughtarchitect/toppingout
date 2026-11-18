@@ -6,20 +6,19 @@ status: code
 product: all
 keywords: anti-patterns, wrong mental model, stale docs, doesn't work, TypeError, StoreBackend namespace, backend lambda, write_todos missing, virtual_mode, task args, pre-0.7 docs, common mistakes, breaking changes
 read_when: Read when a doc example raises an error or an answer feels off, before recommending any 0.7 API from memory.
-updated: 2026-11-09
+updated: 2026-11-18
 ---
 
 # Anti — wrong mental models and stale doc examples
 
-If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, the README, or training memory. Checked against 0.7.34 source; code wins.
+If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, the README, or training memory. Checked against 0.7.39 source; code wins.
 
-## Things the docs still show that break in 0.7.34
+## Things the docs still show that break in 0.7.39
 
 | Doc shows | Reality | Page |
 |---|---|---|
 | `backend=lambda rt: CompositeBackend(default=StateBackend(rt), …)` | `TypeError` — factories removed; `StateBackend()` takes no args | [[backends]] |
 | `StoreBackend()` with no args, namespace falls back to `assistant_id` | `namespace=` is keyword-required | [[backends]] |
-| Seeding `store.put(ns, "/memories/AGENTS.md", …)` | Agent reads key `/AGENTS.md` (route prefix stripped) → seed never found | [[memory]] |
 | `FilesystemBackend` `virtual_mode=False` default | Default is `True` (also `LocalShellBackend`) | [[backends]] |
 | Prompts that say "use write_todos" with no `TodoListMiddleware` | The tool does not exist | [[planning]] |
 | `task(name=…, task=…)` | Args are `description`, `subagent_type` | [[subagents]] |
@@ -28,14 +27,18 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | Prompt order: memory then skills | Your prompt, then your middleware's text, then the skills index, then memory (Skills sits after your middleware since 0.7.29) | [[middleware]] |
 | `LangSmithSandbox.create()` | Does not exist; wrap an existing sandbox | [[sandboxes]] |
 | Blob offload: "set `artifacts_root` on the middleware" | `FilesystemMiddleware` has no such argument; the `blobs/` root follows `CompositeBackend(artifacts_root=...)` | [[backends]] |
-| Reading async subagent notifications with `message.additional_kwargs.get("deepagents_notification")` | Deprecated key, still written in 0.7.34. Read `get_notification_metadata(message)` (`langchain_core.messages`): `source == "async_subagent"`, the `TaskEvent` is in `.get("data")`. Code wins | [[async-subagents]] |
-| Rubric page: "`RubricMiddleware` ... is in beta" | Not beta since 0.7.33 (`@beta` removed from `middleware/rubric.py`). Code wins | [[rubric]] |
 | Customization: a `FilesystemMiddleware` in `middleware=` "won't inherit the ... `permissions=` passed to `create_deep_agent()`" | Since 0.7.31 an unconfigured replacement inherits them, and different non-empty rules raise `ValueError` (it still does not inherit `backend=`). Code wins | [[middleware]] |
 | Content-builder pin `deepagents>=0.3.5,<0.4.0` | Stale | [[tutorials]] |
+| Subagents page: a fork's `system_prompt` "is appended to the parent's inherited prompt" | Since 0.7.35 the fork keeps the parent's system prompt unchanged and gets its own instructions in the task message (`_FORK_INSTRUCTIONS_KEY`, `middleware/subagents.py`); a `wrap_model_call` looking for them in `request.system_message` finds none. Code wins | [[subagents]] |
+| Backends migration note: the factory pattern "still works at runtime and emits a deprecation warning" | `FilesystemMiddleware.__init__` raises `TypeError` for a factory since 0.7 | [[backends]] |
+| Going to production, "sync skills and memories": `StoreBackend(rt, namespace=...)` | `TypeError`: `StoreBackend` takes keyword arguments only (0.7.39 too) | [[production]] |
 | `deepagents deploy`, `deepagents.toml`, `agent.json` (upstream `examples/deploy-*`) | **Deprecated.** They come from `deepagents-cli` (last release 0.3.0, 2026-08-24; PyPI: "DEPRECATED … Use Managed Deep Agents"). Use `mda` ([[managed]]) or self-host ([[production]]). Checked 2026-09-30 | [[managed]] |
 
 ## Wrong mental models
 
+- **"Wrap a subagent in `.with_retry()` to retry it."** A retried compiled subagent is invoked, not streamed, so after a retry the `task` message's `artifact["checkpoint_ns"]` names the failed run (0.7.36+). Retry `task` with `ToolRetryMiddleware` instead: [[fault-tolerance]].
+- **"Seed `/memories/AGENTS.md` in the store."** The agent reads key `/AGENTS.md`: `CompositeBackend` strips the route prefix, so the seed is never found. The memory docs fixed their examples on 2026-11-18; older copies and training memory still show it: [[memory]].
+- **"Read async notifications from `additional_kwargs[\"deepagents_notification\"]`."** That key is deprecated (still written in 0.7.39). Read `get_notification_metadata(message)` from `langchain_core.messages`; the 2026-11-18 docs do: [[async-subagents]].
 - **"It remembers across restarts."** Only with a durable checkpointer and store. `InMemorySaver` / `InMemoryStore` / nothing = gone — [[persistence]].
 - **"Memory edits apply immediately."** `memory=` loads once per thread; setting `memory_contents=None` shows `(No memory loaded)` — [[memory]].
 - **"Subagents get my middleware / memory / system prompt."** They don't; only `mode="fork"` gets memory; GP subagent inherits skills, custom ones don't — [[subagents]], [[middleware]].
@@ -63,6 +66,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 
 | Symptom | Check first, in order | Page |
 |---|---|---|
+| Bedrock or Fireworks prompt caching not applied after installing `langchain-aws` / `langchain-fireworks` in a running process | Since 0.7.37 the lookup is cached per process: restart it | [[middleware]] |
 | Memory **and** conversation gone after restart | 1. `InMemorySaver` / `InMemoryStore` or none at all. 2. A new `thread_id` each launch (persist it per workspace). 3. Relative SQLite path + a different cwd means empty DBs. | [[persistence]] |
 | Preference gone after restart, chat still there | 1. The agent never wrote it (`store.get(ns, "/AGENTS.md")`, not the model's words). 2. It wrote outside `/memories/`, i.e. to per-thread state. 3. The namespace changed (unstable `workspace_id`, `context=` not passed). | [[memory]] |
 | Memory-tab edit ignored in the same chat | `memory=` frozen per thread. Use `FreshMemory`, a new thread, or a `read_file` nudge. | [[agent-setup]] |
@@ -83,7 +87,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | `permission denied ... (resolves to X)` or `Error: cannot resolve <path>` | A symlink target is denied, or the path loops or escapes the root (0.7.25, `FilesystemBackend`) | [[permissions]] |
 | Sandbox `grep` finds nothing under `.git` | `BaseSandbox.grep_exclude_dirs` defaults to `(".git",)` (0.7.25) | [[sandboxes]] |
 | `InvalidUpdateError` after parallel `task` calls | Subagents changed the same custom state key, which has no reducer | [[subagents]] |
-| `ValueError: FilesystemMiddleware permissions conflict with the agent permissions` | Your replacement `FilesystemMiddleware(permissions=...)` differs from `create_deep_agent(permissions=...)`; use the same rules or omit them on the middleware (0.7.34; before 0.7.31 the agent's rules were silently dropped) | [[middleware]] |
+| `ValueError: FilesystemMiddleware permissions conflict with the agent permissions` | Your replacement `FilesystemMiddleware(permissions=...)` differs from `create_deep_agent(permissions=...)`; use the same rules or omit them on the middleware (0.7.39; before 0.7.31 the agent's rules were silently dropped) | [[middleware]] |
 | Main agent sees unexpected user-role messages | Async subagent task notifications (notification metadata `lc_source == "async_subagent"`, read with `get_notification_metadata`; the old `additional_kwargs["deepagents_notification"]` is deprecated); they only arrive on the async path | [[async-subagents]] |
 | `ModelRefusalError` from `invoke` | The model returned a `refusal` block; since 0.7.33 that raises instead of ending the run | [[middleware]] |
 | `compact_conversation` result has `status="error"` | Summary generation failed (`Compaction failed: ...`, 0.7.33+); history is unchanged | [[summarization]] |
@@ -98,7 +102,9 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 
 - Passing `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer` to `define_deep_agent`: `mda build` passes, `mda dev` fails — [[managed-project]].
 - Schedules fire under `mda dev` since 0.9.3 (`--no-schedules` turns them off); the local-development page still says they never do. See [[managed-channels]].
-- Memory `allow` example reading `context.channel.get("raw_event")`: since 0.9.0 channel runs get `context = None`; use `runtime.channel`. See [[managed-capabilities]].
+- The CLI and deploy pages still say project `.env` values are read before shell variables; since 0.10.0 (changelog, breaking) the shell wins, for the LangSmith settings and `--secret-from-env`. See [[managed-dev]].
+- The Slack page still says to "return to the terminal and press Enter" after authorizing; since 0.10.0 deploy prints the link and waits by itself. See [[managed-channels]].
+- The migrate page still shows `define_memory(scope="agent")`; string scopes are rejected since 0.8.0. See [[managed-capabilities]].
 - Agent memory is shared by every caller: a prompt-injection path, not private storage — [[managed-capabilities]].
 
 ## See also

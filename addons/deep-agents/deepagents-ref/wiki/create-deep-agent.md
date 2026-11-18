@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: create_deep_agent, create deep agent, signature, parameters, kwargs, system_prompt, interrupt_on, response_format, structured output, state_schema, context_schema, checkpointer, store, backend, subagents, recursion_limit
 read_when: Read when you need the exact create_deep_agent signature, a parameter default, or the middleware/prompt assembly order.
-updated: 2026-11-09
-sources_hash: 6a2805d1f187
+updated: 2026-11-18
+sources_hash: d808459e9e42
 ---
 
 # create_deep_agent
@@ -21,13 +21,14 @@ sources_hash: 6a2805d1f187
 - `tools=` is additive; it never removes built-ins (hide via profile `excluded_tools`).
 - Final prompt = `system_prompt` + profile BASE + profile SUFFIX; empty if none given.
 - `middleware=` merges by `.name`: same name replaces in place, new names go after the last core entry.
+- Since 0.7.36, a middleware with a `bind_backend(backend)` method (`deepagents.backends.BackendConsumer`) is handed the agent's backend before the graph is built.
 - `interrupt_on` and multi-turn `StateBackend` need a `checkpointer`; `StoreBackend` needs `store=`.
 - `response_format` result lands in `result["structured_response"]`.
 - `state_schema` must subclass `DeepAgentState`; `context_schema` values pass via `invoke(..., context=...)`.
 - Gotcha: `model_provider=` / `temperature=` are not params; build the model with `init_chat_model`.
 - Gotcha: seeding `files` in input works only with `StateBackend`.
 
-## Signature (0.7.34, verified in graph.py)
+## Signature (0.7.39, verified in graph.py)
 
 ```python
 from deepagents import create_deep_agent
@@ -64,7 +65,7 @@ Only `model` and `tools` are positional; everything else is keyword-only.
 | `model` | `None` (deprecated) | `"provider:model"` string resolved via `init_chat_model` + provider profile, or a `BaseChatModel`. `None` warns and uses `ChatAnthropic(model_name="claude-sonnet-4-6")`; removed in 1.0.0. See [[models]]. |
 | `tools` | `None` | Additive to built-ins (fs tools, `execute`, `task`). Never removes a built-in. Accepts `BaseTool`, plain callables, or provider tool dicts. Profile `tool_description_overrides` are applied to `BaseTool`/dict tools (not plain callables). See [[tools]]. |
 | `system_prompt` | `None` | `USER` slot, placed first. Final = `USER` + `"\n\n"` + profile `BASE` + `"\n\n"` + profile `SUFFIX` (empty parts skipped). `None` and no profile -> empty system prompt. A `SystemMessage` keeps its content blocks (e.g. `cache_control`); profile text is appended as an extra text block. |
-| `middleware` | `()` | Merged by `.name`: same name as a stack entry -> replaced in place; otherwise inserted after the last core entry (before profile extras / Skills / caching / memory / HITL). A `SkillsMiddleware` passed here with no `skills=` also supplies `skills` (its `sources`). See [[middleware]]. |
+| `middleware` | `()` | Merged by `.name`: same name as a stack entry -> replaced in place; otherwise inserted after the last core entry (before profile extras / Skills / caching / memory / HITL). A `SkillsMiddleware` passed here with no `skills=` also supplies `skills` (its `sources`). Since 0.7.36, each entry with a `bind_backend` method (the `BackendConsumer` protocol, `from deepagents.backends import BackendConsumer`) gets `bind_backend(backend)` called with the resolved backend before the agent is built. See [[middleware]]. |
 | `subagents` | `None` | `SubAgent` dicts (declarative), `CompiledSubAgent` (pre-built runnable), `AsyncSubAgent` (has `graph_id`). A `general-purpose` subagent is auto-added unless you pass one with that name or the profile disables it. See [[subagents]], [[async-subagents]]. |
 | `skills` | `None` | POSIX paths relative to the backend root, e.g. `["/skills/"]`; later sources win on name clashes. Adds `SkillsMiddleware` near the end of the stack, after your middleware and profile extras, right before prompt caching (moved there in 0.7.29). See [[skills]]. |
 | `memory` | `None` | `AGENTS.md` paths, e.g. `["/memory/AGENTS.md"]`; loaded at startup into the system prompt. Adds `MemoryMiddleware` (after caching). See [[memory]]. |
@@ -75,7 +76,7 @@ Only `model` and `tools` are positional; everything else is keyword-only.
 | `state_schema` | `None` -> `DeepAgentState` | Must subclass `deepagents.DeepAgentState` (keeps the `DeltaChannel` messages reducer; not validated at runtime). Forwarded to declarative subagents, not to compiled/async ones. |
 | `context_schema` | `None` | Immutable per-run context type; pass values with `invoke(..., context=...)`. See [[context-engineering]]. |
 | `checkpointer` | `None` | Passed to `create_agent`. Required for HITL, multi-turn threads, and `StateBackend` persistence across turns. See [[persistence]]. |
-| `store` | `None` | Passed to `create_agent`; required by `StoreBackend` (omit on LangSmith Deployment, which provisions one). |
+| `store` | `None` | Passed to `create_agent`; required by `StoreBackend` (omit on LangSmith Agent Server, which provisions one; the docs renamed "LangSmith Deployment" to "Agent Server" by 2026-11-18). |
 | `debug` | `False` | Passed through. |
 | `name` | `None` | Passed through; also written to metadata `lc_agent_name`. |
 | `cache` | `None` | LangGraph node cache, passed through. |
@@ -84,7 +85,7 @@ Raises `ImportError` (missing/old provider package, e.g. `langchain-openrouter<0
 
 ## Return value
 
-A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.34"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
+A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.39"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
 
 ## Invoke / stream basics
 
@@ -124,9 +125,9 @@ for msg in stream.messages:
 ## Assembly order inside the function
 
 1. Resolve model (`resolve_model`) and harness profile (`_harness_profile_for_model`); validate profile exclusions.
-2. Rewrite tool descriptions per profile; default backend to `StateBackend()`.
+2. Rewrite tool descriptions per profile; default backend to `StateBackend()`; call `bind_backend(backend)` on each `middleware=` entry that has it (0.7.36+).
 3. Build final system prompt (USER, BASE, SUFFIX).
-4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack.
+4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack (its spec `middleware`, plus the parent's for a fork, also gets `bind_backend(backend)`). A fork keeps the parent's final system prompt unchanged; its own `system_prompt` is stored aside and sent with the task message (0.7.35).
 5. Auto-add `general-purpose` subagent (index 0) unless disabled or overridden.
 6. Build main stack (core, then profile extras, Skills, caching, Memory, HITL, UnsupportedContent, `ModelRefusalMiddleware`), merge `middleware`, apply profile exclusions, append tool-exclusion middleware. `ModelRefusalMiddleware` (from `langchain.agents.middleware`) raises `ModelRefusalError` when the model refuses; it sits in the tail so a `ModelFallbackMiddleware` you pass retries on the next model first. Subagent stacks get it too.
 7. Call `create_agent(...)` and `.with_config(...)`.
@@ -141,14 +142,17 @@ Full stack order: [[middleware]].
 - `recursion_limit` is preset to 9999; overriding requires passing `config={"recursion_limit": ...}` at invoke time.
 - `state_schema` that is not a `DeepAgentState` subclass is not rejected at runtime but loses the O(N) messages channel.
 - Seeding `files` in the input only works with `StateBackend`; other backends need `backend.upload_files([...])` or `store.put(...)`.
+- `bind_backend` is matched by shape (`BackendConsumer` is a `runtime_checkable` `Protocol`), so any middleware with a method of that name gets called, whether or not you meant it as the hook. It is called once per stack the instance lands in (main, and each declarative subagent or fork that carries it). `CompiledSubAgent` and `AsyncSubAgent` middleware is never bound. Probed on 0.7.39 on 2026-11-18 (fake model, graph built, not invoked): a main-agent middleware and a declarative subagent's middleware each received the `StateBackend`.
 
 ## Sources
 
 - `../sources/docs/oss/python/deepagents/customization.md`
 - `../sources/docs/oss/python/deepagents/quickstart.md`
 - `../sources/docs/oss/python/reference/deepagents-python.md`
-- `../sources/package/deepagents/graph.py`
+- `../sources/package/deepagents/graph.py` (`_bind_backend`, fork prompt)
+- `../sources/package/deepagents/backends/protocol.py` (`BackendConsumer`)
 - `../sources/package/deepagents/_models.py`
+- `../sources/docs/github/deepagents-CHANGELOG.md` (0.7.35, 0.7.36)
 
 ## See also
 

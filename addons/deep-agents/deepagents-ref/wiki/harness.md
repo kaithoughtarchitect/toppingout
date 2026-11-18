@@ -6,17 +6,17 @@ status: code
 product: all
 keywords: deep agents harness, agent harness, create_agent, middleware stack, built-in tools, virtual filesystem, StateBackend, write_todos missing, planning removed, execute tool, install deepagents, pip install deepagents, task tool, prompt caching, LangGraph graph
 read_when: Read when starting with Deep Agents, asking what is on or off by default, or wondering why write_todos or execute is missing.
-updated: 2026-11-09
-sources_hash: 5dcde52c6f36
+updated: 2026-11-18
+sources_hash: 17786872fc31
 ---
 
 # The Deep Agents harness
 
-`deepagents` (PyPI, MIT, v0.7.34) is an opinionated "agent harness": LangChain's `create_agent` tool-calling loop plus a pre-assembled middleware stack (virtual filesystem, subagents, summarization, prompt caching, tool-call repair), compiled as a LangGraph graph. Reach for it when a task is long-horizon, multi-step, produces artifacts, or needs isolated delegation; drop to `create_agent` or raw LangGraph when you want less (see [[products]]).
+`deepagents` (PyPI, MIT, v0.7.39) is an opinionated "agent harness": LangChain's `create_agent` tool-calling loop plus a pre-assembled middleware stack (virtual filesystem, subagents, summarization, prompt caching, tool-call repair), compiled as a LangGraph graph. Reach for it when a task is long-horizon, multi-step, produces artifacts, or needs isolated delegation; drop to `create_agent` or raw LangGraph when you want less (see [[products]]).
 
 ## Quick reference
 
-- `deepagents` 0.7.34 = `create_agent` loop + fixed middleware stack, compiled as a LangGraph `CompiledStateGraph`; entry point is `create_deep_agent(...)`.
+- `deepagents` 0.7.39 = `create_agent` loop + fixed middleware stack, compiled as a LangGraph `CompiledStateGraph`; entry point is `create_deep_agent(...)`.
 - Python >=3.11; `pip install deepagents` (extras `[aws]`, `[quickjs]`, `[video]`); OpenAI etc. need their own integration package.
 - On by default: file tools (`ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `delete`), `task` + `general-purpose` subagent, summarization, tool-call repair, prompt caching, refusal-as-error (0.7.33+).
 - Opt-in only: `write_todos` (add `TodoListMiddleware()`), skills (`skills=`), memory (`memory=`), HITL (`interrupt_on=`), async subagents, JS interpreter.
@@ -35,7 +35,7 @@ sources_hash: 5dcde52c6f36
 - **Behaviour follows the model.** Harness profiles apply per-model prompt suffixes, tool-description overrides and extra middleware automatically ([[models]]).
 - **"Trust the LLM" security model.** The agent can do anything its tools allow; enforce boundaries in tools / backends / sandboxes / [[permissions]], not in the prompt (README "Security").
 
-## Built-in capabilities (0.7.34)
+## Built-in capabilities (0.7.39)
 
 | Capability | On by default? | Provided by | Page |
 | - | - | - | - |
@@ -46,7 +46,7 @@ sources_hash: 5dcde52c6f36
 | `task` tool + auto `general-purpose` subagent | Yes | `SubAgentMiddleware` | [[subagents]] |
 | Conversation summarization + history offload | Yes (model-aware thresholds) | `SummarizationMiddleware` (deepagents subclass) | [[summarization]] |
 | Dangling tool-call repair | Yes | `PatchToolCallsMiddleware` | [[middleware]] |
-| Prompt caching | Yes (Anthropic always; Bedrock / Fireworks if their packages are installed) | `append_prompt_caching_middleware` | [[middleware]] |
+| Prompt caching | Yes (Anthropic always; Bedrock / Fireworks if their packages are installed). Forked subagents keep the parent's system prompt unchanged so they reuse its cached prefix (0.7.35+, [[subagents]]) | `append_prompt_caching_middleware` | [[middleware]] |
 | Unsupported multimodal block scrubbing | Yes | `UnsupportedContentMiddleware` | [[middleware]] |
 | Model refusal raises `ModelRefusalError`; subagent refusals return a notice to the parent | Yes (0.7.33+) | `ModelRefusalMiddleware` from `langchain` | [[middleware]] |
 | Planning (`write_todos`) | **No** (opt-in since 0.7.0) | `TodoListMiddleware` from `langchain` | [[planning]] |
@@ -69,7 +69,7 @@ pip install "deepagents[quickjs]"  # CodeInterpreterMiddleware
 pip install "deepagents[video]" # video frame extraction in read_file
 ```
 
-Python >=3.11. Hard deps include `langchain` (>=1.4.9), `langchain-core` (>=1.7.6), `langchain-anthropic`, `langchain-google-genai`, `langsmith`, `wcmatch` (see [[versions]]). Since 0.7.32 `import deepagents` does not import `langchain_anthropic` or `langchain_openai`; they load only when an Anthropic or OpenAI model is used. Other providers need their integration package (e.g. `pip install -U "langchain[openai]"`). Set the provider key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, ...). Optional tracing: `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`.
+Python >=3.11. Hard deps include `langchain` (>=1.5.0), `langchain-core` (>=1.8.1) (both raised since 0.7.34, which needed >=1.4.9 and >=1.7.6), `langchain-anthropic`, `langchain-google-genai`, `langsmith`, `wcmatch` (see [[versions]]). Since 0.7.32 `import deepagents` does not import `langchain_anthropic` or `langchain_openai`; they load only when an Anthropic or OpenAI model is used. Other providers need their integration package (e.g. `pip install -U "langchain[openai]"`). Set the provider key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, ...). Optional tracing: `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`.
 
 ## Minimal agent
 
@@ -110,7 +110,7 @@ Provider-native server tools can be passed as dicts in `tools=` (quickstart): `{
 - `execute` is removed from the model-visible tools when the backend is not a sandbox; if the model calls it anyway, it gets an error `ToolMessage`. The `create_deep_agent` docstring only mentions the error path.
 - `FilesystemMiddleware` raises `NotImplementedError` if `permissions=` is combined with an execution-capable backend unless every permission path is scoped to a `CompositeBackend` route (execute cannot be permission-checked).
 - Default `StateBackend` files live in graph state: without a checkpointer they vanish after the run; they are never shared across threads.
-- Prompt caching is automatic only for Anthropic (and Bedrock/Fireworks when `langchain-aws` / `langchain-fireworks` are installed); other providers get no caching. The Anthropic entry is a lazy stand-in (`_LazyAnthropicPromptCachingMiddleware`, 0.7.32+) that imports the real middleware on the first `ChatAnthropic` request.
+- Prompt caching is automatic only for Anthropic (and Bedrock/Fireworks when `langchain-aws` / `langchain-fireworks` are installed); other providers get no caching. Since 0.7.37 the Bedrock/Fireworks import check is cached for the life of the process, so installing one of those packages later needs a restart ([[middleware]]). The Anthropic entry is a lazy stand-in (`_LazyAnthropicPromptCachingMiddleware`, 0.7.32+) that imports the real middleware on the first `ChatAnthropic` request.
 - Since 0.7.33 a model refusal raises `ModelRefusalError` from `invoke` instead of ending the run as an answer ([[middleware]]).
 - `model=None` still works (defaults to `ChatAnthropic(model_name="claude-sonnet-4-6")`) but is deprecated since 0.5.3, removal in 1.0.0.
 
@@ -119,10 +119,11 @@ Provider-native server tools can be passed as dicts in `tools=` (quickstart): `{
 - `../sources/docs/oss/python/deepagents/overview.md`
 - `../sources/docs/oss/python/deepagents/quickstart.md`
 - `../sources/docs/github/deepagents-README.md`
-- `../sources/package/deepagents-0.7.34.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.39.dist-info/METADATA`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_prompt_caching.py`
+- `../sources/package/deepagents/middleware/subagents.py`
 
 ## See also
 

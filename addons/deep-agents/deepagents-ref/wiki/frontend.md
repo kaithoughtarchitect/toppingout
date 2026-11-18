@@ -6,8 +6,8 @@ status: sourced
 product: sdk
 keywords: frontend, UI, useStream, @langchain/react, React, Vue, Svelte, Angular, langgraph dev, langgraph.json, Agent Server, subagent cards, todo list UI, sandbox IDE, chat UI, stream.values
 read_when: Read when building a web UI over a deep agent, or deciding what state the frontend should render.
-updated: 2026-11-09
-sources_hash: 845dcf236359
+updated: 2026-11-18
+sources_hash: 1eb83b29b36e
 ---
 
 # Frontend UIs over a Python deep agent
@@ -54,12 +54,16 @@ Frontend connects with `useStream({ apiUrl: "http://localhost:2024", assistantId
 | tool-call state | tool calls/results on messages (render cards per tool) |
 | interrupts | `interrupt_on` / interrupt permissions + checkpointer — see [[human-in-the-loop]] |
 
+Messages the harness injects (not typed by the user) carry notification metadata you can read in Python with `langchain_core.messages.get_notification_metadata(msg)` (`additional_kwargs["lc_source"]` / `["lc_data"]`), so the UI can render them apart from user turns. Sources in 0.7.39: `summarization` (the summary), `read_file_media` (video frames, `data` has `path` and `tool_call_id`; since 0.7.35), `pinned_skill`, `rubric_grader`, `async_subagent` (task notification, `data` is the task event), and the Nemotron profile's nudges (since 0.7.35) ([[multimodal]], [[skills]], [[rubric]]).
+
+Since 0.7.36 each `task` result `ToolMessage` has `artifact={"checkpoint_ns": ...}`: the checkpoint namespace the subagent saved under, so a client can load that subagent's history from the checkpointer ([[tools]], [[subagents]]). Since 0.7.39 runs that `AsyncSubAgentMiddleware` starts on the same deployment (spec without `url`), and the parent run it starts after a notification, are created with `stream_mode=["values", "updates", "messages-tuple", "custom"]`, `stream_subgraphs=True`, `stream_resumable=True`, so an app that joins them gets tokens and subgraph events, also when it joins late ([[async-subagents]]).
+
 Status strings: the React progress example counts `status === "complete"`; Python event streaming documents `completed`. Check the SDK type you actually get.
 
 ## Pattern: subagent cards
 
 - No extra server options needed. Index subagent cards by the coordinator tool-call id that spawned them so each card sits under the delegating turn; optionally also a sidebar over all `stream.subagents`.
-- Submit via root stream: `stream.submit({messages:[...]}, {config:{recursion_limit: 100}})`. Deep Agents already sets a large default (`9_999` in 0.7.34 code; docs say 10,000) — only override if needed.
+- Submit via root stream: `stream.submit({messages:[...]}, {config:{recursion_limit: 100}})`. Deep Agents already sets a large default (`9_999` in 0.7.39 code; docs say 10,000); only override if needed.
 - Handle errors per card; collapse finished cards when there are many. See [[subagents]], [[streaming]].
 
 ## Pattern: todo list
@@ -96,14 +100,14 @@ async def read_file(thread_id: str = Path(...), filePath: str = Query(...)):
     return {"path": filePath, "content": results[0].content.decode()}
 ```
 
-`aexecute`, `adownload_files`, `id` exist on `BaseSandbox`/`LangSmithSandbox` in 0.7.34. Thread id inside the graph: `langgraph.config.get_config()["configurable"]["thread_id"]`.
+`aexecute`, `adownload_files`, `id` exist on `BaseSandbox`/`LangSmithSandbox` in 0.7.39. Thread id inside the graph: `langgraph.config.get_config()["configurable"]["thread_id"]`.
 
 UI rules from the docs: persist `threadId` in `sessionStorage` so reloads reconnect to the same sandbox; refresh one file when a `write_file`/`edit_file`/`delete` `ToolMessage` arrives and the whole tree after `execute`; snapshot files before each run and default to diff view for changed files; filter `node_modules`; seed files with `upload_files` before the first run; keep secrets out of the sandbox (auth proxy).
 
 ## Gotchas
 
-- Docs' sandbox example passes `backend=lambda _runtime: get_or_create_sandbox_for_thread(...)`. **In 0.7.34 this raises `TypeError`**: `FilesystemMiddleware` rejects callables ("Backend factories were removed in deepagents 0.7; pass StateBackend(), CompositeBackend(...), or another BackendProtocol instance"). Code wins: resolve the sandbox in an async **graph factory** (the `langgraph.json` graph is a function that builds and returns `create_deep_agent(backend=<instance>)` per run) — see [[production]].
-- The docs' sequence diagram calls `LangSmithSandbox.create()`; no such method in 0.7.34 — `LangSmithSandbox(sandbox)` wraps an existing `langsmith` `Sandbox`. The docs' agent-side helper is sync while the API routes `await` it; pick one.
+- Docs' sandbox example passes `backend=lambda _runtime: get_or_create_sandbox_for_thread(...)`. **In 0.7.39 (as since 0.7.0) this raises `TypeError`**: `FilesystemMiddleware` rejects callables ("Backend factories were removed in deepagents 0.7; pass StateBackend(), CompositeBackend(...), or another BackendProtocol instance"). Code wins: resolve the sandbox in an async **graph factory** (the `langgraph.json` graph is a function that builds and returns `create_deep_agent(backend=<instance>)` per run); see [[production]].
+- The docs' sequence diagram calls `LangSmithSandbox.create()`; no such method in 0.7.39: `LangSmithSandbox(sandbox)` wraps an existing `langsmith` `Sandbox`. The docs' agent-side helper is sync while the API routes `await` it; pick one.
 - `http.app` routes take priority over built-in Agent Server routes; don't shadow `/threads` or `/runs`.
 - `todos` in subagents is excluded from the state merged back into the parent (`_EXCLUDED_STATE_KEYS`), so `stream.values.todos` reflects only the coordinator's plan.
 - Alternative wire protocol for non-LangChain frontends: AG-UI via `@ag-ui/langgraph` — see [[protocols]].
@@ -116,8 +120,11 @@ UI rules from the docs: persist `threadId` in `sessionStorage` so reloads reconn
 - `../sources/docs/oss/python/deepagents/frontend/sandbox.md`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/filesystem.py` (backend factory TypeError)
-- `../sources/package/deepagents/middleware/subagents.py` (`_EXCLUDED_STATE_KEYS`)
+- `../sources/package/deepagents/middleware/subagents.py` (`_EXCLUDED_STATE_KEYS`, `task` artifact)
 - `../sources/package/deepagents/backends/langsmith.py`
+- `../sources/package/deepagents/middleware/async_subagents.py` (`_STREAM_OPTIONS`)
+- `../sources/package/deepagents/middleware/summarization.py`, `middleware/skills.py`, `middleware/rubric.py` (notification sources)
+- `../sources/docs/github/deepagents-CHANGELOG.md` (0.7.35, 0.7.36, 0.7.39)
 
 ## See also
 - [[index]]

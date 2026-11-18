@@ -6,12 +6,12 @@ status: code
 product: sdk
 keywords: rules, must know, mental model, core rules, gotchas, deepagents basics
 read_when: Read first, every time — before planning, building or reviewing anything that uses deepagents.
-updated: 2026-11-09
+updated: 2026-11-18
 ---
 
 # Constitution (one screen)
 
-**Mental model:** `create_deep_agent` returns a compiled LangGraph graph built by LangChain's `create_agent` plus a fixed middleware stack ([[create-deep-agent]], [[middleware]]). Everything the harness does is middleware. Rules are ordered by the cost of getting them wrong. All checked against 0.7.34 source ([[versions]]).
+**Mental model:** `create_deep_agent` returns a compiled LangGraph graph built by LangChain's `create_agent` plus a fixed middleware stack ([[create-deep-agent]], [[middleware]]). Everything the harness does is middleware. Rules are ordered by the cost of getting them wrong. All checked against 0.7.39 source ([[versions]]).
 
 1. **Backends are instances, never factories.** `backend=lambda rt: …` and `StateBackend(rt)` raise `TypeError` in 0.7. `StoreBackend(namespace=…)` is keyword-required; the namespace *callable* is fine. File tools see virtual POSIX paths — [[backends]].
 2. **Nothing persists by default.** No checkpointer, no store. `StateBackend` files live in the checkpoint → one thread only. Cross-thread memory = `CompositeBackend` route → `StoreBackend` **and** a durable store. In-memory savers die with the process. Prove restarts — [[persistence]].

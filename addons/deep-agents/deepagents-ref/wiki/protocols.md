@@ -6,13 +6,13 @@ status: sourced
 product: sdk
 keywords: ACP, Agent Client Protocol, deepagents-acp, AG-UI, @ag-ui/langgraph, A2A, Agent2Agent, editor integration, Zed, agent to agent, agent protocol, JSON-RPC, a2a assistant_id, IDE
 read_when: Read when exposing an agent to an editor (ACP), a frontend (AG-UI) or other agents (A2A), or asking which protocol does what.
-updated: 2026-10-21
-sources_hash: 851081ca31c4
+updated: 2026-11-18
+sources_hash: 886edf70f170
 ---
 
 # Protocols (ACP, AG-UI, A2A)
 
-One-line truth: none of these live in the `deepagents` package. ACP = separate `deepagents-acp` package (agent ↔ editor over stdio); AG-UI = TypeScript `@ag-ui/langgraph` adapter in front of a LangGraph server (agent ↔ frontend); A2A = built into LangSmith Agent Server at `/a2a/{assistant_id}` (agent ↔ agent). MCP (agent → external tools) is separate — see [[mcp]].
+One-line truth: none of these live in the `deepagents` package. ACP = separate `deepagents-acp` package (agent ↔ editor over stdio); AG-UI = TypeScript `@ag-ui/langgraph` adapter in front of LangSmith Agent Server, which the docs called "a LangGraph server" before 2026-11-18 (`langgraph dev` locally) (agent ↔ frontend); A2A = built into LangSmith Agent Server at `/a2a/{assistant_id}` (agent ↔ agent). MCP (agent → external tools) is separate; see [[mcp]].
 
 | Protocol | Direction | What you install / run | Transport |
 | - | - | - | - |

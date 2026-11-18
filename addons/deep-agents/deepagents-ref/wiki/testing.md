@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: testing, test, unit test, pytest, fake model, fake chat model, mock model, GenericFakeChatModel, FakeMessagesListChatModel, bind_tools, no API calls, offline tests, scripted model
 read_when: Read when writing tests for an agent that must not call the real model, or when a fake model raises NotImplementedError or StopIteration.
-updated: 2026-11-09
-sources_hash: e92fdb3e0b74
+updated: 2026-11-18
+sources_hash: c109095fb638
 ---
 
 # Testing a deep agent (pytest, fake models)
 
-Script the model's replies with a LangChain fake chat model so tests make no API calls. Deep Agents binds tools to the model, and the stock fakes refuse that, so you need a one-line subclass. The pytest below **passed** on `deepagents` 0.7.20 / `langgraph` 1.2.12 on 2026-09-30, and again on `deepagents` 0.7.29 / `langgraph` 1.2.16 / `langchain` 1.4.6 on 2026-10-21. Not re-run on 0.7.34.
+Script the model's replies with a LangChain fake chat model so tests make no API calls. Deep Agents binds tools to the model, and the stock fakes refuse that, so you need a one-line subclass. The pytest below **passed** on `deepagents` 0.7.20 / `langgraph` 1.2.12 on 2026-09-30, and again on `deepagents` 0.7.29 / `langgraph` 1.2.16 / `langchain` 1.4.6 on 2026-10-21. Not re-run on 0.7.34; **passed** again on `deepagents` 0.7.39 / `langgraph` 1.2.22 / `langchain` 1.5.0 on 2026-11-18.
 
 ## Quick reference
 
@@ -84,7 +84,8 @@ In-memory saver and store are right for unit tests. Restart tests need the durab
 
 ## Gotchas
 
-- Script length must equal the number of model calls. Subagents inherit the parent's model instance, so a `task` call should consume items from the **same** iterator. This is inferred from model inheritance and wasn't run. Give each custom subagent its own scripted fake to keep the counts clear.
+- Script length must equal the number of model calls. Subagents inherit the parent's model instance, so a `task` call consumes items from the **same** iterator. A probe on 0.7.39 (2026-11-18, `InMemorySaver`, no API) confirmed it for the general-purpose subagent: the script `[AIMessage(tool_calls=[task]), AIMessage("sub done"), AIMessage("Done")]` gave a `task` `ToolMessage` with content `sub done`, then the parent's `Done`. Give each custom subagent its own scripted fake to keep the counts clear.
+- Since 0.7.36 a compiled subagent is run with `stream` (`stream_mode=["values", "checkpoints"]`), not `invoke`, and the `task` `ToolMessage` carries `artifact={"checkpoint_ns": ...}` when a checkpointer saved its run (`_run_subagent` in `middleware/subagents.py`). A test that asserts `artifact is None` on a `task` result now fails when a checkpointer is set. The same probe got `{'checkpoint_ns': 'tools:<uuid>'}`.
 - The first import on Windows is slow (one test took about 80 s cold). It isn't a hang.
 - LangChain's own unit-testing page (layer 2) shows the fake without the `bind_tools` override. That version fails with Deep Agents.
 - Evals and trajectory scoring aren't covered here. See [[gaps]].
@@ -93,6 +94,7 @@ In-memory saver and store are right for unit tests. Restart tests need the durab
 
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/_models.py`
+- `../sources/package/deepagents/middleware/subagents.py`
 - `../scripts/check_recipes.py`
 
 ## See also

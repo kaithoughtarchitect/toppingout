@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-18
+
+- **Deep Agents add-on: `deepagents` 0.7.34 to 0.7.39, and the docs of 2026-11-18.** A fork now keeps the parent's system prompt and gets its own `system_prompt` in the task message; middleware with a `bind_backend` method receives the agent's backend; the `task` message names the subagent's checkpoint namespace; `ls`, `glob` and `grep` drop results that would need approval outside the call's scope; `StoreBackend` stores uploads with NUL bytes as base64. The hidden-path permission behaviour is unchanged. The starter pins `deepagents==0.7.39`. All 56 pages were re-checked against the code and the docs' own history, and the recipes (10/10), the SQLite and Postgres restart, the starter tests and the import check were re-run on 0.7.39. A project on the add-on gets it with `/f-setup`; then bump its own `deepagents` pin and re-run its checks (`deepagents-ref/MAINTAINING.md`).
+
 ## 2026-11-17
 
 - **An autonomous run clears blockers itself, within its budget.** A night shift was lost because CI would not start (the Actions budget had run out) and nothing was allowed to fix it. Now a blocker in the environment (CI that won't start, a service down, a quota, a key's credit, a missing tool) is the run's to clear: it names the cause with evidence, tries free and reversible fixes, then, when the goal names a cap, the smallest paid step (raising the Actions budget, counted against the cap), and stops only after two tries or 45 minutes. Each fix is recorded with its cost and undone before the run ends (in a night shift a raised budget stays for the shift and its undo is owed to the owner in the morning). Payment methods, cards, plans, credentials, anything irreversible and anything that makes a gate easier to pass stay the owner's. The repo profile has a new "Blocker fixes" row; `/f-setup` adds it.

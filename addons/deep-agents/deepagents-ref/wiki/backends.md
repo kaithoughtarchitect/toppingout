@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: backend, backends, offload_binary_content, blobs, StateBackend, StoreBackend, CompositeBackend, FilesystemBackend, LocalShellBackend, ContextHubBackend, BackendProtocol, namespace, virtual_mode, long-term memory storage, persistent storage, where do files live, custom backend, route prefix, virtual filesystem
 read_when: Read when choosing where agent files are stored, persisting files across threads, routing /memories/ to a store, writing a custom backend, or hitting a backend factory TypeError or StoreBackend namespace error.
-updated: 2026-11-09
-sources_hash: cd64c220e012
+updated: 2026-11-18
+sources_hash: 34f67b4f7936
 ---
 
 # Backends (pluggable filesystem storage)
@@ -26,6 +26,7 @@ A backend is the storage (and optionally shell) behind the agent's built-in file
 - `FilesystemBackend` alone writes `/large_tool_results/` and `/conversation_history/` onto real disk; use a Composite with a `StateBackend` default.
 - Custom `BackendProtocol`: return result objects with `error=`, `grep` is literal, `glob` must return absolute paths (relative bypasses permissions deny).
 - Multi-tenant servers: never `FilesystemBackend`/`LocalShellBackend`; use `StateBackend` + per-user `StoreBackend` or a sandbox.
+- Middleware that needs the agent's backend: give it a `bind_backend(backend)` method (`BackendConsumer`, 0.7.36+); `create_deep_agent` calls it.
 - Binary files: on `StateBackend`/`StoreBackend`, `edit_file` on a binary (`encoding: "base64"`) file returns `Error: Cannot edit binary files with text replacements.`; the in-memory `grep` skips binary files. Large media in history: `FilesystemMiddleware(offload_binary_content=True)` (below).
 
 ## Mental model
@@ -33,17 +34,17 @@ A backend is the storage (and optionally shell) behind the agent's built-in file
 - `FilesystemMiddleware` owns the tools (see [[filesystem-tools]]); the backend only implements `ls/read/write/edit/delete/glob/grep` (+ `execute` for sandboxes). Paths the agent sees are always virtual, absolute, POSIX (`/notes.md`).
 - Same backend instance is shared by the main agent, subagents ([[subagents]]), `SkillsMiddleware`, `MemoryMiddleware` ([[memory]]) and summarization ([[summarization]]). Files a subagent writes remain visible to the parent.
 - Internal artifacts are written to the backend too: `/large_tool_results/<tool_call_id>` (evicted tool output) and `/conversation_history/` (summarization offload). See [[context-engineering]].
-- Pass an **instance**, not a factory (removal history in [[versions]]). In 0.7.34, `FilesystemMiddleware.__init__` raises `TypeError("... Backend factories were removed in deepagents 0.7 ...")` if `backend` is a callable that is not a `BackendProtocol`.
+- Pass an **instance**, not a factory (removal history in [[versions]]). In 0.7.39, `FilesystemMiddleware.__init__` raises `TypeError("... Backend factories were removed in deepagents 0.7 ...")` if `backend` is a callable that is not a `BackendProtocol`.
 
 ## Built-in backends (all importable from `deepagents.backends`)
 
-`__all__`: `BackendProtocol, CompositeBackend, ContextHubBackend, FilesystemBackend, LangSmithSandbox, LocalShellBackend, NamespaceFactory, StateBackend, StoreBackend, DEFAULT_EXECUTE_TIMEOUT` (=120). `SandboxBackendProtocol` lives in `deepagents.backends.protocol`, `BaseSandbox` in `deepagents.backends.sandbox`.
+`__all__`: `BackendConsumer` (0.7.36+), `BackendProtocol, CompositeBackend, ContextHubBackend, FilesystemBackend, LangSmithSandbox, LocalShellBackend, NamespaceFactory, StateBackend, StoreBackend, DEFAULT_EXECUTE_TIMEOUT` (=120). `SandboxBackendProtocol` lives in `deepagents.backends.protocol`, `BaseSandbox` in `deepagents.backends.sandbox`.
 
-| Backend | Constructor (0.7.34) | Scope / notes |
+| Backend | Constructor (0.7.39) | Scope / notes |
 | - | - | - |
 | `StateBackend` | `StateBackend()` (no args) | Files in the `files` state channel; persists per thread via checkpointer; not shared across threads. Only works inside a graph run (uses `CONFIG_KEY_READ/SEND`); outside raises `RuntimeError`. Pre-seed with `agent.invoke({"messages": [...], "files": {...}})`. |
-| `StoreBackend` | `StoreBackend(*, namespace: NamespaceFactory, store: BaseStore \| None = None)` | Cross-thread durable storage in a LangGraph `BaseStore`. `namespace` is **required**. If `store` is None, uses `get_store()` (the `store=` passed to `create_deep_agent`, or platform-provisioned on LangSmith Deployment). |
-| `FilesystemBackend` | `FilesystemBackend(root_dir=None, virtual_mode=True, max_file_size_mb=10)` | Real disk. `root_dir` defaults to cwd, resolved. Uses ripgrep for `grep` if `rg` on PATH, else Python fallback (skips files > `max_file_size_mb`; since 0.7.33 a file `path` searches only that file, before it walked the file's whole parent directory). Writes use `O_NOFOLLOW`. |
+| `StoreBackend` | `StoreBackend(*, namespace: NamespaceFactory, store: BaseStore \| None = None)` | Cross-thread durable storage in a LangGraph `BaseStore`. `namespace` is **required**. If `store` is None, uses `get_store()` (the `store=` passed to `create_deep_agent`, or platform-provisioned on LangSmith Agent Server, the 2026-11-18 docs' new name for LangSmith Deployment). |
+| `FilesystemBackend` | `FilesystemBackend(root_dir=None, virtual_mode=True, max_file_size_mb=10)` | Real disk. `root_dir` defaults to cwd, resolved. Uses ripgrep for `grep` if `rg` on PATH, else Python fallback (skips files > `max_file_size_mb`; since 0.7.33 a file `path` searches only that file, before it walked the file's whole parent directory). Writes use `O_NOFOLLOW`. In virtual mode `ls`, `glob` and `grep` report a symlink under its own path, not its target's (0.7.35+). `download_files` returns `file_not_found` for a FIFO or device instead of hanging (0.7.36+). |
 | `LocalShellBackend` | `LocalShellBackend(root_dir=None, *, virtual_mode=True, timeout=120, max_output_bytes=100_000, env=None, inherit_env=False)` | `FilesystemBackend` + `execute` via `subprocess.run(shell=True, cwd=root_dir)`. No isolation. |
 | `ContextHubBackend` | `ContextHubBackend(identifier: str, *, client: langsmith.Client \| None = None)` | Files in a LangSmith Context Hub agent repo; `identifier` is `"owner/name"` or `"-/name"`. Needs `LANGSMITH_API_KEY`. |
 | `CompositeBackend` | `CompositeBackend(default, routes: dict[str, BackendProtocol], *, artifacts_root="/")` | Prefix router. |
@@ -86,6 +87,8 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 - `virtual_mode=False`: absolute paths used as-is (`/etc/passwd` bypasses `root_dir`), relative paths resolve under `root_dir`. No security.
 - Needed for `CompositeBackend` routes: the composite strips the route prefix and passes `/rest/of/path`, which only maps under `root_dir` in virtual mode.
 - Neither mode is isolation: with `LocalShellBackend`, `execute` can touch any host path regardless.
+- Symlinks in results (0.7.35+): `_to_virtual_path` still checks that the resolved target is inside `root_dir` (a link escaping it is skipped, as before), then returns the link's own path. Before 0.7.35 the result showed the target's path. Permission filtering still checks both the link and its target ([[permissions]]).
+- `download_files` (0.7.36+) opens with `O_NONBLOCK` (where the OS has it) and returns `error="file_not_found"` for anything that is not a regular file, such as a FIFO or a device, the way `read` reports it. Before, opening a FIFO waited for a writer forever.
 
 ### LocalShellBackend specifics
 
@@ -123,7 +126,7 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 | `grep` | `(pattern, path=None, glob=None, *, max_count=None) -> GrepResult(error, matches, truncated)` | **Literal** substring, not regex. Accept `max_count` (else results are trimmed after the fact). |
 | `glob` | `(pattern, path=None) -> GlobResult(error, matches, truncated, truncation_reason)` | Files only, `FileInfo.path` must be **absolute** (relative paths silently bypass deny rules). |
 | `delete` | `(file_path) -> DeleteResult(error, path)` | Optional; recursive. If not overridden, the `delete` tool is hidden from the model. |
-| `upload_files` / `download_files` | `(list[tuple[str, bytes]]) -> list[FileUploadResponse]` / `(list[str]) -> list[FileDownloadResponse]` | App-side transfer; per-item `error` in `file_not_found`, `permission_denied`, `is_directory`, `invalid_path`. |
+| `upload_files` / `download_files` | `(list[tuple[str, bytes]]) -> list[FileUploadResponse]` / `(list[str]) -> list[FileDownloadResponse]` | App-side transfer; per-item `error` in `file_not_found`, `permission_denied`, `is_directory`, `invalid_path`. `StoreBackend.upload_files` stores content as UTF-8 text only if it decodes and has no NUL byte, else base64 (0.7.39+, `_encode_upload`). |
 
 `FileInfo = {path, is_dir?, size?, modified_at?}`, `GrepMatch = {path, line, text, context_before?, context_after?}`, `FileData = {content: str, encoding: "utf-8"|"base64", created_at?, modified_at?}`.
 
@@ -151,6 +154,22 @@ class PolicyWrapper(BackendProtocol):
 ```
 
 Prefer declarative [[permissions]] for path allow/deny; use wrappers for audit logging, rate limits, content inspection. Community backends: Azure Blob (`langchain-azure-storage`), MongoDB VFS (`langchain-mongodb-deepagents-vfs`).
+
+## Middleware that needs the backend: BackendConsumer (0.7.36+)
+
+`deepagents.backends.BackendConsumer` is a `runtime_checkable` `Protocol` with one method, `bind_backend(self, backend: BackendProtocol) -> None` (`backends/protocol.py`). `create_deep_agent` calls it (`_bind_backend` in `graph.py`) on every middleware in `middleware=` that has the method, with the backend the file tools use (your `backend=`, or the default `StateBackend()`), before the agent is built. It does the same for each declarative subagent's own `middleware`. The check is structural: any middleware with a `bind_backend` method is called, no subclassing needed.
+
+```python
+from langchain.agents.middleware import AgentMiddleware
+from deepagents.backends import BackendProtocol
+
+class AuditMiddleware(AgentMiddleware):
+    def bind_backend(self, backend: BackendProtocol) -> None:
+        self.backend = backend          # same instance the file tools use
+```
+
+- An instance that sits in more than one stack (the parent's `middleware=` and a subagent spec's `middleware`, or a fork, which inherits the parent's) is bound once per stack, always with the same backend.
+- Middleware you build yourself outside `create_deep_agent` (for example with `create_agent`) is not bound; pass the backend in its constructor.
 
 ## Offload binary content (0.7.21+)
 
@@ -185,7 +204,7 @@ agent = create_deep_agent(
 
 ## Gotchas
 
-- Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.34) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
+- Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.39) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
 - Docs say factories (`backend=lambda rt: StateBackend(rt)`) still work with a deprecation warning; code raises `TypeError` (factories removed in 0.7) and `StateBackend.__init__` takes no args.
 - Docs say omitting `StoreBackend(namespace=...)` falls back to `assistant_id`; code makes `namespace` a required keyword argument.
 - Docs protocol reference says `write` is create-only and mentions `files_update`; code: every built-in `write` overwrites, and `WriteResult`/`EditResult` have no `files_update` field.
@@ -194,7 +213,9 @@ agent = create_deep_agent(
 - `LocalShellBackend` with no `env` gives an empty environment: commands like `python` fail with "not found".
 - Store namespace components reject `/`, spaces, `*`; email-like ids with `@`/`.` are fine.
 - A custom `glob` returning relative paths silently bypasses [[permissions]] deny rules.
-- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.34). Overwrite it with `write_file` or upload a new file.
+- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.39). Overwrite it with `write_file` or upload a new file.
+- Before 0.7.39, `StoreBackend.upload_files` stored valid UTF-8 that contained a NUL byte as text, which a Postgres (JSONB) store cannot hold. Since 0.7.39 such content is stored base64 (`encoding: "base64"`), so it also counts as binary for `edit_file` and the in-memory `grep`. App code reading the store directly must check `encoding` (probe on 0.7.39: `b"ab\x00c"` stored as base64, `"héllo"` as utf-8).
+- Since 0.7.35, `FilesystemBackend` results name a symlink by its own path, not its target. Code that compared `ls`/`glob`/`grep` paths with resolved paths needs to resolve them itself.
 
 ## Sources
 

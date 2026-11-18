@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted
 read_when: Read when moving an agent to production, setting up thread_id/context/multi-tenancy, or choosing where the checkpointer and store come from.
-updated: 2026-11-09
-sources_hash: 803d48312130
+updated: 2026-11-18
+sources_hash: 599b7e4264f7
 ---
 
 # Going to production
@@ -35,7 +35,7 @@ One-line truth: a production deep agent = a compiled graph plus a durable checkp
 | LangSmith Deployment (LangGraph server) | `agent.py` exporting a compiled graph or a graph factory + `langgraph.json` | Platform (threads, runs, store, checkpointer, auth, webhooks, cron, MCP/A2A exposure) |
 | Self-hosted (plain Python process) | Your own server calling `agent.invoke/ainvoke` | You: `create_deep_agent(checkpointer=..., store=...)` |
 
-Docs recommend Managed Deep Agents first; use a LangSmith Deployment when you need custom routes, custom app code or advanced auth.
+Docs recommend Managed Deep Agents first; use a LangSmith Deployment when you need custom routes, custom app code or advanced auth. The 2026-11-18 docs call this path "LangSmith Agent Server" (or a custom Agent Server) and link `/langsmith/agent-server` instead of `/langsmith/deployment`; it is the same path, and older pages still say LangSmith Deployment or LangGraph Server (`../sources/docs/oss/python/deepagents/going-to-production.md`).
 
 ### langgraph.json
 
@@ -146,7 +146,7 @@ async def agent(config: RunnableConfig):
 ```
 
 - Thread-scoped (most common): fresh per conversation, TTL cleanup. Assistant-scoped: shared repo/deps across threads; needs TTL/snapshots/cleanup or it grows unbounded.
-- Move data across the boundary with `backend.upload_files([(path, bytes)])` / `backend.download_files([paths])` (seed skills/memories before, pull artifacts after). A `before_agent`/`after_agent` middleware can sync store <-> sandbox.
+- Move data across the boundary with `backend.upload_files([(path, bytes)])` / `backend.download_files([paths])` (seed skills/memories before, pull artifacts after). A `before_agent`/`after_agent` middleware can sync store <-> sandbox. Since 0.7.36 such a middleware can get the agent's backend from `create_deep_agent` by defining `bind_backend(backend)` (`BackendConsumer`, [[backends]]). Uploads into a `StoreBackend` on Postgres need 0.7.39+ if the content can hold a NUL byte (stored base64 since then; before it was stored as text, which a Postgres JSONB store cannot hold: `_encode_upload` in `backends/store.py`).
 
 ## Async, durability, frontend
 
@@ -169,7 +169,7 @@ async def agent(config: RunnableConfig):
 
 ## Gotchas
 
-- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt`. In 0.7.34 (as in 0.7.29) `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
+- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt` (still so in the 2026-11-18 fetch). In 0.7.39 (as in 0.7.29) `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
 - `rt.server_info` is only populated on LangGraph server. In a plain local `agent.invoke`, a namespace lambda reading `rt.server_info.user.identity` raises. For self-hosting read ids from `rt.context` instead.
 - `create_deep_agent` already applies `.with_config({"recursion_limit": 9_999, ...})` (graph.py). You only need a higher limit on the client side (the frontend docs suggest `recursionLimit: 10000`).
 - Deep Agents write internal artifacts (`/conversation_history/...`, `/large_tool_results/...`) to the default backend (the root of `CompositeBackend.artifacts_root`). Keep `StateBackend` as the default so these don't land in a durable store or on disk.

@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: approval modes, manual mode, auto mode, YOLO, --yolo, auto-approve, human in the loop, HITL, approval, shell allow list, -S, allow-fs-tools, sandbox, remote sandbox, daytona, modal, runloop, untrusted repo, project trust, SandboxProvider
 read_when: Read when running dcode unattended or in an untrusted repo, choosing an approval mode, allowing shell commands, or setting up a remote sandbox.
-updated: 2026-11-09
-sources_hash: f0cbf22ca837
+updated: 2026-11-18
+sources_hash: 14eb3aac2ae1
 ---
 
 # dcode approval modes and remote sandboxes
@@ -48,7 +48,7 @@ How [[dcode]] limits what the agent can do. Three approval modes (Manual, Auto, 
 - Auto stage 2: the classifier checks the batch against the user's requested outcome. On deny, the agent gets an error result and can re-plan. When classifier review is unavailable, the tool returns a compact "unavailable" result instead. A total-denial threshold opens the human approval UI.
 - Decisions are bound to the thread, mode, batch and exact calls. A mode change, replay or missing state falls back to human review.
 - Classifier model precedence: `/auto model [p:m|clear]` > `--auto-classifier-model` (TUI only) > `DEEPAGENTS_CODE_AUTO_CLASSIFIER_MODEL` (not from a project `.env`) > `[models].auto_classifier` > provider default > main model.
-- Provider defaults: Anthropic → `anthropic:claude-sonnet-5`. Google AI → `google_genai:gemini-3.8-flash`. Vertex → `google_vertexai:gemini-3.8-flash`. OpenAI → `openai:gpt-5.6-luna`. Codex → `openai_codex:gpt-5.6-luna`.
+- Provider defaults (2026-11-18 docs): Anthropic → `anthropic:claude-sonnet-5-5`. Google AI → `google_genai:gemini-4-hydrogen`. Vertex → `google_vertexai:gemini-4-hydrogen` (both were `gemini-3.8-flash` in the 2026-11-09 docs). OpenAI → `openai:gpt-5.6-luna`. Codex → `openai_codex:gpt-5.6-luna`.
 - The classifier time budget per batch is 20 s by default (`[models].auto_classifier_timeout`, clamped 1..300). Misses are denied as `classifier_unavailable`.
 - Auto is an authorization heuristic, **not** containment. Parent-level Auto does not review actions inside delegated subagents or broadly configured `js_eval` fan-out. MCP `readOnlyHint` annotations are trusted without verification.
 
@@ -114,7 +114,7 @@ supports_snapshot_name = false        # default false
 region = "us-east-1"
 ```
 
-A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProvider`. It implements `get_or_create(*, sandbox_id=None, **kw)`, which returns an SDK `SandboxBackendProtocol`, and `delete(*, sandbox_id, **kw)`. It can optionally define a `metadata` property returning `SandboxProviderMetadata`. `SandboxBackendProtocol` exists in SDK 0.7.34 `backends/protocol.py`. The `deepagents_code` classes are docs only.
+A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProvider`. It implements `get_or_create(*, sandbox_id=None, **kw)`, which returns an SDK `SandboxBackendProtocol`, and `delete(*, sandbox_id, **kw)`. It can optionally define a `metadata` property returning `SandboxProviderMetadata`. `SandboxBackendProtocol` exists in SDK 0.7.39 `backends/protocol.py`. The `deepagents_code` classes are docs only.
 
 ## Gotchas
 

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: multimodal, image input, images, audio, video, PDF, file blocks, content blocks, read_file media, video frames, UnsupportedContentMiddleware, deepagents[video], screenshot, vision, unsupported content
 read_when: Read when passing images/audio/video/files to an agent, read_file media fails, or blocks are replaced by a text notice.
-updated: 2026-11-09
-sources_hash: f507293fa1a7
+updated: 2026-11-18
+sources_hash: 3552196c882e
 ---
 
 # Multimodal input, read_file media, video frames
@@ -52,9 +52,9 @@ Extension map (`backends/utils.py _EXTENSION_TO_FILE_TYPE`):
 | `file` | `.pdf .ppt .pptx` |
 
 - Non-text result = single block `{"type": <block>, "base64": ..., "mime_type": mimetypes.guess_type(...) or "application/octet-stream"}` in a `ToolMessage` with `additional_kwargs={"read_file_path", "read_file_media_type"}`.
-- Any backend result with `encoding == "base64"` is treated as binary even if the extension is unknown → generic `file` block.
+- Any backend result with `encoding == "base64"` is treated as binary even if the extension is unknown → generic `file` block. Since 0.7.39 `StoreBackend.upload_files` stores content as base64 when it contains a NUL byte, even if it is valid UTF-8 (`_encode_upload` in `backends/store.py`; NUL can't go in a Postgres JSONB store), so such an upload now reads back as binary, not text.
 - `offset`/`limit` are ignored for images/PDFs (text-only pagination).
-- `edit_file` on a binary file stored in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29, unchanged in 0.7.34); `grep` there skips binary files.
+- `edit_file` on a binary file stored in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29, unchanged in 0.7.39); `grep` there skips binary files.
 
 ## Video: sampled frames (`middleware/_video.py`)
 
@@ -62,7 +62,7 @@ Install: `pip install "deepagents[video]"` (PyAV `av>=18.0.0` + `pillow>=12.3.0`
 
 - `offset` = seconds to skip, `limit` = seconds to sample (default `limit=100` → first 100 s). `limit <= 0` → tool error.
 - Fixed sampling rate `0.5` fps (one frame every 2 s); not configurable by the agent.
-- Output: `ToolMessage` "Read video X: sampled N frames. The sampled frames are attached in the following message." **plus** a synthetic `HumanMessage` (returned via `Command`) holding a header text block and interleaved `"Frame at t=HH:MM:SS.mmm"` text + JPEG `image` blocks (quality 85).
+- Output: `ToolMessage` "Read video X: sampled N frames. The sampled frames are attached in the following message." **plus** a synthetic `HumanMessage` (returned via `Command`) holding a header text block and interleaved `"Frame at t=HH:MM:SS.mmm"` text + JPEG `image` blocks (quality 85). Since 0.7.35 that `HumanMessage` carries notification metadata: `additional_kwargs["lc_source"] == "read_file_media"` and `lc_data == {"path": ..., "tool_call_id": ...}` (read with `langchain_core.messages.get_notification_metadata`), so a UI can show the frames apart from user messages. It still also has `additional_kwargs["read_file_media_result"] = True`.
 - Caps: ≤64 frames, ≤4 MiB encoded output, 10 s decode wall-clock, frames downscaled to fit 1920x1080, frames with a side >4096 px rejected, input file ≤1 GiB (`MAX_VIDEO_INPUT_BYTES`). Hitting frame/byte cap appends "Coverage truncated at t=... Continue from offset=...".
 - Errors (bad base64, no video stream, decode failure, missing deps) come back as `status="error"` `ToolMessage`s so the agent can retry with a smaller window.
 - Without the extra, videos are returned as a raw `video` base64 block (whole file).
@@ -100,7 +100,7 @@ agent = create_agent(model, middleware=[FilesystemMiddleware(), UnsupportedConte
 
 - The unsupported-content placeholder always says `read_file:` — even for a user-attached image (path falls back to "the requested file"). Don't mistake it for a tool bug.
 - `_VIDEO_SAMPLING_RATE = 0.5` is documented in code as "seconds between sampled frames" but is used as frames-per-second (header says "at 0.5 fps"): effective spacing is 2 s. Code behavior wins.
-- Docs' extension table omits `.mkv` (video-extra only) and don't mention the video extra at all; the code's `read_file` description does.
+- Docs' extension table omits `.mkv` (video-extra only). The docs mention the `[video]` extra since the 2026-11-18 fetch (frames, `read_file_media` notification, `offset`/`limit` in seconds).
 - Model profiles are incomplete; an unknown model with no profile gets everything passed through and may 400 — layer 2 only rescues `read_file` media, not user-attached media. See [[models]].
 - Video frames are sent as a `HumanMessage`, so they count as user input for provider gating (`image_inputs`), not `image_tool_message`.
 - Offloaded large human messages (`human_message_token_limit_before_evict`, default 50000 tokens) are a separate `FilesystemMiddleware` feature; see [[filesystem-tools]].
@@ -116,7 +116,8 @@ agent = create_agent(model, middleware=[FilesystemMiddleware(), UnsupportedConte
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/_blob_offload.py`
 - `../sources/package/deepagents/backends/state.py`
-- `../sources/package/deepagents-0.7.34.dist-info/METADATA` (`video` extra)
+- `../sources/package/deepagents/backends/store.py` (`_encode_upload`)
+- `../sources/package/deepagents-0.7.39.dist-info/METADATA` (`video` extra)
 
 ## See also
 - [[index]]

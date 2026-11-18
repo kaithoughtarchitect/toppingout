@@ -6,8 +6,8 @@ status: sourced
 product: all
 keywords: Deep Agents vs LangChain, Deep Agents vs LangGraph, Claude Agent SDK comparison, create_agent, harness vs framework vs runtime, which one to use, when to use deep agents, build harness yourself, CrewAI, Temporal, Manus, agent framework choice
 read_when: Read when choosing between Deep Agents, LangChain, LangGraph or Claude Agent SDK, or deciding whether to build the harness yourself.
-updated: 2026-11-09
-sources_hash: 4264c6a695d3
+updated: 2026-11-18
+sources_hash: d00da9c53dc6
 ---
 
 # Deep Agents vs LangChain, LangGraph and Claude Agent SDK
@@ -45,7 +45,7 @@ Decision rule (README FAQ): use Deep Agents for the full harness out of the box;
 | Execution backend | pluggable: state, disk, store, composite, remote sandbox, custom ([[backends]], [[sandboxes]]) | the sandbox's local filesystem |
 | Models | any tool-calling LangChain model | Claude (Anthropic, Bedrock, Vertex, Azure) |
 | Per-model tuning | harness profiles (beta) ([[models]]) | per call site |
-| Deployment | Managed Deep Agents in LangSmith (the docs now call it the default, via `mda deploy`), or self-host `langgraph build` image ([[managed]], [[production]]) | self-host; build server/auth/streaming yourself; Claude managed agents is a separate product |
+| Deployment | Managed Deep Agents in LangSmith (the docs now call it the default, via `mda deploy`), or self-host `langgraph build` image on Agent Server (the docs' new name for a custom "LangSmith Deployment", 2026-11-18) ([[managed]], [[production]]) | self-host; build server/auth/streaming yourself; Claude managed agents is a separate product |
 | Multi-tenancy | built in (scoped threads, per-user sandboxes, RBAC) | build it yourself |
 | License | MIT | MIT (Claude Code proprietary) |
 
@@ -100,7 +100,7 @@ stream = agent.stream_events({"messages": [{"role": "user", "content": "Read /sa
                              version="v3", config={"recursion_limit": 8})
 ```
 
-What `create_deep_agent` adds beyond this hand-built stack: `PatchToolCallsMiddleware`, `_ParentNotifierMiddleware` (reports back when the agent runs as an async subagent), auto `general-purpose` subagent with its own fs/summarization stack, prompt caching, `UnsupportedContentMiddleware`, LangChain's `ModelRefusalMiddleware` (since 0.7.33; a model refusal raises `ModelRefusalError`, and a subagent refusal comes back to the parent as a notice, see [[subagents]]), model-aware summarization thresholds, harness profiles, permissions/HITL wiring, `DeepAgentState`, `recursion_limit=9999` ([[middleware]]). It does **not** add `TodoListMiddleware` any more ([[planning]]).
+What `create_deep_agent` adds beyond this hand-built stack: `PatchToolCallsMiddleware`, `_ParentNotifierMiddleware` (reports back when the agent runs as an async subagent), auto `general-purpose` subagent with its own fs/summarization stack, prompt caching, `UnsupportedContentMiddleware`, LangChain's `ModelRefusalMiddleware` (since 0.7.33; a model refusal raises `ModelRefusalError`, and a subagent refusal comes back to the parent as a notice, see [[subagents]]), model-aware summarization thresholds, harness profiles, permissions/HITL wiring, `DeepAgentState`, `recursion_limit=9999`, and (since 0.7.36) a `bind_backend(backend)` call on each passed middleware that has that method ([[middleware]], [[customization]]). With `create_agent` you hand each middleware its backend yourself. It does **not** add `TodoListMiddleware` any more ([[planning]]).
 
 ## Gotchas
 

@@ -2849,7 +2849,7 @@ def addon_parts() -> list:
 # Facts: addons/deep-agents/starter/requirements.txt, .env.example, deepagents-ref/LEARN.md sections 1, 5 and 6.
 ADDON_KIT = {
     "installed": [
-        ("deepagents", "Deep Agents", "Version 0.7.34, pinned."),
+        ("deepagents", "Deep Agents", "Version 0.7.39, pinned."),
         ("langchain", "LangChain", "Comes with Deep Agents."),
         ("langgraph", "LangGraph", "Comes with LangChain."),
     ],
@@ -2864,10 +2864,10 @@ def lc_logo(key: str, name: str, ext_dark: str = "png") -> str:
 
 def addon_html(parts: bool = False) -> str:
     req = (ROOT / "addons" / "deep-agents" / "starter" / "requirements.txt").read_text(encoding="utf-8")
-    if "deepagents==0.7.34" not in req:
-        raise SystemExit("build_site: the skeleton no longer pins deepagents==0.7.34: update ADDON_KIT")
+    if "deepagents==0.7.39" not in req:
+        raise SystemExit("build_site: the skeleton no longer pins deepagents==0.7.39: update ADDON_KIT")
     inst = ('<li><span class="lcrow">' + "".join(lc_logo(k, n) for k, n, _d in ADDON_KIT["installed"]) + '</span>'
-            '<span><b>deepagents</b> 0.7.34, pinned. Brings LangChain and LangGraph with it.</span></li>')
+            '<span><b>deepagents</b> 0.7.39, pinned. Brings LangChain and LangGraph with it.</span></li>')
     ok, on, od = ADDON_KIT["optional"]
     tiles = "".join(f'<li><code>{esc(n)}</code><span>{esc(d)}</span></li>' for n, d in addon_parts()) if parts else ""
     return ('<div class="addon"><div class="adh"><span class="adt">Optional add-on</span><h3>Deep Agents</h3>'

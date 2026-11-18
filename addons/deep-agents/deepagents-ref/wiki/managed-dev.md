@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: mda dev, local development, LangSmith Studio, hot reload, mda evals, Harbor, evals, eval-engineering, tutorial, Tavily tool, .mda/build, langgraph dev, test schedule locally, memory not persisting, MDA_DEV, harbor-job.json
 read_when: Read when running or debugging a Managed Deep Agent locally, writing Harbor evals, or working through the tool plus memory plus schedule tutorial.
-updated: 2026-11-09
-sources_hash: c8c64cd64e56
+updated: 2026-11-18
+sources_hash: 01819d6804b9
 ---
 
 # MDA local development, evals and tutorial
@@ -23,7 +23,7 @@ uv run mda dev            # --port, --hostname, --no-browser, --no-reload, --no-
 
 What it does:
 1. Validates and compiles into `.mda/build`.
-2. Copies project `.env` to `.mda/build/.env` (only `.env` is read; a value exported in your shell is not, per migrate page) and adds local-only identity config.
+2. Copies project `.env` to `.mda/build/.env` (only `.env` is staged for the server; a value exported in your shell is not, per migrate page) and adds local-only identity config. For the CLI's own settings, 0.10.0 (changelog, breaking) reads `LANGSMITH_API_KEY`, `LANGSMITH_ENDPOINT`, `LANGSMITH_WORKSPACE_ID` and, in `mda dev`, `LANGSMITH_PROJECT` from the shell first and the project `.env` second, and warns once when the two differ.
 3. Creates a local Context Hub mock for instructions, skills, memory (`.mda/__contexthub__`).
 4. Starts `uv run --with langgraph-cli[inmem]>=0.4.36 langgraph dev` from the build dir (needs `uv`; you do not install langgraph-cli).
 5. Opens Studio (unless `--no-browser`).
@@ -42,9 +42,11 @@ Local behavior that differs from a deployment:
 
 - Hot reload watches sources (0.5.3), but the docs still say to stop and rerun after changing project files; rerun after adding new managed files (e.g. `memory.py`) so they are discovered.
 - Doc contradiction: the local-development page still says schedules never run under `mda dev`; the schedules and CLI pages and the 0.9.3 changelog say they fire locally. On >=0.9.3, trust the schedules page.
-- `mda chat` (changelog only) is a terminal client for the local agent; since 0.8.6 it starts its own dev server if none is running (log in `.mda/dev-server.log`). Per-call HITL (`interrupt_mode="per_call"`) needs `langgraph-api` 0.16 or later under `mda dev` (0.9.3).
+- `mda chat [path]` is a terminal client for the local agent (now on the CLI page). It reuses a running dev server or starts one (since 0.8.6; log in `.mda/dev-server.log`). Flags: `--url URL` (must be a local dev server or a tunnel to one, because `mda chat` sends no credentials), `--assistant ID` (defaults to the one `mda dev` staged, then the agent `name`), `-t/--thread ID` (continue a thread), `--env-file PATH` (>=0.10.0; env file used when it starts a dev server). Per-call HITL (`interrupt_mode="per_call"`) needs `langgraph-api` 0.16 or later under `mda dev` (0.9.3).
 - Local traces in an agent-based workspace are rejected until the agent record exists. `mda deploy` creates it, `mda dev` does not: create the agent once (UI or API, same identifier) or deploy once. Studio chat still works meanwhile.
-- Test identity, sandbox and user-owned OAuth on a deployment, not locally. `mda deploy --deployment-type serverless|dedicated` (default `serverless`; the old `dev|prod` values are gone). Use `dedicated` when pending state must survive scale-down; BYOC data planes do not support Serverless and get Dedicated by default.
+- Test identity, sandbox and user-owned OAuth on a deployment, not locally. `mda deploy --agent-server-type serverless|dedicated` (default `serverless`). The 2026-11-18 docs renamed the flag; `--deployment-type` stays a hidden alias, and an older CLI may only know the old spelling (0.10.4 changelog: "Agent Server naming and flags with hidden deployment aliases"). The 0.10.0 changelog says `dev` and `prod` still work as values; the docs list only `serverless|dedicated`. Use `dedicated` when pending state must survive scale-down; BYOC data planes do not support Serverless and get Dedicated by default.
+- `mda pull [path]` (>=0.10.2) copies `instructions.md` and `skills/` from the deployed agent's Context Hub entry into the local project, so edits made in LangSmith come back to your files. It lists every add, overwrite and delete and asks first; `--dry-run` only shows them, `-y/--yes` is required without a terminal. It never changes agent code or memories and writes nothing remote. Other flags: `-n/--name`, `--workspace-id`, `--agent-environment`, `--env-file`.
+- `mda init` scaffolds an `AGENTS.md` for coding agents working in the project (0.10.2; 0.10.4 changelog). It lists the project commands and tells the agent not to run `mda deploy` unless the user asks. Build and deploy leave the root `AGENTS.md` out.
 
 ## Evals (Harbor)
 
@@ -119,7 +121,7 @@ uv run mda connections create research-tavily --secret-from-env MDA_DEV_RESEARCH
 from managed_deepagents import define_deep_agent
 from tools.search import internet_search
 
-agent = define_deep_agent(name="research-assistant", model="openai:gpt-5.5", tools=[internet_search])
+agent = define_deep_agent(name="research-assistant", model="openai:gpt-6.1-sol", tools=[internet_search])
 ```
 
 2. Add a `## Memory` policy section to `instructions.md` (what to keep, no personal data/secrets).
