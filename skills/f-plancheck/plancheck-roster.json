@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "snapshot_date": "2026-10-28",
+  "snapshot_date": "2026-11-18",
   "source": "Single home for f-plancheck seats. Edit this file to change the pool. plancheck-pick.mjs, plancheck-console.html, and plancheck-dispatch.mjs read it. Every seat runs at high reasoning. Claude-family models are never OpenRouter rows (roster rule since 2026-09-02) — the Claude door is the claude CLI. Host family and declared Player family are greyed/refused at pick time.",
   "picker": {
     "minSeats": 1,
@@ -27,15 +27,15 @@
   "models": [
     {
       "id": "sol",
-      "name": "GPT-6.1 Sol",
+      "name": "GPT-6.2 Sol",
       "vendor": "OpenAI",
       "door": "codex CLI",
-      "cliModel": "gpt-6.1-sol",
+      "cliModel": "gpt-6.2-sol",
       "effort": "high",
       "pickableAs": ["panel"],
       "cost": "subscription",
-      "blurb": "OpenAI flagship for long-horizon analysis, software engineering, and agentic work. Reached headless via the codex CLI on the operator's ChatGPT subscription. Row id `sol`, model gpt-6.1-sol (it pointed at gpt-6-astra until 2026-11-12).",
-      "note": "codex exec -m gpt-6.1-sol -c model_reasoning_effort=\"high\" --sandbox read-only --skip-git-repo-check -   |   $0 (ChatGPT subscription). The seat runs gpt-6.1-sol (codex-cli 0.160.0 lists it); it ran gpt-6-astra until 2026-11-12; check yours with codex --version. --ignore-user-config removed 2026-09-23: it discarded ~/.codex/config.toml's global sandbox = \"elevated\", which is what permits CreateProcess on Windows, so with the flag the seat could reach the network but read nothing. The seat now inherits the operator's ~/.codex/config.toml (model, effort, MCP servers, hooks, plugins): less hermetic than the other doors."
+      "blurb": "OpenAI flagship for long-horizon analysis, software engineering, and agentic work. Reached headless via the codex CLI on the operator's ChatGPT subscription. Row id `sol`, model gpt-6.2-sol from 2026-11-18 (gpt-6.1-sol from 2026-11-12, gpt-6-astra before that).",
+      "note": "codex exec -m gpt-6.2-sol -c model_reasoning_effort=\"high\" --sandbox read-only --skip-git-repo-check -   |   $0 (ChatGPT subscription). The seat runs gpt-6.2-sol, which needs codex-cli 0.170.0 or newer (0.160.0 answers 'not supported when using Codex with a ChatGPT account'; probed 2026-11-18); it ran gpt-6.1-sol from 2026-11-12 and gpt-6-astra before that; check yours with codex --version. --ignore-user-config removed 2026-09-23: it discarded ~/.codex/config.toml's global sandbox = \"elevated\", which is what permits CreateProcess on Windows, so with the flag the seat could reach the network but read nothing. The seat now inherits the operator's ~/.codex/config.toml (model, effort, MCP servers, hooks, plugins): less hermetic than the other doors."
     },
     {
       "id": "astra",
@@ -112,6 +112,22 @@
       "note": "OpenRouter id qwen/qwen3.8-max-0902. Dispatched headless via pi at thinking high: pi -p … --model openrouter/qwen/qwen3.8-max-0902 --thinking high."
     },
     {
+      "id": "qwen4-max",
+      "name": "Qwen4 Max",
+      "vendor": "Alibaba",
+      "door": "OpenRouter",
+      "slug": "qwen/qwen4-max",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "openrouter",
+      "ctx": 1000000,
+      "maxOut": 131072,
+      "priceIn": 1.425,
+      "priceOut": 4.275,
+      "blurb": "Alibaba's Qwen4 Max, the successor to Qwen3.8 Max and cheaper. Added 2026-11-18.",
+      "note": "OpenRouter id qwen/qwen4-max. Dispatched headless via pi at thinking high: pi -p … --model openrouter/qwen/qwen4-max --thinking high. Shares vendor Alibaba with qwen — the picker will not seat both in one run."
+    },
+    {
       "id": "muse",
       "name": "Muse Wonder",
       "vendor": "Meta",
@@ -148,6 +164,39 @@
       "released": "2026-10-13",
       "blurb": "Google's flagship reasoning model for complex software engineering and autonomous multi-step agents.",
       "note": "OpenRouter id google/gemini-4-argon. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-argon --thinking high."
+    },
+    {
+      "id": "gemini-carbon",
+      "name": "Gemini 4 Carbon",
+      "vendor": "Google",
+      "door": "OpenRouter",
+      "slug": "google/gemini-4-carbon",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "openrouter",
+      "ctx": 1048576,
+      "maxOut": 943718,
+      "priceIn": 2.0,
+      "priceOut": 10.0,
+      "released": "2026-11-10",
+      "blurb": "Google's Gemini 4 Carbon, newer than Argon at the same price. Added 2026-11-18.",
+      "note": "OpenRouter id google/gemini-4-carbon. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-carbon --thinking high. Shares vendor Google with gemini and gemini-hydrogen — the picker seats one of them."
+    },
+    {
+      "id": "gemini-hydrogen",
+      "name": "Gemini 4 Hydrogen",
+      "vendor": "Google",
+      "door": "OpenRouter",
+      "slug": "google/gemini-4-hydrogen",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "openrouter",
+      "ctx": 1048576,
+      "priceIn": 1.5,
+      "priceOut": 7.5,
+      "released": "2026-11-12",
+      "blurb": "Google's Gemini 4 Hydrogen, newer than Carbon and cheaper. Added 2026-11-18.",
+      "note": "OpenRouter id google/gemini-4-hydrogen. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-hydrogen --thinking high. Shares vendor Google with gemini and gemini-carbon — the picker seats one of them."
     },
     {
       "id": "glm",

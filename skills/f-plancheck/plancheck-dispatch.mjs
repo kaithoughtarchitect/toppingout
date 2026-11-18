@@ -9,7 +9,7 @@
  * through `scrubSecrets` before it touches disk (a seat's read-only tools can
  * still open a local `.env`; a key echoed into findings must not persist).
  *
- *   node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment <file> --seats <seats.json> --out <dir> [--cwd <repo>] [--timeout <ms>] [--dry-run] [--preflight-only]
+ *   node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment <file> --seats <seats.json> --out <dir> [--cwd <repo>] [--timeout <ms>] [--effort low|medium|high] [--dry-run] [--preflight-only]
  */
 import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
@@ -53,6 +53,10 @@ const KILL_GRACE_MS = 20_000;
 // already exited 130. Entries are `{ child, killTree }` — `killTree` is the
 // same per-child kill routine spawnCapture already uses on timeout/overflow.
 const LIVE_CHILDREN = new Set();
+
+// Seat reasoning effort, high unless --effort says otherwise (a short plan read at
+// medium finishes sooner: Topping Out's sprint mode passes --effort medium).
+const EFFORT = (() => { const i = process.argv.indexOf("--effort"); const v = i >= 0 ? process.argv[i + 1] : "high"; return ["low", "medium", "high"].includes(v) ? v : "high"; })();
 
 /**
  * `--permission-mode plan` already allows grok's built-in read-only shell
@@ -430,13 +434,13 @@ export function buildArgvForSeat(seat, ctx) {
       // the operator on 2026-09-23: the seat now inherits the operator's config.toml, including any
       // configured MCP servers, hooks and plugins, so this seat is less hermetic than before.
       return [
-        "exec", "-m", seat.model, "-c", `model_reasoning_effort="high"`, "--sandbox", "read-only",
+        "exec", "-m", seat.model, "-c", `model_reasoning_effort="${EFFORT}"`, "--sandbox", "read-only",
         "--skip-git-repo-check", "-o", lastMessageArg, "-",
       ];
     }
     case "claude":
       return [
-        "-p", "--model", seat.model, "--effort", "high", "--permission-mode", "plan",
+        "-p", "--model", seat.model, "--effort", EFFORT, "--permission-mode", "plan",
         "--tools", "Read,Grep,Glob,Bash", "--disallowedTools", "Edit,Write,NotebookEdit",
         "--no-session-persistence", "--output-format", "text",
       ];
@@ -446,7 +450,7 @@ export function buildArgvForSeat(seat, ctx) {
         "--permission-mode", "plan",
         "--disallowed-tools", "Edit,Write,MultiEdit,NotebookEdit",
         ...GROK_READ_ONLY_ALLOW_RULES.flatMap((rule) => ["--allow", rule]),
-        "--reasoning-effort", "high", "--no-subagents", "-m", seat.model,
+        "--reasoning-effort", EFFORT, "--no-subagents", "-m", seat.model,
       ];
     case "openrouter":
       return [
@@ -455,7 +459,7 @@ export function buildArgvForSeat(seat, ctx) {
         // far and what it cost; dispatchSeat reads the final text out of it.
         "-p", "--mode", "json", "--no-session", "--no-context-files", "--no-extensions", "--no-skills",
         "--no-prompt-templates", "--no-mcp", "--no-approve", "--tools", "read,grep,find,ls",
-        "--model", `openrouter/${seat.model}`, "--thinking", "high", `@${assignmentPathArg}`,
+        "--model", `openrouter/${seat.model}`, "--thinking", EFFORT, `@${assignmentPathArg}`,
         "Execute the attached cold-seat f-plancheck assignment exactly as written. Output findings only, in the shape it specifies.",
       ];
     default:

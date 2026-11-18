@@ -185,12 +185,16 @@ codex seat, which is why the reason lives on this page and not only in a work re
 node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment {scratch}/assignment.md --seats {scratch}/seats.json --out {scratch} --cwd <repo-root>
 ```
 
+Every seat runs at high reasoning. `--effort medium` (or `low`) lowers it for every door, for a
+short plan that must come back fast (sprint mode uses it).
+
 **OpenRouter seats run in a pi folder of their own.** Set `PI_CODING_AGENT_DIR` to the
 absolute path of a plan-check folder (for example `foreman/plancheck-pi-agent/`; git-ignore
 its `auth.json`, `models-store.json` and `bin/`), never the owner's `~/.pi`. The folder holds:
 
-- `models.json`, the output cap for every OpenRouter model the roster seats:
-  `{ "providers": { "openrouter": { "modelOverrides": { "<slug>": { "maxTokens": 65536 } } } } }`.
+- `models.json`, the output cap for every OpenRouter model the roster seats: copy
+  `plancheck-pi-models.json` from this skill (one `{ "maxTokens": 65536 }` per OpenRouter row;
+  a test keeps it in step with the roster). A row you add needs its own line.
   Without it pi asks for the model's full output size on every call (942,756 tokens for
   `google/gemini-4-carbon`), and OpenRouter refuses any call the key can't cover in full:
   `402 You requested up to 942756 tokens, but can only afford 695816`.

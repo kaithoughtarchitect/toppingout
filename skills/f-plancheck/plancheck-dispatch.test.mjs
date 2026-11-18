@@ -3,6 +3,7 @@
 // OpenRouter door): the catalog row, the output cap and the JSON event stream.
 //   node skills/f-plancheck/plancheck-dispatch.test.mjs
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import {
   buildArgvForSeat,
   findPiModelRow,
@@ -120,6 +121,15 @@ t("the OpenRouter argv streams JSON events", () => {
   const argv = buildArgvForSeat({ doorSlug: "openrouter", model: "google/gemini-4-carbon" }, { cwd: process.cwd(), absAssignmentPath: `${process.cwd()}/a.md` });
   assert.deepEqual(argv.slice(0, 3), ["-p", "--mode", "json"]);
   assert.ok(argv.includes("openrouter/google/gemini-4-carbon"));
+});
+
+t("the models.json template caps every OpenRouter row in the roster", () => {
+  const read = (f) => JSON.parse(fs.readFileSync(new URL(f, import.meta.url), "utf8"));
+  const caps = read("./plancheck-pi-models.json").providers.openrouter.modelOverrides;
+  for (const m of read("./plancheck-roster.json").models.filter((r) => r.door === "OpenRouter")) {
+    assert.ok(caps[m.slug], `no cap for ${m.slug}`);
+    assert.ok(!overSeatOutputCap(caps[m.slug].maxTokens), `cap too high for ${m.slug}`);
+  }
 });
 
 console.log(`PASS ${n}/${n}`);

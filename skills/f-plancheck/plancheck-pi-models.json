@@ -1,0 +1,39 @@
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "openrouter": {
+      "modelOverrides": {
+        "moonshotai/kimi-k3.1-pro": {
+          "maxTokens": 65536
+        },
+        "qwen/qwen3.8-max-0902": {
+          "maxTokens": 65536
+        },
+        "qwen/qwen4-max": {
+          "maxTokens": 65536
+        },
+        "meta/muse-wonder": {
+          "maxTokens": 65536
+        },
+        "google/gemini-4-argon": {
+          "maxTokens": 65536
+        },
+        "google/gemini-4-carbon": {
+          "maxTokens": 65536
+        },
+        "google/gemini-4-hydrogen": {
+          "maxTokens": 65536
+        },
+        "z-ai/glm-5.3": {
+          "maxTokens": 65536
+        },
+        "deepseek/deepseek-v4-pro-0813": {
+          "maxTokens": 65536
+        },
+        "deepseek/deepseek-v4.1-flash-1017": {
+          "maxTokens": 65536
+        }
+      }
+    }
+  }
+}
