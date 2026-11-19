@@ -6,7 +6,7 @@ status: sourced
 product: dcode
 keywords: dcode, deepagents-code, Deep Agents Code, terminal coding agent, CLI coding agent, TUI, headless mode, non-interactive, dcode -n, ACP server, slash commands, --model, --resume, --sandbox, install dcode
 read_when: Read when choosing between dcode and the SDK, installing or running dcode, scripting it headless in CI, or looking up a dcode flag or slash command.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 6acc5d23371b
 ---
 
@@ -18,7 +18,7 @@ sources_hash: 6acc5d23371b
 
 - Package `deepagents-code`, binary `dcode`; needs Python 3.14 since 0.2.0 (was >= 3.12) and WSL on Windows. Install with `curl -LsSf https://langch.in/dcode | bash`.
 - Modes: interactive TUI (`dcode`), headless (`dcode -n "task"` or piped stdin), ACP server (`dcode --acp`).
-- Headless has no shell unless `-S` is given; `-y` and `--yolo` are ignored. `--max-turns`, `--timeout`, `-q`, `--no-stream` and `--rubric*` need `-n` or stdin, else exit code 2. Timeout exit is 124.
+- Headless has no shell unless `-S` is given; `-y` and `--yolo` are ignored. `--max-turns`, `--timeout`, `-q`, `--no-stream` and `--rubric*` need `-n` or stdin; the docs give exit code 2 for `--max-turns` and `--timeout` without them. Timeout exit is 124.
 - Model resolution: `-M provider:model` > `[models].default` > `[models].recent` > first env key among OPENAI, ANTHROPIC, GOOGLE_API_KEY, GOOGLE_CLOUD_PROJECT (docs). The 0.2.3 changelog says dcode now requires an explicit or saved model selection, so the env-key fallback may be gone.
 - `-a NAME` selects an agent profile under `~/.deepagents/<name>/`; `-r` resumes a thread. Threads are checkpointed to `~/.deepagents/.state/sessions.db`.
 - `--allow-fs-tools` must include `read_file`; `-S` without `execute` does nothing, and `execute` without `-S` pre-approves nothing.
@@ -43,7 +43,7 @@ curl -LsSf https://langch.in/dcode | bash    # installs via uv as a uv tool
 dcode                                         # interactive TUI
 ```
 
-- Requires Python 3.14 (`>=3.14,<3.15`, breaking change in 0.2.0; auto-upgrade migrates, otherwise re-run the installer). From 0.1.58 to 0.1.88 it was >= 3.12. The old docs said the install script's `DEEPAGENTS_CODE_PYTHON` defaults to `3.13`; the 2026-11-09 docs no longer mention that variable.
+- Requires Python 3.14 (`>=3.14,<3.15`, breaking change in 0.2.0; auto-upgrade migrates, otherwise re-run the installer). From 0.1.58 to 0.1.88 it was >= 3.12. The current docs list no `DEEPAGENTS_CODE_PYTHON` install variable.
 - Windows is not officially supported. Use WSL.
 - Uninstall with `uv tool uninstall deepagents-code`. This leaves `~/.deepagents/` in place.
 - Provider and sandbox extras: `dcode --install groq`, `/install fireworks`, `dcode uninstall groq`. For an arbitrary package: `dcode --install my_pkg --package`.
@@ -68,7 +68,7 @@ dcode -n "implement X" --rubric @acceptance.md --rubric-max-iterations 3
 ```
 
 - Piped input is capped at 10 MiB. `--stdin` forces a stdin read.
-- `--max-turns`, `--timeout`, `-q`, `--no-stream` and the `--rubric*` flags require `-n` or piped stdin. Without them dcode exits with code 2.
+- `--max-turns`, `--timeout`, `-q`, `--no-stream` and the `--rubric*` flags require `-n` or piped stdin. The docs say `--max-turns` and `--timeout` exit with code 2 without them; they state no exit code for the others.
 - In headless mode the agent is told to assume and proceed, not ask clarifying questions.
 - `--startup-cmd CMD` output is shown in the transcript but is not added to the agent's history. To give the agent command output, pipe it in. In headless mode `--startup-cmd` has a 60 s timeout.
 
@@ -100,11 +100,11 @@ dcode -n "implement X" --rubric @acceptance.md --rubric-max-iterations 3
 
 ## Most-used slash commands
 
-`/model`, `/effort`, `/agents`, `/auth`, `/goal`, `/rubric`, `/remember`, `/skill:<name>`, `/offload` (alias `/compact`), `/context`, `/context-doctor` (token attribution for system prompt, `AGENTS.md`, skills index, tool and MCP schemas), `/tools`, `/cost`, `/tokens`, `/btw` (side question that does not interrupt the task), `/threads` (alias `/resume`), `/rename [name]` (name the thread; names are also generated automatically after the first model call, `[threads].auto_rename = false` turns that off), `/mcp`, `/plugins`, `/extensions`, `/reload` (re-reads `.env`, config, skills, MCP, plugin skills), `/restart`, `/trace`, `/offload model` (was `/summarization-model` before 0.1.81), `/auto model`, `/clear`, `/update`. Keys: `Shift+Tab` cycles approval modes, `Ctrl+G` opens an external editor, `Ctrl+R` searches prompt history, `Ctrl+O` expands the last tool output, `Ctrl+T` toggles the subagent panel.
+`/model`, `/effort`, `/agents`, `/auth`, `/goal`, `/rubric`, `/remember`, `/skill:<name>`, `/offload` (alias `/compact`), `/context`, `/context-doctor` (token attribution for system prompt, `AGENTS.md`, skills index, tool and MCP schemas), `/tools`, `/cost`, `/tokens`, `/btw` (side question that does not interrupt the task), `/threads` (alias `/resume`, added in 0.1.86 per the changelog), `/rename [name]` (name the thread; names are also generated automatically after the first model call, `[threads].auto_rename = false` turns that off), `/mcp`, `/plugins`, `/extensions`, `/reload` (re-reads `.env`, config, skills, MCP, plugin skills), `/restart`, `/trace`, `/offload model` (was `/summarization-model` before 0.1.81), `/auto model`, `/clear`, `/update`. Keys: `Shift+Tab` cycles approval modes, `Ctrl+G` opens an external editor, `Ctrl+R` searches prompt history, `Ctrl+O` expands the last tool output, `Ctrl+T` toggles the subagent panel.
 
 ## Tracing
 
-Store a LangSmith key via `/auth`, or set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `~/.deepagents/.env`. dcode's own traces go to `DEEPAGENTS_CODE_LANGSMITH_PROJECT` (default `deepagents-code`). Shell commands that dcode runs keep the user's `LANGSMITH_PROJECT`, so app traces stay separate. `DEEPAGENTS_CODE_LANGSMITH_REPLICA_PROJECTS` dual-writes to a second project. Client-side secret redaction is on by default. To turn agent tracing off: `dcode --no-tracing` for one session, or `DEEPAGENTS_CODE_LANGSMITH_TRACING=false`; an explicit `false` there overrides `LANGSMITH_TRACING=true`.
+Store a LangSmith key via `/auth`, or set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `~/.deepagents/.env`. dcode's own traces go to `DEEPAGENTS_CODE_LANGSMITH_PROJECT` (the docs give no default; they say to set it to the agent environment's `tracer_session_name`). Shell commands that dcode runs keep the user's `LANGSMITH_PROJECT`, so app traces stay separate. `DEEPAGENTS_CODE_LANGSMITH_REPLICA_PROJECTS` dual-writes to a second project. Client-side secret redaction is on by default. To turn agent tracing off: `dcode --no-tracing` for one session, or `DEEPAGENTS_CODE_LANGSMITH_TRACING=false`; an explicit `false` there overrides `LANGSMITH_TRACING=true`.
 
 Git trace attribution: with tracing on, dcode runs read-only Git checks around tools that can change a checkout and labels traces with the repository and branch the agent changed. It is on by default. In large repos it adds latency; turn it off with `[tracing].git_attribution = false` in `~/.deepagents/config.toml` or `DEEPAGENTS_CODE_GIT_ATTRIBUTION=false` (the env var wins). This does not turn tracing off and does not stop the agent running Git (`../sources/docs/oss/deepagents/code/config-file.md`, `../sources/docs/oss/deepagents/code/configuration.md`; added in 0.2.7).
 
@@ -114,7 +114,7 @@ Git trace attribution: with tracing on, dcode runs read-only Git checks around t
 - 0.1.4: `js_eval` interpreter via `langchain-quickjs`. `js_eval` became on by default later.
 - 0.1.13: pluggable third-party sandbox backends, the `dcode config` command, `[retries]`.
 - 0.1.16: ChatGPT OAuth (`openai_codex`) and the Vercel sandbox.
-- ~0.1.3x: `RubricMiddleware`-backed `/goal` and `/rubric`, plugins and marketplaces reach GA, `[startup].mode`.
+- 0.1.28: `RubricMiddleware`-backed `/goal` and `/rubric`. 0.1.35: `[startup].mode`. 0.1.40: plugin marketplaces. 0.1.42: plugins reach GA.
 - 0.1.40: saved per-server project MCP approvals. `DEEPAGENTS_CODE_ENABLED_PROJECT_MCP_SERVERS` is now ignored.
 - 0.1.45: `--allow-fs-tools`, the Hooks v2 engine.
 - 0.1.46: Auto mode GA. The recursion limit was raised to 2000. It was later deferred to the LangGraph server in 0.1.64.

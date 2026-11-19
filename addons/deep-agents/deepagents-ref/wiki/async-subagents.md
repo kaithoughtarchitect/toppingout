@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: async subagent, async sub-agent, background task, AsyncSubAgent, start_async_task, Agent Protocol, graph_id, long-running agent, non-blocking subagent, LangSmith Deployment, remote subagent, cancel task, update task, TaskEvent, task notification, deepagents_notification, get_notification_metadata, waiting status, pending status, fork mode, parent_thread_id, update_strategy, enqueue, notify_parent, webhook
 read_when: Read when work should run in the background while the supervisor keeps talking, or when wiring a remote graph as a subagent.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 874527bb194c
 ---
 
 # Async subagents (background tasks on Agent Protocol servers)
 
-One-line truth: `AsyncSubAgent` specs point at graphs on an Agent Protocol server (LangSmith Agent Server, which older docs called LangSmith Deployment, or self-hosted). The supervisor gets five tools to start, check, update, cancel and list background runs. `start_async_task` returns a task id immediately, so the supervisor keeps talking to the user while the work runs. On an Agent Server (async path) the supervisor is also told when a task finishes, fails or waits for a human (since 0.7.26, beta). Use this for long-running, parallel or steerable work. Use sync [[subagents]] when the parent should wait for the result.
+One-line truth: `AsyncSubAgent` specs point at graphs on an Agent Protocol server (LangSmith Agent Server, which older docs called LangSmith Deployment, or self-hosted). The supervisor gets five tools to start, check, update, cancel and list background runs. `start_async_task` returns a task id immediately, so the supervisor keeps talking to the user while the work runs. On an Agent Server (async path) the supervisor is also told when a task finishes, fails or waits for a human (beta; the docs say `deepagents>=0.7.26`, while the changelog lists `waiting` in 0.7.26 and status-update notifications in 0.7.27). Use this for long-running, parallel or steerable work. Use sync [[subagents]] when the parent should wait for the result.
 
 ## Configure
 
@@ -56,15 +56,15 @@ Co-deployed `langgraph.json`:
 
 | tool | args | behaviour (code) |
 | - | - | - |
-| `start_async_task` | `description`, `subagent_type` | `threads.create(metadata={"subagent_name": <name>, "parent_thread_id": <parent thread>})`, then `runs.create(thread_id, assistant_id=graph_id, input={"messages": [...]})`. The messages are one user message with `description` (isolated) or the parent's conversation plus the description (fork). Returns `"Launched async subagent. task_id: <thread_id>"`. **task_id == thread_id**. Since 0.7.31 the tool description calls the id "for internal coordination" and says to omit task ids from user-facing replies unless asked or needed for troubleshooting. Since 0.7.39 a run on the same deployment (no `url`) is created with `_STREAM_OPTIONS` (see "Streaming the runs" below) |
-| `check_async_task` | `task_id` | `runs.get`, then `threads.get` once the run finished. On `success` it returns JSON `{"status","thread_id","result"}`, where `result` is the **last message** as text (`_check_output`: text blocks joined; reasoning and tool-call blocks dropped since 0.7.30). If that message has image, audio, video or file blocks, the output is a JSON status block followed by the text and media blocks in order. On `error` it returns `{"error": ...}`. On `waiting` it returns `interrupts` (`id` and `value` each) and a `note` that the user, not the supervisor, answers. On `pending` it returns a `note` that the latest run hasn't started yet. If the thread can't be read it returns `"Failed to get run status: ..."` (since 0.7.30; before, it fell back to the bare run status) |
+| `start_async_task` | `description`, `subagent_type` | `threads.create(metadata={"subagent_name": <name>, "parent_thread_id": <parent thread>, "parent_assistant_id": <parent assistant>})` (`_thread_metadata`; `parent_assistant_id` only for a subagent on the same deployment with `notify_parent` not `False`), then `runs.create(thread_id, assistant_id=graph_id, input={"messages": [...]}, **_run_options(...))`. `_run_options` adds the trace `headers`, the spec's `webhook`, and either the parent's run `context` (same deployment, when the run has one) or `config={"configurable": {"deepagents_parent": {...}}}`. The messages are one user message with `description` (isolated) or the parent's conversation plus the description (fork). Returns `"Launched async subagent. task_id: <thread_id>"`. **task_id == thread_id**. Since 0.7.31 the tool description calls the id "for internal coordination" and says to omit task ids from user-facing replies unless asked or needed for troubleshooting. Since 0.7.39 a run on the same deployment (no `url`) is created with `_STREAM_OPTIONS` (see "Streaming the runs" below) |
+| `check_async_task` | `task_id` | `runs.get`, then `threads.get` once the run finished. On `success` it returns JSON `{"status","thread_id","result"}`, where `result` is the **last message** as text (`_check_output`: text blocks joined; reasoning and tool-call blocks dropped since 0.7.30). If that message has image, audio, video or file blocks, the output is a JSON status block followed by the text and media blocks in order. On `error` it returns JSON `{"status": "error", "thread_id": ..., "error": ...}`. On `waiting` it returns `interrupts` (`id` and `value` each) and a `note` that the user, not the supervisor, answers. On `pending` it returns a `note` that the latest run hasn't started yet. If the thread can't be read it returns `"Failed to get run status: ..."` (since 0.7.30; before, it fell back to the bare run status) |
 | `update_async_task` | `task_id`, `message` | new `runs.create` on the same thread with `multitask_strategy=` the spec's `update_strategy`. With `"interrupt"` (default) the old run is interrupted and the subagent sees the full history plus the new message; on a `waiting` task the pending human request is dropped (the reply says so). With `"enqueue"` the new run queues behind the active one: the reply is `"Queued follow-up to async subagent without interrupting its current run. task_id: ..."`, the task takes the new run's status (usually `pending`) and earlier run ids go to `superseded_run_ids`. If the current run then stops for approval or input, the queued run still starts and that request is dropped. A second enqueued update to the same task in one model turn is refused (`"Not sent: ..."`). Same task_id, new run_id either way |
 | `cancel_async_task` | `task_id` | `runs.cancel`, then (since 0.7.30) cancels any `superseded_run_ids` still `running` or `pending`, newest first (failures there are logged and skipped), then marks the task `"cancelled"`. A `waiting` task has no active run, so it is only marked |
 | `list_async_tasks` | `status_filter` (`running`, `pending`, `waiting`, `success`, `error`, `cancelled` or `all`; default all) | filters on **cached** status, then fetches live status for non-terminal tasks (in parallel when async) |
 
 Terminal statuses skipped by the live fetch: `cancelled`, `success`, `error`, `timeout`, `interrupted`. `waiting` (the run finished but the thread is interrupted, for example by `interrupt()` or HITL) is not terminal. `interrupted` means a run cancelled or replaced on the server, not a human pause. Since 0.7.30 a task reports such a run as `cancelled` (`_task_status`); older state may still hold `interrupted`. If another client's run replaced the tracked run, the check follows the newest run on the thread instead (except for a task the parent already cancelled). `pending` means the latest run (for example a queued follow-up) hasn't started.
 
-## Task notifications and `waiting` (beta, since 0.7.26)
+## Task notifications and `waiting` (beta; docs: `deepagents>=0.7.26`)
 
 Only on the async path (`ainvoke`/`astream`, which the Agent Server uses). With `invoke` only the five tools work.
 
@@ -104,7 +104,7 @@ _STREAM_OPTIONS = {
 - Launches and updates of a subagent on the same deployment (no `url`), through `_run_options`. A subagent with a `url` does not get them.
 - The notification run `_awake_parent` starts on an idle parent's thread.
 
-So a joining app now gets tokens, subgraph events and custom events, and a late join can replay the run's events. On 0.7.34 these runs used the server's default stream. Nothing to configure.
+So a joining app now gets tokens, subgraph events and custom events, and a late join can replay the run's events. Before 0.7.39 these runs used the server's default stream. Nothing to configure.
 
 ## State: `async_tasks`
 

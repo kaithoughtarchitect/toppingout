@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: middleware stack, middleware order, ModelRefusalMiddleware, ModelRefusalError, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware, BackendConsumer, bind_backend, middleware needs backend
 read_when: Read when you need the exact middleware order, where custom middleware lands, how to replace or remove a built-in, or why a hook misbehaves across subagents.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: d6b83aef65c8
 ---
 
@@ -18,7 +18,7 @@ sources_hash: d6b83aef65c8
 
 - Main stack order: Filesystem, SubAgent, ParentNotifier, Summarization, PatchToolCalls, AsyncSubAgent, then your middleware, profile extras, Skills (if `skills=`), prompt caching, Memory, HITL, UnsupportedContent, ModelRefusal (0.7.33+).
 - `ModelRefusalMiddleware` (LangChain) is in the main stack and every declarative and general-purpose subagent stack since 0.7.33: a `refusal` block in the model response raises `ModelRefusalError`. Remove it with `excluded_middleware={"ModelRefusalMiddleware"}`.
-- Skills moved from the head of the stack to the tail in 0.7.29. It now runs after your middleware, so your `before_agent`/`before_model` hooks don't see freshly loaded `skills_metadata` and your `wrap_model_call` can't edit the skills section of the prompt.
+- Skills sits in the tail (seen in 0.7.39). It runs after your middleware, so your `before_agent`/`before_model` hooks don't see freshly loaded `skills_metadata` and your `wrap_model_call` can't edit the skills section of the prompt.
 - `FilesystemMiddleware` and `SubAgentMiddleware` are protected; excluding them raises `ValueError`.
 - Merge rule: same `.name` replaces in place; new names splice after the last core entry; `create_agent` rejects duplicate names.
 - Remove middleware via `HarnessProfile(excluded_middleware=frozenset({...}))`, not `middleware=`; unmatched entries raise.
@@ -62,7 +62,7 @@ Post-processing:
 - Profile `excluded_middleware` filter runs, then your `middleware=` is merged, then the filter runs again (so exclusions also remove your instances).
 - `_ToolExclusionMiddleware(excluded=profile.excluded_tools)` is appended **last** if the profile excludes tools, so no later `wrap_model_call` can restore them; excluded tools are also non-executable.
 
-Confirmed on 0.7.29 (2026-10-21) by capturing the list `create_deep_agent` passes to `create_agent`, with a scripted fake model, `skills`, `memory`, `interrupt_on`, one async subagent and one custom middleware: `FilesystemMiddleware, SubAgentMiddleware, _ParentNotifierMiddleware, SummarizationMiddleware, PatchToolCallsMiddleware, AsyncSubAgentMiddleware, <yours>, SkillsMiddleware, AnthropicPromptCachingMiddleware, MemoryMiddleware, HumanInTheLoopMiddleware, UnsupportedContentMiddleware`. Not re-run on 0.7.34; per `graph.py`, 0.7.34 adds `ModelRefusalMiddleware` after `UnsupportedContentMiddleware`, and the caching entry is the lazy stand-in (class `_LazyAnthropicPromptCachingMiddleware`, same name). The 0.7.39 `graph.py` builds the same order (read, not run).
+Confirmed on 0.7.39 (2026-11-19) by capturing the list `create_deep_agent` passes to `create_agent`, with a fake model, `skills`, `memory`, `interrupt_on`, one async subagent and one custom middleware: `FilesystemMiddleware, SubAgentMiddleware, _ParentNotifierMiddleware, SummarizationMiddleware, PatchToolCallsMiddleware, AsyncSubAgentMiddleware, <yours>, SkillsMiddleware, AnthropicPromptCachingMiddleware (class _LazyAnthropicPromptCachingMiddleware), MemoryMiddleware, HumanInTheLoopMiddleware, UnsupportedContentMiddleware, ModelRefusalMiddleware`. The same capture on 0.7.29 (2026-10-21) gave this list without `ModelRefusalMiddleware`, which arrived in 0.7.33.
 
 Passing a `SkillsMiddleware` in `middleware=` (its `.name` is `"SkillsMiddleware"`) replaces the default in place. If you passed no `skills=`, its `sources` become `skills`, so the default slot exists and the general-purpose subagent gets the same sources.
 
@@ -75,16 +75,17 @@ Declarative `SubAgent` (not forked), built in `graph.py`:
 
 Auto `general-purpose`: Filesystem -> Summarization -> Patch -> profile extras -> `SkillsMiddleware` (parent `skills`) -> caching -> `ModelRefusalMiddleware` (0.7.33+), with the parent profile. It inherits your `middleware=` entries **only** where `.name` matches one of its default slots.
 
-Forked subagent (`mode="fork"`): uses the parent's `skills` (a fork can't set its own), puts parent `MemoryMiddleware` after caching, and merges parent `middleware=` with spec middleware (spec wins by name); the merged list lands after Patch, ahead of profile extras and Skills. No `SubAgentMiddleware` and no `_ParentNotifierMiddleware` exist inside any subagent.
+Forked subagent (`mode="fork"`): uses the parent's `skills` (a fork can't set its own), puts parent `MemoryMiddleware` after caching, and merges parent `middleware=` with spec middleware (spec wins by name); the merged list lands after Patch, ahead of profile extras and Skills. A fork also gets `_ForkTaskToolMiddleware` right after its `FilesystemMiddleware` (inserted by `_resolved_declarative_spec` in `subagents.py`): it gives the fork a `task` tool with the parent's description, so the tool block matches the parent's cached prefix, but a call to it is refused with "You are a subagent and cannot delegate to another subagent..." (`_FORK_RECURSION_REFUSAL`). No `SubAgentMiddleware` and no `_ParentNotifierMiddleware` exist inside any subagent.
 
 When a subagent run raises `ModelRefusalError` (or a `StructuredOutputValidationError` carrying a refusal), the `task` tool catches it and returns a notice to the parent instead of failing: `The subagent stopped because a model refused the request.`, then the refusal category and explanation when present, then `Retrying the same request is unlikely to succeed; rephrase it or continue without it.` (`_refusal_notice` in `subagents.py`, 0.7.33+). A subagent whose last message holds a refusal block returns the same notice.
 
-Since 0.7.29, skills sit in the same place on the main agent and in subagents: after your middleware and profile extras, right before caching. Before, the main agent ran skills first and subagents ran them right after Patch.
+In 0.7.39, skills sit in the same place on the main agent and in subagents: after your middleware and profile extras, right before caching.
 
 ## Adding custom middleware
 
 ```python
-from langchain.agents.middleware import AgentMiddleware, wrap_tool_call
+from typing import NotRequired
+from langchain.agents.middleware import AgentMiddleware, AgentState, wrap_tool_call
 from deepagents import create_deep_agent
 
 @wrap_tool_call
@@ -92,12 +93,18 @@ def log_tool_calls(request, handler):
     print("tool:", request.tool_call["name"])
     return handler(request)
 
+class CountState(AgentState):
+    turns: NotRequired[int]
+
 class CountTurns(AgentMiddleware):
+    state_schema = CountState                          # declares the "turns" key
     def before_agent(self, state, runtime):
-        return {"x": state.get("x", 0) + 1}   # state, never self.x += 1
+        return {"turns": state.get("turns", 0) + 1}   # state, never self.turns += 1
 
 agent = create_deep_agent(model="openai:gpt-5.5", middleware=[log_tool_calls, CountTurns()])
 ```
+
+The `state_schema` is required: a hook update for a key no schema declares is dropped without an error, so without it `turns` never reaches state. Ran on 0.7.39 with a fake model and a checkpointer (2026-11-19): two turns on one thread gave `turns == 2`; the same class without `state_schema` left the key out of the result.
 
 Merge rule (`_apply_custom_middleware`): if `m.name` matches a name in the assembled stack it **replaces in place** (keeps position); otherwise it is spliced after the last core entry (before profile extras, Skills, caching, memory, HITL, UnsupportedContent, ModelRefusal). `create_agent` rejects two middleware with the same name. A replacement `FilesystemMiddleware` without its own `permissions` inherits the agent's `permissions=`; if both have non-empty rules that differ, `create_deep_agent` raises `ValueError` (0.7.39 `graph.py`).
 
@@ -158,13 +165,13 @@ from deepagents.middleware import (FilesystemMiddleware, SkillsMiddleware,
     SubAgentMiddleware, SummarizationMiddleware, UnsupportedContentMiddleware)
 
 agent = create_agent(
-    model="google_genai:gemini-3.6-flash",
+    model="google_genai:gemini-4-hydrogen",
     tools=[],
     middleware=[
         FilesystemMiddleware(backend=backend),
         TodoListMiddleware(),
         SubAgentMiddleware(backend=backend, subagents=[visualizer]),
-        SummarizationMiddleware(model="google_genai:gemini-3.6-flash", backend=backend),
+        SummarizationMiddleware(model="google_genai:gemini-4-hydrogen", backend=backend),
         SkillsMiddleware(backend=backend, sources=["/skills/"]),  # after summarization and any fallback, before caching
         UnsupportedContentMiddleware(),   # keep last
     ],

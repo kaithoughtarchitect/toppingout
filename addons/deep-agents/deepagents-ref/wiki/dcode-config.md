@@ -6,7 +6,7 @@ status: sourced
 product: dcode
 keywords: dcode config, config.toml, managed_config.toml, API key, /auth, base_url, OPENAI_BASE_URL, gateway, DEEPAGENTS_CODE_, DEEPAGENTS_HOME, .env, provider, custom provider, class_path, recursion_limit, allowed models, retries
 read_when: Read when dcode uses the wrong model or API key, a setting seems ignored, you need a custom or gateway provider, or an admin must pin policy.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: c4b27c03b6ce
 ---
 
@@ -58,7 +58,7 @@ Where every dcode setting lives and which source wins: `managed_config.toml`, en
 default = "anthropic:claude-opus-4-8"      # beats recent; /model only writes recent
 summarization_default = "openai:gpt-5.6-sol"  # else the main model; --summarization-model wins; in-session /offload model (was /summarization-model)
 auto_classifier = "openai:gpt-5.6-luna"    # Auto-mode reviewer
-auto_classifier_timeout = 20               # seconds, clamped 1..300
+auto_classifier_timeout = 20               # seconds, valid 1..300 (docs disagree: clamped vs falls back to 20)
 allowed = ["anthropic:*", "openai:gpt-6.1-sol"]  # unset = all; [] = none
 
 [agents]
@@ -119,14 +119,14 @@ show_diff_line_numbers = true
 
 - Retry-budget precedence: `--max-retries` > `[retries.<p>]` > `[retries]` > 5. For an arbitrary provider, `[retries.<p>].param = "retries"` names the SDK's retry kwarg so dcode can disable the SDK-level retry.
 - Recursion limit precedence: managed > `--recursion-limit` > `DEEPAGENTS_CODE_RECURSION_LIMIT` > `[runtime]` > `LANGGRAPH_DEFAULT_RECURSION_LIMIT` > Agent Server default (the 2026-11-18 docs say "LangSmith Agent Server default" where they used to say "LangGraph server default"; same fallback, new name). `dcode config get runtime.recursion_limit` shows the effective value and its source. The goal-rubric limits are separate.
-- `[interpreter].ptc = "all"` exposes every tool to programmatic tool calls, and those calls **bypass approvals**. It needs `ptc_acknowledge_unsafe = true`. See [[interpreters]].
+- `[interpreter].ptc = "all"` exposes every tool to programmatic tool calls, and those calls **bypass approvals**. It needs `ptc_acknowledge_unsafe = true` unless approvals are globally disabled. See [[interpreters]].
 
 ## Providers
 
 - OpenAI, Anthropic and Google (Gemini) are bundled. Everything else is an extra: `dcode --install groq|fireworks|ollama|baseten|openrouter|litellm|vertex|nvidia|...` (NVIDIA: `/auth`, public Build endpoint by default, `NVIDIA_BASE_URL` or `dcode auth set nvidia --base-url URL` for a private one). Installer extras go on the `bash` side of the pipe: `curl -LsSf https://langch.in/dcode | DEEPAGENTS_CODE_EXTRAS="baseten,groq" bash`. Built-in providers are identified by LangChain's `provider:model` ids (`openai`, `openai_codex`, `azure_openai`, `anthropic`, `google_genai`, `google_vertexai`, `google_anthropic_vertex`, `bedrock`, `bedrock_converse`, `groq`, `fireworks`, `ollama`, `together`, `mistralai`, `deepseek`, `xai`, `openrouter`, and more). See [[models]] for the SDK side.
 - `openai_codex` uses ChatGPT browser sign-in through `/auth`, not an API key. The token is stored at `.state/chatgpt-auth.json`. `dcode auth set` cannot store it; `dcode auth remove openai_codex` signs you out.
 - Claude on Vertex uses `google_anthropic_vertex:<model>` with ADC plus `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION`. Use `google_vertexai` only for Google models.
-- The `/model` switcher lists models from installed packages' profiles, `[models.providers.<p>].models`, and locally discovered Ollama models (`DEEPAGENTS_CODE_OLLAMA_DISCOVERY=0` turns discovery off). Any model name can still be passed directly.
+- The `/model` switcher lists models from installed packages' profiles, `[models.providers.<p>].models`, and locally discovered Ollama models. Any model name can still be passed directly.
 - Model kwargs, highest priority first: `--model-params` JSON, then `/model --model-params`, then `[models.providers.<p>.params]`, then `[...params."<model>"]` sub-tables (shallow merge; the model entry wins). Never put `api_key` in `params`.
 
 ```toml
@@ -157,7 +157,7 @@ Install the package into dcode's environment with `dcode --install my_package --
 - Remote policy: a local file containing only `[managed_config] source = "https://..."`. Requirements: HTTPS, no query string or credentials, 200 status, uncompressed, at most 1 MiB, 5 s timeout, no redirects or proxies.
 - Fails closed: an unreadable policy makes commands exit with code `78`. Invalid values for security keys stop startup; these keys are `interpreter.enable_interpreter`, `interpreter.ptc`, `interpreter.ptc_acknowledge_unsafe`, `models.allowed`, `models.auto_classifier`, `runtime.recursion_limit`, `sandboxes.default`, `shell.allow_list`, `skills.extra_allowed_dirs`, `startup.mode`, `startup.yolo_switcher`, `tracing.langsmith_redact`. `dcode config`, `dcode doctor`, `dcode auth path` and help still run.
 - Managed `[models].allowed` **replaces** the user's list. It applies to `--model`, `/model`, defaults, the Auto classifier, rubric graders and subagent models.
-- Install pinning: `curl -LsSf https://langch.in/dcode | DEEPAGENTS_CODE_VERSION="0.1.16" bash`. Related variables: `DEEPAGENTS_CODE_EXTRAS`, `DEEPAGENTS_CODE_PRERELEASE` (mutually exclusive with `VERSION`), `DEEPAGENTS_CODE_PYTHON`. The script supports running as root for MDM.
+- Install pinning: `curl -LsSf https://langch.in/dcode | DEEPAGENTS_CODE_VERSION="0.1.16" bash`. Related variables: `DEEPAGENTS_CODE_EXTRAS`, `DEEPAGENTS_CODE_PRERELEASE` (mutually exclusive with `VERSION`). The script supports running as root for MDM.
 
 ## Gotchas
 

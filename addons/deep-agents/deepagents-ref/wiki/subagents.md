@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out, model refusal, ModelRefusalError, lc_subagent_tool_call_id, checkpoint_ns, ToolMessage artifact, BackendConsumer, bind_backend
 read_when: Read when a subagent can't see parent middleware/memory, when adding a specialist agent, when a task call is rejected, or when a subagent's model refuses.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 5d538c806611
 ---
 
@@ -21,7 +21,8 @@ One-line truth: synchronous subagents are child agents that the main agent calls
 - A `general-purpose` subagent is auto-added unless you pass one with that name or the profile disables it.
 - Declarative `SubAgent`: `name`, `description` required; `system_prompt` is optional in code (default `""`), so always write one.
 - Omitting `tools` inherits ALL the parent's custom tools; setting `tools=[...]` replaces them.
-- Parent `middleware=` (TodoListMiddleware, RubricMiddleware) does NOT reach declarative children; children get no `task` tool.
+- Parent `middleware=` (TodoListMiddleware, RubricMiddleware) does NOT reach isolated declarative children, and they get no `task` tool. A `mode="fork"` child does get the parent's `middleware=`, merged with its own by name.
+- No child, forks included, sees the parent's `todos`: isolated children have the key excluded, and `todos` is `OmitFromInput` on `TodoListMiddleware`'s state, so a fork's input drops it too.
 - Children share the parent `backend`, so files are visible both ways; the child is stateless across calls.
 - `CompiledSubAgent(name, description, runnable)` inherits nothing and its state must have `messages`.
 - `mode="fork"` (beta, >=0.7.13) inherits parent history; `skills` on a fork raises `ValueError`.
@@ -58,7 +59,7 @@ class TaskToolSchema(BaseModel):
   1. If the child state has a non-None `structured_response`, it is JSON-serialized (`model_dump_json`, `dataclasses.asdict`, or `json.dumps`).
   2. Otherwise, if the child's last message holds a `refusal` content block, the content is the refusal notice (see Model refusals below; since 0.7.33).
   3. Otherwise the content is the text of the **last `AIMessage` with non-empty text**. It walks backwards, which skips Anthropic's trailing empty `end_turn` messages.
-  4. Other child state keys flow back as a `Command(update=...)`, **except** `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `_skill_tools_disclosed`, `rubric`, the fork marker, and private (`PrivateStateAttr`) keys. Since 0.7.27, a key the child returns exactly as it received it is also dropped, so an untouched key without a reducer no longer conflicts across parallel `task` calls and an additive reducer doesn't add the inherited value twice.
+  4. Other child state keys flow back as a `Command(update=...)`, **except** `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `_skill_tools_disclosed`, `rubric`, the fork marker, and private (`PrivateStateAttr`) keys. A key the child returns exactly as it received it is also dropped (`_is_unchanged`, seen in 0.7.39), so an untouched key without a reducer no longer conflicts across parallel `task` calls and an additive reducer doesn't add the inherited value twice.
   5. A key the children really change, in parallel `task` calls, still needs a reducer in your `state_schema`, or the step fails with `InvalidUpdateError`.
 - A `CompiledSubAgent` whose output lacks a `messages` key raises `ValueError`.
 
@@ -86,16 +87,16 @@ The subagent stopped because a model refused the request. Category: <category>. 
 | `model` | no | the parent's model. Accepts a `"provider:model"` string or a `BaseChatModel` |
 | `middleware` | no | merged into the default child stack by `.name` (see below) |
 | `interrupt_on` | no | inherits the top-level `interrupt_on`. If set, it overrides |
-| `skills` | no | none (unless the spec's own `middleware` holds a `SkillsMiddleware`). Only GP inherits the parent's `skills` |
+| `skills` | no | none for an isolated child (unless the spec's own `middleware` holds a `SkillsMiddleware`). GP and `mode="fork"` children inherit the parent's `skills`; a fork may not set its own |
 | `permissions` | no | inherits the parent's `permissions`. If set, it **replaces** them |
 | `response_format` | no | none. Accepts a Pydantic model, dataclass, TypedDict, JSON-schema dict, `ToolStrategy`, `ProviderStrategy` or `AutoStrategy` |
-| `mode` | no | `"isolated"`. Can be `"fork"` (beta, >=0.7.13). Any other value raises `ValueError`; the legacy alias `"handoff"` is no longer accepted in 0.7.34 (it was in 0.7.29; the changelog does not mention it) |
+| `mode` | no | `"isolated"`. Can be `"fork"` (beta, >=0.7.13). Any other value raises `ValueError`. The old name `"handoff"` was renamed to `"isolated"` in 0.7.13 (changelog) and is rejected in 0.7.39 |
 
 The default child middleware stack (for `create_deep_agent`) is built in `graph.py`:
-`FilesystemMiddleware(backend, permissions)` → `SummarizationMiddleware` → `PatchToolCallsMiddleware` → *spec `middleware` (new names)* → profile `extra_middleware` → `SkillsMiddleware` (only if the spec has `skills`) → prompt caching → `MemoryMiddleware` (forks only, if `memory`) → `ModelRefusalMiddleware` (since 0.7.33) → `_ToolExclusionMiddleware` (if the profile excludes tools) → `HumanInTheLoopMiddleware` (if `interrupt_on`) → `UnsupportedContentMiddleware`. (0.7.29 moved Skills from right after Patch to just before caching. Order re-checked on 0.7.39 `graph.py`.)
+`FilesystemMiddleware(backend, permissions)` → `SummarizationMiddleware` → `PatchToolCallsMiddleware` → *spec `middleware` (new names)* → profile `extra_middleware` → `SkillsMiddleware` (only if the spec has `skills`) → prompt caching → `MemoryMiddleware` (forks only, if `memory`) → `ModelRefusalMiddleware` (since 0.7.33) → `_ToolExclusionMiddleware` (if the profile excludes tools) → `HumanInTheLoopMiddleware` (if `interrupt_on`) → `UnsupportedContentMiddleware`. (Order seen in 0.7.39 `graph.py`.)
 - Spec `middleware` entries whose `.name` matches a default **replace it in place**. For example, `FilesystemMiddleware(backend=..., tools=["read_file","ls"])` restricts the child's file tools. New entries land after the core entries and before the profile, Skills, caching and memory tail.
 - Since 0.7.36, any middleware in the spec's `middleware` (and, for a fork, the inherited parent `middleware=`) that has a `bind_backend` method (the `BackendConsumer` protocol, `from deepagents.backends import BackendConsumer`) gets `bind_backend(backend)` with the parent's backend before the child is built (`_bind_backend` in `graph.py`). See [[middleware]].
-- The child **does not inherit** the parent's `middleware=`. That includes `TodoListMiddleware` ([[planning]]) and `RubricMiddleware`.
+- An isolated child **does not inherit** the parent's `middleware=`. That includes `TodoListMiddleware` ([[planning]]) and `RubricMiddleware`. A fork does (see Forked subagents).
 - The child gets **no** `SubAgentMiddleware`. An isolated declarative child therefore has no `task` tool and cannot delegate further.
 - The child **does** share the parent's `backend`, so its files are visible to the parent ([[filesystem-tools]]). It is compiled with the parent's `state_schema` as well.
 
@@ -140,13 +141,25 @@ analyzer = CompiledSubAgent(
 ## General-purpose subagent
 
 - `name="general-purpose"`. The description says it has "access to all tools as the main agent". The prompt is `DEFAULT_SUBAGENT_PROMPT` plus profile overlays, and it tells the child that only its final message reaches the caller.
-- It uses the parent's `model`, `tools`, `permissions`, `interrupt_on` and `skills` (the only child that inherits skills). It gets its own Filesystem, Summarization and PatchToolCalls middleware.
+- It uses the parent's `model`, `tools`, `permissions`, `interrupt_on` and `skills` (forks also inherit skills; isolated declarative children do not). It gets its own Filesystem, Summarization and PatchToolCalls middleware.
 - From the parent's `middleware=`, it inherits only instances whose `.name` overrides a default GP slot.
 - To **replace** it, pass a spec named `"general-purpose"`. Yours fully replaces the default, with no merge.
 - To **rename or re-prompt** it, or **disable** it: `HarnessProfile(general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False | description=... | system_prompt=...))` registered via `register_harness_profile("provider:model", ...)` ([[customization]]).
 - Listing `SubAgentMiddleware` in `excluded_middleware` raises `ValueError`, because it is required scaffolding. Disable GP instead.
 
 ## Forked subagents (`mode="fork"`, beta)
+
+What each kind of declarative child gets (0.7.39, `graph.py` and `middleware/subagents.py`):
+
+| | isolated (default) | `mode="fork"` |
+| - | - | - |
+| messages | one `HumanMessage(description)` | the parent's effective history, then a task message |
+| system prompt | its own `system_prompt` (default `""`) plus profile overlays | the parent's system prompt, byte-identical; its own `system_prompt` goes into the task message |
+| `skills` | none unless its spec sets `skills` | the parent's `skills`; setting `skills` raises `ValueError` |
+| parent `middleware=` | not inherited | merged by `.name` with the spec's `middleware` (spec entry wins) |
+| `MemoryMiddleware` | none | added when the parent has `memory=` |
+| parent state | non-excluded, non-private keys | full state, private keys included, minus the keys listed below |
+| parent `todos` | no | no (`OmitFromInput`) |
 
 - The child receives the parent's **effective** history, meaning the summarization event is applied ([[summarization]]). The trailing AIMessage that holds the `task` call is dropped, and a `HumanMessage` is appended containing a continuation preamble, then the fork's own `system_prompt` if it has one, then the `description` (`f"{preamble}{instructions}\n\n{description}"` in `_fork_messages`).
 - A declarative fork inherits the full parent state, including private keys, except `structured_response`, the summarization event/session id, `rubric`, `pinned_skills` and `_skill_tools_disclosed` (the rubric grades the parent's goal, pending pins and disclosed skill tools belong to the parent). It also mirrors the parent's system prompt and prompt-producing middleware (Skills with the parent's `skills`, Memory, and the parent `middleware=`), which is good for prompt-cache reuse.
@@ -186,8 +199,8 @@ In this path each raw `SubAgent` **must** specify `model` and `tools` (`create_s
 - The docs' comparison table says forks "cannot use `task`". In code the tool is present but refuses at call time.
 - The docs (2026-11-18) say a fork's `system_prompt` is appended to the inherited prompt and "can reduce cache reuse". Since 0.7.35 it rides in the task message instead and the system prompt is unchanged. Middleware that reads the fork's instructions from `request.system_message` will not find them there.
 - The child's report is not shown to the user, so the parent must relay it. The child is stateless across calls: each `task` is a fresh run.
-- Parent `middleware=` (for example `TodoListMiddleware`, `RubricMiddleware` or custom logging) does not reach declarative isolated children, GP excepted for slot overrides.
-- The parent's `rubric` is not passed to children, so a child running its own `RubricMiddleware` is not graded against the parent's whole goal (fixed in 0.7.24/0.7.27).
+- Parent `middleware=` (for example `TodoListMiddleware`, `RubricMiddleware` or custom logging) does not reach declarative isolated children, GP excepted for slot overrides. Forks get all of it, merged by name.
+- The parent's `rubric` is not passed to children, so a child running its own `RubricMiddleware` is not graded against the parent's whole goal (changelog 0.7.24: "Preserve the parent rubric during parallel subagent calls"; seen in 0.7.39).
 - Custom `state_schema` fields are written back to the parent. If parallel `task` calls may change the same field, give it a reducer, or the step fails with `InvalidUpdateError`.
 - Subagent HITL interrupts need a checkpointer on the **parent** ([[human-in-the-loop]]).
 - Dynamic `response_format` per call (used by interpreter `task()` with `responseSchema`) works only on declarative specs. A compiled one raises `ValueError` ([[dynamic-subagents]]).

@@ -6,7 +6,7 @@ status: sourced
 product: dcode
 keywords: /goal, goal, /rubric, --rubric, rubric, acceptance criteria, grader, RubricMiddleware, keep iterating until done, self-grading, --rubric-max-iterations, --rubric-model, definition of done, CI quality gate
 read_when: Read when you want dcode to keep working until acceptance criteria pass, or need a rubric quality gate in headless or CI runs.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 824f5da29318
 ---
 
@@ -16,8 +16,8 @@ Goals and rubrics make [[dcode]] grade its own work against acceptance criteria 
 
 ## How it works
 
-- Both are built on the SDK's `RubricMiddleware` (see [[rubric]]). When the agent would finish (a model response with no tool calls), a separate grader subagent judges the transcript. `needs_revision` injects feedback as a `HumanMessage` and the loop resumes. The loop ends on `satisfied`, on `failed`, or at `max_iterations`.
-- In SDK 0.7.39 (unchanged since 0.7.20; `rubric.py` did not change from 0.7.34 to 0.7.39) the constructor is `RubricMiddleware(*, model, system_prompt=None, tools=None, ..., max_iterations=3, on_evaluation=None)` (every argument is keyword-only). Since SDK 0.7.33 `RubricMiddleware` is out of beta (no `@beta` decorator; the docs still say beta). The SDK default of 3 iterations explains why the docs example uses `--rubric-max-iterations 3`. dcode's own default is not stated in the docs.
+- Both are built on the SDK's `RubricMiddleware` (see [[rubric]]). When the agent would finish (a model response with no tool calls), a separate grader subagent judges the transcript. `needs_revision` injects feedback as a `HumanMessage` and the loop resumes. The loop ends on `satisfied`, `failed`, `grader_error`, or `max_iterations_reached` (`rubric.py` `_TERMINAL_RESULTS`).
+- In SDK 0.7.39 the constructor is `RubricMiddleware(*, model, system_prompt=None, tools=None, ..., max_iterations=3, on_evaluation=None)` (every argument is keyword-only). Since SDK 0.7.33 `RubricMiddleware` is out of beta (no `@beta` decorator; the docs carry no beta label either). The docs example passes `--rubric-max-iterations 3`, the same as the SDK default; dcode's own default is not stated in the docs.
 - Since 0.1.61, goal and rubric context is injected directly into the prompt. The old `get_goal` and `get_rubric` tools were removed. Since 0.1.46 the grader can inspect working-directory files.
 - Grading calls are billed and appear in `/cost`. The grader model is subject to `[models].allowed`.
 
@@ -71,7 +71,7 @@ dcode -n "implement OAuth refresh handling" \
   --rubric-max-iterations 3
 ```
 
-- `--rubric TEXT|@PATH`, `--rubric-model` (defaults to the main model) and `--rubric-max-iterations` all require `-n` or piped stdin. Without them dcode exits with code 2.
+- `--rubric TEXT|@PATH`, `--rubric-model` (defaults to the main model) and `--rubric-max-iterations` all require `-n` or piped stdin (the docs state no exit code for these).
 - Combine with `--max-turns` and `--timeout` (exit 124) so a grader loop cannot run forever in CI.
 - Grader model changes take effect without a restart (0.1.65) and persist across server restarts.
 

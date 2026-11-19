@@ -6,7 +6,7 @@ status: sourced
 product: sdk
 keywords: MCP, Model Context Protocol, MCPAdapter, langchain.mcp, langchain[mcp], FastMCP, MCP server tools, langchain-mcp-adapters, MultiServerMCPClient, list_tools, mcpServers, stdio, streamable http, connect MCP
 read_when: Read when connecting a deep agent to an MCP server or seeing old MultiServerMCPClient examples.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: b73521e4271c
 ---
 
@@ -58,7 +58,7 @@ MCPAdapter("https://example.com/mcp")     # str: must be http(s) URL -> streamab
 MCPAdapter(Path("weather_server.py"))     # Path: launched as stdio subprocess (one per adapter)
 MCPAdapter(server)                        # in-process FastMCP instance (tests; no socket)
 MCPAdapter({"mcpServers": {...}})         # MCPConfig dict: several servers behind one adapter
-# also: a fastmcp StreamableTransport object, or a prebuilt fastmcp.Client
+# also: a fastmcp StreamableTransport object, a prebuilt fastmcp.Client, or a ClientGroup
 ```
 
 Public no-auth example server: `https://docs.langchain.com/mcp` (tools `search_docs_by_lang_chain`, `query_docs_filesystem_docs_by_lang_chain`, `submit_feedback`).
@@ -76,6 +76,8 @@ The Deep Agents docs no longer have their own MCP page: the old URL redirects to
 
 - A `str` target must look like an `http(s)` URL. FastMCP would otherwise test a string as a filesystem path first and could launch a `.py`/`.js` file as a subprocess; `MCPAdapter` rejects non-URL strings. Use `Path(...)` for stdio.
 - `langchain.mcp` is beta; pin `langchain` and expect breaking changes (see [[versions]]).
+- MCP elicitation becomes a LangGraph interrupt: `MCPAdapter.__init__` arms each client so a server's request for user input pauses the run, unless the client you pass already has its own elicitation handler (installed `langchain/mcp/adapter.py`, `elicitation.py`, langchain 1.5.0). Give the agent a checkpointer and a stable `thread_id` if a server can elicit ([[human-in-the-loop]]).
+- The `.venv` this reference was checked in has no `fastmcp`, so the examples here were not run; the API was checked against the installed `langchain/mcp` source.
 - The tools page example builds the agent inside the context manager; if you build the agent at import time (e.g. `langgraph.json` graph), you need an async graph factory or to load tools before the graph is constructed.
 - Nothing about MCP is in the `deepagents` 0.7.39 package source; all behavior here is LangChain's (docs-sourced).
 

@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: memory history, edit history, audit trail, revision, versioning, undo, diff, original wording, correction, superseded preference, HistoryStoreBackend
 read_when: Read when memory edits must keep the prior wording, e.g. an owner corrects a preference and the original must stay visible.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 5cca998d88cb
 ---
 
@@ -63,11 +63,19 @@ class HistoryStoreBackend(StoreBackend):
                       old_string=old_string, new_string=new_string)
         return res
 
+    @staticmethod
+    def _under(items, file_path: str) -> dict:
+        # StoreBackend.delete is recursive: it removes the key and every key under "<key>/".
+        base = file_path.rstrip("/")
+        return {str(i.key): i.value.get("content") for i in items
+                if str(i.key) == base or str(i.key).startswith(base + "/")}
+
     def delete(self, file_path):
-        before = self._current(file_path)
+        befores = self._under(self._search_store_paginated(self._get_store(), self._get_namespace()), file_path)
         res = super().delete(file_path)
         if res.error is None:
-            self._log(file_path, op="delete", before=before, after=None)
+            for path, before in befores.items():
+                self._log(path, op="delete", before=before, after=None)
         return res
 
     # --- async (used by ainvoke / astream) ---
@@ -98,10 +106,12 @@ class HistoryStoreBackend(StoreBackend):
         return res
 
     async def adelete(self, file_path):
-        before = await self._acurrent(file_path)
+        items = await self._asearch_store_paginated(self._get_store(), self._get_namespace())
+        befores = self._under(items, file_path)
         res = await super().adelete(file_path)
         if res.error is None:
-            await self._alog(file_path, op="delete", before=before, after=None)
+            for path, before in befores.items():
+                await self._alog(path, op="delete", before=before, after=None)
         return res
 ```
 
@@ -127,7 +137,8 @@ for it in entries:            # it.value: path, ts, op, before, after (+ old_str
 - **Async:** `ainvoke`/`astream` go through `awrite`, `aedit` and `adelete`, which are overridden above using `store.aget`/`store.aput` (**ran**). If you add a method, add both versions.
 - **Not atomic.** The live write and its log entry are two `put`s. A crash in between loses one log entry. Acceptable for an audit trail; use a DB transaction if it must be exact.
 - `upload_files` (app-side bulk writes) isn't logged. Override it if you use it. Since 0.7.39 it stores content with a NUL byte as base64 (`_encode_upload`), so `_current` returns base64 text for such a file; log `encoding` too if you keep uploads.
-- `_get_store()` and `_get_namespace()` are private helpers of `StoreBackend` (still there in 0.7.39). In 0.7.39 `write`, `edit`, `delete` and their async versions are unchanged from 0.7.34; only `upload_files` changed (`backends/store.py`). On upgrade, re-run `../scripts/check_persistence.py`, which exercises this class.
+- **Deletes are recursive.** `StoreBackend.delete` removes the key and every key under `<key>/` (`backends/store.py`, `delete`), so `delete` and `adelete` above search the namespace first and log one `delete` entry per removed key, each with its own `before`. On 2026-11-19 (0.7.39, `InMemoryStore`, sync and async) deleting `/notes` logged `/notes/a.md` and `/notes/b.md` and left `/notesX.md` alone; `check_persistence.py` was not re-run for this change.
+- `_get_store()`, `_get_namespace()`, `_search_store_paginated()` and `_asearch_store_paginated()` are private helpers of `StoreBackend` (still there in 0.7.39). In 0.7.39 `write`, `edit`, `delete` and their async versions are unchanged from 0.7.34; only `upload_files` changed (`backends/store.py`). On upgrade, re-run `../scripts/check_persistence.py`, which exercises this class.
 
 ## Gotchas
 

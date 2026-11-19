@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: tutorials, examples, data analysis agent, deep research agent, content builder, RAG agent, chunk-analyst, research-agent, sample agents, reference architecture, copy pattern, load_subagents, official tutorial
 read_when: Read when looking for an end-to-end pattern to copy (research, data analysis, content, RAG), or when a tutorial example fails on 0.7.39.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 07d87bc1a2d1
 ---
 
@@ -67,7 +67,7 @@ def slack_send_message(text: str, file_path: str | None = None) -> str:
     return "Message sent."
 
 agent = create_deep_agent(
-    model="google_genai:gemini-3.6-flash",
+    model="google_genai:gemini-4-hydrogen",
     tools=[slack_send_message],
     backend=backend,
     checkpointer=InMemorySaver(),
@@ -125,7 +125,7 @@ agent = create_deep_agent(
 
 `load_subagents` reads YAML (`description`, `system_prompt`, optional `model`, `tools` as names) and maps tool names to Python tool objects: deep agents do not load subagents from files natively. Copy: behavior lives in editable files (memory = voice, skills = procedures, YAML = delegation); skills tell the agent to call `task(subagent_type="researcher", description="Research X. Save findings to research/x.md")` and then read the file, so research is handed over by file path rather than pasted. In virtual mode `./AGENTS.md` resolves to `<root_dir>/AGENTS.md`.
 
-Managed variant (deep research and content builder, Nov 2026 docs): scaffold with `uvx --from managed-deepagents mda init content-builder` (or `deep-research`), put the brand voice or research workflow in `instructions.md` (the SDK `memory=` role; synced to Context Hub on deploy), keep skills under `skills/` (discovered automatically, no `skills=`), and declare the agent in code:
+Managed variant (deep research and content builder, Nov 2026 docs): scaffold with `uvx --from managed-deepagents mda init content-builder` (or `deep-research`), put the brand voice (content builder: the SDK `memory=`/`AGENTS.md` role) or the research workflow (deep research: the SDK `system_prompt` role) in `instructions.md`, which is synced to Context Hub on deploy, keep skills under `skills/` (discovered automatically, no `skills=`), and declare the agent in code:
 
 ```python
 from managed_deepagents import define_deep_agent
@@ -189,7 +189,7 @@ Copy: the orchestrator never sees chunk text, only paths; one `task()` per chunk
 - `FilesystemBackend` can delete files under `root_dir` (0.7 adds a recursive `delete` tool). Run it in a dedicated directory.
 - In-memory vector store and `InMemorySaver` are demo choices; persist the index and state for production.
 - None of the tutorials add retries or call limits; research-style agents with web tools are the prime case for [[fault-tolerance]] middleware on the subagent specs.
-- Tutorials use per-provider model strings that change often (`gemini-3.6-flash`, `claude-sonnet-5`); the patterns, not the model ids, are the point ([[tools]], [[context-engineering]], [[memory]], [[sandboxes]], [[backends]], [[subagents]]).
+- Tutorials use per-provider model strings that change often (`gemini-4-hydrogen`, `claude-sonnet-5`); the patterns, not the model ids, are the point ([[tools]], [[context-engineering]], [[memory]], [[sandboxes]], [[backends]], [[subagents]]).
 
 ## Sources
 

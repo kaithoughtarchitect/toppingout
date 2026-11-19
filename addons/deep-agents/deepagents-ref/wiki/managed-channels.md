@@ -6,7 +6,7 @@ status: sourced
 product: managed
 keywords: MDA Slack, channels.slack, channels.http, webhook, HTTP channel, define_identity, identity.py, Supabase, define_schedule, cron, schedules, runtime.schedules, reminders, scheduled agent, Slack reactions, MCP endpoint, /mcp, interrupt_on Slack, attach_file, user_prompt_response, INTERRUPT_CORRELATION_KEY
 read_when: Read when wiring a Managed Deep Agent to Slack or a webhook, controlling who can call it, adding a cron schedule, or exposing it over MCP.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 0d5252cb65fe
 ---
 
@@ -149,7 +149,7 @@ async def request_approval(amount: str, runtime: ManagedDeepAgentRuntime) -> str
 - Response fields: `provider`, `action` (button `action_id` / modal `callback_id`), `value`, `correlation_id` (`INTERRUPT_CORRELATION_KEY == "mda_correlation_id"`).
 - Matching: one parked + no id -> resumes it; id matches exactly one -> resumes it; several parked + no id, or id matches none/several -> nothing runs; none parked -> fresh run, answer only on `runtime.thread.origin.channel.event`.
 - Modal: button `action_id` starting `mda_modal::` with the full view JSON as `value` (<=2000 chars); platform sets `callback_id` and `private_metadata` (setting it yourself blocks the modal). Modals never carry a correlation id.
-- Failure modes: dismissed modal leaves interrupt parked forever; replying in thread abandons the checkpoint; double-press = resume + fresh turn.
+- Failure modes: dismissed modal leaves interrupt parked forever; replying in thread abandons the checkpoint; two people press the same button: the first press resumes the interrupt, the second starts a fresh turn, and nothing deduplicates them.
 - The built-in Slack channel `post` is text-only; use the Web API for blocks. Studio shows the raw interrupt value.
 
 ## Identity (`identity.py`)
@@ -234,7 +234,7 @@ async with MCPAdapter(Client(StreamableHttpTransport(
     "<DEPLOYMENT_API_URL>/mcp",
     headers={"x-api-key": os.environ["LANGSMITH_API_KEY"]},
 ))) as adapter:
-    tools = await adapter.list_tools()   # docs switched from langchain_mcp_adapters on 2026-09-30 ([[mcp]])
+    tools = await adapter.list_tools()   # the docs use fastmcp + MCPAdapter here ([[mcp]])
 ```
 
 Any MCP client that can send a custom header works the same way: Streamable HTTP transport, the `/mcp` URL, and an `x-api-key` header.

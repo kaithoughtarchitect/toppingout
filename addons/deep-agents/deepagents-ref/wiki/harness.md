@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: deep agents harness, agent harness, create_agent, middleware stack, built-in tools, virtual filesystem, StateBackend, write_todos missing, planning removed, execute tool, install deepagents, pip install deepagents, task tool, prompt caching, LangGraph graph
 read_when: Read when starting with Deep Agents, asking what is on or off by default, or wondering why write_todos or execute is missing.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 17786872fc31
 ---
 
@@ -69,7 +69,7 @@ pip install "deepagents[quickjs]"  # CodeInterpreterMiddleware
 pip install "deepagents[video]" # video frame extraction in read_file
 ```
 
-Python >=3.11. Hard deps include `langchain` (>=1.5.0), `langchain-core` (>=1.8.1) (both raised since 0.7.34, which needed >=1.4.9 and >=1.7.6), `langchain-anthropic`, `langchain-google-genai`, `langsmith`, `wcmatch` (see [[versions]]). Since 0.7.32 `import deepagents` does not import `langchain_anthropic` or `langchain_openai`; they load only when an Anthropic or OpenAI model is used. Other providers need their integration package (e.g. `pip install -U "langchain[openai]"`). Set the provider key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, ...). Optional tracing: `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`.
+Python >=3.11. Hard deps include `langchain` (>=1.5.0), `langchain-core` (>=1.8.1) `langchain-anthropic`, `langchain-google-genai`, `langsmith`, `wcmatch` (see [[versions]]). Since 0.7.32 `import deepagents` does not import `langchain_anthropic` or `langchain_openai`; they load only when an Anthropic or OpenAI model is used. Other providers need their integration package (e.g. `pip install -U "langchain[openai]"`). Set the provider key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, ...). Optional tracing: `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`.
 
 ## Minimal agent
 
@@ -102,7 +102,7 @@ Provider-native server tools can be passed as dicts in `tools=` (quickstart): `{
 - **Deep Agents Code (`dcode`)**: pre-built terminal coding agent on this SDK ([[dcode]]).
 - **Managed Deep Agents**: LangSmith-hosted runtime; owns backend/store/checkpointer ([[managed]]).
 - JS/TS port: `deepagentsjs` (separate library; not covered here).
-- Production path: LangSmith deployment / `langgraph build` ([[production]], [[persistence]]); streaming via `stream_events(version="v3")` with `stream.subagents` ([[streaming]]).
+- Production path: LangSmith Agent Server / `langgraph build` ([[production]], [[persistence]]); streaming via `stream_events(version="v3")` with `stream.subagents` ([[streaming]]).
 
 ## Gotchas
 

@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: persistence, checkpointer, store, remember across sessions, long-term memory, InMemorySaver, SqliteSaver, PostgresSaver, PostgresStore, StoreBackend, thread_id, survive restart, durable state
 read_when: Read when state or memory is lost after a restart, when thread_id seems ignored, or when choosing a durable checkpointer and store.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 1489b51a24a7
 ---
 
@@ -60,7 +60,7 @@ Durable savers/stores are standard LangGraph packages, not part of `deepagents` 
 - `StateBackend()` (the default when `backend=None`): files live in the `files` state channel; reads/writes go through LangGraph `CONFIG_KEY_READ`/`CONFIG_KEY_SEND`. Persisted only by the checkpointer, scoped to one thread. Calling it outside a graph raises `RuntimeError`; to pre-seed, pass `{"messages": [...], "files": {...}}` on invoke. Every step is checkpointed, so large files bloat checkpoints.
 - `StoreBackend(*, namespace, store=None)`: `namespace` is required and keyword-only (`NamespaceFactory = Callable[[Runtime], tuple[str, ...]]`). Store resolution: explicit `store=` wins, else `langgraph.config.get_store()`, i.e. the store passed to `create_deep_agent`. Components must match `^[A-Za-z0-9\-_.@+:~]+$` (no `*`, `?`, empty strings).
 - `CompositeBackend(default, routes, *, artifacts_root="/")`: longest prefix wins, and the route prefix is **stripped** before calling the routed backend. `/memories/AGENTS.md` routed to a `StoreBackend` is stored under key `/AGENTS.md`.
-- Store item value format: `{"content": str, "encoding": "utf-8", "created_at": iso, "modified_at": iso}`. Build it with `deepagents.backends.utils.create_file_data(content)`.
+- Store item value format: `{"content": str, "encoding": "utf-8" | "base64", "created_at": iso, "modified_at": iso}`. Build it with `deepagents.backends.utils.create_file_data(content)` (it takes an `encoding=` argument). Since 0.7.39 `StoreBackend.upload_files` stores content with a NUL byte or invalid UTF-8 as `"base64"` (see Gotchas), so code reading the store must check `encoding`.
 
 ## Self-hosted durable setup
 
@@ -194,8 +194,8 @@ Deployed: `await client.store.put_item((org_id,), "/compliance.md", create_file_
 - HITL and `ToolCallLimitMiddleware/ModelCallLimitMiddleware(thread_limit=...)` require a checkpointer; resume must reuse the same `thread_id`.
 - Concurrent writes to the same store key are last-write-wins. Prefer user-scoped namespaces or per-topic files.
 - `InMemoryStore` and `InMemoryVectorStore` in tutorials are demo-only; they vanish on restart.
-- Subagents share the parent's `files` channel (only `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `rubric` and private keys are excluded), so `StateBackend` files written by the parent are visible to [[subagents]] and vice versa.
-- Since 0.7.29 a subagent's returned state drops keys it gave back unchanged (not in 0.7.20; still so in 0.7.39). A custom state key that parallel `task` calls may each change still needs a reducer, or the step fails with `InvalidUpdateError`.
+- Subagents share the parent's `files` channel (only `messages`, `todos`, `structured_response`, `skills_metadata`, `pinned_skills`, `rubric`, `_skill_tools_disclosed` and `_deepagents_forked_context` (`_EXCLUDED_STATE_KEYS` in `middleware/subagents.py`), plus keys marked `PrivateStateAttr`, are excluded), so `StateBackend` files written by the parent are visible to [[subagents]] and vice versa.
+- A subagent's returned state drops keys it gave back unchanged (seen in 0.7.39, `_is_unchanged` in `middleware/subagents.py`). A custom state key that parallel `task` calls may each change still needs a reducer, or the step fails with `InvalidUpdateError`.
 - `task` subagents (`invoke` and `ainvoke`) run with config metadata `lc_subagent_tool_call_id` set to the `task` call's id (0.7.33+), and checkpointers copy config metadata into each checkpoint, so a stored subagent checkpoint names the call that ran it (`middleware/subagents.py`).
 - Since 0.7.36 the `task` result records where the subagent checkpointed: `ToolMessage.artifact == {"checkpoint_ns": "<ns>"}` (the model never sees `artifact`). A client can load the subagent's history from that namespace. To get it, a compiled subagent graph is now run with `stream`/`astream` (`stream_mode=["values", "checkpoints"]`) instead of `invoke`/`ainvoke`; any other runnable is still invoked and reports the `task` call's own `checkpoint_ns`. With no checkpointer nothing is saved and `artifact` is `None` (`_run_subagent` in `middleware/subagents.py`). A `.with_retry()` subagent that retried records the failed run's namespace; retry `task` with `ToolRetryMiddleware` instead (code comment above `_SUBAGENT_STREAM_MODES`). A probe on 0.7.39 (fake model, `InMemorySaver`) returned `{'checkpoint_ns': 'tools:<uuid>'}` for the general-purpose subagent.
 

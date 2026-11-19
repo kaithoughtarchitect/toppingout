@@ -6,7 +6,7 @@ status: sourced
 product: managed
 keywords: MDA tools, define_mcp, MCP connectors, connections, connections.get, OAuth, mda connections create, define_memory, MemoryLayer, durable memory, remember across sessions, define_sandbox, sandbox setup.sh, runtime.backend, Context Hub, async middleware, ManagedDeepAgentRuntime, ManagedToolRuntime, ManagedRuntime
 read_when: Read when adding tools, MCP servers, OAuth connections, memory or a sandbox to a Managed Deep Agent, or when memory or a connection does nothing.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: eac2492540d9
 ---
 
@@ -119,7 +119,7 @@ uv run mda connections create acme-api --grant-type client_credentials \
 uv run mda connections create engineering-notion --mcp https://mcp.notion.com/mcp
 ```
 
-- Slug is your name (lowercase, single hyphens); provider goes to `--oauth`. Catalog: `mda connections catalog` (github, google, linear, slack, atlassian, notion-api, stripe-link, x, ...). Custom providers: `--authorize-url` + `--token-url` + `--scope` (no scope = most providers refuse).
+- Slug is your name (lowercase, single hyphens); provider goes to `--oauth`. Catalog: `mda connections catalog` (github, google, linear, slack, atlassian, notion-api, stripe-link, x, ...). Custom providers: `--authorize-url` + `--token-url` + `--scope` (no scope = most providers refuse). Providers that need custom headers at the token endpoint (e.g. Stripe): add `--token-request-header KEY=VALUE`, repeated per header; works for authorization code and client credentials grants; values are write-only.
 - Agent-owned credentials belong to one deployment: create after the first successful deploy, and re-run `create` from each project root that needs the same slug. Without a local project, pass `--agent-server-id <id>` (`--deployment-id` is the hidden older alias; an older CLI may need it). `--authorize` needs either a project directory or `--agent-server-id` (CLI page, 2026-11-18).
 - Since 0.10.0 (changelog, breaking) `--secret-from-env` reads the shell first and the project `.env` second.
 - Local: agent-owned opaque connections read `MDA_DEV_<SLUG>` (upper-cased, hyphens -> underscores), e.g. `MDA_DEV_ORGANIZATION_TAVILY`.
@@ -155,13 +155,14 @@ from managed_deepagents import MemoryLayer, define_memory
 
 memory = define_memory(
     agent=MemoryLayer(),
-    user=MemoryLayer(allow=lambda context: context.get("remember") is True),
+    user=MemoryLayer(),
 )
 ```
 
-- `allow(context)` (sync or async) runs once per run before mounting; denial removes that layer's mount and hot memory for that run (data not deleted). It can widen only within the already-authenticated person; never grants user memory to a service principal (e.g. LangSmith API-key identity) or selects another person.
+- Legacy `MemoryLayer(allow=...)` (deprecated since 0.9.0, see below): `allow(context)` (sync or async) runs once per run before mounting; denial removes that layer's mount and hot memory for that run (data not deleted). It can widen only within the already-authenticated person; never grants user memory to a service principal (e.g. LangSmith API-key identity) or selects another person.
 - Since 0.9.0 channel runs get `context = None`, so an `allow(context)` policy cannot read channel delivery data from `context`. The 2026-11-18 memory page no longer has the old `context.channel.get("raw_event")` DM example; it shows selecting layers in a factory and a "Migrate from an allow policy" section instead. Delivery data now lives at `runtime.thread.origin.channel` (0.10.0; `runtime.channel` is deprecated). Slack `channel_type == "im"` = DM.
 - 0.9.0 deprecates `allow` callbacks: select memory per run in an agent factory with `define_memory(...)` instead ([[managed]]). Root `memory.py` stays the fallback; factory-selected memory can't have `allow`. Since 0.9.4, writes to a layer that isn't mounted fail instead of being silently dropped. Since 0.9.5 writes to read-only Context Hub mounts return a tool error. Since 0.10.1 agents can delete memory files. 0.10.4 adds a "runtime-resolved assistant memory scope" (changelog only; the 2026-11-18 memory page does not document it, so its API is unverified).
+- Approval before a write: a mounted layer doesn't control what the agent writes. Add `permissions=[FilesystemPermission(operations=["write"], paths=["/memories/**"], mode="interrupt")]` to `define_deep_agent` (`/memories/user/**` for user memory only); Slack and Studio show an approval card naming the path, and nothing is written until approved. No `checkpointer` needed. Adding `"read"` pauses on `ls`/`read_file`/`glob`/`grep` too; the automatic hot `AGENTS.md` load is never paused ([[permissions]]).
 - `AGENTS.md` at each mount root is hot memory, injected into every model call (not saved in thread state). Other files are cold, read on demand with `read_file`. Writes elsewhere under `/memories/` are not durable. See OSS [[memory]].
 - Deploy never overwrites stored memory. `mda dev` memory lives in `.mda/__contexthub__` and is separate from deployed memory.
 - Agent memory is a trust boundary: any caller can write content later callers read. No secrets/PII; never let memory grant authority.
@@ -246,7 +247,7 @@ Everything else (tools, middleware, MCP, channels, schedules, sandbox, agent def
 - Sync-only middleware hooks will not run under MDA.
 - `connections.get` needs a run: do not call it in channel `verify`/`parse` (use env).
 - User memory and user-owned connections both need a *person* principal; the default LangSmith API-key identity is a service and gets neither.
-- `runtime.backend` method names match OSS 0.7.39 `BackendProtocol` (`ls`, `read`, `grep`, `glob`, `write`, `edit`, `delete`, `upload_files`, `download_files`, `execute`), verified in source.
+- `runtime.backend` method names match OSS 0.7.39 `BackendProtocol` (`ls`, `read`, `grep`, `glob`, `write`, `edit`, `delete`, `upload_files`, `download_files`) plus `execute` from `SandboxBackendProtocol` (`backends/protocol.py`), verified in source.
 
 ## Sources
 

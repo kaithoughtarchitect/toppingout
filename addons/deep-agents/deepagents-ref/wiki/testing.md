@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: testing, test, unit test, pytest, fake model, fake chat model, mock model, GenericFakeChatModel, FakeMessagesListChatModel, bind_tools, no API calls, offline tests, scripted model
 read_when: Read when writing tests for an agent that must not call the real model, or when a fake model raises NotImplementedError or StopIteration.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: c109095fb638
 ---
 
@@ -16,7 +16,7 @@ Script the model's replies with a LangChain fake chat model so tests make no API
 
 ## Quick reference
 
-- `GenericFakeChatModel(messages=iter([...]))` raises `NotImplementedError` at `bind_tools` inside `create_deep_agent`. Subclass it and return `self` from `bind_tools`.
+- `GenericFakeChatModel(messages=iter([...]))` builds an agent without error, then raises `NotImplementedError` on the first invoke, when the model node calls `bind_tools`. Subclass it and return `self` from `bind_tools`.
 - It uses one scripted message per model call. An extra call (summarization, a subagent, a retry) exhausts the iterator and raises `StopIteration`.
 - For `.stream()` tests use `FakeMessagesListChatModel(responses=[...])` with the same subclass. `GenericFakeChatModel` streaming drops tool calls.
 - Passing a model **instance** skips provider profiles, so tests don't exercise OpenRouter or OpenAI profile behaviour ([[models]]).

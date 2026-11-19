@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: summarizer, summarization, SummarizationMiddleware, context compression, compact_conversation, conversation history, large_tool_results, context overflow, ContextOverflowError, trim history, offload, compaction, artifacts_root, context window full, summarize old messages
 read_when: Read when the context fills up, history is summarized or lost, tuning summarization triggers, finding offloaded conversation files, or hitting ContextOverflowError.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: dcce7b79361f
 ---
 
@@ -27,7 +27,7 @@ One-line truth: every deep agent (main, general-purpose and declarative subagent
 - `artifacts_root` on `CompositeBackend` relocates archives; `history_path_prefix` was removed (`TypeError`).
 - Gotcha: models without a profile use the 170k trigger, which may exceed a small window; set `profile` or your own trigger.
 - Gotcha: summarization never touches memory files; save durable facts to memory first.
-- 0.7.34: the cutoff is also stored as `cutoff_message_id` and resolved by message id, so it stays right when earlier messages are removed; Claude reasoning blocks in messages kept from before the summary are dropped from what the model sees.
+- 0.7.34: the cutoff is also stored as `cutoff_message_id` and resolved by message id, so it stays right when earlier messages are removed (changelog). Claude reasoning blocks in messages kept from before the summary are dropped from what the model sees (changelog 0.7.30 for reasoning removal; the `created_at_index` form is seen in 0.7.39).
 
 ## Pieces and where they live
 
@@ -63,7 +63,7 @@ No profile:
 3. Summarize if the trigger is met or the request exceeds the input budget (`0.95 * max_input_tokens - max output tokens`).
 4. Otherwise call the model; on a recognised context-overflow error (`ContextOverflowError`, or HTTP 400/413/422 with messages like "prompt is too long", "maximum context length") fall through to summarization.
 5. Summarize: partition at cutoff, upload inline media, append the evicted messages (XML buffer string, filtered of previous summaries) under `## Summarized at <iso>` to the history file, generate the summary with the same model, or with `summarizer` when set (async path runs these concurrently).
-6. Summary message is a `HumanMessage` marked with `add_notification_metadata(..., source="summarization")` (0.7.34, unchanged in 0.7.39; it still sets `additional_kwargs["lc_source"] = "summarization"`). The 2026-11-18 docs now say this too, so a frontend can read it with `get_notification_metadata` to show the summary apart from user messages:
+6. Summary message is a `HumanMessage` marked with `add_notification_metadata(..., source="summarization")` (seen in 0.7.39; it still sets `additional_kwargs["lc_source"] = "summarization"`). The 2026-11-18 docs now say this too, so a frontend can read it with `get_notification_metadata` to show the summary apart from user messages:
 
 ```
 You are in the middle of a conversation that has been summarized.
@@ -78,12 +78,12 @@ A condensed summary follows:
 ```
 
    If the archive write failed: `Here is a summary of the conversation to date:` and a Python warning ("Older messages will not be recoverable").
-7. State update: private `_summarization_event` (`cutoff_index`, `cutoff_message_id`, `summary_message`, `file_path`, `created_at_index`) and `_summarization_session_id`. `cutoff_message_id` (id of the message at `cutoff_index`, or `None`) and `created_at_index` (message count when the summary was made) are new in 0.7.34 and `NotRequired`; older events without them still work. `state["messages"]` is untouched, unlike LangChain's middleware which `RemoveMessage`s everything. A UI reading thread state still sees the full raw transcript.
+7. State update: private `_summarization_event` (`cutoff_index`, `cutoff_message_id`, `summary_message`, `file_path`, `created_at_index`) and `_summarization_session_id`. `cutoff_message_id` (id of the message at `cutoff_index`, or `None`) and `created_at_index` (message count when the summary was made) are `NotRequired` (`cutoff_message_id` arrived in 0.7.34 per the changelog; `created_at_index` is seen in 0.7.39); older events without them still work. `state["messages"]` is untouched, unlike LangChain's middleware which `RemoveMessage`s everything. A UI reading thread state still sees the full raw transcript.
 8. If still over budget, trailing big tool results are clipped/offloaded once (`_clip_overflow_tail`); if that cannot shrink the request, `ContextOverflowError("Model input still does not fit after recovery...")`.
 
 The session id is reused for the whole thread, so one history file per thread (and per subagent invocation).
 
-### Reasoning blocks after a summary (0.7.34)
+### Reasoning blocks after a summary (seen in 0.7.39)
 
 Claude binds each reasoning block to the conversation before it and can reject a request once that history changes. So `_drop_bound_reasoning` removes those blocks from `AIMessage` list content in the preserved messages of the summarizing call and in messages kept from before the summary on later calls. Which block types go (`_bound_reasoning_types`):
 
@@ -107,7 +107,7 @@ Preview lines clip at 1000 chars each. Non-text blocks (images) in the tool mess
 
 ## Customizing
 
-Replace the default by passing your own instance: `_apply_custom_middleware` replaces a built-in whose `.name` matches (`SummarizationMiddleware` reports `"SummarizationMiddleware"`), keeping its stack position. Only the main agent is affected; GP subagent inherits it only because the name matches a GP slot, declarative subagents keep their own default.
+Replace the default by passing your own instance: `_apply_custom_middleware` replaces a built-in whose `.name` matches (`SummarizationMiddleware` reports `"SummarizationMiddleware"`), keeping its stack position. The main agent gets it; the GP subagent gets it because the name matches a GP slot; `mode="fork"` subagents get it because a fork inherits the parent's `middleware=` merged by name. Isolated declarative subagents keep their own default.
 
 ```python
 from deepagents import create_deep_agent

@@ -6,7 +6,7 @@ status: sourced
 product: sdk
 keywords: interpreter, code interpreter, CodeInterpreterMiddleware, QuickJS, eval tool, JavaScript REPL, programmatic tool calling, PTC, ptc, langchain_quickjs, run code in loop, orchestrate tools in code, REPL, dynamic subagents
 read_when: Read when the model should loop, batch or transform data in code without a shell, call tools or subagents from code (PTC), or when choosing between an interpreter and a sandbox.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 30a7016752fd
 ---
 
@@ -29,7 +29,7 @@ Interpreters = code for composing tools and controlling what returns to the mode
 ## Install and wire
 
 ```bash
-pip install -U "deepagents[quickjs]"   # extra pins langchain-quickjs>=0.3.12 (0.7.39 METADATA; was >=0.3.11 in 0.7.34); docs say >=0.3.0; Python >=3.11
+pip install -U "deepagents[quickjs]"   # extra pins langchain-quickjs>=0.3.12 (0.7.39 METADATA); docs say >=0.3.0; Python >=3.11
 ```
 
 ```python
@@ -89,7 +89,7 @@ reviews.join("\n\n");
 
 ## Security
 
-- QuickJS compiled to WebAssembly (via `quickjs-rs`), running in the host process on `wasmtime`. Per the current docs the WebAssembly sandbox is the isolation boundary: JS cannot read or write host memory, and each LangGraph thread gets its own instance. A `wasmtime` bug is the remaining way out, so keep `wasmtime` updated, and for hostile multi-tenant workloads still run agents in isolated workers or containers. (Docs fetched 2026-09-30 described it as a same-process capability boundary, not memory isolation; the docs changed, the deepagents package has no code for it.)
+- QuickJS compiled to WebAssembly (via `quickjs-rs`), running in the host process on `wasmtime`. Per the current docs the WebAssembly sandbox is the isolation boundary: JS cannot read or write host memory, and each LangGraph thread gets its own instance. A `wasmtime` bug is the remaining way out, so keep `wasmtime` updated, and for hostile multi-tenant workloads still run agents in isolated workers or containers. (The deepagents package has no code for it; this is docs only, `../sources/docs/oss/python/deepagents/interpreters.md`.)
 - The sandbox contains the engine, not the capabilities: code can call every tool bridged into it.
 - The PTC allowlist is a permission boundary; do not bridge tools that spend money, mutate data, or reach arbitrary networks unless intended.
 - PTC calls bypass the normal tool-call path, so `interrupt_on` approvals ([[human-in-the-loop]]) are **not** enforced for tools invoked from `eval`.

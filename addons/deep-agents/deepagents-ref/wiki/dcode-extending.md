@@ -6,7 +6,7 @@ status: sourced
 product: dcode
 keywords: dcode extensions, AGENTS.md, memory, skills, SKILL.md, subagents, sub-agent, MCP servers, .mcp.json, hooks, hooks.json, PreToolUse, plugins, marketplace, ExtensionAPI, Python extension, register_tool, allowedTools
 read_when: Read when adding memory, skills, subagents, MCP servers, hooks, plugins or Python extensions to dcode, or when a project MCP server or extension does not load.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 6a727efcd651
 ---
 
@@ -74,7 +74,7 @@ You are a research assistant...
 
 - Frontmatter supports only `name`, `description` and optional `model`. The body becomes `system_prompt`. `tools`, `middleware`, `interrupt_on` and `skills` cannot be set, and these subagents inherit the main agent's tools. Use the SDK for full control ([[subagents]]).
 - Project subagents override user subagents with the same name. Naming one `general-purpose` overrides the built-in, for example to send delegation to a cheaper model.
-- The built-in `general-purpose` subagent runs in **fork** mode by default (since 0.1.66): it inherits the parent conversation and system prompt. `DEEPAGENTS_CODE_FORKED_SUBAGENTS=false` switches to isolated mode. Set it in the shell or global `.env`; a project `.env` cannot set it. This maps to the SDK's `mode: "fork"`, which is beta. In SDK 0.7.39, `mode` accepts `"isolated"` or `"fork"`, and fork cannot also set `skills` (`subagents.py`). Since SDK 0.7.39 a fork keeps the parent's system prompt byte for byte (so it reuses the parent's cached prompt prefix); a fork spec's own `system_prompt` now goes into the task message after the inherited history instead of being appended to the system prompt (`graph.py`, `subagents.py` `_FORK_INSTRUCTIONS_KEY`). The dcode docs still say the fork inherits "the parent conversation and system prompt", which stays true.
+- The built-in `general-purpose` subagent runs in **fork** mode by default (since 0.1.66): it inherits the parent conversation and system prompt. `DEEPAGENTS_CODE_FORKED_SUBAGENTS=false` switches to isolated mode. Set it in the shell or global `.env`; a project `.env` cannot set it. This maps to the SDK's `mode: "fork"`, which is beta. In SDK 0.7.39, `mode` accepts `"isolated"` or `"fork"`, and fork cannot also set `skills` (`subagents.py`). Since SDK 0.7.35 a fork keeps the parent's system prompt byte for byte (so it reuses the parent's cached prompt prefix); a fork spec's own `system_prompt` now goes into the task message after the inherited history instead of being appended to the system prompt (`graph.py`, `subagents.py` `_FORK_INSTRUCTIONS_KEY`). The dcode docs still say the fork inherits "the parent conversation and system prompt", which stays true.
 - [[dynamic-subagents]] work out of the box because `js_eval` is on. Ask for a "workflow" and the agent writes a script that calls `task()` in the interpreter. Progress shows in the dynamic subagents panel (`Ctrl+T`).
 - [[async-subagents]] are **not** available to dcode end users.
 
@@ -113,7 +113,7 @@ You are a research assistant...
 - Events: client-owned are `SessionStart`, `UserPromptSubmit`, `SessionEnd`, `PermissionRequest`, `Notification`. Server-owned are `PreToolUse`, `PostToolUse`, `PreCompact`, `Stop`, `SubagentStart`, `SubagentStop`.
 - Handlers: only `type: "command"`. The payload arrives as JSON on stdin. Optional fields are `argv` (skips the shell), `timeout` (default 600 s, 30 s for `UserPromptSubmit`) and `statusMessage`. `"async": true` is an error.
 - Exit codes: `0` means stdout JSON is applied. `2` blocks or feeds back, depending on the event (deny tool, block prompt, block compaction, continue a `Stop`), with stderr as the reason. Any other code is a non-blocking diagnostic.
-- `PreToolUse` → `hookSpecificOutput.permissionDecision`: `allow`, `ask` or `deny`, combined as deny > ask > allow. `Stop` → `{"decision": "block", "reason": ...}` keeps working, capped at 8 consecutive continuations; check `stop_hook_active`. `additionalContext` works for `SessionStart`, `UserPromptSubmit` and `SubagentStart`.
+- `PreToolUse` → `hookSpecificOutput.permissionDecision`: `allow`, `ask` or `deny`, combined as deny > ask > allow. `Stop` → `{"decision": "block", "reason": ...}` keeps working, capped at 8 consecutive continuations; check `stop_hook_active`. `additionalContext` works for `SessionStart`, `UserPromptSubmit` and `SubagentStart`; `Stop` uses it to continue the turn, and `PostToolUse` and `SubagentStop` can append it for the model.
 - Hooks see Claude-Code-style public tool names: `Bash`, `Write`, `Edit`, `Read`, `Glob`, `Grep`, `LS`, `mcp__<server>__<tool>`. The internal names (`execute`, `write_file`, and so on) are not used.
 - Precedence: project, then user, then plugin. All matching handlers run concurrently; precedence only decides which result wins. The handler environment drops any variable whose name contains KEY, TOKEN, SECRET, PASSWORD or APIKEY.
 - `Notification` with `matcher: "cache_expiring"` fires once per thread and cache window in the last 60 seconds before the prompt cache expires (0.1.80).
@@ -125,7 +125,7 @@ You are a research assistant...
 - Plugin layout: `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json` (optional; must have `name`), `skills/`, `hooks/hooks.json`, `.mcp.json`. Custom paths must start with `./`.
 - Plugin skills are namespaced: `/skill:plugin@marketplace:skill`.
 - Path variables: `${CLAUDE_PLUGIN_ROOT}`/`${PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`/`${PLUGIN_DATA}`, `${CLAUDE_PROJECT_DIR}`.
-- A marketplace is a JSON file with `name` and a `plugins[]` array (`name`, `source`). It is found at `.claude-plugin/marketplace.json` or `.agents/plugins/marketplace.json`. Sources: `./local`, `github`, `url`, `git-subdir`.
+- A marketplace is a JSON file with `name` and a `plugins[]` array (`name`, `source`). It is found at `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json` or `.agents/plugins/api_marketplace.json`. Sources: `./local`, `github`, `url`, `git-subdir`.
 - Auto-update is opt-in per plugin via `extensions."com.langchain.deepagents.code".autoUpdate: true`. Turn it off globally with `[plugins].auto_update = false`.
 - The agent can search your configured marketplace catalogs for plugins (`dcode plugin list --json`, `dcode plugin marketplace list --json`); it does not search marketplaces you have not added.
 - Enabling a plugin is the consent gate for its hooks, MCP servers and extensions. Workspace trust does not apply to plugins.

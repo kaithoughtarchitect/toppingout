@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, ModelRefusalMiddleware, ModelRefusalError, model refusal, rate_limiter, 429, resilience, error handling, timeout, fallback model
 read_when: Read when adding retries, fallback models, call limits or rate limiting, when errors kill a run or a subagent, or when a model refusal raises.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 236bd965a71b
 ---
 
@@ -26,7 +26,7 @@ One-line truth: resilience is added with LangChain prebuilt middleware passed th
 | Runaway loops / budget | system | `ModelCallLimitMiddleware`, `ToolCallLimitMiddleware` |
 | Unexpected | developer | let it propagate |
 
-All middleware classes import from `langchain.agents.middleware`. Their signatures come from the docs; `langchain` is not in this repo's sources.
+All middleware classes import from `langchain.agents.middleware`. Their signatures were checked with `inspect.signature` against the installed `langchain` 1.5.0 (repo `.venv`); `langchain` itself is not vendored in `sources/`.
 
 ## Full resilient stack
 
@@ -81,7 +81,7 @@ agent = create_deep_agent(
 - **Fallback**: `ModelFallbackMiddleware("gpt-5.5")` switches model when the primary fails outright.
 - **Refusals** (since 0.7.33, code): `create_deep_agent` appends `ModelRefusalMiddleware()` at the end of the main tail (after `UnsupportedContentMiddleware`, comment: "so a caller's `ModelFallbackMiddleware` catches refusals first"), and to GP and every declarative subagent stack. It raises `ModelRefusalError` when a response has a `refusal` content block (also when structured-output parsing fails on one). Catch it where you invoke the agent; the refused reply is not saved to the thread (code: `ModelRefusalMiddleware` raises inside `wrap_model_call`, before the response reaches the model node, in `langchain/agents/middleware/model_refusal.py`). Model-level `with_fallbacks` does not catch refusals (docs). The 2026-11-18 docs add that raising on refusals by default needs `deepagents>=0.7.33`, matching the changelog. A sync subagent's refusal does not raise in the parent: `task` returns "The subagent stopped because a model refused the request. ..." and the parent continues ([[subagents]]); async subagents report the same notice ([[async-subagents]]).
 - **Call limits**: `run_limit` caps per invocation (resets each turn); `thread_limit` caps across a conversation and requires a checkpointer ([[persistence]]).
-- **Tool errors**: without `ToolErrorMiddleware` a raising tool halts the run. The handler returns a string (sent to the model as an error `ToolMessage`) or `None` (re-raise). Async handlers and composition with retry are covered in LangChain's prebuilt-middleware docs.
+- **Tool errors**: without `ToolErrorMiddleware` a raising tool halts the run. The handler returns a string or a list of content blocks (sent to the model as an error `ToolMessage`), or `None` (re-raise) (`OnError` in `langchain/agents/middleware/tool_error.py`). Async handlers and composition with retry are covered in LangChain's prebuilt-middleware docs.
 - **Durability**: with a durable checkpointer a crashed/timed-out run resumes from the last checkpoint on the same `thread_id` without redoing completed steps.
 - **Recursion**: `create_deep_agent` sets `recursion_limit=9_999` via `.with_config`. Use call limits, not the recursion limit, as the budget guard.
 
@@ -99,7 +99,7 @@ agent = create_deep_agent(
 - Doc snippets reference `ToolCallRequest` without importing it; in the handler just annotate loosely or import it from LangChain's agent middleware types.
 - The docs' "Transient errors" tab shows `langchain.agents.create_agent`; the same middleware works unchanged with `create_deep_agent(middleware=...)`.
 - **Don't add retries to a subagent with `.with_retry()`.** Since 0.7.36 `task` streams a compiled subagent graph to learn its checkpoint namespace, but a `.with_retry()` runnable (`RunnableRetry`) is not recognised as a graph, so it is invoked instead. After a retry the `task` result's `artifact["checkpoint_ns"]` points at the failed run, not the one that finished (code comment above `_SUBAGENT_STREAM_MODES` in `middleware/subagents.py`). Retry the `task` tool with `ToolRetryMiddleware` instead, which records the right namespace ([[subagents]]).
-- A call limit hit ends the run; pair it with a clear final message path so users are not left with a silent stop.
+- A call limit hit does not always end the run. `ModelCallLimitMiddleware` defaults to `exit_behavior="end"` (the run stops). `ToolCallLimitMiddleware` defaults to `exit_behavior="continue"`: calls over the limit get error `ToolMessage`s and the model keeps going (`langchain/agents/middleware/tool_call_limit.py`, langchain 1.5.0). Pass `exit_behavior="end"` or `"error"` for a hard stop, and pair it with a clear final message path so users are not left with a silent stop.
 - Rate limiter is per model instance and in-memory: separate processes and subagents with a different `model` string do not share it.
 
 ## Sources

@@ -6,7 +6,7 @@ status: sourced
 product: dcode
 keywords: approval modes, manual mode, auto mode, YOLO, --yolo, auto-approve, human in the loop, HITL, approval, shell allow list, -S, allow-fs-tools, sandbox, remote sandbox, daytona, modal, runloop, untrusted repo, project trust, SandboxProvider
 read_when: Read when running dcode unattended or in an untrusted repo, choosing an approval mode, allowing shell commands, or setting up a remote sandbox.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 14eb3aac2ae1
 ---
 
@@ -48,8 +48,8 @@ How [[dcode]] limits what the agent can do. Three approval modes (Manual, Auto, 
 - Auto stage 2: the classifier checks the batch against the user's requested outcome. On deny, the agent gets an error result and can re-plan. When classifier review is unavailable, the tool returns a compact "unavailable" result instead. A total-denial threshold opens the human approval UI.
 - Decisions are bound to the thread, mode, batch and exact calls. A mode change, replay or missing state falls back to human review.
 - Classifier model precedence: `/auto model [p:m|clear]` > `--auto-classifier-model` (TUI only) > `DEEPAGENTS_CODE_AUTO_CLASSIFIER_MODEL` (not from a project `.env`) > `[models].auto_classifier` > provider default > main model.
-- Provider defaults (2026-11-18 docs): Anthropic → `anthropic:claude-sonnet-5-5`. Google AI → `google_genai:gemini-4-hydrogen`. Vertex → `google_vertexai:gemini-4-hydrogen` (both were `gemini-3.8-flash` in the 2026-11-09 docs). OpenAI → `openai:gpt-5.6-luna`. Codex → `openai_codex:gpt-5.6-luna`.
-- The classifier time budget per batch is 20 s by default (`[models].auto_classifier_timeout`, clamped 1..300). Misses are denied as `classifier_unavailable`.
+- Provider defaults (2026-11-18 docs): Anthropic → `anthropic:claude-sonnet-5-5`. Google AI → `google_genai:gemini-4-hydrogen`. Vertex → `google_vertexai:gemini-4-hydrogen`. OpenAI → `openai:gpt-5.6-luna`. Codex → `openai_codex:gpt-5.6-luna`.
+- The classifier time budget per batch is 20 s by default (`[models].auto_classifier_timeout`, valid 1..300; config-file.md says out-of-range values are clamped, configuration.md says they fall back to 20). Misses are denied as `classifier_unavailable`.
 - Auto is an authorization heuristic, **not** containment. Parent-level Auto does not review actions inside delegated subagents or broadly configured `js_eval` fan-out. MCP `readOnlyHint` annotations are trusted without verification.
 
 ## Shell and filesystem allowlists
@@ -63,7 +63,7 @@ dcode -n "Fix the build" -S all       # any command, no confirmation
 - `-S/--shell-allow-list` (or `DEEPAGENTS_CODE_SHELL_ALLOW_LIST`, or `[shell].allow_list`) pre-approves commands that run through `execute`. It works in both modes. Headless shell is **off** unless this is set.
 - `--allow-fs-tools` picks which of `ls, read_file, write_file, edit_file, delete, glob, grep, execute` exist. It must include `read_file`. It applies to the main agent and synchronous subagents, not to async subagents or non-filesystem tools.
 - Both flags are needed for headless shell. `-S` without `execute` has nothing to gate. `execute` without `-S` pre-approves nothing.
-- `js_eval` programmatic tool calls bypass approvals. The default `ptc = "safe"` exposes only `read_file`, `glob` and `grep`. `ptc = "all"` requires `ptc_acknowledge_unsafe = true` (see [[interpreters]], [[dcode-config]]).
+- `js_eval` programmatic tool calls bypass approvals. The default `ptc = "safe"` exposes only `read_file`, `glob` and `grep`. `ptc = "all"` requires `ptc_acknowledge_unsafe = true` unless approvals are globally disabled (see [[interpreters]], [[dcode-config]]).
 
 ## Project trust gates (untrusted repos)
 

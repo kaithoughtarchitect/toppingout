@@ -4,9 +4,9 @@ id: human-in-the-loop
 type: how-to
 status: code
 product: sdk
-keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__
+keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__, interrupt_mode, per_call, ToolApprovalRequest, edit_notice
 read_when: Read when a tool needs human approval before running, when a resume fails, or when subagent interrupts do not fire.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 27b1531171ad
 ---
 
@@ -20,7 +20,7 @@ One-line truth: `create_deep_agent(interrupt_on={tool_name: True | False | Inter
 - Keys are tool names, built-ins included (`write_file`, `edit_file`, `delete`, `execute`, `task`).
 - Decision types: `approve`, `edit`, `reject`, `respond`; never use `respond` to deny a side-effecting tool.
 - Resume with `agent.invoke(Command(resume={"decisions": [...]}), config)` on the SAME `thread_id`.
-- Several interrupts in one turn batch into one; give one decision per `action_request`, same order.
+- Several interrupts in one turn batch into one; give one decision per `action_request`, same order. That is langchain's default `interrupt_mode="batched"`, which `create_deep_agent` uses. langchain 1.5.0 also has `interrupt_mode="per_call"` (one interrupt per call, resumed by interrupt id): see Interrupt modes below.
 - Declarative subagents inherit `interrupt_on`; setting it on a spec replaces (no merge).
 - `CompiledSubAgent` and `AsyncSubAgent` inherit nothing; put HITL inside their graph.
 - Dynamic interpreter `task()` bypasses `interrupt_on={"task": True}`; gate `eval` instead.
@@ -75,7 +75,7 @@ interrupt_on = {"write_file": {"allowed_decisions": ["approve", "edit", "reject"
 
 - If `message` is omitted on `reject`, a default says the tool was not executed and not to retry unless asked.
 - Never use `respond` to deny a side-effecting tool, because the model may read it as success.
-- Edit conservatively. Large edits can make the model re-plan or re-run the tool.
+- Edit conservatively. Large edits can make the model re-plan or re-run the tool. In langchain 1.5.0 the result of an edited call carries a default `edit_notice` telling the model a reviewer replaced its call and ending "Do not re-issue your original call."; change it or turn it off with `HumanInTheLoopMiddleware(..., edit_notice=None)`.
 
 ## Handle and resume
 
@@ -95,6 +95,14 @@ if result.get("__interrupt__"):
 - Several interrupting tool calls in one model turn are **batched into one interrupt**. Supply one decision per `action_request`, in order.
 - Streaming: use `agent.stream(input, stream_mode=["messages", "updates"], config=config)`. Interrupts arrive as `data["__interrupt__"]` in `updates`. Loop, then restart the stream with `Command(resume=...)` as input ([[streaming]]).
 - With several pending interrupts at once (parallel branches), map interrupt id to resume value instead of passing a flat payload.
+
+## Interrupt modes (langchain 1.5.0)
+
+`HumanInTheLoopMiddleware(interrupt_on, *, description_prefix=..., edit_notice=..., interrupt_mode="batched")` (`langchain/agents/middleware/human_in_the_loop.py`):
+
+- `"batched"` (default, and what `create_deep_agent` builds): one interrupt per model turn whose value is a `HITLRequest` (`action_requests`, `review_configs`), resumed with `{"decisions": [...]}` in call order. Everything above describes this mode.
+- `"per_call"`: one interrupt per gated tool call, raised as the call starts. Its value is a `ToolApprovalRequest` with a `response_schema`; answer each with a single decision keyed by interrupt id, `Command(resume={interrupt.id: {"type": "approve"}})`. LangGraph validates the answer before saving it: an edit can't switch tools, and an invalid answer raises `pydantic.ValidationError` so the same interrupt can be answered again. The langchain docstring says `"per_call"` is planned to become the default in the next major release.
+- To use `"per_call"` with Deep Agents, pass your own `HumanInTheLoopMiddleware(interrupt_on=..., interrupt_mode="per_call")` in `middleware=`. When the agent already builds one (from `interrupt_on=` or interrupt-mode `permissions`), yours replaces it by name (`_apply_custom_middleware` in `graph.py`), so your `interrupt_on` must also cover the tools the permission rules would have gated. List it before tool retry or error-handling middleware (langchain docstring warning).
 
 ## Subagents
 

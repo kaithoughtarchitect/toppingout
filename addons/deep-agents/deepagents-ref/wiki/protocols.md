@@ -6,18 +6,18 @@ status: sourced
 product: sdk
 keywords: ACP, Agent Client Protocol, deepagents-acp, AG-UI, @ag-ui/langgraph, A2A, Agent2Agent, editor integration, Zed, agent to agent, agent protocol, JSON-RPC, a2a assistant_id, IDE
 read_when: Read when exposing an agent to an editor (ACP), a frontend (AG-UI) or other agents (A2A), or asking which protocol does what.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 886edf70f170
 ---
 
 # Protocols (ACP, AG-UI, A2A)
 
-One-line truth: none of these live in the `deepagents` package. ACP = separate `deepagents-acp` package (agent ↔ editor over stdio); AG-UI = TypeScript `@ag-ui/langgraph` adapter in front of LangSmith Agent Server, which the docs called "a LangGraph server" before 2026-11-18 (`langgraph dev` locally) (agent ↔ frontend); A2A = built into LangSmith Agent Server at `/a2a/{assistant_id}` (agent ↔ agent). MCP (agent → external tools) is separate; see [[mcp]].
+One-line truth: none of these live in the `deepagents` package. ACP = separate `deepagents-acp` package (agent ↔ editor over stdio); AG-UI = TypeScript `@ag-ui/langgraph` adapter in front of LangSmith Agent Server (`langgraph dev` locally) (agent ↔ frontend); A2A = built into LangSmith Agent Server at `/a2a/{assistant_id}` (agent ↔ agent). MCP (agent → external tools) is separate; see [[mcp]].
 
 | Protocol | Direction | What you install / run | Transport |
 | - | - | - | - |
 | MCP | agent calls tools | `langchain[mcp]` | HTTP / stdio |
-| ACP | editor/IDE drives agent | `pip install deepagents-acp` | stdio JSON-RPC |
+| ACP | editor/IDE drives agent | `pip install deepagents-acp` | stdio |
 | AG-UI | frontend drives agent | `langgraph dev` + TS `@ag-ui/langgraph` | HTTP events |
 | A2A | other agents call agent | Agent Server (`langgraph-api>=0.4.21`) | JSON-RPC over HTTP / SSE |
 
@@ -32,7 +32,7 @@ from deepagents_acp.server import AgentServerACP
 
 async def main() -> None:
     agent = create_deep_agent(
-        model="anthropic:claude-sonnet-4-6",
+        model="anthropic:claude-sonnet-5",
         system_prompt="You are a helpful coding assistant",
         checkpointer=MemorySaver(),        # ACP sessions need thread state
     )
@@ -96,7 +96,7 @@ A2A is not how Deep Agents' own async subagents talk to remote graphs; those use
 ## Gotchas
 
 - Known Agent Server A2A gaps: responses still v0.3 wire shape (`kind`, `mimeType`), flat SSE events with `final`, snake_case `tool_results`, `+00:00` timestamps, no error `data`, `A2A-Version` header ignored, no card caching headers, `GetExtendedAgentCard` served but not advertised.
-- The A2A page moved out of the Deep Agents docs into the LangSmith Agent Server docs (`/langsmith/server-a2a`); it is generic Agent Server behavior, not Deep Agents code.
+- The A2A docs live in the LangSmith Agent Server docs (`/langsmith/server-a2a`), not the Deep Agents docs; it is generic Agent Server behavior, not Deep Agents code.
 - Docs give two agent-card URLs: `GET /.well-known/agent-card.json?assistant_id={id}` and `GET /a2a/{assistant_id}/.well-known/agent-card.json`. The "test your integration" curl uses the latter; verify against your deployment.
 - A mis-cased `historyscope` is silently ignored (you get full-context history).
 - ACP's `MemorySaver` loses sessions on restart; use a persistent checkpointer for real use ([[persistence]]).
@@ -105,7 +105,7 @@ A2A is not how Deep Agents' own async subagents talk to remote graphs; those use
 ## Sources
 - `../sources/docs/oss/python/deepagents/acp.md`
 - `../sources/docs/oss/python/deepagents/ag-ui.md`
-- `../sources/docs/langsmith/server-a2a.md` (the old Deep Agents A2A page redirects here)
+- `../sources/docs/langsmith/server-a2a.md` (the AG-UI page still links the old `/oss/python/deepagents/a2a` URL)
 
 ## See also
 - [[index]]

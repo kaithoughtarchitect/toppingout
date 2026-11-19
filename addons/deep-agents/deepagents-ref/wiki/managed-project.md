@@ -6,7 +6,7 @@ status: sourced
 product: managed
 keywords: MDA project layout, agent.py, instructions.md, define_deep_agent, agent factory, per-run configuration, shared local package, project structure, system prompt, Context Hub, managed context, skills folder, tools folder, middleware folder, interrupt_on, agent name, assistant_id, .env, hatchling
 read_when: Read when unsure where a file goes in an MDA project, what define_deep_agent accepts, or when the name-is-required error appears.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: b2c4b4b1537b
 ---
 
@@ -86,7 +86,7 @@ It returns a definition, not a graph. The runtime compiles it with `create_deep_
 | `routes` | `{"/prefix/": backend}` mounts Deep Agents backends at path prefixes, like `CompositeBackend` routes (>=0.10.3). Prefix must start and end with `/` and must not overlap `/instructions.md`, `/skills/`, `/memories/`. File tools only; sandbox shell commands don't see it. See [[managed-capabilities]]. |
 | `context_schema`, `cache`, `debug` | Accepted unchanged (migrate page; not in the agent-definition table). |
 
-Not accepted: `system_prompt`, `skills`, `memory`, `backend`, `store`, `checkpointer`, `state_schema` (Python). OSS `create_deep_agent` in 0.7.39 has all of these plus an optional `name` (`graph.py`); MDA makes `name` required. `backend` still cannot be replaced, but since 0.10.3 `routes` can mount extra backends under prefixes. A definition returned by an agent factory may also set `instructions`, `skills`, `mcp`, `sandbox` and `browser` to override the project files for that run; static definitions can't ([[managed]]). Wrap a factory in `@cached_agent(keyed_by=...)` (>=0.10.2) to reuse compiled graphs.
+Not accepted: `system_prompt`, `backend`, `store`, `checkpointer`, `state_schema` (Python); a static definition also can't set `skills` or `memory`. OSS `create_deep_agent` in 0.7.39 has all of these plus an optional `name` (`graph.py`); MDA makes `name` required. `backend` still cannot be replaced, but since 0.10.3 `routes` can mount extra backends under prefixes. A definition returned by an agent factory may also set `instructions`, `skills`, `mcp`, `sandbox`, `memory` and `browser` to override the project files for that run; static definitions can't ([[managed]]). Wrap a factory in `@cached_agent(keyed_by=...)` (>=0.10.2) to reuse compiled graphs.
 
 ## `instructions.md`
 
@@ -116,7 +116,7 @@ keep notes, and return concise answers with citations.
 - `mda build` does not validate the definition call; a forbidden param (e.g. `backend=`) only fails when `mda dev` loads the graph (0.8.3 notes build-time catching of unsupported settings).
 - Syntax errors in authored files are reported as `failed to parse <file>:<line>:<column>` since 0.5.0; before that they surfaced as "agent `name` is required".
 - `name` must be a literal; computed names are rejected (static extraction).
-- `channels/channel.py` is a forbidden declaration name; `channel/` (singular dir) is warned about.
+- `channels/channel.py` is a forbidden declaration name.
 - `tools/mcp.py` is reserved; do not put a regular tool there.
 - `.env` is loaded locally and non-reserved values are forwarded as deployment secrets; anything else next to `agent.py` ships in the upload (200 MB cap).
 

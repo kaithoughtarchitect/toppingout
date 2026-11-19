@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: customize agent, system prompt, prompt composition, custom middleware, override middleware, SummarizationMiddleware, SkillsMiddleware, structured output, response_format, subagents, backends, human in the loop, HITL, interrupt_on, going fully custom, tools, memory, skills
 read_when: Read when deciding which create_deep_agent knob changes a behaviour, overriding a default middleware, or composing the system prompt.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: b28aa930cc12
 ---
 
@@ -49,7 +49,7 @@ agent = create_deep_agent(
 - Middleware with the same `.name` as a built-in replaces it; keep counters in graph state, not on `self`.
 - A replacement middleware is not merged with defaults; an overriding `SummarizationMiddleware(...)` loses model-aware defaults. One exception (0.7.31+): an overriding `FilesystemMiddleware` built without `permissions=` inherits the agent's `permissions=`.
 - Hide built-ins with profile `excluded_tools` or allowlist via `FilesystemMiddleware(tools=[...])` (`read_file` mandatory).
-- Declarative subagents inherit parent `tools` only if the spec omits `"tools"`; they never inherit parent `middleware=`.
+- Declarative subagents inherit parent `tools` only if the spec omits `"tools"`; they never inherit parent `middleware=` (except forks).
 - Default `StateBackend`; `StoreBackend` needs `store=` and an explicit `namespace`; `FilesystemBackend` has `virtual_mode=True`.
 - HITL: `interrupt_on={"tool": True}` and a `checkpointer` are required.
 - Skills/memory files must exist in the backend before the run.
@@ -63,10 +63,10 @@ Main agent: `USER` (your `system_prompt`) -> `BASE` (profile `base_system_prompt
 | - | - |
 | Main agent | `system_prompt` + profile BASE + profile SUFFIX |
 | Declarative subagent | (profile `base_system_prompt` if set, **replacing** the spec's `system_prompt`, else spec's) + SUFFIX of the subagent's own model profile |
-| Forked subagent (`mode="fork"`, experimental) | parent's final prompt, byte-identical (keeps the parent's prompt-cache prefix); since 0.7.35 the spec's `system_prompt` is not appended to it but sent in the task `HumanMessage`, after the inherited history (preamble, then instructions, a blank line, then the task). The subagents docs (fetched 2026-11-18) still say it is appended to the inherited prompt; the code wins |
+| Forked subagent (`mode="fork"`, experimental) | parent's final prompt, byte-identical (keeps the parent's prompt-cache prefix); since 0.7.35 the spec's `system_prompt` is not appended to it but sent in the task `HumanMessage`, after the inherited history (preamble, then instructions, a blank line, then the task). The subagents docs (fetched 2026-11-18) and `create_deep_agent`'s own docstring still say it is appended to the inherited prompt; the code wins |
 | Auto `general-purpose` | `general_purpose_subagent.system_prompt` -> else profile `base_system_prompt` -> else SDK GP default; then SUFFIX |
 
-Middleware then appends dynamic sections at call time, in stack order: filesystem host-path routing notes (composite backends only), your own middleware's fragments, the skills catalog (`SkillsMiddleware`, after your middleware since 0.7.29), then memory content (`MemoryMiddleware`). `SystemMessage` input keeps content blocks (useful for `cache_control`); subagent dict specs take strings only.
+Middleware then appends dynamic sections at call time, in stack order: filesystem host-path routing notes (composite backends only), your own middleware's fragments, the skills catalog (`SkillsMiddleware`, after your middleware, seen in 0.7.39), then memory content (`MemoryMiddleware`). `SystemMessage` input keeps content blocks (useful for `cache_control`); subagent dict specs take strings only.
 
 ## Tools
 
@@ -124,7 +124,7 @@ research_subagent = {
     "tools": [internet_search],
     "model": "openai:gpt-5.5",   # optional, defaults to parent model
 }
-agent = create_deep_agent(model="google_genai:gemini-3.6-flash", subagents=[research_subagent])
+agent = create_deep_agent(model="google_genai:gemini-4-hydrogen", subagents=[research_subagent])
 ```
 
 Declarative spec keys also accept `middleware`, `interrupt_on`, `skills`, `permissions`, `response_format`. Tools: inherit parent `tools` only if the spec omits `"tools"`. Details: [[subagents]].
@@ -163,7 +163,7 @@ See [[human-in-the-loop]].
 
 ## Skills and memory
 
-- `skills=["/skills/"]`: each skill is a dir with `SKILL.md` frontmatter; only metadata enters the prompt until needed ([[skills]]). Override `SkillsMiddleware(backend=..., sources=[...], system_prompt=TEMPLATE)` where the template must contain `{skills_locations}`, `{skills_list}`, `{skills_load_warnings}`; `system_prompt=None` suppresses the catalog. Your instance replaces the default by name; `skills=` is optional then, since its `sources` become `skills` (0.7.29). Pass it this way to give skills their own tools (`SkillsMiddleware(..., tools=[...])`) ([[skills]]).
+- `skills=["/skills/"]`: each skill is a dir with `SKILL.md` frontmatter; only metadata enters the prompt until needed ([[skills]]). Override `SkillsMiddleware(backend=..., sources=[...], system_prompt=TEMPLATE)` where the template must contain `{skills_locations}`, `{skills_list}`, `{skills_load_warnings}`; `system_prompt=None` suppresses the catalog. Your instance replaces the default by name; `skills=` is optional then, since its `sources` become `skills` (seen in 0.7.39). Pass it this way to give skills their own tools (`SkillsMiddleware(..., tools=[...])`) ([[skills]]).
 - Pin a skill the user named for this turn: `invoke({"messages": [...], "pinned_skills": ["name"]})` ([[skills]]).
 - `memory=["/AGENTS.md"]`: always loaded; agent can update it ([[memory]]).
 
@@ -192,7 +192,7 @@ Compose `langchain.agents.create_agent` with `deepagents.middleware` pieces your
 
 - A replacement middleware is **not merged** with the default: an overriding `FilesystemMiddleware` does not inherit `backend=` from `create_deep_agent`, so pass it yourself (the 0.7.36 `bind_backend` hook does not change this: no built-in middleware implements it). Permissions are the exception since 0.7.31: built without `permissions=`, the replacement gets a copy bound to the agent's `permissions=` (`_apply_custom_middleware` in `graph.py`), and different non-empty rules raise `ValueError` ([[permissions]]). The constructor now takes a public `permissions=` (`_permissions=` is deprecated, removal 0.9.0). The docs still say the override won't inherit `permissions=`; code wins.
 - An overriding `SummarizationMiddleware(...)` constructed directly loses the model-aware defaults (`trigger=None`, `keep=("messages", 20)`, `trim_tokens_to_summarize=4000`, arg truncation off) unless you set them ([[summarization]]). Its new `summarizer=` (0.7.26) writes summaries with another model while `model` still sets thresholds and token counting.
-- Custom middleware now runs before `SkillsMiddleware` (0.7.29), so it can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section. Replace `SkillsMiddleware` by name if you need to.
+- Custom middleware runs before `SkillsMiddleware` (seen in 0.7.39), so it can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section. Replace `SkillsMiddleware` by name if you need to.
 - Overrides propagate to the auto GP subagent only for middleware whose name matches a GP default slot; declarative subagents never inherit parent `middleware=` (except forks). Put overrides in the spec's `middleware`.
 - Some customization-page examples pass `model_provider=` / `temperature=` to `create_deep_agent`; those params do not exist ([[create-deep-agent]]).
 - `StoreBackend` example in the Memory tab both `store.put(...)` and seeds `files` in the input; the `files` seed is ignored for non-state backends.

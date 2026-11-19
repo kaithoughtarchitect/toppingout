@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: agent setup, reference setup, workspace, workspace_id, per-workspace memory, Memory tab, MemoryService, UI reads memory, read-only except memory, allow then deny, thread per workspace, workspace switch, leakage test, FreshMemory, GPT-6 Luna
 read_when: Read when building, reviewing or debugging your agent, its per-workspace memory, its Memory tab, or workspace switching.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: e90690c1f961
 ---
 
@@ -14,7 +14,7 @@ sources_hash: e90690c1f961
 
 The whole agent wiring in one place: per-workspace Markdown memory, a durable store and checkpointer, no shell, writes only under `/memories/` (and to paths with a hidden segment, which no `**` deny covers: [[permissions]], Gotchas), read-only data tools, and a UI that reads the exact files.
 
-**In code:** this page is implemented in `../../src/agent/` and tested in `../../tests/` (6 tests, including a real restart).
+**In code:** this page is implemented by the Deep Agents add-on's starter: `src/agent/` (`agent.py`, `memory.py`) and 6 tests in `tests/` (5 in `test_agent.py`, plus a real two-process restart in `test_restart.py`). In a project set up with the starter they sit at the repo root (`../../src/agent/` and `../../tests/` from this page). In the Topping Out package they are `addons/deep-agents/starter/src/agent/` and `addons/deep-agents/starter/tests/`.
 
 **Adapt:** a *workspace* is whatever your agent keeps memory separate by: a user, a project, a customer, a save file. Rename `"app"` in the namespaces to your product name, and `workspace_id` to your unit if you like. The model is the starter default; any `provider:model` string works ([[models]]).
 
@@ -107,6 +107,7 @@ await agent.ainvoke({"messages": [{"role": "user", "content": text}]},
 The UI talks to the **store**, never to `StoreBackend`, because the namespace callable needs a graph `Runtime` and fails outside a run.
 
 ```python
+import base64
 from deepagents.backends.utils import create_file_data
 
 class MemoryService:
@@ -119,13 +120,17 @@ class MemoryService:
 
     def read(self, workspace_id, path):      # "/memories/AGENTS.md" -> key "/AGENTS.md"
         it = self.store.get(self.ns(workspace_id), path.removeprefix("/memories"))
-        return it.value["content"] if it else None
+        if it is None:
+            return None
+        if it.value.get("encoding") == "base64":   # binary upload, or (0.7.39+) any upload with a NUL byte
+            return base64.b64decode(it.value["content"]).decode("utf-8", errors="replace")
+        return it.value["content"]
 
     def write(self, workspace_id, path, text):
         self.store.put(self.ns(workspace_id), path.removeprefix("/memories"), create_file_data(text))
 ```
 
-- Store value shape: `{"content", "encoding", "created_at", "modified_at"}` ([[memory]]).
+- Store value shape: `{"content", "encoding", "created_at", "modified_at"}` ([[memory]]). `encoding` is `"utf-8"` or `"base64"`. Since 0.7.39 `StoreBackend` stores any upload that is not valid UTF-8 or contains a NUL byte as base64 (`_encode_upload` in `backends/store.py`), so `read` above decodes it.
 - `search` results past `limit` are silently dropped. Set `limit` above your file count.
 - The store keeps no edit history; writes overwrite. For history, use `HistoryStoreBackend` (`../examples/history_backend.py`, sync + async, ran through a restart) in place of `StoreBackend`: [[memory-history]].
 
@@ -159,7 +164,7 @@ class MemoryService:
 
 - A plain `deny write /**` with no `allow /memories/**` before it also blocks memory writes. A read-only agent wants exactly that, plus a write-tool guard: `**` misses hidden paths ([[permissions]], Gotchas).
 - Permissions don't cover your custom tools. Keep the data tools read-only in code.
-- Don't use `FilesystemBackend` or `LocalShellBackend`. They give the model real disk and a shell, and combining them with permissions raises `NotImplementedError` ([[permissions]]).
+- Don't use `FilesystemBackend` or `LocalShellBackend`. `FilesystemBackend` gives the model the real disk; `LocalShellBackend` adds an unrestricted shell. Only the shell one clashes with permissions: combined with rules that are not all scoped to `CompositeBackend` routes it raises `NotImplementedError`, while `FilesystemBackend` with permissions builds fine (`_set_permissions` in `middleware/filesystem.py`, probed on 0.7.39) ([[permissions]]).
 - GPT-6 Luna on OpenRouter doesn't list `temperature` among its supported parameters (OpenRouter models API, 2026-09-29). Don't rely on it.
 - `ModelRetryMiddleware` comes from `langchain.agents.middleware` (not vendored; [[fault-tolerance]]).
 

@@ -6,7 +6,7 @@ status: sourced
 product: sdk
 keywords: dynamic subagents, dynamic sub-agent, task() in interpreter, CodeInterpreterMiddleware, QuickJS, Promise.all, fan-out, RLM, recursive subagents, langchain_quickjs, responseSchema, eval, batch dispatch
 read_when: Read when fanning out over many files or tickets from interpreter code, or when gating dynamic task() dispatch.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: c7d82ccd579a
 ---
 
@@ -16,7 +16,7 @@ One-line truth: when an agent has both sync subagents and `CodeInterpreterMiddle
 
 ## Requirements
 
-- `pip install -U "deepagents[quickjs]"` gives you `langchain-quickjs>=0.3.12` (0.7.39 METADATA; it was `>=0.3.11` in 0.7.34; the docs say `>=0.2.0` on this page and `>=0.3.0` on the interpreters page). Python 3.11 or newer.
+- `pip install -U "deepagents[quickjs]"` gives you `langchain-quickjs>=0.3.12` (0.7.39 METADATA; the docs say `>=0.2.0` on this page and `>=0.3.0` on the interpreters page). Python 3.11 or newer.
 - At least one sync subagent. The auto-added `general-purpose` one counts, so basic fan-out needs no extra config ([[subagents]]).
 - `CodeInterpreterMiddleware` in `middleware=`. It lives in `langchain_quickjs`, **not** in the deepagents 0.7.39 package, so interpreter behaviour is docs-only here ([[interpreters]]).
 

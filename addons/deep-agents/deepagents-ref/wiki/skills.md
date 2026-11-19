@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools
 read_when: Read when adding task-specific procedures the agent loads on demand, when skills load zero, a new or edited skill does not appear, or a subagent lacks skills.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: efb9fc0649c7
 ---
 
@@ -22,7 +22,7 @@ One-line truth: a skill is a directory with a `SKILL.md` (YAML frontmatter + ins
 - Later source wins on a name clash; the SDK never auto-scans `~/.deepagents` (that is Deep Agents Code).
 - StateBackend seeding: `invoke({"files": {path: create_file_data(text)}})`; raw strings are not accepted.
 - Skills load once per thread when a checkpointer exists; reload with `{"skills_metadata": None}` (needs `deepagents>=0.7.16`), never `[]`.
-- General-purpose subagent inherits `skills=`; custom declarative subagents get none unless their spec sets `"skills"`.
+- The general-purpose subagent and `mode="fork"` subagents inherit `skills=`; custom isolated subagents get none unless their spec sets `"skills"`.
 - Pin a skill the user named: pass `pinned_skills=["name"]` in the input (`>=0.7.23`).
 - Skill-only tools: list them under `metadata.include_tools` and pass them as `SkillsMiddleware(tools=...)` (`>=0.7.22`); the model sees them only after reading the skill.
 - Running `scripts/*.py` needs a sandbox backend; StoreBackend skill files are not inside the sandbox.
@@ -127,7 +127,7 @@ result = agent.invoke(
 ```
 
 - `pinned_skills` is a state key on `SkillsState` (names only, matched exactly against `skills_metadata`). In `before_model`, `SkillsMiddleware` reads each named `SKILL.md`, strips the frontmatter, and appends one `HumanMessage` per skill in the order named: `<skill name="..." path="...">body</skill>`.
-- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. Since 0.7.34 (still in 0.7.39) `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model. The docs (2026-11-18) now call this notification metadata, read with `langchain_core.messages.get_notification_metadata(message)` (returns `{"source": "pinned_skill", ...}`).
+- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. In 0.7.39 `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model. The docs (2026-11-18) now call this notification metadata, read with `langchain_core.messages.get_notification_metadata(message)` (returns `{"source": "pinned_skill", ...}`).
 - The message is a snapshot: editing `SKILL.md` later doesn't change it; pinning again appends a new copy. Earlier messages never change, so the prompt cache holds.
 - Unknown names and unreadable (or over 10 MB, or non-UTF-8) files are skipped with a debug log, no error. The key is cleared once used (reducer appends, so parallel tool calls can each pin).
 - Deep Agents does not parse skill names out of messages. Your app finds them (e.g. a regex for `/name`) and passes them in `pinned_skills`.
@@ -168,7 +168,7 @@ agent = create_deep_agent(
 ## Subagents
 
 - General-purpose subagent: inherits the main `skills=` (code: GP stack appends `SkillsMiddleware(sources=skills)`). If you passed a `SkillsMiddleware` in `middleware=` instead of `skills=`, its sources become `skills` and the GP subagent inherits your instance by name (tools included).
-- Custom declarative subagent: gets **none** unless its spec has `"skills": [...]` or a `SkillsMiddleware` in its own `middleware`.
+- Custom isolated declarative subagent: gets **none** unless its spec has `"skills": [...]` or a `SkillsMiddleware` in its own `middleware`.
 - `mode="fork"` subagents inherit the parent's skills and may not set `skills` (`ValueError`).
 - `skills_metadata`, `pinned_skills` and the private `_skill_tools_disclosed` record are excluded from state passed to/from subagents, so they never leak either way. See [[subagents]].
 
@@ -200,10 +200,10 @@ Reading works on any backend; running `scripts/*.py` needs a shell, i.e. a sandb
 - Pointing `skills=` at the skill directory instead of its parent silently loads zero skills.
 - Name/directory mismatch only warns; spec validators (`skills-ref`) will still flag it.
 - Deployed agents always checkpoint, so edited skills do not appear in ongoing threads until you reset `skills_metadata` to `None`.
-- Custom subagents do not inherit skills; GP subagent does.
+- Custom isolated subagents do not inherit skills; the GP subagent and forks do.
 - The skills prompt fragment is kept even though other built-in tool prose was removed in 0.7; it is the only channel for the skill index.
 - In the assembled prompt, the skills block still comes before the memory block (Skills runs before caching, Memory after).
-- Before 0.7.29 Skills was first in the main stack. Custom middleware that read `skills_metadata` in `before_model` (expecting it loaded) or edited the skills prompt in `wrap_model_call` now runs before Skills and sees neither.
+- In 0.7.39 Skills sits just before prompt caching, after your middleware. Custom middleware that reads `skills_metadata` in `before_model` (expecting it loaded) or edits the skills prompt in `wrap_model_call` runs before Skills and sees neither.
 - `include_tools` must be one space-separated string; a YAML list silently matches no tool (only a warning in the log).
 - A skill tool passed to the agent's `tools=` (not deferred) is always visible; gating only works for tools passed to `SkillsMiddleware(tools=...)`.
 

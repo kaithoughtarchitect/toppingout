@@ -6,12 +6,12 @@ status: sourced
 product: all
 keywords: sources, raw docs, ground truth, package source, deepagents 0.7.39, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs
 read_when: Read when you need the raw doc or code path to cite, or to know which source wins when docs and code disagree.
-updated: 2026-11-09
+updated: 2026-11-19
 ---
 
 # Sources
 
-What this graph is distilled from. Raw is immutable between refreshes: read it, cite it, never hand-edit it. `sourced` 2026-09-29, docs re-fetched 2026-10-21 and 2026-11-09.
+What this graph is distilled from. Raw is immutable between refreshes: read it, cite it, never hand-edit it. `sourced` 2026-09-29, docs re-fetched 2026-10-21, 2026-11-09 and 2026-11-18.
 
 ## Ground truth order
 

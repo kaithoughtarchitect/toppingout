@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: index, map, table of contents, where to start, catalog
 read_when: Read after the constitution to pick the one page for your question.
-updated: 2026-11-09
+updated: 2026-11-19
 ---
 
 # Map
@@ -15,9 +15,9 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 
 ## Start here
 
-- [[agent-setup]] — the full checked your agent setup: model, backend, permissions, Memory tab, workspaces, leakage tests
+- [[agent-setup]] — the full checked agent setup: model, backend, permissions, Memory tab, workspaces, leakage tests
   _agent setup, reference setup, workspace, workspace_id, per-workspace memory, Memory tab, MemoryService, UI reads memory, read-only except memory, allow then deny, thread per workspace, workspace switch, leakage test, FreshMemory, GPT-6 Luna_
-- [[constitution]] — 13 rules ordered by cost of error; read first, every time
+- [[constitution]] — 14 rules ordered by cost of error; read first, every time
   _rules, must know, mental model, core rules, gotchas, deepagents basics_
 - [[decisions]] — which piece to reach for: product, backend, memory vs skills, subagent kind
   _decision, which to use, choose, SDK vs dcode vs managed, StateBackend vs StoreBackend, sandbox vs interpreter, subagent vs skill, tradeoff, recommendation, default choice, when to use_
@@ -26,7 +26,7 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[lookup]] — term, class, function or parameter → the page that explains it (generated symbol table)
   _lookup, find, where is, glossary, symbol, import, class, function, parameter, synonym_
 - [[gaps]] — what this folder does not cover, with the live URL for each — check before answering from memory (docs only)
-  _not found, missing, not covered, testing, unit test, fake model, token usage, cost tracking, tracing, observability, MCP auth, OAuth, checkpointer classes, PostgresSaver, SqliteSaver, TodoListMiddleware params, LangGraph, create_agent_
+  _not found, missing, not covered, evals, integration test, token usage, cost tracking, tracing, observability, MCP auth, OAuth, checkpointer classes, PostgresSaver, SqliteSaver, TodoListMiddleware params, LangGraph, create_agent_
 - [[versions]] — 0.7.39 deps and extras, 0.7.0 breaking changes, public API map
   _deepagents version, changelog, breaking changes, 0.7.0, upgrade, migration, dependencies, extras, public API, __all__, deprecated, BASE_AGENT_PROMPT, virtual_mode, write_file overwrite, TodoListMiddleware removed, what changed_
 - [[sources]] — raw docs + vendored package; ground-truth order; refresh rule (docs only)
@@ -45,7 +45,7 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[customization]] — every knob in one place: prompt composition, tools, middleware, backends, output
   _customize agent, system prompt, prompt composition, custom middleware, override middleware, SummarizationMiddleware, SkillsMiddleware, structured output, response_format, subagents, backends, human in the loop, HITL, interrupt_on, going fully custom, tools, memory, skills_
 - [[middleware]] — exact default stack order (main + subagent), replace-by-name, build by hand
-  _middleware stack, middleware order, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware_
+  _middleware stack, middleware order, ModelRefusalMiddleware, ModelRefusalError, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware, BackendConsumer, bind_backend, middleware needs backend_
 - [[products]] — LangChain vs LangGraph vs Deep Agents; vs Claude Agent SDK; from-scratch walkthrough (docs only)
   _Deep Agents vs LangChain, Deep Agents vs LangGraph, Claude Agent SDK comparison, create_agent, harness vs framework vs runtime, which one to use, when to use deep agents, build harness yourself, CrewAI, Temporal, Manus, agent framework choice_
 
@@ -67,13 +67,13 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[planning]] — `write_todos` is opt-in since 0.7: add `TodoListMiddleware`
   _write_todos, TodoListMiddleware, todo list, planning tool, task planning, todos state, progress tracking, plan and track tasks, write_todos missing, opt-in planning, Codex harness profile_
 - [[subagents]] — `task(description, subagent_type)`, SubAgent/CompiledSubAgent, inheritance, what returns
-  _subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out_
+  _subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out, model refusal, ModelRefusalError, lc_subagent_tool_call_id, checkpoint_ns, ToolMessage artifact, BackendConsumer, bind_backend_
 - [[dynamic-subagents]] — fan out from code via interpreter `task()` (docs only)
   _dynamic subagents, dynamic sub-agent, task() in interpreter, CodeInterpreterMiddleware, QuickJS, Promise.all, fan-out, RLM, recursive subagents, langchain_quickjs, responseSchema, eval, batch dispatch_
 - [[async-subagents]] — background subagents on Agent Protocol servers, five `*_async_task` tools
-  _async subagent, async sub-agent, background task, AsyncSubAgent, start_async_task, Agent Protocol, graph_id, long-running agent, non-blocking subagent, LangSmith Deployment, remote subagent, cancel task, update task, TaskEvent, task notification, deepagents_notification, waiting status, fork mode, parent_thread_id_
+  _async subagent, async sub-agent, background task, AsyncSubAgent, start_async_task, Agent Protocol, graph_id, long-running agent, non-blocking subagent, LangSmith Deployment, remote subagent, cancel task, update task, TaskEvent, task notification, deepagents_notification, get_notification_metadata, waiting status, pending status, fork mode, parent_thread_id, update_strategy, enqueue, notify_parent, webhook_
 - [[human-in-the-loop]] — `interrupt_on`, approve/edit/reject/respond, resume with `Command`
-  _human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt___
+  _human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__, interrupt_mode, per_call, ToolApprovalRequest, edit_notice_
 - [[rubric]] — `RubricMiddleware` grader loop until done
   _rubric, RubricMiddleware, LLM-as-judge, grader, grading loop, self-check, verify output, needs_revision, max_iterations, quality gate, evaluate before finish, definition of done, on_evaluation_
 
@@ -88,7 +88,7 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[skills]] — SKILL.md format, progressive disclosure, `skills=` sources, inheritance
   _skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools_
 - [[context-engineering]] — the five context layers and the real prompt assembly order
-  _context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context_
+  _context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context, notification metadata, read_file_media, fork prompt cache_
 - [[summarization]] — thresholds, offload to `/conversation_history/`, `compact_conversation`
   _summarizer, summarization, SummarizationMiddleware, context compression, compact_conversation, conversation history, large_tool_results, context overflow, ContextOverflowError, trim history, offload, compaction, artifacts_root, context window full, summarize old messages_
 - [[retrieval]] — RAG patterns: retrieve, offload to files, delegate
@@ -101,7 +101,7 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[mcp]] — `langchain.mcp.MCPAdapter` → `tools=` (docs only)
   _MCP, Model Context Protocol, MCPAdapter, langchain.mcp, langchain[mcp], FastMCP, MCP server tools, langchain-mcp-adapters, MultiServerMCPClient, list_tools, mcpServers, stdio, streamable http, connect MCP_
 - [[streaming]] — `stream(subgraphs=True)`, namespaces, v3 `stream_events` (docs only)
-  _streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events_
+  _streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events, checkpoint_ns, ToolMessage artifact_
 - [[frontend]] — what a Python agent exposes for `useStream` UIs (subagents, todos, sandbox IDE) (docs only)
   _frontend, UI, useStream, @langchain/react, React, Vue, Svelte, Angular, langgraph dev, langgraph.json, Agent Server, subagent cards, todo list UI, sandbox IDE, chat UI, stream.values_
 - [[protocols]] — ACP, AG-UI, A2A (docs only)
@@ -114,7 +114,7 @@ One line per page, keywords in italics. Can't pick? Search [[lookup]] for your t
 - [[production]] — deploy paths, `thread_id`/`context`, multi-tenancy, resilience checklist
   _production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted_
 - [[fault-tolerance]] — rate limits, retries, fallbacks, call limits, tool errors
-  _fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, rate_limiter, 429, resilience, error handling, timeout, fallback model_
+  _fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, ModelRefusalMiddleware, ModelRefusalError, model refusal, rate_limiter, 429, resilience, error handling, timeout, fallback model_
 - [[testing]] — pytest with a scripted fake model (checked recipe; the `bind_tools` fix)
   _testing, test, unit test, pytest, fake model, fake chat model, mock model, GenericFakeChatModel, FakeMessagesListChatModel, bind_tools, no API calls, offline tests, scripted model_
 - [[tutorials]] — data analysis, deep research, content builder, RAG: patterns and stale bits

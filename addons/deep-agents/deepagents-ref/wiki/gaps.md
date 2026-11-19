@@ -6,12 +6,12 @@ status: sourced
 product: all
 keywords: not found, missing, not covered, evals, integration test, token usage, cost tracking, tracing, observability, MCP auth, OAuth, checkpointer classes, PostgresSaver, SqliteSaver, TodoListMiddleware params, LangGraph, create_agent
 read_when: Read when the index and lookup have no page for your question, before answering from memory.
-updated: 2026-11-09
+updated: 2026-11-19
 ---
 
 # Gaps — what this folder does not cover
 
-If the answer is not in the wiki, `lookup.md`, or `../sources/`, it is not known in layer 1. **Go to layer 2**, the LangChain docs MCP server `docs-langchain` (see `../AGENTS.md`): `search_docs_by_lang_chain` with "python" in the query, then read the page with `query_docs_filesystem_docs_by_lang_chain`. The live URLs below are where each gap is covered. Label layer-2 answers "not checked against 0.7.39". Never fill a gap from memory. Checked by grep across `wiki/`, `sources/docs/`, and `sources/package/` on 2026-09-29.
+If the answer is not in the wiki, `lookup.md`, or `../sources/`, it is not known in layer 1. **Go to layer 2**, the LangChain docs MCP server `docs-langchain` (see `../AGENTS.md`): `search_docs_by_lang_chain` with "python" in the query, then read the page with `query_docs_filesystem_docs_by_lang_chain`. The live URLs below are where each gap is covered. Label layer-2 answers "not checked against 0.7.39". Never fill a gap from memory. Checked by grep across `wiki/`, `sources/docs/`, and `sources/package/` on 2026-09-29, and re-checked against the 0.7.39 package and the 2026-11-18 docs on 2026-11-19 (the LangChain MCP page only links to auth; no SDK page covers token cost).
 
 | Topic | Status here | Live source |
 |---|---|---|
@@ -21,7 +21,7 @@ If the answer is not in the wiki, `lookup.md`, or `../sources/`, it is not known
 | Tracing / observability (LangSmith) setup | Mentioned only in passing ([[production]]) | https://docs.langchain.com/oss/python/langchain/observability.md · https://docs.langchain.com/oss/python/langgraph/observability.md |
 | MCP authentication (bearer, OAuth, per-user), connection options | Not in Deep Agents docs ([[mcp]] covers loading tools only) | https://docs.langchain.com/oss/python/langchain/mcp/auth.md · https://docs.langchain.com/oss/python/langchain/mcp/connections.md |
 | Durable checkpointer / store internals beyond setup | Imports, packages, async setup and gotchas **are** covered: [[persistence]]. The code isn't vendored | https://docs.langchain.com/oss/python/langgraph/persistence.md |
-| LangChain built-in middleware params (`TodoListMiddleware`, retry, fallback, call limits) | Docs-only on [[planning]] / [[fault-tolerance]]; code lives in `langchain`, not vendored | https://docs.langchain.com/oss/python/langchain/middleware/built-in.md |
+| LangChain built-in middleware params (`TodoListMiddleware`, retry, fallback, call limits) | Summarized on [[planning]] / [[fault-tolerance]], with signatures checked against the installed `langchain` 1.5.0 on 2026-11-19; the `langchain` source isn't vendored in `sources/` | https://docs.langchain.com/oss/python/langchain/middleware/built-in.md |
 | Writing custom middleware (hooks, state) | Summary on [[middleware]]; full guide not vendored | https://docs.langchain.com/oss/python/langchain/middleware/custom.md |
 | `interrupt()` / `Command` semantics beyond HITL | Summary on [[human-in-the-loop]] | https://docs.langchain.com/oss/python/langgraph/interrupts.md |
 | `langchain_quickjs` interpreter internals | Docs-only on [[interpreters]]; package not vendored | https://docs.langchain.com/oss/python/deepagents/interpreters.md |

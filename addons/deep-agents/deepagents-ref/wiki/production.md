@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted
 read_when: Read when moving an agent to production, setting up thread_id/context/multi-tenancy, or choosing where the checkpointer and store come from.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 599b7e4264f7
 ---
 
@@ -31,7 +31,7 @@ One-line truth: a production deep agent = a compiled graph plus a durable checkp
 
 | Path | What you author | Who provisions checkpointer + store |
 | - | - | - |
-| [[managed]] (Managed Deep Agents, public beta, LangSmith Cloud) | A project of files, declared for the managed runtime; you do not compile the graph | Platform |
+| [[managed]] (Managed Deep Agents, public beta, LangSmith Cloud and BYOC with CLI/SDK v0.10+) | A project of files, declared for the managed runtime; you do not compile the graph | Platform |
 | LangSmith Deployment (LangGraph server) | `agent.py` exporting a compiled graph or a graph factory + `langgraph.json` | Platform (threads, runs, store, checkpointer, auth, webhooks, cron, MCP/A2A exposure) |
 | Self-hosted (plain Python process) | Your own server calling `agent.invoke/ainvoke` | You: `create_deep_agent(checkpointer=..., store=...)` |
 
@@ -49,7 +49,7 @@ Docs recommend Managed Deep Agents first; use a LangSmith Deployment when you ne
 }
 ```
 
-- `dependencies`: `["."]` installs the current dir (reads `requirements.txt` / `pyproject.toml`).
+- `dependencies`: `["."]` installs the current dir (reads `requirements.txt`, `pyproject.toml` or `package.json`).
 - `graphs`: `"<graph_id>": "./<file>:<variable>"`; `<variable>` is a compiled graph or a (possibly async) factory function. `graph_id` is what clients pass as the assistant (`"agent"` below).
 - `env`: `.env` path. Same file drives `langgraph dev` (local, `http://localhost:2024`) and `langgraph deploy`.
 - Multiple agents in one deployment: add more `graphs` entries (e.g. a `consolidation_agent`, see [[memory]]).

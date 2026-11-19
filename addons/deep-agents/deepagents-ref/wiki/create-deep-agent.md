@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: create_deep_agent, create deep agent, signature, parameters, kwargs, system_prompt, interrupt_on, response_format, structured output, state_schema, context_schema, checkpointer, store, backend, subagents, recursion_limit
 read_when: Read when you need the exact create_deep_agent signature, a parameter default, or the middleware/prompt assembly order.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: d808459e9e42
 ---
 
@@ -67,7 +67,7 @@ Only `model` and `tools` are positional; everything else is keyword-only.
 | `system_prompt` | `None` | `USER` slot, placed first. Final = `USER` + `"\n\n"` + profile `BASE` + `"\n\n"` + profile `SUFFIX` (empty parts skipped). `None` and no profile -> empty system prompt. A `SystemMessage` keeps its content blocks (e.g. `cache_control`); profile text is appended as an extra text block. |
 | `middleware` | `()` | Merged by `.name`: same name as a stack entry -> replaced in place; otherwise inserted after the last core entry (before profile extras / Skills / caching / memory / HITL). A `SkillsMiddleware` passed here with no `skills=` also supplies `skills` (its `sources`). Since 0.7.36, each entry with a `bind_backend` method (the `BackendConsumer` protocol, `from deepagents.backends import BackendConsumer`) gets `bind_backend(backend)` called with the resolved backend before the agent is built. See [[middleware]]. |
 | `subagents` | `None` | `SubAgent` dicts (declarative), `CompiledSubAgent` (pre-built runnable), `AsyncSubAgent` (has `graph_id`). A `general-purpose` subagent is auto-added unless you pass one with that name or the profile disables it. See [[subagents]], [[async-subagents]]. |
-| `skills` | `None` | POSIX paths relative to the backend root, e.g. `["/skills/"]`; later sources win on name clashes. Adds `SkillsMiddleware` near the end of the stack, after your middleware and profile extras, right before prompt caching (moved there in 0.7.29). See [[skills]]. |
+| `skills` | `None` | POSIX paths relative to the backend root, e.g. `["/skills/"]`; later sources win on name clashes. Adds `SkillsMiddleware` near the end of the stack, after your middleware and profile extras, right before prompt caching (seen in 0.7.39). See [[skills]]. |
 | `memory` | `None` | `AGENTS.md` paths, e.g. `["/memory/AGENTS.md"]`; loaded at startup into the system prompt. Adds `MemoryMiddleware` (after caching). See [[memory]]. |
 | `permissions` | `None` | `FilesystemPermission` rules, first match wins, no match = allow; modes `"allow"`/`"deny"`/`"interrupt"`. Enforced at tool level by `FilesystemMiddleware`, not by backends. Subagents inherit unless they set their own (which replaces). See [[permissions]]. |
 | `backend` | `None` -> `StateBackend()` | Where files live; sandbox backends add `execute`. See [[backends]]. |
@@ -127,7 +127,7 @@ for msg in stream.messages:
 1. Resolve model (`resolve_model`) and harness profile (`_harness_profile_for_model`); validate profile exclusions.
 2. Rewrite tool descriptions per profile; default backend to `StateBackend()`; call `bind_backend(backend)` on each `middleware=` entry that has it (0.7.36+).
 3. Build final system prompt (USER, BASE, SUFFIX).
-4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack (its spec `middleware`, plus the parent's for a fork, also gets `bind_backend(backend)`). A fork keeps the parent's final system prompt unchanged; its own `system_prompt` is stored aside and sent with the task message (0.7.35).
+4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack (its spec `middleware`, plus the parent's for a fork, also gets `bind_backend(backend)`). A fork keeps the parent's final system prompt unchanged; its own `system_prompt` is stored aside and sent with the task message (0.7.35). The function's own docstring (`graph.py`, `subagents` arg) still says it is appended to the inherited prompt; the code wins.
 5. Auto-add `general-purpose` subagent (index 0) unless disabled or overridden.
 6. Build main stack (core, then profile extras, Skills, caching, Memory, HITL, UnsupportedContent, `ModelRefusalMiddleware`), merge `middleware`, apply profile exclusions, append tool-exclusion middleware. `ModelRefusalMiddleware` (from `langchain.agents.middleware`) raises `ModelRefusalError` when the model refuses; it sits in the tail so a `ModelFallbackMiddleware` you pass retries on the next model first. Subagent stacks get it too.
 7. Call `create_agent(...)` and `.with_config(...)`.

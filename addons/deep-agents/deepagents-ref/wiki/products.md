@@ -6,7 +6,7 @@ status: sourced
 product: all
 keywords: Deep Agents vs LangChain, Deep Agents vs LangGraph, Claude Agent SDK comparison, create_agent, harness vs framework vs runtime, which one to use, when to use deep agents, build harness yourself, CrewAI, Temporal, Manus, agent framework choice
 read_when: Read when choosing between Deep Agents, LangChain, LangGraph or Claude Agent SDK, or deciding whether to build the harness yourself.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: d00da9c53dc6
 ---
 
@@ -37,7 +37,7 @@ Feature mapping:
 
 Decision rule (README FAQ): use Deep Agents for the full harness out of the box; use `create_agent` for a lighter harness without bundled middleware; drop to LangGraph when the loop itself is the wrong shape. Any LangGraph `CompiledStateGraph` can be plugged in as a `CompiledSubAgent`, so custom orchestration composes with the harness ([[subagents]]).
 
-## Deep Agents vs Claude Agent SDK (docs drafted 2026-04-16)
+## Deep Agents vs Claude Agent SDK (from the docs' comparison page)
 
 | | Deep Agents | Claude Agent SDK |
 | - | - | - |
@@ -45,7 +45,7 @@ Decision rule (README FAQ): use Deep Agents for the full harness out of the box;
 | Execution backend | pluggable: state, disk, store, composite, remote sandbox, custom ([[backends]], [[sandboxes]]) | the sandbox's local filesystem |
 | Models | any tool-calling LangChain model | Claude (Anthropic, Bedrock, Vertex, Azure) |
 | Per-model tuning | harness profiles (beta) ([[models]]) | per call site |
-| Deployment | Managed Deep Agents in LangSmith (the docs now call it the default, via `mda deploy`), or self-host `langgraph build` image on Agent Server (the docs' new name for a custom "LangSmith Deployment", 2026-11-18) ([[managed]], [[production]]) | self-host; build server/auth/streaming yourself; Claude managed agents is a separate product |
+| Deployment | Managed Deep Agents in LangSmith (the docs now call it the default, via `mda deploy`), or self-host a standalone server image built with `langgraph build` ([[managed]], [[production]]) | self-host; build server/auth/streaming yourself; Claude managed agents is a separate product |
 | Multi-tenancy | built in (scoped threads, per-user sandboxes, RBAC) | build it yourself |
 | License | MIT | MIT (Claude Code proprietary) |
 
@@ -57,7 +57,7 @@ The "deep agent from scratch" guide assembles a data-analysis agent one piece at
 
 | Step | Adds | Code |
 | - | - | - |
-| 1 Minimal | model + loop | `create_agent(model="google_genai:gemini-3.6-flash", tools=[])` |
+| 1 Minimal | model + loop | `create_agent(model="google_genai:gemini-4-hydrogen", tools=[])` |
 | 2 Sandbox + fs | file tools + `execute` | `FilesystemMiddleware(backend=LangSmithSandbox(sandbox=sb))` |
 | 3 Context | history compression | `SummarizationMiddleware(model=model, backend=backend)` |
 | 4 Skills | on-demand knowledge | `SkillsMiddleware(backend=backend, sources=["/skills/"])` |
@@ -73,11 +73,11 @@ from deepagents.middleware import (FilesystemMiddleware, SkillsMiddleware,
                                    SubAgentMiddleware, SummarizationMiddleware)
 
 client = SandboxClient()                      # needs LANGSMITH_API_KEY
-sandbox = client.create_sandbox()
+sandbox = client.create_sandbox(name="langchain-docs", snapshot_name="docs-test-ci")   # the guide's names
 backend = LangSmithSandbox(sandbox=sandbox)
 backend.upload_files([("/sales.csv", csv_bytes)])   # absolute POSIX paths only
 
-model = "google_genai:gemini-3.6-flash"
+model = "google_genai:gemini-4-hydrogen"
 visualizer: SubAgent = {
     "name": "visualizer",
     "description": "Generates charts and visualizations from data files in the sandbox.",
@@ -108,7 +108,7 @@ What `create_deep_agent` adds beyond this hand-built stack: `PatchToolCallsMiddl
 - Its `visualizer` subagent gets no file or `execute` tools when used through raw `SubAgentMiddleware` (only what its spec lists), so it cannot actually write/run plotting scripts as described; pass `FilesystemMiddleware` in the spec's `middleware` or use `create_deep_agent`.
 - `SummarizationMiddleware(model=..., backend=...)` built directly uses non-model-aware defaults (`trigger=None`); `create_deep_agent` uses `create_summarization_middleware`.
 - products.md still lists "planning capabilities" as a harness feature; in 0.7.x it is opt-in.
-- Comparison claims about Claude Agent SDK are dated 2026-04-16 and vendor-authored; verify before relying on them.
+- Comparison claims about Claude Agent SDK are vendor-authored (LangChain docs, undated); verify before relying on them.
 
 ## Sources
 

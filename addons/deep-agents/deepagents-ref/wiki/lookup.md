@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: lookup, find, where is, glossary, symbol, import, class, function, parameter, synonym
 read_when: Read when you have a term, class, function or parameter name and need the page that explains it.
-updated: 2026-10-21
+updated: 2026-11-19
 ---
 
 # Lookup — term and symbol to page
@@ -72,7 +72,15 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 | failed turn, tool error, stream crashed, Trace tab | [[streaming]] | [[anti]] |
 | debugging, symptom, why doesn't | [[anti]] (Symptom → cause) | |
 | GPT-6 Luna, openrouter model id, slug | [[models]] | [[agent-setup]] |
-| evals, token usage, cost, tracing, MCP auth | not covered | [[gaps]] |
+| evals, token usage, cost, tracing, MCP auth | not covered | [[gaps]]; Managed Harbor evals: [[managed-dev]] |
+| refusal, model refusal, `ModelRefusalMiddleware`, `ModelRefusalError` | [[middleware]], [[fault-tolerance]] | [[subagents]] |
+| `notify_parent`, `webhook`, `get_notification_metadata`, notification metadata, queued follow-up | [[async-subagents]] | [[context-engineering]] |
+| `checkpoint_ns`, `task` message `artifact`, subagent history | [[subagents]] | [[streaming]] |
+| fork system prompt, fork instructions, `_FORK_INSTRUCTIONS_KEY`, fork prompt cache | [[subagents]] | [[context-engineering]] |
+| `.with_retry()` on a subagent, retry a subagent | [[fault-tolerance]] | [[subagents]] |
+| `BackendConsumer`, `bind_backend`, middleware needs the backend | [[middleware]] | [[subagents]] |
+| `mda dev`, local Managed development, Harbor, `mda evals` | none (Managed only) | [[managed-dev]] |
+| rules, must know, which piece to use, never, raw sources, where to cite | [[constitution]], [[decisions]], [[do-not]] | [[sources]] |
 
 ## Symbols
 

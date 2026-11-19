@@ -6,7 +6,7 @@ status: sourced
 product: sdk
 keywords: streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events, checkpoint_ns, ToolMessage artifact
 read_when: Read when streaming agent output or tokens, seeing no subagent events, or moving to stream_events v3.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: f5f269c13205
 ---
 
@@ -45,7 +45,7 @@ Namespaces:
 
 Detect subagent: `any(s.startswith("tools:") for s in namespace)`.
 
-The current docs pass `version="v2"`, which yields one dict per chunk instead of a tuple: `chunk["type"]` (the mode), `chunk["ns"]` (the namespace) and `chunk["data"]`. Checked on langgraph 1.2.16: `stream(..., stream_mode="updates", subgraphs=True, version="v2")` gives keys `data`, `ns`, `type`.
+The current docs pass `version="v2"`, which yields one dict per chunk instead of a tuple: `chunk["type"]` (the mode), `chunk["ns"]` (the namespace) and `chunk["data"]`. Checked on langgraph 1.2.16 and again on 1.2.22 (2026-11-19, subagent chunk `ns` = `('tools:<uuid>',)`, parent `ns` = `()`): `stream(..., stream_mode="updates", subgraphs=True, version="v2")` gives keys `data`, `ns`, `type`.
 
 ```python
 for chunk in agent.stream(inp, stream_mode="updates", subgraphs=True, version="v2"):
@@ -88,7 +88,7 @@ for ns, mode, data in agent.stream(inp, stream_mode=["updates", "messages", "cus
 
 ## Human-in-the-loop while streaming
 
-With `interrupt_on` (or interrupt-mode `permissions`) set and a checkpointer + `thread_id` (see [[persistence]]), an `"updates"` chunk may contain `"__interrupt__"`; each item's `.value` holds the action requests. Resume by streaming again with `Command(resume={"decisions": [...]})` on the same `thread_id`, with the same payload as `invoke`. See [[human-in-the-loop]].
+With `interrupt_on` (or interrupt-mode `permissions`) set and a checkpointer + `thread_id` (see [[persistence]]), an `"updates"` chunk may contain `"__interrupt__"`; each item's `.value` holds the action requests. Resume by streaming again with `Command(resume={"decisions": [...]})` on the same `thread_id`, with the same payload as `invoke`. This is the default `interrupt_mode="batched"` that `create_deep_agent` uses; a `HumanInTheLoopMiddleware(interrupt_mode="per_call")` (langchain 1.5.0) raises one interrupt per gated call and is resumed with `Command(resume={interrupt.id: decision})` instead. See [[human-in-the-loop]].
 
 ```python
 for mode, data in agent.stream(inp, stream_mode=["messages", "updates"], config=config):
@@ -128,7 +128,7 @@ Concurrency:
 
 ## Failed turns (for a Trace tab)
 
-Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. Re-run on 0.7.39 / langgraph 1.2.22 / langchain 1.5.0 on 2026-11-18 (the `task` tool now streams compiled children internally): the same four results. The refusal rows are from code, not a run (0.7.34 adds `ModelRefusalMiddleware` to the stack).
+Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. Re-run on 0.7.39 / langgraph 1.2.22 / langchain 1.5.0 on 2026-11-18 (the `task` tool now streams compiled children internally): the same four results. The refusal rows are from code, not a run (0.7.33 adds `ModelRefusalMiddleware` to the stack).
 
 | Failure | Default behaviour |
 |---|---|

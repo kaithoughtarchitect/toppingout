@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context, notification metadata, read_file_media, fork prompt cache
 read_when: Read when deciding what goes in the prompt vs files vs state, passing per-run context, debugging how the system prompt is assembled, or context bloat.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: ce56466bd3cc
 ---
 
@@ -34,9 +34,9 @@ Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotif
 4. skills index (`## Skills System ...`)
 5. `<agent_memory>` + `<memory_guidelines>` (last, with its own cache breakpoint so memory edits do not invalidate the cached prefix)
 
-Checked on 0.7.29 with a scripted model that records its input: `system_prompt`, then a custom `wrap_model_call` fragment, then the skills index, then memory. Before 0.7.29 the skills index came right after your `system_prompt`, ahead of your own fragments. Not re-run on 0.7.34; the 0.7.34 code keeps the same order (only prompt caching and memory's Anthropic check changed).
+Checked on 0.7.29 with a scripted model that records its input: `system_prompt`, then a custom `wrap_model_call` fragment, then the skills index, then memory. The prompt text has not been re-recorded since.
 
-The 0.7.39 `graph.py` builds the main stack in the same order (read, not run).
+On 0.7.39 the main stack was captured in the same order (2026-11-19, fake model, see [[middleware]]).
 
 The docs' list puts memory before skills and includes filesystem/subagent prompt sections; the code order above wins. A skill can also keep related tool schemas out of the prompt until the skill is read (`metadata.include_tools`, [[skills]]). See [[middleware]], [[customization]], [[harness]].
 
@@ -86,7 +86,7 @@ agent = create_deep_agent(model=..., state_schema=ResearchState)
 Always on; details in [[summarization]]. Summary of defaults:
 - Tool results > 20,000 tokens (approx `4 * 20000` chars) are written to `/large_tool_results/<tool_call_id>` and replaced by a head/tail preview (5 + 5 lines). `ls`, `glob`, `grep`, `read_file`, `edit_file`, `write_file`, `delete` are exempt.
 - Human messages > 50,000 tokens are evicted to a file too.
-- Old tool-call args > 2,000 chars are clipped once the history hits the truncation trigger.
+- Old `write_file` / `edit_file` call args > 2,000 chars are clipped once the history hits the truncation trigger; other tools' args are left alone.
 - At 85% of the model's `max_input_tokens` (fallback 170k tokens) history is summarized; the evicted messages go to `/conversation_history/<session>.md`; 10% (fallback 6 messages) kept verbatim.
 - A provider context-overflow error triggers summarize-and-retry once.
 - After a summary, the cutoff is found by message id (`cutoff_message_id`, 0.7.34), and Claude reasoning blocks in messages kept from before the summary are left out of the model request; state keeps them ([[summarization]]).
@@ -95,7 +95,7 @@ Always on; details in [[summarization]]. Summary of defaults:
 - Opt-in `FilesystemMiddleware(backend=..., offload_binary_content=True)` (in `middleware=`) writes binary `read_file` results and inline `HumanMessage` media to `blobs/` under the artifacts root, keeps a reference in history, and rehydrates it for each model call. It has no effect (and warns) when `blobs/` routes to a `StateBackend`.
 - Images are never resized or embedded ([[multimodal]]).
 - When streaming tokens, skip `metadata.get("lc_source") == "summarization"` to hide summary generation ([[streaming]]).
-- Messages the harness adds to the history as `HumanMessage`s carry LangChain notification metadata, so a UI can tell them from the user's words with `get_notification_metadata(message)` (`langchain_core.messages`): the summary (source `"summarization"`, also in the 2026-11-18 docs), async task notifications (source `"async_subagent"`, [[async-subagents]]) and, since 0.7.35, the media message `read_file` adds for an image, audio, video or PDF (source `"read_file_media"`, `data={"path", "tool_call_id"}`, `_READ_FILE_MEDIA_SOURCE` in `middleware/filesystem.py`). The Nemotron harness profile's nudges are marked the same way since 0.7.35 (source = the nudge's name).
+- Messages the harness adds to the history as `HumanMessage`s carry LangChain notification metadata, so a UI can tell them from the user's words with `get_notification_metadata(message)` (`langchain_core.messages`): the summary (source `"summarization"`, also in the 2026-11-18 docs), async task notifications (source `"async_subagent"`, [[async-subagents]]) and, since 0.7.35, the frames message `read_file` adds after reading a video (needs the `deepagents[video]` extra; source `"read_file_media"`, `data={"path", "tool_call_id"}`, `_READ_FILE_MEDIA_SOURCE` in `middleware/filesystem.py`). Images, audio and PDFs get no extra message: `read_file` returns them as content blocks in its `ToolMessage`. The Nemotron harness profile's nudges are marked the same way since 0.7.35 (source = the nudge's name).
 
 ## Isolation with subagents
 
@@ -125,7 +125,7 @@ The directory can start empty; tell the agent in the prompt what to save where (
 - Docs say the large-result preview is "first 10 lines"; code shows first 5 and last 5 lines (`_create_content_preview(head_lines=5, tail_lines=5)`).
 - Offloaded results and conversation history land on the default route (usually per-thread `StateBackend`) unless you set `CompositeBackend(artifacts_root=...)` to a routed prefix.
 - Prompt order in the docs (memory before skills) does not match code (memory last).
-- Code that treats every `HumanMessage` as the user's words will also pick up summaries, task notifications and (since 0.7.35) `read_file` media messages. Check `get_notification_metadata(message)` first.
+- Code that treats every `HumanMessage` as the user's words will also pick up summaries, task notifications and (since 0.7.35) `read_file` video-frame messages. Check `get_notification_metadata(message)` first.
 
 ## Sources
 - `../sources/docs/oss/python/deepagents/context-engineering.md`

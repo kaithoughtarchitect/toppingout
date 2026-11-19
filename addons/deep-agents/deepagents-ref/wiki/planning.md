@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: write_todos, TodoListMiddleware, todo list, planning tool, task planning, todos state, progress tracking, plan and track tasks, write_todos missing, opt-in planning, Codex harness profile
 read_when: Read when write_todos is missing or a prompt says use write_todos, or when adding planning/progress tracking to a long multi-step agent.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 9b404c926c4d
 ---
 
@@ -41,7 +41,7 @@ User middleware is spliced in after the core stack, before the profile, prompt-c
 
 ## Planning in subagents
 
-`todos` does **not** cross the subagent boundary. `_EXCLUDED_STATE_KEYS = {"messages", "todos", "structured_response", "skills_metadata", ...}` in `middleware/subagents.py` is stripped from the state the `task` tool passes in, and from the update it returns ("no defined reducer and no clear meaning"). Each subagent has its own list, or none. One exception: a declarative `mode="fork"` subagent starts from the parent's state minus `_FORK_EXCLUDED_STATE_KEYS`, which does not list `todos`, so a fork **sees** the parent's todos. Its changes still never come back, because the returned update drops `todos` (checked in 0.7.39 `middleware/subagents.py`).
+`todos` does **not** cross the subagent boundary. `_EXCLUDED_STATE_KEYS = {"messages", "todos", "structured_response", "skills_metadata", ...}` in `middleware/subagents.py` is stripped from the state the `task` tool passes in, and from the update it returns ("no defined reducer and no clear meaning"). Each subagent has its own list, or none. Forks too: a declarative `mode="fork"` subagent's state is built from the parent's minus `_FORK_EXCLUDED_STATE_KEYS`, which does not list `todos`, but `TodoListMiddleware` marks `todos` as `OmitFromInput` (`langchain/agents/middleware/todo.py`), so the graph drops it from the fork's input. Probed on 0.7.39 with langchain 1.5.0 (2026-11-19, fake model): the parent wrote a todo and delegated to a fork, and the fork's `before_model` saw `todos=None`. Changes never come back either, because the returned update drops `todos`.
 
 To give a subagent a todo list:
 
@@ -56,7 +56,7 @@ agent = create_deep_agent(model=..., subagents=[researcher],
                           middleware=[TodoListMiddleware()])
 ```
 
-**The general-purpose subagent does not inherit it.** GP inherits only those main-agent middleware whose `.name` matches a default GP slot (Filesystem, Summarization, PatchToolCalls, Skills, profile extras, prompt caching). `TodoListMiddleware` is not one of those slots, so it is dropped. You have two ways around this:
+**The general-purpose subagent does not inherit it.** GP inherits only those main-agent middleware whose `.name` matches a default GP slot (Filesystem, Summarization, PatchToolCalls, profile extras, Skills, prompt caching, ModelRefusal). `TodoListMiddleware` is not one of those slots, so it is dropped. You have two ways around this:
 - Pass your own `{"name": "general-purpose", ..., "middleware": [TodoListMiddleware()]}`. This fully replaces the default GP (see [[subagents]]).
 - Register a harness profile whose `extra_middleware` returns `[TodoListMiddleware()]`. Profile extras are materialized fresh for the main agent, for GP, and for each declarative subagent whose model resolves to that profile (see [[customization]]).
 
@@ -77,9 +77,9 @@ agent = create_deep_agent(model=..., subagents=[researcher],
 - **Pre-0.7 code and tutorials assume `write_todos` exists.** In 0.7.x it silently isn't there: the model just never sees the tool. The changelog lists this as a 0.7.0 breaking change (see [[versions]]).
 - Import path: `from langchain.agents.middleware import TodoListMiddleware`. It is not exported from `deepagents`.
 - Adding it to the main agent does **not** reach the auto-added general-purpose subagent or custom subagents.
-- `todos` is never merged back from a subagent, so parent plans and child plans are independent. A fork starts with a copy of the parent's list, and anything it changes is lost.
+- `todos` never passes into or out of a subagent, so parent plans and child plans are independent. A fork starts with no list, even though its copy of the parent's state includes one.
 - Codex models (`openai:gpt-5.x-codex`) get `write_todos` automatically through their harness profile, even if you did not ask for it. Other models don't.
-- `TodoListMiddleware` constructor options (custom prompt or tool description) are LangChain's API. They are not in the deepagents 0.7.39 source, so check the LangChain reference before relying on specific kwargs.
+- `TodoListMiddleware` takes two keyword options in langchain 1.5.0: `system_prompt` (the planning prompt fragment) and `tool_description` (the `write_todos` description). Both are LangChain's API, not deepagents', so re-check them when langchain changes.
 - `BASE_AGENT_PROMPT` (deprecated, removed in 0.9.0) restores the old authored prompt text, but **not** the todo middleware.
 
 ## Sources

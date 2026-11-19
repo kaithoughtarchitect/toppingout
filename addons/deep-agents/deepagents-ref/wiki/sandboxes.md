@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: grep_exclude_dirs, sandbox, sandboxes, execute tool, run code, shell access, BaseSandbox, LangSmithSandbox, DaytonaSandbox, ModalSandbox, E2BSandbox, RunloopSandbox, isolated environment, run shell commands, install packages, SandboxBackendProtocol
 read_when: Read when the agent must run shell commands, tests or install packages, when choosing or writing a sandbox provider, or when execute is missing or file ops fail in a custom image.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 57deed6d751c
 ---
 
@@ -68,7 +68,7 @@ finally:
 | `OpenShellSandbox` | `langchain-nvidia-openshell` | `OpenShellSandbox(sandbox=openshell.Sandbox(delete_on_exit=True))` |
 | `DatabricksSandbox` | `databricks-langchain[deepagents]>=0.22.0` | `DatabricksSandbox(WorkspaceClient(), "sandboxes/my-sandbox")` (`from databricks_langchain import DatabricksSandbox`, `from databricks.sdk import WorkspaceClient`; docs, 2026-11) |
 
-Also listed in the integrations index: OpenSandbox, Opsen, Runtime, Kubernetes, Nono, Islo, Baponi, Upstash Box, Leap0, Novita, Superserve, Lizard. These are docs only; none ship in the 0.7.39 package except `LangSmithSandbox`. Deep Agents Code wires sandboxes with `--sandbox` ([[dcode]]); managed hosting: [[managed-capabilities]].
+Also listed in the integrations index (2026-11-18 fetch): OpenSandbox, Opsen, Lizard, Kubernetes, Agent37, Nono, Islo, Prized, Runtime, Novita, Upstash Box, Briq, Leap0, Baponi, Superserve, WBX, Boxd, Kosa8, NoMac. These are docs only; none ship in the 0.7.39 package except `LangSmithSandbox`. Deep Agents Code wires sandboxes with `--sandbox` ([[dcode]]); managed hosting: [[managed-capabilities]].
 
 ## How it works: BaseSandbox
 
@@ -114,7 +114,7 @@ bash: foobar: command not found
 [Command failed with exit code 127]
 ```
 
-Per-call `timeout` must be `0 <= t <= max_execute_timeout` (3600). Large output is offloaded to `/large_tool_results/<tool_call_id>` (inside the sandbox when capture offload is on) and the model gets a preview plus a `read_file` pointer. Exit code is on `ToolMessage.artifact["exit_code"]`; `status` stays `"success"`. The artifact also carries `truncated` (backend limits discarded output) and, when capture offload wrote the output, `output_file` with its path in the sandbox (both added after 0.7.29; `ExecuteArtifact` in `backends/protocol.py`).
+Per-call `timeout` must be `0 <= t <= max_execute_timeout` (3600). Large output is offloaded to `/large_tool_results/<tool_call_id>` (inside the sandbox when capture offload is on) and the model gets a preview plus a `read_file` pointer. Exit code is on `ToolMessage.artifact["exit_code"]`; `status` stays `"success"`. The artifact also carries `truncated` (backend limits discarded output) and, when capture offload wrote the output, `output_file` with its path in the sandbox (seen in 0.7.39; `ExecuteArtifact` in `backends/protocol.py`).
 
 ## Two planes of file access
 

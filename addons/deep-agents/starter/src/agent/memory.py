@@ -7,6 +7,8 @@ The store keeps no history; for an audit trail use deepagents-ref/examples/histo
 
 from __future__ import annotations
 
+import base64
+
 from pathlib import Path
 
 from deepagents.backends.utils import create_file_data
@@ -33,7 +35,11 @@ class MemoryService:
 
     async def read(self, workspace_id: str, path: str) -> str | None:
         it = await self.store.aget(self._ns(workspace_id), _key(path))
-        return it.value["content"] if it else None
+        if not it:
+            return None
+        if it.value.get("encoding") == "base64":  # 0.7.39: uploads with a NUL byte or invalid UTF-8
+            return base64.b64decode(it.value["content"]).decode("utf-8", errors="replace")
+        return it.value["content"]
 
     async def write(self, workspace_id: str, path: str, text: str) -> None:
         await self.store.aput(self._ns(workspace_id), _key(path), create_file_data(text))

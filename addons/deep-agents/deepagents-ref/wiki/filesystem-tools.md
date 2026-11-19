@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: filesystem tools, file tools, grep_exclude_dirs, offload_binary_content, ls, read_file, write_file, edit_file, delete, glob, grep, execute, FilesystemMiddleware, tool_token_limit_before_evict, large_tool_results, grep regex, read file limit, tool eviction, big tool output
 read_when: Read when the agent's file tools behave unexpectedly, grep regex finds nothing, read_file truncates, a large tool result is evicted, or execute is missing or reports success on failure.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 5cc66b138b50
 ---
 
@@ -48,7 +48,7 @@ FilesystemMiddleware(
 )
 ```
 
-`FsToolName = Literal["ls","read_file","write_file","edit_file","delete","glob","grep","execute"]` (exported from `deepagents`). Tools not in `tools=` are not created at all. Via `create_deep_agent`, hide tools with a `HarnessProfile(excluded_tools=frozenset({...}))` and rename/re-describe them with `tool_description_overrides` (see [[customization]]).
+`FsToolName = Literal["ls","read_file","write_file","edit_file","delete","glob","grep","execute"]` (exported from `deepagents`). Tools not in `tools=` are not created at all. Via `create_deep_agent`, hide tools with a `HarnessProfile(excluded_tools=frozenset({...}))` and replace their descriptions with `tool_description_overrides` (descriptions only: it is passed as `custom_tool_descriptions`, and nothing renames a tool) (see [[customization]]).
 
 ## Tool reference
 
@@ -80,7 +80,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 
 - `write_file` overwrites silently (description tells the model it need not read first).
 - `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing; this tool errors otherwise" - that read-before-edit check is **not enforced** in the 0.7.39 middleware.
-- `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.39). Since 0.7.39 a `StoreBackend` file uploaded with a NUL byte is stored base64, so it counts as binary too ([[backends]]).
+- `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29+, still so in 0.7.39). Since 0.7.39 a `StoreBackend` file uploaded with a NUL byte is stored base64, so it counts as binary too ([[backends]]).
 - Two mutations (`write_file`/`edit_file`/`delete`) of the same path in one model response: the later ones return `Error: parallel file mutations to the same path are not allowed.`
 - `delete` is hidden from the model when the backend does not override `BackendProtocol.delete`.
 
@@ -107,8 +107,8 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 
 - Created always; **filtered out of the model request** unless the backend (or a `CompositeBackend`'s `default`) is a `SandboxBackendProtocol`. Called anyway, it returns an error.
 - `timeout < 0` or `> max_execute_timeout` returns an error; a backend whose `execute` lacks a `timeout` kwarg rejects per-call timeouts.
-- Output: combined stdout/stderr + `\n[Command succeeded with exit code 0]` / `failed with exit code N`, + `[Output was truncated due to size limits]` if the backend truncated. `ToolMessage.status` is `"success"` even for non-zero exit; `ToolMessage.artifact` is an `ExecuteArtifact`: `{"truncated": bool, "exit_code": N}`, with `exit_code` omitted when unknown - use it to detect failure. `truncated` (always set since 0.7.31) means backend limits discarded output; `artifact` is `None` when no command ran (validation error, `status="error"`).
-- Large output: for a `BaseSandbox` with `enable_capture_offload=True` (e.g. `LangSmithSandbox`), output over 80,000 chars is captured to `/large_tool_results/<id>` inside the sandbox and only a head/tail preview is returned (capture capped at 10 MiB); the artifact then also carries `output_file` with that path (0.7.31+; may be incomplete when `truncated`). Otherwise generic eviction applies.
+- Output: combined stdout/stderr + `\n[Command succeeded with exit code 0]` / `failed with exit code N`, + `[Output was truncated due to size limits]` if the backend truncated. `ToolMessage.status` is `"success"` even for non-zero exit; `ToolMessage.artifact` is an `ExecuteArtifact`: `{"truncated": bool, "exit_code": N}`, with `exit_code` omitted when unknown - use it to detect failure. `truncated` (always set, seen in 0.7.39: `_execute_artifact`) means backend limits discarded output; `artifact` is `None` when no command ran (validation error, `status="error"`).
+- Large output: for a `BaseSandbox` with `enable_capture_offload=True` (e.g. `LangSmithSandbox`), output over 80,000 chars is captured to `/large_tool_results/<id>` inside the sandbox and only a head/tail preview is returned (capture capped at 10 MiB); the artifact then also carries `output_file` with that path (seen in 0.7.39; may be incomplete when `truncated`). Otherwise generic eviction applies.
 - Description steers the model away from shell `find`/`grep`/`cat` toward `glob`/`grep`/`read_file`.
 
 ## Large result eviction

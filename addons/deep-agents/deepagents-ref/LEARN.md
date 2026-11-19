@@ -83,7 +83,7 @@ model replies "Remembered." → checkpointer saves the thread
 - Memory files load once per thread; edits made elsewhere only appear in a new thread (unless you use `FreshMemory`).
 - The store key has no `/memories` prefix. UI code must read `/AGENTS.md`.
 - `write_todos` (planning) only exists if you add `TodoListMiddleware()`.
-- Subagents don't inherit your middleware or memory.
+- Subagents don't inherit your middleware or memory, except a `mode="fork"` subagent, which mirrors both and the parent's system prompt.
 - Workspace ids must be slugs. `"My Workspace 1"` raises `ValueError`.
 - On Windows, async Postgres needs `WindowsSelectorEventLoopPolicy`.
 
@@ -140,13 +140,15 @@ Why three kinds of test?
 
 ### The skeleton files
 
+These paths are the starter's layout (`addons/deep-agents/starter/` in the Topping Out package, copied into a new agent project). An existing project may keep its agent elsewhere; use its own paths in the commands below.
+
 | File | What it does |
 |---|---|
 | `src/agent/agent.py` | `build_agent()`: model, backend (memory per workspace), permissions (write only to `/memories/`), `FreshMemory`, retries, `Ctx` |
 | `src/agent/persistence.py` | `open_persistence()`: SQLite locally, Postgres if `AGENT_DB_URL` is set |
 | `src/agent/memory.py` | `MemoryService`: app/UI code reads and writes memory files by the correct key |
 | `src/agent/tools.py` | Example read-only tool that gets the workspace from context |
-| `src/agent/chat.py` | `PYTHONPATH=src .venv/Scripts/python (macOS/Linux: .venv/bin/python) -m agent.chat` to talk to it |
+| `src/agent/chat.py` | `PYTHONPATH=src .venv/Scripts/python -m agent.chat` to talk to it (macOS/Linux: `.venv/bin/python`) |
 | `src/agent/graph.py` + `langgraph.json` | Entry point for `langgraph dev` / Studio / hosting |
 
 ---
@@ -154,8 +156,11 @@ Why three kinds of test?
 ## 5. Everyday commands
 
 ```bash
-# talk to the agent (needs OPENROUTER_API_KEY in .env)
-PYTHONPATH=src .venv/Scripts/python (macOS/Linux: .venv/bin/python) -m agent.chat --workspace demo
+# talk to the agent (needs OPENROUTER_API_KEY in .env); starter layout
+# Windows:
+PYTHONPATH=src .venv/Scripts/python -m agent.chat --workspace demo
+# macOS/Linux:
+PYTHONPATH=src .venv/bin/python -m agent.chat --workspace demo
 
 # run the tests the Topping Out way
 source foreman/test-adapter.sh && run_tests /tmp/t.txt /tmp/t.exit && tail -3 /tmp/t.txt
@@ -179,7 +184,7 @@ pip install "langgraph-cli[inmem]" && langgraph dev
 - **Compute:** billed while your agent's server is provisioned. "Serverless" deployments can scale to zero when idle; "Dedicated" ones are always on.
 - **Storage:** the database that keeps your agent's state.
 - **Traces:** billed separately.
-- **Transition:** this usage-based model replaces the old per-run/uptime pricing, and existing customers switch on 1 October 2026.
+- **Transition:** this usage-based model replaces the old per-run/uptime pricing, and existing customers were due to switch on 1 October 2026 (as the billing docs said on 2026-09-30; not re-checked since).
 - **Exact rates:** use the calculator at https://www.langchain.com/pricing (not checked here).
 
 **Locally or hosted?**

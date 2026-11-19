@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: retrieval, RAG, retrieval augmented generation, vector store, vector search, retriever, agentic RAG, 2-step RAG, knowledge base, semantic search, embeddings, search tool, document search, RubricMiddleware
 read_when: Read when adding RAG or a vector store to a deep agent, deciding how to wire a retrieval tool, or offloading search hits to files and subagents.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: f65221fe1226
 ---
 
@@ -22,7 +22,7 @@ One-line truth: Deep Agents has no built-in retriever or vector store; RAG = you
 | Agentic RAG | agent decides when/how to call retrieval tools | multi-source research; this is the Deep Agents default shape |
 | Hybrid | query rewrite + retrieval validation + answer validation loops | ambiguous queries, QA-critical domains |
 
-Existing knowledge bases (SQL, CRM, docs search, MCP servers) do not need re-indexing: expose them as tools or via [[mcp]].
+Existing knowledge bases (SQL database, document database, CRM, internal docs system) do not need rebuilding: expose them as a tool (agentic RAG) or query them and pass the results as context (2-step RAG). Wrapping one as an MCP server is one way to make that tool ([[mcp]]).
 
 ## Deep Agents RAG patterns
 

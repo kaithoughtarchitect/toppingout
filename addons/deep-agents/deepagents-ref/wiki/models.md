@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: model, provider:model, init_chat_model, choose model, switch model, OpenRouter, Ollama, Bedrock, Azure OpenAI, harness profile, HarnessProfile, provider profile, ProviderProfile, register_harness_profile, register_provider_profile, use_responses_api, excluded_tools, runtime model switching
 read_when: Read when picking or configuring a model, tuning behaviour per model, excluding a tool or middleware for one model, or a profile does not apply.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 0fef9439c8ea
 ---
 
@@ -30,7 +30,7 @@ Deep Agents runs on any LangChain chat model that supports tool calling. Pass a 
 ## Model strings
 
 - Format `provider:model`; only the **first** colon separates (e.g. `ollama:minimax-m2.7:cloud` -> provider `ollama`, model `minimax-m2.7:cloud`). Valid providers = `init_chat_model`'s `model_provider` values.
-- Examples from docs: `openai:gpt-5.5`, `openai:gpt-6.1-sol` (the docs' new example id, 2026-11-18), `anthropic:claude-sonnet-4-6`, `google_genai:gemini-4-hydrogen` (replaced `gemini-3.6-flash` in the docs, 2026-11-18), `azure_openai:gpt-5.5`, `openrouter:z-ai/glm-5.2`, `fireworks:accounts/fireworks/models/glm-5p2`, `baseten:zai-org/GLM-5.2`, `ollama:...`.
+- Examples from docs: `openai:gpt-5.5`, `openai:gpt-6.1-sol` (the docs' new example id, 2026-11-18), `anthropic:claude-sonnet-4-6`, `google_genai:gemini-4-hydrogen` (replaced `gemini-3.6-flash` in the docs, 2026-11-18), `azure_openai:gpt-6.1-sol`, `openrouter:z-ai/glm-5.2`, `fireworks:accounts/fireworks/models/glm-5p2`, `baseten:zai-org/GLM-5.2`, `ollama:...`.
 - Install the integration: `pip install -U "langchain[openai]"` / `[anthropic]` / `[google-genai]` / `[aws]`, `langchain-openrouter>=0.2.0`, etc. (`langchain-anthropic` and `langchain-google-genai` ship as deepagents deps.)
 - Suggested (pass the Deep Agents eval suite, docs fetched 2026-11-18): Google `gemini-3.1-pro-preview`, `gemini-4-hydrogen` (was `gemini-3.6-flash`); OpenAI `gpt-5.5`, `gpt-5.4`; Anthropic `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`; open-weight `GLM-5.2`, `Kimi-K2.7 Code`, `MiniMax-M3` (via Baseten, Fireworks, OpenRouter, Ollama).
 
@@ -51,7 +51,7 @@ Provider-profile kwargs apply **only** to strings. A pre-built instance is used 
 from langchain.chat_models import init_chat_model
 from deepagents import create_deep_agent
 
-model = init_chat_model("google_genai:gemini-3.6-flash", thinking_level="medium")
+model = init_chat_model("google_genai:gemini-4-hydrogen", thinking_level="medium")
 agent = create_deep_agent(model=model)
 ```
 
@@ -77,7 +77,7 @@ model = init_chat_model("openai:gpt-5.5", use_responses_api=True, store=False,
 - Context 1,050,000 tokens. Supported params include `tools`, `tool_choice`, `reasoning`, `reasoning_effort`, `response_format`, `structured_outputs`, `max_tokens`, `seed`. **`temperature` isn't listed.**
 - Related slugs: `openai/gpt-6-luna-pro`; `:batch` variants; `~openai/gpt-luna-latest` (floating alias, so avoid it for reproducibility).
 - Harness profile: none built in for this string, so there's no prompt suffix and no extra middleware. The `openrouter` provider profile above still applies (Azure ignore, attribution) because it's a string. Register your own with `register_harness_profile("openrouter:openai/gpt-6-luna", HarnessProfile(...))` if needed.
-- The Deep Agents docs never mention GPT-6 Luna (the dcode docs show `openai:gpt-5.6-luna`). Since 0.7.29 the `SummarizationMiddleware` docstring uses `openai:gpt-6-luna` as a cheaper `summarizer=` example ([[summarization]]). The rest of this entry comes from OpenRouter, not LangChain.
+- The Deep Agents docs never mention GPT-6 Luna (the dcode docs show `openai:gpt-5.6-luna`). The 0.7.39 `SummarizationMiddleware` docstring uses `openai:gpt-6-luna` as a cheaper `summarizer=` example ([[summarization]]). The rest of this entry comes from OpenRouter, not LangChain.
 
 Other built-in provider profiles: `openai` (`use_responses_api=True`), `nvidia` (header `X-BILLING-INVOKE-ORIGIN: DeepAgents`).
 
@@ -120,7 +120,7 @@ register_harness_profile(
 | `extra_middleware` | sequence or zero-arg factory | Appended to main, GP and declarative subagent stacks (not compiled/async) | by concrete type |
 | `general_purpose_subagent` | `GeneralPurposeSubagentProfile or None` | `enabled` (None/True/False), `description`, `system_prompt` | field-wise |
 
-Built-in harness profiles in 0.7.39 (same set since 0.7.29; registered lazily on first registry access):
+Built-in harness profiles in 0.7.39 (registered lazily on first registry access):
 - `anthropic:claude-sonnet-4-6`, `anthropic:claude-haiku-4-5`: suffix with parallel-tool-calls, investigate-before-answering, tool-result-reflection blocks.
 - `anthropic:claude-opus-4-7`: same plus `<tool_usage>` and `<subagent_usage>` blocks.
 - `openai:gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.3-codex`: Codex behaviour suffix + `extra_middleware=[TodoListMiddleware()]` (so these models get `write_todos`, see [[planning]]).
@@ -137,7 +137,7 @@ No provider-wide built-in for `anthropic` or `openai`; other models (e.g. `claud
 
 ### Config files
 
-`HarnessProfileConfig.from_dict(yaml.safe_load(f))` covers the declarative subset (prompts, overrides, excluded tools/middleware as strings incl. `module:Class`, GP edits); `register_harness_profile` accepts either type. `HarnessProfileConfig.from_harness_profile(p)` exports; raises if `extra_middleware` is set.
+`HarnessProfileConfig.from_dict(yaml.safe_load(f))` covers the declarative subset (prompts, overrides, excluded tools/middleware as plain `.name` strings, GP edits). Class-path `module:Class` entries and names starting with `_` raise `ValueError` (`_validate_config_middleware_string`); `register_harness_profile` accepts either type. `HarnessProfileConfig.from_harness_profile(p)` exports; raises if `extra_middleware` is set.
 
 ## Runtime model switching
 
@@ -154,7 +154,7 @@ class Context:
 def configurable_model(request, handler):
     return handler(request.override(model=init_chat_model(request.runtime.context.model)))
 
-agent = create_deep_agent(model="google_genai:gemini-3.6-flash",
+agent = create_deep_agent(model="google_genai:gemini-4-hydrogen",
                           middleware=[configurable_model], context_schema=Context)
 agent.invoke({"messages": [...]}, context=Context(model="openai:gpt-5.5"))
 ```

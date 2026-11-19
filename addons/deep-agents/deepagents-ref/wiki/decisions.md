@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: decision, which to use, choose, SDK vs dcode vs managed, StateBackend vs StoreBackend, sandbox vs interpreter, subagent vs skill, tradeoff, recommendation, default choice, when to use
 read_when: Read when choosing between products, backends, subagent kinds or memory options before recommending a design.
-updated: 2026-11-09
+updated: 2026-11-19
 ---
 
 # Decisions — which piece to reach for
@@ -54,6 +54,8 @@ Yes/no tests before recommending a design. Each row names the default and when t
 | Long-running background work while chatting? | Async subagents on an Agent Protocol server — [[async-subagents]] |
 | Iterate until a quality bar is met? | `RubricMiddleware` (needs a deterministic-ish rubric) — [[rubric]] |
 | Human approves sensitive actions? | `interrupt_on` + checkpointer — [[human-in-the-loop]] |
+| Retry a flaky subagent? | `ToolRetryMiddleware` on `task`, not `.with_retry()` on a compiled subagent (after a retry its recorded `checkpoint_ns` names the failed run, 0.7.36+). See [[fault-tolerance]] |
+| Your middleware needs the agent's backend? | Give it a `bind_backend(self, backend)` method (`BackendConsumer`, 0.7.36+); `create_deep_agent` calls it. See [[middleware]] |
 | Going live? | [[production]] checklist |
 
 ## Worked case: your agent

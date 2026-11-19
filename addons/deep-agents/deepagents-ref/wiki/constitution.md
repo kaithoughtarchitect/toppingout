@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: rules, must know, mental model, core rules, gotchas, deepagents basics
 read_when: Read first, every time — before planning, building or reviewing anything that uses deepagents.
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 # Constitution (one screen)
@@ -17,8 +17,8 @@ updated: 2026-11-18
 2. **Nothing persists by default.** No checkpointer, no store. `StateBackend` files live in the checkpoint → one thread only. Cross-thread memory = `CompositeBackend` route → `StoreBackend` **and** a durable store. In-memory savers die with the process. Prove restarts — [[persistence]].
 3. **`CompositeBackend` strips the route prefix.** `/memories/AGENTS.md` is store key `/AGENTS.md`. Any UI or seed code must use the stripped key — [[memory]].
 4. **`memory=` loads once per thread, then freezes in state.** Edits reach the prompt on a new thread; no reload knob — [[memory]].
-5. **Planning is opt-in since 0.7.0.** No `write_todos` unless you add `TodoListMiddleware()` (Codex profiles excepted). README and tutorials still say otherwise — [[planning]].
-6. **Subagents are isolated.** One `ToolMessage` comes back. Declarative subagents inherit model, tools, permissions, `interrupt_on` — not system prompt, middleware, or memory. Repeat retries/limits per subagent — [[subagents]].
+5. **Planning is opt-in since 0.7.0.** No `write_todos` unless you add `TodoListMiddleware()` (Codex profiles excepted). The overview, quickstart and tutorials now say opt-in; `concepts/products.md` and the README still imply it is built in. See [[planning]].
+6. **Subagents are isolated.** One `ToolMessage` comes back. Declarative subagents inherit model, tools, permissions and `interrupt_on`, but not system prompt, middleware or memory. Exception: a `mode="fork"` subagent mirrors the parent's system prompt, `middleware=` and memory. Repeat retries/limits per subagent. See [[subagents]].
 7. **Permissions guard file tools only.** First match wins, default allow; `**` skips hidden path segments; on `FilesystemBackend` the symlink target is checked too. Not `execute`, custom or MCP tools; with an execute-capable backend they raise `NotImplementedError` unless route-scoped — [[permissions]].
 8. **HITL needs a checkpointer and the same `thread_id`.** Resume with `Command(resume={"decisions": […]})` — [[human-in-the-loop]].
 9. **A refusal raises (0.7.33+).** `ModelRefusalMiddleware` turns a `refusal` block into `ModelRefusalError`; catch it or add `ModelFallbackMiddleware`. Subagent refusals return to the parent as a `task` notice. See [[middleware]].

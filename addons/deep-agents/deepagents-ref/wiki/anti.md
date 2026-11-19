@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: anti-patterns, wrong mental model, stale docs, doesn't work, TypeError, StoreBackend namespace, backend lambda, write_todos missing, virtual_mode, task args, pre-0.7 docs, common mistakes, breaking changes
 read_when: Read when a doc example raises an error or an answer feels off, before recommending any 0.7 API from memory.
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 # Anti — wrong mental models and stale doc examples
@@ -23,7 +23,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | Prompts that say "use write_todos" with no `TodoListMiddleware` | The tool does not exist | [[planning]] |
 | `task(name=…, task=…)` | Args are `description`, `subagent_type` | [[subagents]] |
 | `create_deep_agent(model_provider=…, temperature=…)` | No such params — configure via `init_chat_model` | [[models]] |
-| "`execute` returns an error on non-sandbox backends" | It is removed from the tool list | [[filesystem-tools]] |
+| "`execute` returns an error on non-sandbox backends" (the package's own `execute` tool description, `middleware/filesystem.py`; the 2026-11-18 docs no longer say it) | It is removed from the tool list | [[filesystem-tools]] |
 | Prompt order: memory then skills | Your prompt, then your middleware's text, then the skills index, then memory (Skills sits after your middleware since 0.7.29) | [[middleware]] |
 | `LangSmithSandbox.create()` | Does not exist; wrap an existing sandbox | [[sandboxes]] |
 | Blob offload: "set `artifacts_root` on the middleware" | `FilesystemMiddleware` has no such argument; the `blobs/` root follows `CompositeBackend(artifacts_root=...)` | [[backends]] |
@@ -41,7 +41,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 - **"Read async notifications from `additional_kwargs[\"deepagents_notification\"]`."** That key is deprecated (still written in 0.7.39). Read `get_notification_metadata(message)` from `langchain_core.messages`; the 2026-11-18 docs do: [[async-subagents]].
 - **"It remembers across restarts."** Only with a durable checkpointer and store. `InMemorySaver` / `InMemoryStore` / nothing = gone — [[persistence]].
 - **"Memory edits apply immediately."** `memory=` loads once per thread; setting `memory_contents=None` shows `(No memory loaded)` — [[memory]].
-- **"Subagents get my middleware / memory / system prompt."** They don't; only `mode="fork"` gets memory; GP subagent inherits skills, custom ones don't — [[subagents]], [[middleware]].
+- **"Subagents get my middleware / memory / system prompt."** Isolated subagents don't. Only a `mode="fork"` subagent gets them: memory, the parent's `middleware=`, and the parent's system prompt unchanged (since 0.7.35; its own `system_prompt` goes in the task message). GP subagent inherits skills, custom ones don't — [[subagents]], [[middleware]].
 - **"Omit `tools` on a subagent → it gets none."** It gets all parent custom tools; `"tools": []` for none — [[subagents]].
 - **"Permissions sandbox the agent."** File tools only; not `execute`, custom or MCP tools — [[permissions]].
 - **"`read_file` reads 2000 lines."** Tool default 100 — [[filesystem-tools]].
@@ -51,7 +51,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 - **"`skills=` points at a skill folder."** Point at its parent; otherwise zero skills load silently — [[skills]].
 - **"My middleware sees the skills."** Since 0.7.29 `SkillsMiddleware` runs after your middleware and profile extras, so your `before_model` / `wrap_model_call` doesn't see freshly loaded `skills_metadata` or the skills prompt section. Replace `SkillsMiddleware` by name instead. See [[middleware]], [[skills]].
 - **"`include_tools: [a, b]` works."** It must be a space-separated string; a YAML list matches no tool. See [[skills]].
-- **"Swap in my own `SummarizationMiddleware()`." Loses model-aware defaults (trigger `None`) — [[summarization]].
+- **"Swap in my own `SummarizationMiddleware()`."** Loses model-aware defaults (trigger `None`) — [[summarization]].
 - **"A replacement `FilesystemMiddleware` keeps my `backend=`."** Overrides replace, not merge. Only `permissions` carry over (0.7.31+): an unconfigured replacement inherits the agent's rules, and different non-empty rules raise `ValueError`. See [[middleware]].
 - **"A refusal is just the final answer."** Since 0.7.33 `ModelRefusalMiddleware` raises `ModelRefusalError` on a `refusal` block; a subagent refusal comes back to the parent as a `task` notice. Catch it, add `ModelFallbackMiddleware`, or exclude `"ModelRefusalMiddleware"`. See [[middleware]].
 - **"`interrupt_on={'task': True}` gates all delegation."** Interpreter `task()` bypasses it; gate `eval` — [[dynamic-subagents]].

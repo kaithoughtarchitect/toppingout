@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: backend, backends, offload_binary_content, blobs, StateBackend, StoreBackend, CompositeBackend, FilesystemBackend, LocalShellBackend, ContextHubBackend, BackendProtocol, namespace, virtual_mode, long-term memory storage, persistent storage, where do files live, custom backend, route prefix, virtual filesystem
 read_when: Read when choosing where agent files are stored, persisting files across threads, routing /memories/ to a store, writing a custom backend, or hitting a backend factory TypeError or StoreBackend namespace error.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 34f67b4f7936
 ---
 
@@ -64,7 +64,7 @@ agent = create_deep_agent(
             "/workspace/": FilesystemBackend(root_dir="/abs/path/project", virtual_mode=True),
         },
     ),
-    store=InMemoryStore(),  # store goes to create_deep_agent, not the backend; omit on LangSmith Deployment
+    store=InMemoryStore(),  # store goes to create_deep_agent, not the backend; omit on LangSmith Agent Server
 )
 ```
 
@@ -105,7 +105,7 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 - `execute` is not routable: always runs on `default`. The `execute` tool is exposed only if `default` is a `SandboxBackendProtocol`.
 - `delete` is always advertised; a route whose backend lacks `delete` returns `"Error: deletion is not supported for '<path>'."`.
 - `artifacts_root` relocates `/large_tool_results` and `/conversation_history` (e.g. `artifacts_root="/scratch/"`).
-- With a `LocalShellBackend` default, the model gets a system-prompt section mapping virtual route prefixes to host paths (virtual `FilesystemBackend` route -> its `cwd`); other routes are marked file-tool-only.
+- With a `LocalShellBackend` default, the model gets a system-prompt section mapping virtual route prefixes to host paths (virtual `FilesystemBackend` route -> its `cwd`; non-virtual `FilesystemBackend` route -> `/`, prefix stripped); other routes are marked file-tool-only (`_route_host_path_prompt` in `middleware/filesystem.py`).
 
 ### ContextHubBackend behaviour (code)
 
@@ -130,7 +130,7 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 
 `FileInfo = {path, is_dir?, size?, modified_at?}`, `GrepMatch = {path, line, text, context_before?, context_after?}`, `FileData = {content: str, encoding: "utf-8"|"base64", created_at?, modified_at?}`.
 
-Rules: return result objects with `error=...`, never raise for expected failures. For `execute`, subclass `SandboxBackendProtocol` (adds `id` property and `execute(command, *, timeout=None) -> ExecuteResponse`) or better `BaseSandbox` ([[sandboxes]]). `ExecuteResponse(output, exit_code=None, truncated=False)` feeds the tool's `ExecuteArtifact` (`exit_code?`, `truncated?`, `output_file?`; the last two added after 0.7.29) on `ToolMessage.artifact` ([[filesystem-tools]]).
+Rules: return result objects with `error=...`, never raise for expected failures. For `execute`, subclass `SandboxBackendProtocol` (adds `id` property and `execute(command, *, timeout=None) -> ExecuteResponse`) or better `BaseSandbox` ([[sandboxes]]). `ExecuteResponse(output, exit_code=None, truncated=False)` feeds the tool's `ExecuteArtifact` (`exit_code?`, `truncated?`, `output_file?`; seen in 0.7.39) on `ToolMessage.artifact` ([[filesystem-tools]]).
 
 ```python
 from deepagents.backends.protocol import BackendProtocol, WriteResult, EditResult
@@ -213,7 +213,7 @@ agent = create_deep_agent(
 - `LocalShellBackend` with no `env` gives an empty environment: commands like `python` fail with "not found".
 - Store namespace components reject `/`, spaces, `*`; email-like ids with `@`/`.` are fine.
 - A custom `glob` returning relative paths silently bypasses [[permissions]] deny rules.
-- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.39). Overwrite it with `write_file` or upload a new file.
+- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.29+, changelog "Text edits to binary files are now rejected"; still so in 0.7.39). Overwrite it with `write_file` or upload a new file.
 - Before 0.7.39, `StoreBackend.upload_files` stored valid UTF-8 that contained a NUL byte as text, which a Postgres (JSONB) store cannot hold. Since 0.7.39 such content is stored base64 (`encoding: "base64"`), so it also counts as binary for `edit_file` and the in-memory `grep`. App code reading the store directly must check `encoding` (probe on 0.7.39: `b"ab\x00c"` stored as base64, `"héllo"` as utf-8).
 - Since 0.7.35, `FilesystemBackend` results name a symlink by its own path, not its target. Code that compared `ls`/`glob`/`grep` paths with resolved paths needs to resolve them itself.
 

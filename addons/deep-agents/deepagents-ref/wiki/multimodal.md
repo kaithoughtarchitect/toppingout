@@ -6,13 +6,13 @@ status: code
 product: sdk
 keywords: multimodal, image input, images, audio, video, PDF, file blocks, content blocks, read_file media, video frames, UnsupportedContentMiddleware, deepagents[video], screenshot, vision, unsupported content
 read_when: Read when passing images/audio/video/files to an agent, read_file media fails, or blocks are replaced by a text notice.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 3552196c882e
 ---
 
 # Multimodal input, read_file media, video frames
 
-One-line truth: Deep Agents pass LangChain standard content blocks (image/audio/video/file) through unchanged when the model supports them; `read_file` turns media files into content blocks (videos into sampled JPEG frames with the `[video]` extra), and `UnsupportedContentMiddleware` (auto-added near the end of the stack, before `ModelRefusalMiddleware`) swaps blocks the active model can't accept for a text notice.
+One-line truth: Deep Agents pass LangChain standard content blocks (image/audio/video/file) through unchanged when the model supports them; `read_file` turns media files into content blocks (videos into sampled JPEG frames with the `[video]` extra), and `UnsupportedContentMiddleware` (auto-added near the end of the stack: before `ModelRefusalMiddleware` in the main agent, last in declarative subagents) swaps blocks the active model can't accept for a text notice.
 
 ## User input
 

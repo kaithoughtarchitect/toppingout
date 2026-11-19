@@ -6,7 +6,7 @@ A reference for LangChain **Deep Agents**, checked against the real package code
 
 ```
 Layer 1: this folder (deepagents-ref/). Read first. Checked against 0.7.39 code. Wins every conflict.
-  wiki/constitution.md     13 rules, read every time
+  wiki/constitution.md     14 rules, read every time
   wiki/agent-setup.md         the full agent setup: model, backend, permissions, Memory tab, workspaces (run on 0.7.39)
   wiki/index.md            one line per page (SDK first, dcode/Managed optional)
   wiki/lookup.md           term, class, function or parameter -> page
@@ -27,7 +27,7 @@ Layer 2: LangChain docs server, MCP "docs-langchain" (registered in the repo-roo
 ## Find it
 
 1. Read `wiki/constitution.md` first, every time. It's one screen.
-2. **your agent work: read `wiki/agent-setup.md`.** It's the checked setup to copy from.
+2. **For agent work, read `wiki/agent-setup.md`.** It's the checked setup to copy from.
 3. Pick the page on `wiki/index.md`. SDK pages come first; `dcode-*` and `managed-*` pages are other products, so skip them for SDK code.
 4. If you have a term, class, function or parameter name, search `wiki/lookup.md` for it.
 5. If neither has it, check `wiki/gaps.md`, then use **layer 2**:
@@ -70,6 +70,8 @@ Start at the **Symptom → cause** table in `wiki/anti.md`. Check the store and 
 - [ ] `write_todos` is only expected if `TodoListMiddleware()` was added.
 - [ ] Every middleware class used is imported (`ModelRetryMiddleware`, `TodoListMiddleware` come from `langchain.agents.middleware`).
 - [ ] Each subagent gets its own middleware, retries and limits.
+- [ ] Subagent retries use `ToolRetryMiddleware` on `task`, not `.with_retry()` on a compiled subagent: after a retry, the `task` message's `artifact["checkpoint_ns"]` names the failed run (0.7.36+, `wiki/fault-tolerance.md`).
+- [ ] A model refusal is handled: since 0.7.33 `ModelRefusalMiddleware` raises `ModelRefusalError`, so catch it or add `ModelFallbackMiddleware` (constitution rule 9).
 - [ ] Tools that can raise are covered by a `wrap_tool_call` catcher, or a failure kills the stream (`wiki/streaming.md`).
 - [ ] HITL has a checkpointer and a stable `thread_id`. Each thread is bound to one workspace.
 - [ ] Models are given as `provider:model` strings (agent: `openrouter:openai/gpt-6-luna`).

@@ -35,11 +35,19 @@ class HistoryStoreBackend(StoreBackend):
                       old_string=old_string, new_string=new_string)
         return res
 
+    @staticmethod
+    def _under(items, file_path: str) -> dict:
+        # StoreBackend.delete is recursive: it removes the key and every key under "<key>/".
+        base = file_path.rstrip("/")
+        return {str(i.key): i.value.get("content") for i in items
+                if str(i.key) == base or str(i.key).startswith(base + "/")}
+
     def delete(self, file_path):
-        before = self._current(file_path)
+        befores = self._under(self._search_store_paginated(self._get_store(), self._get_namespace()), file_path)
         res = super().delete(file_path)
         if res.error is None:
-            self._log(file_path, op="delete", before=before, after=None)
+            for path, before in befores.items():
+                self._log(path, op="delete", before=before, after=None)
         return res
 
     # --- async (used by ainvoke / astream) ---
@@ -70,8 +78,10 @@ class HistoryStoreBackend(StoreBackend):
         return res
 
     async def adelete(self, file_path):
-        before = await self._acurrent(file_path)
+        items = await self._asearch_store_paginated(self._get_store(), self._get_namespace())
+        befores = self._under(items, file_path)
         res = await super().adelete(file_path)
         if res.error is None:
-            await self._alog(file_path, op="delete", before=before, after=None)
+            for path, before in befores.items():
+                await self._alog(path, op="delete", before=before, after=None)
         return res

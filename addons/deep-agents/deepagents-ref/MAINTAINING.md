@@ -15,7 +15,7 @@ For whoever updates the reference. Agents that only *use* it don't need this fil
 ## New `deepagents` version
 
 1. `python scripts/setup_sources.py --version X` replaces `sources/package/` with the new wheel; set `VERSION` in that script to X.
-2. Update `wiki/versions.md` and the version named in `AGENTS.md` and `wiki/constitution.md`.
+2. Update `wiki/versions.md` and the version named in `AGENTS.md`, `wiki/constitution.md` and the `/deep` skill (`SKILL.md`, its description and its layer-2 label). Other pages name it too (`do-not`, `gaps`, `sources`, `index`, `LEARN.md`): `grep -rn "0\.7\.<old>"` over the folder and the skill, and move each pointer mention (dated run claims follow the refresh routine, step 5).
 3. Run `python scripts/wiki_lint.py`; every page citing a changed package file goes STALE. Re-check each one, then run `--stamp`.
 4. Run `python scripts/build_lookup.py` to regenerate the symbol table.
 5. In an environment with the new version installed, run `python scripts/check_recipes.py`. It checks itself and must print `PASS: 10/10` (CI runs it on every push). Also run `python scripts/check_persistence.py sqlite 1`, then `... sqlite 2` (and Postgres if you have Docker). Any change means `wiki/agent-setup.md`, `wiki/memory-history.md` and `wiki/persistence.md` must be re-checked.
