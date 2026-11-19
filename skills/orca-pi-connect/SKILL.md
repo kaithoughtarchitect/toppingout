@@ -112,7 +112,7 @@ Right before every send:
 
 ```bash
 orca terminal show --terminal <handle> --json    # worktreePath, branch, tabId, incarnationId unchanged since binding
-SEEN=$(grep -c "session=$SID" "$LOG" 2>/dev/null || echo 0)
+SEEN=$(node "$WATCH" --session "$SID" --count --log "$LOG")   # never `grep -c … || echo 0`: on a log with no line for this session grep prints 0 AND exits 1, so the fallback adds a second 0 and the waiter exits 3
 ```
 
 If anything moved, go back to §1. Count only the bound session's lines, because the log is global.
@@ -156,7 +156,7 @@ The reply, the Stop log and the session file are three witnesses to the same tur
 For each work order:
 1. Revalidate (§2) and take `SEEN`.
 2. Send **only the one-line pointer** to the work-order file, never the pasted text. Mark the file header *"Sent by the foreman as a one-line pointer."*
-3. Arm `stop-watch.mjs` as a **background** command right after the send. A foreman that only checks the log during its own turns misses stops made while it's idle. **If the host kills the watcher** (memory pressure), don't restart it in the background unasked; say so in the reply and wait in the **foreground, repeated**: `node "$WATCH" --session "$SID" --seen "$SEEN" --log "$LOG" --timeout-seconds 540`, reading the log before each wait. **At the start of your next turn, read the Stop log yourself** (`grep -c "session=$SID" "$LOG"` against `SEEN`) and act on any new STOP: a reaped watcher must not hide one.
+3. Arm `stop-watch.mjs` as a **background** command right after the send. A foreman that only checks the log during its own turns misses stops made while it's idle. **If the host kills the watcher** (memory pressure), don't restart it in the background unasked; say so in the reply and wait in the **foreground, repeated**: `node "$WATCH" --session "$SID" --seen "$SEEN" --log "$LOG" --timeout-seconds 540`, reading the log before each wait. **At the start of your next turn, read the Stop log yourself** (`node "$WATCH" --session "$SID" --count --log "$LOG"` against `SEEN`) and act on any new STOP: a reaped watcher must not hide one.
 4. On exit 0: **disk check first** (commits, captures, files), then read the builder's report file. The pane text isn't the report. **A Stop counts as the work order's end only when its named report file exists:** a Stop with no report (a tool-call timeout mid work order, say) is not done; read the pane and wait again.
 5. On exit 2 (timeout): check `orca terminal show` for `connected: true` and an unchanged `incarnationId`. Never restart the builder on a quiet read.
 6. **Any other exit** (1, 3), or a Stop log you can't read: tell the owner the link is down and go hand-carried (METHOD §7e). Never go quiet.
