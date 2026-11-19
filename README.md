@@ -49,9 +49,9 @@ The smallest loop:
 3. the foreman checks the work on disk, and **inspectors** (fresh review sessions, one of them from another model family) review it and only report;
 4. **you, the owner,** give the word for the acts `RULES.md` reserves for you: merging, pushes, messages, migrations and the rest.
 
-Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over a pane link. With an autonomous-run goal (`/goal autonomous run: …`), or a night shift of them, a job runs to the merge without you (with the pane link carrying the pointers), inside the grants `RULES.md` ("The one exception") lists. Any other standing goal grants nothing.
+Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over a pane link. With an autonomous-run goal (`/goal autonomous run: …`), or a night shift of them, a job runs to the merge without you (with the pane link carrying the pointers), inside the grants `RULES.md` ("The one exception") lists. Any other standing goal grants nothing. Every end game ends with a **🚧 YOUR CALL · how does job <N> run?** card: 👤 with you, 🤖 autonomous run or 🌙 night shift, ★ on the recommended one, each with its line ready to paste.
 
-**Two lanes (optional, off by default):** two jobs at once on two machines, chosen per head when `/f-schedule` asks "one lane or two?" after its width report. Each lane has its own end-game lock, and a job lands only as the exact commit that was proven (`METHOD.md` §13, "Two lanes"). Not yet tried on a real project.
+**Two lanes (optional, off by default):** two jobs at once on two machines, chosen per head: every `/f-schedule` proposal ends with a **🚧 YOUR CALL · one lane or two?** card (★ on the recommended option; no answer means one lane). Each lane has its own end-game lock, and a job lands only as the exact commit that was proven (`METHOD.md` §13, "Two lanes"). Not yet tried on a real project.
 
 The name comes from the building site: the ceremony held when the last beam goes on. The roles follow the site too, and the skill names start with `f-`, for foreman, the role that runs them. It has been used on real codebases since September 2026.
 

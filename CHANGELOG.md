@@ -2,6 +2,11 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-19
+
+- **The one-lane-or-two choice is now impossible to miss.** Every `/f-schedule` proposal ends with its own **🚧 YOUR CALL · one lane or two?** card, starred on the recommended option, asked through the host's question tool where there is one. It shows even when two lanes aren't set up, and then says what setting them up takes. No answer still means one lane. `/f-setup` asks about lanes too.
+- **How the next job runs is now its own card too.** Every end game ends with **🚧 YOUR CALL · how does job <N> run?**: ★ on the recommended option, 👤 with you, 🤖 autonomous run or 🌙 night shift, each with its line ready to paste, what it would decide without you, its spend, and what stops an option running now. Asked through the host's question tool where there is one. Nothing starts until you paste one. Skipped under a goal, where nobody is there to answer.
+
 ## 2026-11-18
 
 - **Suggested plan check seats: `sol` · `gemini-hydrogen` · `qwen4-max`**, one per vendor, from a side-by-side run on one assignment (Sol 6 min and 34 findings, Hydrogen 6 min and 15, Qwen4 Max 15 min and 25, each finding things the others missed). Gemini 4 Carbon (nothing back, twice) and Argon stay in the roster but are no longer suggested. Your repo's own standing choice is unchanged: to switch, say "change the plan check seats". Each OpenRouter seat needs `OPENROUTER_API_KEY` in `.env` and a cap line in the plan-check pi folder's `models.json` (`skills/f-plancheck/plancheck-pi-models.json`).

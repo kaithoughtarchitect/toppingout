@@ -398,12 +398,7 @@ END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md; in lane mode foreman/END
 3. board close event     -> endgame.mjs tick board --file <project>/BOARD.json   (every project has one; none yet: render_board.py … init)
 4. shift handover + opener -> endgame.mjs tick handover --file <handover> --opener foreman/handovers/OPENER-JOB-<next>.txt, then endgame.mjs clear
    (the session brief's "Last key's mistakes" is filled from this job's dev report: the KEY-WRONG items of its own site walk's outside grade, so the new key doesn't repeat them)
-   (then give the owner the opener's path and **three ways to start the next job, each ready to paste**:
-    normal: paste the opener's text into a fresh session;
-    autonomous run: /goal autonomous run: <absolute opener path>, until done or stopped;
-    night shift: /goal night shift: jobs <next board id>, <the one after, from the board>, until done or stopped;
-    adding ", spend up to <n> USD (read, or a ceiling under it)" to the last two when the next job has a paid seat or a live-key walkthrough, and
-    listing the questions its survey will answer itself under a goal (its ground investigation's starred picks))
+   (then give the owner the opener's path and the **"how does the next job run" card** below, as the last thing on screen)
 5. records push         -> names check over everything staged (names-check.mjs --staged, METHOD.md §10 step 9; a hit is rewritten first), merge <remote>/<main> into
                            the records branch (never a rebase), check only records differ, push; then check CI on main
                            (gh run list -R <target repo> -b <main> -L 1): red is reported, never called green
@@ -418,6 +413,27 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
 4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
     (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts)
 ```
+
+**How the next job runs: always its own decision card.** After step 4 (not after a topping out), the end game's last message ends with this card, filled in, every option shown every time, even one that can't run now (it then says why). Never fold the three ways into a paragraph. Use the host's question tool when it has one (Claude Code: a question with the three options, the recommended one first), and print the card as well, so the paste lines stay on screen:
+
+```
+🚧 YOUR CALL · how does job <N> run?
+
+    ★ A  👤  With you: paste the opener; you answer its questions and give each word   ← recommended
+      B  🤖  Autonomous run: job <N> runs to the merge without you, then stops
+      C  🌙  Night shift: board <id>, then board <id2>, one after another while you're away, then stops
+
+    Why A: <one line: what the next job needs from the owner, or why it can run alone>
+    📋 A: paste the opener's text (below) into a fresh session
+    📋 B: /goal autonomous run: <absolute opener path>, until done or stopped
+    📋 C: /goal night shift: jobs <id>, <id2>, until done or stopped
+    💸 Spend: <"none" | B and C carry ", spend up to <n> USD (read, or a ceiling under it)": <the paid seat or live-key walkthrough>>
+    🤖🌙 Decided without you under B or C: <the survey questions it answers itself, each with its starred pick | "none">
+    ⛔ Can't run now: <"none" | B: <what's missing, e.g. no Orca, no Pi> | C: <only one job is ready, or what's missing>>
+    Not now? Nothing starts until you paste one.
+```
+
+The star goes on the recommended option, whichever it is. Recommend **A** when the next job has a question with no clear star, a live walkthrough the owner should run, or an owner-only act its goal can't cover; **B** when its ground investigation answered every question with a star and nothing in it needs the owner; **C** only when B holds for the next two jobs on the board and both are ready. The night shift's list takes **board numbers**, not job numbers: `<id>` is the next job's board id (the opener's line 1, `(board <id>)`) and `<id2>` the board's next ready job after it; with none, C shows in the "Can't run now" line. In lane mode the C line starts `lane <X>, ` (`skills/f-night-shift`, §0b). A planned list is the owner's to change: they may edit the C line before pasting. **Under a standing goal** (an autonomous run, a night shift) skip the card and the question: nobody is there to answer, and the end-of-job status block stays the last reply the night shift reads.
 
 ---
 

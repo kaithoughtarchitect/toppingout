@@ -80,7 +80,20 @@ With more than ~10 jobs, run `simplicity-critic` on the cut (any job doing two j
 
 Write the draft board (`scratch/f-schedule-<slug>/BOARD.json`, from `templates/BOARD-v2.json`, with `project.cut` copied from the repo profile: its noise files, hot files, re-proof allowance and "Max work orders per job"), check it, and measure it: `FOREMAN_BOARD_NO_OPEN=1 python <path>/render_board.py scratch/f-schedule-<slug>/BOARD.json check`, then `… width`. **Two-lane estimate under 1.5x:** show the owner the longest chain and ask whether an interface-first re-cut (5b) can widen it before going on. A board that is truly sequential is fine; the report then says one lane is enough.
 
-**One lane or two.** After the width report, ask: *"One lane or two for this head? One lane (default): jobs run one at a time. Two lanes: two jobs at once on two machines, for this board's estimate of <n>x. Recommended: <one | two>, because <reason>."* Recommend one lane when the estimate is under about 1.3x or the repo profile has no "Lanes" row; two only when both machines are set up and the board pairs well. No answer, or anything not clearly "two", is one lane. Two without the profile's "Lanes" row and the owner's standing word for the coordination branch stops and says what's missing. The answer goes in `PROJECT.md` with the owner's words; for two, the board gets `project.lanes: ["A", "B"]`, `project.lane_caps` from the row, and `next: {"A": null, "B": null}`, and its first push creates the coordination branch (`snippets/board_push.sh <remote> <board> --init`). Changing later: only at a re-cut point with no job in progress, on the owner's word.
+**One lane or two: always asked, as its own decision card.** Every head's proposal ends with this card, after the width report, **even when the repo profile has no "Lanes" row** (then option B says what setting it up takes). Never fold it into a paragraph or skip it because one lane is recommended: the owner must see the choice every time. Use the host's question tool when it has one (Claude Code: a question with the two options, the recommended one first), and print the card as well:
+
+```
+🚧 YOUR CALL · one lane or two for this head?
+
+    ★ A  🛣️  One lane: one job at a time, as today            ← recommended
+      B  🛣️🛣️  Two lanes: two jobs at once on two machines, about <n>x faster on this board
+
+    Why A: <one line: the estimate, how well the board pairs, what is set up>
+    Two lanes needs: <"ready: A = <machine>, B = <machine>" | what is missing: the profile's "Lanes" row (which two machines), your standing word for the foreman-lanes branch, about 10 minutes>
+    Not now? A is the default: no answer, or anything not clearly B, is one lane.
+```
+
+The star goes on the recommended option, whichever it is. Recommend one lane when the estimate is under about 1.3x or the repo profile has no "Lanes" row; two only when both machines are set up and the board pairs well. No answer, or anything not clearly "two", is one lane. Two without the profile's "Lanes" row and the owner's standing word for the coordination branch stops and says what's missing. The answer goes in `PROJECT.md` with the owner's words; for two, the board gets `project.lanes: ["A", "B"]`, `project.lane_caps` from the row, and `next: {"A": null, "B": null}`, and its first push creates the coordination branch (`snippets/board_push.sh <remote> <board> --init`). Changing later: only at a re-cut point with no job in progress, on the owner's word.
 
 Show the owner:
 - the head;
@@ -90,7 +103,8 @@ Show the owner:
 - the decision list (5b): each shared decision and the job that owns it;
 - the width report, word for word, with its warnings;
 - placeholders and sweep jobs, and that the board will likely grow;
-- the recommended first job, and why.
+- the recommended first job, and why;
+- **last, the 🚧 lanes card above**, on its own, so the decision is the last thing on screen.
 
 ## Phase 4 · Write (each act on its own word)
 
