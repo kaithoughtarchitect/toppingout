@@ -1,7 +1,7 @@
 ---
 name: lens-errors
 description: Use this agent when reviewing code changes to identify silent failures, inadequate error handling, and inappropriate fallback behavior. This agent should be invoked proactively after completing a logical chunk of work that involves error handling, catch blocks, fallback logic, or any code that could potentially suppress errors. Typical triggers include the user asking for a review of newly-added error handling, a change set containing try-catch blocks or fallback logic, and a proactive check after refactoring error handling code. See "When to invoke" in the agent body for worked scenarios.
-model: opus
+model: fable
 color: yellow
 tools: Bash, Glob, Grep, Read
 ---

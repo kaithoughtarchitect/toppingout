@@ -9,7 +9,7 @@ description: >
   checks got weaker. Runs as a lens inside /f-inspect, findings only. Not for bugs
   in the changed lines (lens-code), not for coverage of new behaviour (lens-tests),
   not for style-only duplication (lens-simplify). Not for git (the caller owns it).
-model: sonnet
+model: fable
 color: yellow
 tools: Bash, Glob, Grep, Read
 ---

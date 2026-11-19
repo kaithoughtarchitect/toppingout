@@ -1,7 +1,7 @@
 ---
 name: lens-instructions
 description: Reviews LLM instruction files (.md prompts, protocols, skill/agent definitions, templates) for cross-file consistency, terminology alignment, reference integrity, and conflicting guidance. Use after updating documentation, before releases, or when adding new phases/steps to a system.
-model: inherit
+model: fable
 color: blue
 tools: Bash, Glob, Grep, Read
 ---

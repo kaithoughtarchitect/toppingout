@@ -1,7 +1,7 @@
 ---
 name: lens-types
 description: Use this agent when you need expert analysis of type design in your codebase. Specifically use it (1) when introducing a new type to ensure invariants live in the type's shape and its boundaries are validated, (2) when a change set adds or modifies types, and (3) when refactoring existing types to improve their design quality. The agent returns evidence-cited findings (file:line, severity, confidence) and a single net type-health verdict. See "When to invoke" in the agent body for worked scenarios.
-model: opus
+model: fable
 color: pink
 tools: Bash, Glob, Grep, Read
 ---

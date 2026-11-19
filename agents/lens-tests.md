@@ -4,7 +4,7 @@ description: >
   Review a change set for test coverage, a PR, a commit range, or the
   uncommitted working tree. Use after a PR or as a pre-push coverage check.
   Not for finding product bugs (lens-code). Not for git (the caller owns it).
-model: sonnet
+model: fable
 color: cyan
 tools: Bash, Glob, Grep, Read
 ---

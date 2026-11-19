@@ -6,7 +6,7 @@ description: >
   asked to tidy this session's edits. Not for finding bugs (lens-code),
   not for "is this more than we need?" on a plan (simplicity-critic), not
   for git (the caller owns staging).
-model: sonnet
+model: fable
 tools: Bash, Edit, Glob, Grep, Read, Write
 ---
 

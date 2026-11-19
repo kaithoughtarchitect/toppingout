@@ -13,7 +13,7 @@ description: >
   and a pre-merge check on a PR whose migration is not yet applied to production. Not for general
   logic bugs (lens-code), not for swallowed errors (lens-errors), not for git (the caller owns
   it).
-model: opus
+model: fable
 color: blue
 tools: Bash, Glob, Grep, Read
 ---

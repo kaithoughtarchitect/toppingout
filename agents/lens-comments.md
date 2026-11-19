@@ -1,7 +1,7 @@
 ---
 name: lens-comments
 description: Use this agent when you need to analyze code comments for accuracy, completeness, and long-term maintainability. This includes (1) after generating large documentation comments or docstrings, (2) before finalizing a change set that adds or modifies comments, (3) when reviewing existing comments for potential technical debt or comment rot, and (4) when you need to verify that comments accurately reflect the code they describe. See "When to invoke" in the agent body for worked scenarios.
-model: haiku
+model: fable
 color: green
 tools: Bash, Glob, Grep, Read
 ---
