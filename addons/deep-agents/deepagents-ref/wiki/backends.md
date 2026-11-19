@@ -7,7 +7,7 @@ product: sdk
 keywords: backend, backends, offload_binary_content, blobs, StateBackend, StoreBackend, CompositeBackend, FilesystemBackend, LocalShellBackend, ContextHubBackend, BackendProtocol, namespace, virtual_mode, long-term memory storage, persistent storage, where do files live, custom backend, route prefix, virtual filesystem
 read_when: Read when choosing where agent files are stored, persisting files across threads, routing /memories/ to a store, writing a custom backend, or hitting a backend factory TypeError or StoreBackend namespace error.
 updated: 2026-11-19
-sources_hash: 34f67b4f7936
+sources_hash: a8e96d61a887
 ---
 
 # Backends (pluggable filesystem storage)
@@ -34,18 +34,18 @@ A backend is the storage (and optionally shell) behind the agent's built-in file
 - `FilesystemMiddleware` owns the tools (see [[filesystem-tools]]); the backend only implements `ls/read/write/edit/delete/glob/grep` (+ `execute` for sandboxes). Paths the agent sees are always virtual, absolute, POSIX (`/notes.md`).
 - Same backend instance is shared by the main agent, subagents ([[subagents]]), `SkillsMiddleware`, `MemoryMiddleware` ([[memory]]) and summarization ([[summarization]]). Files a subagent writes remain visible to the parent.
 - Internal artifacts are written to the backend too: `/large_tool_results/<tool_call_id>` (evicted tool output) and `/conversation_history/` (summarization offload). See [[context-engineering]].
-- Pass an **instance**, not a factory (removal history in [[versions]]). In 0.7.39, `FilesystemMiddleware.__init__` raises `TypeError("... Backend factories were removed in deepagents 0.7 ...")` if `backend` is a callable that is not a `BackendProtocol`.
+- Pass an **instance**, not a factory (removal history in [[versions]]). In 0.7.40, `FilesystemMiddleware.__init__` raises `TypeError("... Backend factories were removed in deepagents 0.7 ...")` if `backend` is a callable that is not a `BackendProtocol`.
 
 ## Built-in backends (all importable from `deepagents.backends`)
 
 `__all__`: `BackendConsumer` (0.7.36+), `BackendProtocol, CompositeBackend, ContextHubBackend, FilesystemBackend, LangSmithSandbox, LocalShellBackend, NamespaceFactory, StateBackend, StoreBackend, DEFAULT_EXECUTE_TIMEOUT` (=120). `SandboxBackendProtocol` lives in `deepagents.backends.protocol`, `BaseSandbox` in `deepagents.backends.sandbox`.
 
-| Backend | Constructor (0.7.39) | Scope / notes |
+| Backend | Constructor (0.7.40) | Scope / notes |
 | - | - | - |
 | `StateBackend` | `StateBackend()` (no args) | Files in the `files` state channel; persists per thread via checkpointer; not shared across threads. Only works inside a graph run (uses `CONFIG_KEY_READ/SEND`); outside raises `RuntimeError`. Pre-seed with `agent.invoke({"messages": [...], "files": {...}})`. |
 | `StoreBackend` | `StoreBackend(*, namespace: NamespaceFactory, store: BaseStore \| None = None)` | Cross-thread durable storage in a LangGraph `BaseStore`. `namespace` is **required**. If `store` is None, uses `get_store()` (the `store=` passed to `create_deep_agent`, or platform-provisioned on LangSmith Agent Server, the 2026-11-18 docs' new name for LangSmith Deployment). |
 | `FilesystemBackend` | `FilesystemBackend(root_dir=None, virtual_mode=True, max_file_size_mb=10)` | Real disk. `root_dir` defaults to cwd, resolved. Uses ripgrep for `grep` if `rg` on PATH, else Python fallback (skips files > `max_file_size_mb`; since 0.7.33 a file `path` searches only that file, before it walked the file's whole parent directory). Writes use `O_NOFOLLOW`. In virtual mode `ls`, `glob` and `grep` report a symlink under its own path, not its target's (0.7.35+). `download_files` returns `file_not_found` for a FIFO or device instead of hanging (0.7.36+). |
-| `LocalShellBackend` | `LocalShellBackend(root_dir=None, *, virtual_mode=True, timeout=120, max_output_bytes=100_000, env=None, inherit_env=False)` | `FilesystemBackend` + `execute` via `subprocess.run(shell=True, cwd=root_dir)`. No isolation. |
+| `LocalShellBackend` | `LocalShellBackend(root_dir=None, *, virtual_mode=True, timeout=120, max_output_bytes=100_000, env=None, inherit_env=False)` | `FilesystemBackend` + `execute` via `subprocess.Popen(shell=True, cwd=root_dir)` (0.7.40+; before, `subprocess.run`). No isolation. |
 | `ContextHubBackend` | `ContextHubBackend(identifier: str, *, client: langsmith.Client \| None = None)` | Files in a LangSmith Context Hub agent repo; `identifier` is `"owner/name"` or `"-/name"`. Needs `LANGSMITH_API_KEY`. |
 | `CompositeBackend` | `CompositeBackend(default, routes: dict[str, BackendProtocol], *, artifacts_root="/")` | Prefix router. |
 | `LangSmithSandbox` | `LangSmithSandbox(sandbox: langsmith.sandbox.Sandbox)` | A `BaseSandbox`; see [[sandboxes]]. |
@@ -94,6 +94,10 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 
 - `env=None, inherit_env=False` gives the shell an **empty environment** (no `PATH`); pass `env={"PATH": "/usr/bin:/bin"}` or `inherit_env=True`.
 - stderr lines are prefixed `[stderr] `; output over `max_output_bytes` UTF-8 bytes (0.7.30+; before, characters) is cut at that byte count, a split multi-byte character dropped, with `... Output truncated at N bytes.` and `ExecuteResponse.truncated=True`; non-zero exit appends `Exit code: N`; timeout returns exit code 124. `timeout <= 0` raises `ValueError`. `id` is `local-<8 hex>`.
+- **Timeouts keep the output so far (0.7.40+).** The message starts `Error: Command timed out after N seconds (custom timeout). The command may be stuck or require more time.` when the call passed `timeout=`, or `Error: Command timed out after N seconds. For long-running commands, re-run using the timeout parameter.` when the backend default applied. If the command printed anything, `Output before the timeout:` follows with that output (same `[stderr] ` prefix and byte limit, so `truncated` can be `True`). If cleanup could not stop the command it adds `Warning: the command could not be stopped and may still be running. Re-running it may start a second copy.`; on Windows a stopped shell always adds `Note: the shell was stopped, but processes it started may still be running.` Before 0.7.40 a timeout returned only the first message, with no output.
+- Probe on 0.7.40 on Windows 11 on 2026-11-19: `execute('"<python>" -u -c "import time; print(\'started\'); time.sleep(5); print(\'done\')"', timeout=1)` returned after 1.1 s with exit code 124, `truncated=False` and output `'Error: Command timed out after 1 seconds (custom timeout). The command may be stuck or require more time.\n\nOutput before the timeout:\nstarted\n\n\nNote: the shell was stopped, but processes it started may still be running.'`. The same command on a backend built with `timeout=1` and no per-call timeout gave the default-timeout sentence instead. A silent `time.sleep(5)` gave the message without the `Output before the timeout:` part. The Note is real: a child set to write a file 3 s later still wrote it after the 1 s timeout.
+- **Cleanup (0.7.40+).** On POSIX each command starts in its own session; a timeout, a `KeyboardInterrupt` or an async cancel kills the whole process group with `SIGKILL`, then waits briefly for the shell. A descendant that calls `setsid` leaves the group and survives; `nohup` alone does not. On Windows only the shell process is killed; its children keep running, and a child that holds the output pipes makes the call wait for the full timeout even after the shell exits (`execute` docstring, `local_shell.py`).
+- **Async cancel (0.7.40+).** `aexecute` runs the command in a thread. Cancelling the awaiting task sets a cancel flag, the process is killed, and `aexecute` waits up to 1 s (`_ASYNC_CANCELLATION_GRACE_PERIOD`) for that cleanup before re-raising `CancelledError` (probe on Windows, 2026-11-19: a 10 s sleep cancelled after 1 s raised `CancelledError` 0.1 s after `cancel()`). A subclass that overrides `execute` keeps the plain thread hand-off with no cancel cleanup, even if it calls `super().execute`. A backend error (not a failing command) is now also logged at `ERROR`, with the exception type only.
 
 ### CompositeBackend routing rules (from `_route_for_path`)
 
@@ -204,16 +208,17 @@ agent = create_deep_agent(
 
 ## Gotchas
 
-- Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.39) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
+- Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.40) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
 - Docs say factories (`backend=lambda rt: StateBackend(rt)`) still work with a deprecation warning; code raises `TypeError` (factories removed in 0.7) and `StateBackend.__init__` takes no args.
 - Docs say omitting `StoreBackend(namespace=...)` falls back to `assistant_id`; code makes `namespace` a required keyword argument.
 - Docs protocol reference says `write` is create-only and mentions `files_update`; code: every built-in `write` overwrites, and `WriteResult`/`EditResult` have no `files_update` field.
 - `FilesystemBackend` alone writes `/large_tool_results/...` and `/conversation_history/...` onto real disk under `root_dir`. Use a `CompositeBackend` with a `StateBackend` default.
 - `StateBackend` methods called outside a graph run raise `RuntimeError`; seed files via the `files` input key.
 - `LocalShellBackend` with no `env` gives an empty environment: commands like `python` fail with "not found".
+- A `LocalShellBackend` timeout on Windows does not stop what the shell started (0.7.40 says so in the message), so a retried long command can run twice. On Windows prefer a sandbox, or a timeout long enough for the job.
 - Store namespace components reject `/`, spaces, `*`; email-like ids with `@`/`.` are fine.
 - A custom `glob` returning relative paths silently bypasses [[permissions]] deny rules.
-- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.29+, changelog "Text edits to binary files are now rejected"; still so in 0.7.39). Overwrite it with `write_file` or upload a new file.
+- On `StateBackend`/`StoreBackend`, `edit_file` on an uploaded image or PDF fails with `Cannot edit binary files with text replacements.` (0.7.29+, changelog "Text edits to binary files are now rejected"; still so in 0.7.40). Overwrite it with `write_file` or upload a new file.
 - Before 0.7.39, `StoreBackend.upload_files` stored valid UTF-8 that contained a NUL byte as text, which a Postgres (JSONB) store cannot hold. Since 0.7.39 such content is stored base64 (`encoding: "base64"`), so it also counts as binary for `edit_file` and the in-memory `grep`. App code reading the store directly must check `encoding` (probe on 0.7.39: `b"ab\x00c"` stored as base64, `"héllo"` as utf-8).
 - Since 0.7.35, `FilesystemBackend` results name a symlink by its own path, not its target. Code that compared `ls`/`glob`/`grep` paths with resolved paths needs to resolve them itself.
 
@@ -227,11 +232,14 @@ agent = create_deep_agent(
 - `../sources/package/deepagents/backends/store.py`
 - `../sources/package/deepagents/backends/filesystem.py`
 - `../sources/package/deepagents/backends/local_shell.py`
+- `../sources/package/deepagents/backends/_posix_process.py`
+- `../sources/package/deepagents/backends/_windows_process.py`
 - `../sources/package/deepagents/backends/composite.py`
 - `../sources/package/deepagents/backends/context_hub.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_blob_offload.py`
 - `../sources/package/deepagents/graph.py`
+- `../sources/docs/github/deepagents-CHANGELOG.md`
 
 ## See also
 

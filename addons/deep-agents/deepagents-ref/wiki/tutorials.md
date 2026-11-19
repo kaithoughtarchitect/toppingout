@@ -5,14 +5,14 @@ type: reference
 status: code
 product: sdk
 keywords: tutorials, examples, data analysis agent, deep research agent, content builder, RAG agent, chunk-analyst, research-agent, sample agents, reference architecture, copy pattern, load_subagents, official tutorial
-read_when: Read when looking for an end-to-end pattern to copy (research, data analysis, content, RAG), or when a tutorial example fails on 0.7.39.
+read_when: Read when looking for an end-to-end pattern to copy (research, data analysis, content, RAG), or when a tutorial example fails on 0.7.40.
 updated: 2026-11-19
-sources_hash: 07d87bc1a2d1
+sources_hash: f9e845f52df6
 ---
 
 # Official tutorials (patterns to copy)
 
-One-line truth: four official end-to-end builds (data analysis, deep research, content builder, RAG), each a reusable architecture pattern; copy the pattern, but fix their stale bits against 0.7.39 (todo middleware is opt-in, backend factories are gone, several miss a checkpointer).
+One-line truth: four official end-to-end builds (data analysis, deep research, content builder, RAG), each a reusable architecture pattern; copy the pattern, but fix their stale bits against 0.7.40 (todo middleware is opt-in, backend factories are gone, several miss a checkpointer).
 
 ## Quick reference
 
@@ -185,9 +185,9 @@ Copy: the orchestrator never sees chunk text, only paths; one `task()` per chunk
 - Todo planning is opt-in since 0.7.0: `create_deep_agent` no longer adds `TodoListMiddleware`/`write_todos`. The RAG full-code prompt still says "Use write_todos" without adding the middleware, so that tool does not exist there. Add `middleware=[TodoListMiddleware()]` or drop the line.
 - `TodoListMiddleware` on the main agent is not inherited by declarative subagents; add it per spec if a subagent should plan.
 - Deep research, content builder and RAG pass no `checkpointer`; content builder even passes a `thread_id`, which does nothing without one. Add a durable checkpointer for multi-turn use ([[persistence]]).
-- Content builder: says to pin `deepagents>=0.3.5,<0.4.0` (stale vs 0.7.39); the skills tell the model to call `generate_image` while the tools are `generate_cover` / `generate_social_image`; image tools write to `EXAMPLE_DIR` directly, bypassing the backend and permissions; the "Output" section claims artifacts land in a system temp dir, contradicting `FilesystemBackend(root_dir=EXAMPLE_DIR)`. Code wins: files go under `root_dir`.
+- Content builder: says to pin `deepagents>=0.3.5,<0.4.0` (stale vs 0.7.40); the skills tell the model to call `generate_image` while the tools are `generate_cover` / `generate_social_image`; image tools write to `EXAMPLE_DIR` directly, bypassing the backend and permissions; the "Output" section claims artifacts land in a system temp dir, contradicting `FilesystemBackend(root_dir=EXAMPLE_DIR)`. Code wins: files go under `root_dir`.
 - `FilesystemBackend` can delete files under `root_dir` (0.7 adds a recursive `delete` tool). Run it in a dedicated directory.
-- In-memory vector store and `InMemorySaver` are demo choices; persist the index and state for production.
+- In-memory vector store and `InMemorySaver` are demo choices; persist the index and state for production. The RAG tutorial (2026-11-19) adds: keep the same embedding model for indexing and querying, and re-index after changing it ([[retrieval]]).
 - None of the tutorials add retries or call limits; research-style agents with web tools are the prime case for [[fault-tolerance]] middleware on the subagent specs.
 - Tutorials use per-provider model strings that change often (`gemini-4-hydrogen`, `claude-sonnet-5`); the patterns, not the model ids, are the point ([[tools]], [[context-engineering]], [[memory]], [[sandboxes]], [[backends]], [[subagents]]).
 

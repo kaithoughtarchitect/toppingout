@@ -7,7 +7,7 @@ product: sdk
 keywords: write_todos, TodoListMiddleware, todo list, planning tool, task planning, todos state, progress tracking, plan and track tasks, write_todos missing, opt-in planning, Codex harness profile
 read_when: Read when write_todos is missing or a prompt says use write_todos, or when adding planning/progress tracking to a long multi-step agent.
 updated: 2026-11-19
-sources_hash: 9b404c926c4d
+sources_hash: 2d86da69653f
 ---
 
 # Planning (write_todos / TodoListMiddleware)
@@ -20,7 +20,7 @@ One-line truth: since `deepagents` 0.7.0 the `write_todos` planning tool is **op
   - the `write_todos` tool
   - a `todos` state channel: a list of items with `content` and `status` (`"pending"` | `"in_progress"` | `"completed"`)
   - a todo-planning system-prompt fragment
-- `deepagents/graph.py` in 0.7.39 **never** adds `TodoListMiddleware`. The default main-agent stack is Filesystem → SubAgent → ParentNotifier → Summarization → PatchToolCalls → AsyncSubAgent (if any) → *your middleware* → profile extras → Skills (if `skills=`) → prompt caching → Memory → HITL → UnsupportedContent → ModelRefusal (LangChain's `ModelRefusalMiddleware`, since 0.7.33). See [[middleware]] and [[harness]].
+- `deepagents/graph.py` in 0.7.40 **never** adds `TodoListMiddleware`. The default main-agent stack is Filesystem → SubAgent → ParentNotifier → Summarization → PatchToolCalls → AsyncSubAgent (if any) → *your middleware* → profile extras → Skills (if `skills=`) → prompt caching → Memory → HITL → UnsupportedContent → ModelRefusal (LangChain's `ModelRefusalMiddleware`, since 0.7.33). See [[middleware]] and [[harness]].
 - The only place the package itself adds it is the **OpenAI Codex harness profile** (`profiles/harness/_openai_codex.py`), for `openai:gpt-5.1-codex`, `openai:gpt-5.2-codex` and `openai:gpt-5.3-codex`. Its `extra_middleware` factory returns `[TodoListMiddleware()]`, because the Codex prompt suffix tells the model to reconcile every `write_todos` item before it finishes.
 
 ## Enable it

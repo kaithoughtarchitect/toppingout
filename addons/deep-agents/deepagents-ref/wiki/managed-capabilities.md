@@ -7,7 +7,7 @@ product: managed
 keywords: MDA tools, define_mcp, MCP connectors, connections, connections.get, OAuth, mda connections create, define_memory, MemoryLayer, durable memory, remember across sessions, define_sandbox, sandbox setup.sh, runtime.backend, Context Hub, async middleware, ManagedDeepAgentRuntime, ManagedToolRuntime, ManagedRuntime
 read_when: Read when adding tools, MCP servers, OAuth connections, memory or a sandbox to a Managed Deep Agent, or when memory or a connection does nothing.
 updated: 2026-11-19
-sources_hash: eac2492540d9
+sources_hash: 5adac733e19d
 ---
 
 # MDA capabilities (skills, tools, MCP, connections, middleware, memory, sandbox, Context Hub)
@@ -214,7 +214,7 @@ agent = define_deep_agent(
 
 - Each prefix is an absolute directory that starts and ends with `/`. It cannot overlap MDA's own mounts: `/instructions.md`, `/skills/`, `/memories/`.
 - Routes reach the file tools only. Shell commands in a sandbox do not see them.
-- `StoreBackend(*, namespace, store=None)` matches SDK 0.7.39 `backends/store.py` (a namespace factory is the right shape; a backend factory is not).
+- `StoreBackend(*, namespace, store=None)` matches SDK 0.7.40 `backends/store.py` (a namespace factory is the right shape; a backend factory is not).
 
 ## Browser (`browser.py`)
 
@@ -245,9 +245,10 @@ Everything else (tools, middleware, MCP, channels, schedules, sandbox, agent def
 
 - Tools and middleware are never discovered; forgetting to add them to `define_deep_agent` silently omits them.
 - Sync-only middleware hooks will not run under MDA.
+- Since 0.10.5 (changelog) a tool error is returned to the model as a tool result instead of ending the run, and Tool Gateway and Managed Tools calls carry an agent access token (Tool Gateway servers declare auth `"langsmith"`). Code that relied on a raising tool to stop the run must stop it another way. MCP tool calls keep using the cached catalog with FastMCP 4.2 (0.10.5).
 - `connections.get` needs a run: do not call it in channel `verify`/`parse` (use env).
 - User memory and user-owned connections both need a *person* principal; the default LangSmith API-key identity is a service and gets neither.
-- `runtime.backend` method names match OSS 0.7.39 `BackendProtocol` (`ls`, `read`, `grep`, `glob`, `write`, `edit`, `delete`, `upload_files`, `download_files`) plus `execute` from `SandboxBackendProtocol` (`backends/protocol.py`), verified in source.
+- `runtime.backend` method names match OSS 0.7.40 `BackendProtocol` (`ls`, `read`, `grep`, `glob`, `write`, `edit`, `delete`, `upload_files`, `download_files`) plus `execute` from `SandboxBackendProtocol` (`backends/protocol.py`), verified in source.
 
 ## Sources
 

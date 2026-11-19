@@ -7,20 +7,21 @@ product: sdk
 keywords: deepagents version, changelog, breaking changes, 0.7.0, upgrade, migration, dependencies, extras, public API, __all__, deprecated, BASE_AGENT_PROMPT, virtual_mode, write_file overwrite, TodoListMiddleware removed, what changed
 read_when: Read when upgrading deepagents, code behaves differently after 0.7.x, or you need to know which module exports a class or what a dependency is.
 updated: 2026-11-19
-sources_hash: e5a6c29ff5ff
+sources_hash: fdf51d5e7b66
 ---
 
 # Versions, dependencies and public API map
 
-This repo targets `deepagents==0.7.39` (released 2026-11-16; `deepagents.__version__ == "0.7.39"`). Upgraded from 0.7.19 on 2026-09-30, from 0.7.20 on 2026-10-21, from 0.7.29 on 2026-11-09, then from 0.7.34 on 2026-11-18. Use this page to check what changed between versions, which deps you get, and where each public class lives.
+This repo targets `deepagents==0.7.40` (released 2026-11-18; `deepagents.__version__ == "0.7.40"`). Upgraded from 0.7.19 on 2026-09-30, from 0.7.20 on 2026-10-21, from 0.7.29 on 2026-11-09, from 0.7.34 on 2026-11-18, then from 0.7.39 on 2026-11-19. Use this page to check what changed between versions, which deps you get, and where each public class lives.
 
 ## Quick reference
 
-- Target is `deepagents==0.7.39` (2026-11-16); Python `>=3.11,<4.0`.
+- Target is `deepagents==0.7.40` (2026-11-18); Python `>=3.11,<4.0`.
 - **0.7.20** (2026-09-29): one fix: `StateBackend.upload_files` now tags binary content `base64` (it was stored as base64 but tagged `utf-8`). Code diff vs 0.7.19: only `backends/state.py` and `_version.py`. Minimum versions raised: `langchain>=1.4.3`, `langchain-core>=1.6.6`, `langchain-anthropic>=1.7.5`, `langsmith>=0.14.1`, quickjs extra `>=0.3.8`.
 - **0.7.21 to 0.7.29** (2026-09-30 to 2026-10-20): `SkillsMiddleware` moved to the tail of the stack, skill tools (`metadata.include_tools`, `SkillsMiddleware(tools=...)`) and `pinned_skills`, async subagents gained `mode="fork"`, a `waiting` status and push notifications to the parent (`TaskEvent`, `_ParentNotifierMiddleware`), permissions also check symlink targets on `FilesystemBackend`, `edit_file` refuses binary files, `SummarizationMiddleware(summarizer=...)`, `FilesystemMiddleware(offload_binary_content=...)`. Details in the 0.7.20 to 0.7.29 table below. Minimum versions raised: `langchain>=1.4.6`, `langchain-core>=1.6.12`, `langchain-anthropic>=1.7.6`, `langchain-google-genai>=4.4.2`, `langsmith>=0.14.11`, aws extra `langchain-aws>=1.9.0`, quickjs extra `>=0.3.9`.
 - **0.7.30 to 0.7.34** (2026-10-22 to 2026-11-05): model refusals raise an error by default and a subagent's refusal is reported to the parent; async subagents gained `notify_parent`, `webhook`, queued follow-ups and notification metadata; summaries drop reasoning blocks of the history they replace and anchor the cutoff to a message ID; the Python `grep` fallback searches only the requested file and clips long lines; rubric middleware is out of beta. Details: Changes 0.7.29 to 0.7.34 below. Minimum versions raised: `langchain>=1.4.9`, `langchain-core>=1.7.6`, `langchain-anthropic>=1.7.10`, `langchain-google-genai>=4.4.3`, `langsmith>=0.14.17`; extras by 0.7.34: aws `langchain-aws>=1.9.1`, quickjs `>=0.3.11`.
 - **0.7.35 to 0.7.39** (2026-11-09 to 2026-11-16): a fork keeps the parent's system prompt and gets its own `system_prompt` in the task message; middleware with a `bind_backend` method (`BackendConsumer`) receives the agent's backend; the `task` tool message records the subagent's checkpoint namespace; `ls`, `glob` and `grep` drop results that would need approval outside the call's scope; `FilesystemBackend` keeps symlink names and no longer hangs on a FIFO; `StoreBackend` stores uploads with NUL bytes as base64; async subagents on the same deployment stream like an app's own runs. Minimums now `langchain>=1.5.0`, `langchain-core>=1.8.1`; extras aws `langchain-aws>=1.9.3`, quickjs `>=0.3.12` (0.7.34 and 0.7.39 METADATA compared).
+- **0.7.40** (2026-11-18): `LocalShellBackend` timeouts keep the output so far and warn when the command may still run; cancelled commands are cleaned up (process group on POSIX, shell only on Windows); one entry-point scan for profile plugins; a thread-safe `warn_deprecated`. Minimums raised: `langchain>=1.5.1`, `langchain-core>=1.8.3`, `langchain-anthropic>=1.7.11`, `langsmith>=0.15.0`.
 - Extras: `aws` (Bedrock caching), `quickjs` (`CodeInterpreterMiddleware`), `video` (frames in `read_file`); `langchain-openai` is not included.
 - 0.7.0 removed `TodoListMiddleware` from defaults; restore with `middleware=[TodoListMiddleware()]`.
 - 0.7.0 lean prompts: empty base prompt; `BASE_AGENT_PROMPT` deprecated (removal 0.9.0).
@@ -31,13 +32,13 @@ This repo targets `deepagents==0.7.39` (released 2026-11-16; `deepagents.__versi
 - Pending removals: `model=None` (1.0.0), `BASE_AGENT_PROMPT` (0.9.0).
 - `deepagents.profiles` is beta and may change in minor releases.
 
-## Package metadata (0.7.39)
+## Package metadata (0.7.40)
 
 - License MIT; "Development Status :: 4 - Beta"; Python `>=3.11,<4.0` (3.11 to 3.14).
-- Required: `langchain>=1.5.0,<2`, `langchain-core>=1.8.1,<2`, `langchain-anthropic>=1.7.10,<2`, `langchain-google-genai>=4.4.3,<5`, `langsmith>=0.14.17`, `packaging>=23.2`, `wcmatch>=11.0`. (LangGraph comes transitively via `langchain`.)
+- Required: `langchain>=1.5.1,<2`, `langchain-core>=1.8.3,<2`, `langchain-anthropic>=1.7.11,<2`, `langchain-google-genai>=4.4.3,<5`, `langsmith>=0.15.0`, `packaging>=23.2`, `wcmatch>=11.0`. (LangGraph comes transitively via `langchain`.)
 - Extras: `aws` -> `langchain-aws>=1.9.3,<2` (Bedrock prompt caching); `quickjs` -> `langchain-quickjs>=0.3.12` (`CodeInterpreterMiddleware`); `video` -> `av>=18`, `pillow>=12.3` (video frames in `read_file`; no upper bounds, already so in 0.7.34).
 - Not included: `langchain-openai`, `langchain-openrouter` (need `>=0.2.0`), `langchain-fireworks`, sandbox partner packages.
-- Traces carry metadata `lc_versions.deepagents` (`"0.7.39"`, or `"0.7.39+editable"` for editable installs; since 0.7.39 the editable check scans only the `deepagents` distribution records).
+- Traces carry metadata `lc_versions.deepagents` (`"0.7.40"`, or `"0.7.40+editable"` for editable installs; since 0.7.39 the editable check scans only the `deepagents` distribution records).
 
 ## Breaking changes in 0.7.0 (2026-07-29)
 
@@ -113,6 +114,14 @@ Code files changed between the 0.7.34 and 0.7.39 wheels: `graph.py`, `_version.p
 | 0.7.38 | `ls`, `glob` and `grep` remove results whose path or resolved target needs `interrupt` approval outside the roots the call was approved for (`_bulk_scope` in `middleware/filesystem.py`): a symlink can no longer list or search past an interrupt rule ([[permissions]], [[filesystem-tools]]) |
 | 0.7.39 | `StoreBackend.upload_files` stores content as UTF-8 only when it is valid UTF-8 **and** has no NUL byte, otherwise base64 (a NUL byte can't go in a Postgres JSONB store); async subagents on the same deployment (no `url`) stream `values`, `updates`, `messages-tuple` and `custom` with subgraphs and resumable streams, so an app that joins their runs sees them ([[backends]], [[async-subagents]]) |
 
+## Changes 0.7.39 to 0.7.40
+
+Code files changed between the 0.7.39 and 0.7.40 wheels: `_version.py`, `_api/deprecation.py`, `backends/local_shell.py`, `profiles/_builtin_profiles.py`; new files `backends/_posix_process.py` and `backends/_windows_process.py` (private; the API reference now lists their `PosixProcessReader` and `WindowsProcessReader`, which `deepagents.backends` does not export). Minimum versions raised (METADATA): `langchain>=1.5.1` (was 1.5.0), `langchain-core>=1.8.3` (was 1.8.1), `langchain-anthropic>=1.7.11` (was 1.7.10), `langsmith>=0.15.0` (was 0.14.17). Extras unchanged. Rows below are from the upstream changelog (2026-11-18), each checked against the code diff.
+
+| Version | Change |
+| - | - |
+| 0.7.40 | `LocalShellBackend.execute` runs the command with `subprocess.Popen` and its own reader instead of `subprocess.run`; a timeout keeps the output printed so far (`Output before the timeout:`) and says when the command may still be running; a timeout, interruption or async cancel kills the process group on POSIX (only the shell on Windows); `aexecute` cancellation cleans up the process within a 1 s grace period; `warn_deprecated` passes `stacklevel` to `langchain_core` instead of re-emitting through `warnings.catch_warnings` (which raced across threads); provider and harness profile plugins come from one entry-point scan ([[backends]], [[models]]) |
+
 ## Earlier milestones
 
 - 0.5.2: filesystem permissions; `StateBackend.upload_files`.
@@ -159,11 +168,11 @@ Also documented in the reference: the Nemotron middleware classes (`NemotronTool
 - Code written for <0.7 that relied on `write_todos`, the base prompt, `write_file` refusing overwrites, or `virtual_mode=False` default silently changes behaviour on 0.7.x.
 - README/METADATA quickstart uses `model="openai:gpt-6-astra"`; any tool-calling model works but check the provider package is installed (`langchain-openai` is not a dependency).
 - `deepagents.profiles` is explicitly beta: minor changes possible in minor releases.
-- The changelog's 0.5.4 note mentions Codex `apply_patch`/`shell_command` conventions; the Codex profile (unchanged through 0.7.39) only has a prompt suffix + `TodoListMiddleware`.
+- The changelog's 0.5.4 note mentions Codex `apply_patch`/`shell_command` conventions; the Codex profile (unchanged through 0.7.40) only has a prompt suffix + `TodoListMiddleware`.
 
 ## Sources
 
-- `../sources/package/deepagents-0.7.39.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.40.dist-info/METADATA`
 - `../sources/package/deepagents/backends/protocol.py`
 - `../sources/docs/github/deepagents-CHANGELOG.md`
 - `../sources/docs/oss/python/reference/deepagents-python.md`
@@ -172,6 +181,9 @@ Also documented in the reference: the Nemotron middleware classes (`NemotronTool
 - `../sources/package/deepagents/middleware/__init__.py`
 - `../sources/package/deepagents/backends/__init__.py`
 - `../sources/package/deepagents/graph.py`
+- `../sources/package/deepagents/backends/local_shell.py`
+- `../sources/package/deepagents/profiles/_builtin_profiles.py`
+- `../sources/package/deepagents/_api/deprecation.py`
 
 ## See also
 

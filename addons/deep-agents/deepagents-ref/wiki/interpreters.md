@@ -7,7 +7,7 @@ product: sdk
 keywords: interpreter, code interpreter, CodeInterpreterMiddleware, QuickJS, eval tool, JavaScript REPL, programmatic tool calling, PTC, ptc, langchain_quickjs, run code in loop, orchestrate tools in code, REPL, dynamic subagents
 read_when: Read when the model should loop, batch or transform data in code without a shell, call tools or subagents from code (PTC), or when choosing between an interpreter and a sandbox.
 updated: 2026-11-19
-sources_hash: 30a7016752fd
+sources_hash: a6ed795de2db
 ---
 
 # Interpreters (QuickJS CodeInterpreterMiddleware)
@@ -29,7 +29,7 @@ Interpreters = code for composing tools and controlling what returns to the mode
 ## Install and wire
 
 ```bash
-pip install -U "deepagents[quickjs]"   # extra pins langchain-quickjs>=0.3.12 (0.7.39 METADATA); docs say >=0.3.0; Python >=3.11
+pip install -U "deepagents[quickjs]"   # extra pins langchain-quickjs>=0.3.12 (0.7.40 METADATA); docs say >=0.3.0; Python >=3.11
 ```
 
 ```python
@@ -42,7 +42,7 @@ agent = create_deep_agent(
 )
 ```
 
-`CodeInterpreterMiddleware` lives in `langchain_quickjs`, not in the `deepagents` package; it is passed through `middleware=` like any other [[middleware]]. Nothing in `deepagents` 0.7.39 source references it besides the `quickjs` extra.
+`CodeInterpreterMiddleware` lives in `langchain_quickjs`, not in the `deepagents` package; it is passed through `middleware=` like any other [[middleware]]. Nothing in `deepagents` 0.7.40 source references it besides the `quickjs` extra.
 
 ## What the model gets
 
@@ -106,7 +106,7 @@ reviews.join("\n\n");
 ## Sources
 
 - `../sources/docs/oss/python/deepagents/interpreters.md`
-- `../sources/package/deepagents-0.7.39.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.40.dist-info/METADATA`
 - `../sources/package/deepagents/backends/state.py`
 
 ## See also

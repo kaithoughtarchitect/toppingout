@@ -7,7 +7,7 @@ product: sdk
 keywords: multimodal, image input, images, audio, video, PDF, file blocks, content blocks, read_file media, video frames, UnsupportedContentMiddleware, deepagents[video], screenshot, vision, unsupported content
 read_when: Read when passing images/audio/video/files to an agent, read_file media fails, or blocks are replaced by a text notice.
 updated: 2026-11-19
-sources_hash: 3552196c882e
+sources_hash: f13232284cfe
 ---
 
 # Multimodal input, read_file media, video frames
@@ -54,7 +54,7 @@ Extension map (`backends/utils.py _EXTENSION_TO_FILE_TYPE`):
 - Non-text result = single block `{"type": <block>, "base64": ..., "mime_type": mimetypes.guess_type(...) or "application/octet-stream"}` in a `ToolMessage` with `additional_kwargs={"read_file_path", "read_file_media_type"}`.
 - Any backend result with `encoding == "base64"` is treated as binary even if the extension is unknown → generic `file` block. Since 0.7.39 `StoreBackend.upload_files` stores content as base64 when it contains a NUL byte, even if it is valid UTF-8 (`_encode_upload` in `backends/store.py`; NUL can't go in a Postgres JSONB store), so such an upload now reads back as binary, not text.
 - `offset`/`limit` are ignored for images/PDFs (text-only pagination).
-- `edit_file` on a binary file stored in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29, unchanged in 0.7.39); `grep` there skips binary files.
+- `edit_file` on a binary file stored in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29, unchanged in 0.7.40); `grep` there skips binary files.
 
 ## Video: sampled frames (`middleware/_video.py`)
 
@@ -117,7 +117,7 @@ agent = create_agent(model, middleware=[FilesystemMiddleware(), UnsupportedConte
 - `../sources/package/deepagents/middleware/_blob_offload.py`
 - `../sources/package/deepagents/backends/state.py`
 - `../sources/package/deepagents/backends/store.py` (`_encode_upload`)
-- `../sources/package/deepagents-0.7.39.dist-info/METADATA` (`video` extra)
+- `../sources/package/deepagents-0.7.40.dist-info/METADATA` (`video` extra)
 
 ## See also
 - [[index]]

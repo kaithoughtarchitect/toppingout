@@ -7,7 +7,7 @@ product: sdk
 keywords: fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, ModelRefusalMiddleware, ModelRefusalError, model refusal, rate_limiter, 429, resilience, error handling, timeout, fallback model
 read_when: Read when adding retries, fallback models, call limits or rate limiting, when errors kill a run or a subagent, or when a model refusal raises.
 updated: 2026-11-19
-sources_hash: 236bd965a71b
+sources_hash: 170f5c2ceba0
 ---
 
 # Fault tolerance
@@ -87,7 +87,7 @@ agent = create_deep_agent(
 
 ## Where user middleware lands (code)
 
-- `_apply_custom_middleware`: a user middleware whose `.name` matches a built-in (e.g. `SummarizationMiddleware`) replaces it in place. Otherwise it is inserted after the core stack (Filesystem, SubAgent, the private `_ParentNotifierMiddleware`, Summarization, PatchToolCalls, AsyncSubAgent) and before the harness-profile / Skills / prompt-caching / `MemoryMiddleware` / `HumanInTheLoopMiddleware` / `UnsupportedContentMiddleware` / `ModelRefusalMiddleware` tail (order re-checked on 0.7.39 `graph.py`; [[middleware]] has the full list).
+- `_apply_custom_middleware`: a user middleware whose `.name` matches a built-in (e.g. `SummarizationMiddleware`) replaces it in place. Otherwise it is inserted after the core stack (Filesystem, SubAgent, the private `_ParentNotifierMiddleware`, Summarization, PatchToolCalls, AsyncSubAgent) and before the harness-profile / Skills / prompt-caching / `MemoryMiddleware` / `HumanInTheLoopMiddleware` / `UnsupportedContentMiddleware` / `ModelRefusalMiddleware` tail (order re-checked on 0.7.40 `graph.py`, unchanged from 0.7.39; [[middleware]] has the full list).
 - Replacing a built-in `FilesystemMiddleware` this way (since 0.7.31): an unconfigured replacement inherits the agent's `permissions`; one with different non-empty `permissions` raises `ValueError`.
 - Declarative (`mode="isolated"`, the default) subagents get only their spec's `middleware`. Forked subagents (`mode="fork"`, experimental) inherit the parent `middleware` list. The auto-added general-purpose subagent inherits only user middleware whose name overrides one of its default slots, so a new `ModelRetryMiddleware` is **not** inherited by it. `CompiledSubAgent` runnables keep whatever they were built with.
 - `create_agent` rejects two middleware with the same `.name`, so you cannot add two `ModelRetryMiddleware` instances with different settings to one stack.

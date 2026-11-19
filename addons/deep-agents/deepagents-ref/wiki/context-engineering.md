@@ -7,7 +7,7 @@ product: all
 keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context, notification metadata, read_file_media, fork prompt cache
 read_when: Read when deciding what goes in the prompt vs files vs state, passing per-run context, debugging how the system prompt is assembled, or context bloat.
 updated: 2026-11-19
-sources_hash: ce56466bd3cc
+sources_hash: fa6749d8b1e4
 ---
 
 # Context engineering in Deep Agents
@@ -24,7 +24,7 @@ One-line truth: every `create_deep_agent` graph already manages five context lay
 | Isolation | [[subagents]] via `task` | per delegated task |
 | Long-term memory | files on a persistent route ([[memory]]) | across threads |
 
-## Input context: how the system prompt is assembled (0.7.39 code)
+## Input context: how the system prompt is assembled (0.7.40 code)
 
 Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotifier -> Summarization -> PatchToolCalls -> AsyncSubAgent (if any) -> your middleware -> harness-profile extras -> Skills (if `skills=`) -> prompt caching -> Memory (if `memory=`) -> HITL (if `interrupt_on`/interrupt permissions) -> UnsupportedContent -> ModelRefusal (0.7.33+, adds no prompt text). Each prompt-producing middleware appends to the system message, so the model sees roughly:
 
@@ -36,7 +36,7 @@ Main-agent middleware order in `graph.py`: Filesystem -> SubAgent -> ParentNotif
 
 Checked on 0.7.29 with a scripted model that records its input: `system_prompt`, then a custom `wrap_model_call` fragment, then the skills index, then memory. The prompt text has not been re-recorded since.
 
-On 0.7.39 the main stack was captured in the same order (2026-11-19, fake model, see [[middleware]]).
+On 0.7.39 the main stack was captured in the same order (2026-11-19, fake model, see [[middleware]]), and again on 0.7.40 the same day.
 
 The docs' list puts memory before skills and includes filesystem/subagent prompt sections; the code order above wins. A skill can also keep related tool schemas out of the prompt until the skill is read (`metadata.include_tools`, [[skills]]). See [[middleware]], [[customization]], [[harness]].
 

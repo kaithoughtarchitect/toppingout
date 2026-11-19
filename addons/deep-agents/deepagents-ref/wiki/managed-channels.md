@@ -7,7 +7,7 @@ product: managed
 keywords: MDA Slack, channels.slack, channels.http, webhook, HTTP channel, define_identity, identity.py, Supabase, define_schedule, cron, schedules, runtime.schedules, reminders, scheduled agent, Slack reactions, MCP endpoint, /mcp, interrupt_on Slack, attach_file, user_prompt_response, INTERRUPT_CORRELATION_KEY
 read_when: Read when wiring a Managed Deep Agent to Slack or a webhook, controlling who can call it, adding a cron schedule, or exposing it over MCP.
 updated: 2026-11-19
-sources_hash: 0d5252cb65fe
+sources_hash: 1b151236bb75
 ---
 
 # MDA channels, identity, schedules and MCP endpoint
@@ -247,6 +247,7 @@ Any MCP client that can send a custom header works the same way: Streamable HTTP
 ## Gotchas
 
 - Slack HITL supports only approve/reject; edit decisions are unavailable there.
+- `mda init --from` (0.10.5, changelog only) also exports a Fleet agent's Slack channel; check what it wrote before the first deploy, since a deployment allows one Slack channel. The fetched docs do not describe the export yet.
 - HTTP `thread_id` must be a UUID (400 otherwise); map external IDs with `uuid.uuid5`.
 - Agent-owned interrupt tools re-execute from the top on resume; guard side effects.
 - Upgrading to 0.7.0 orphaned in-flight Slack conversations (thread ownership change).

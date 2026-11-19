@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: custom tools, add tool, tools=, @tool, ToolRuntime, runtime.context, runtime.store, runtime.state, tool_call_id, Command update, large tool results, tool eviction, built-in tools, excluded_tools, get_stream_writer, tool returns image
 read_when: Read when adding a custom tool, a tool needs context/store/state via ToolRuntime, a tool returns Command or media, or a built-in tool is missing.
-updated: 2026-11-18
-sources_hash: 4699d3db470f
+updated: 2026-11-19
+sources_hash: d9d0af13944a
 ---
 
 # Tools (custom tools, ToolRuntime, built-ins)
@@ -27,7 +27,7 @@ One-line truth: `create_deep_agent(tools=[...])` accepts plain callables, LangCh
 - Gotcha: `permissions=` covers only built-in fs tools; use `interrupt_on` for custom tools.
 - Gotcha: `write_todos` is absent unless you add `TodoListMiddleware()`.
 
-## Signature (0.7.39)
+## Signature (0.7.40)
 
 ```python
 create_deep_agent(

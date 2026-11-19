@@ -7,7 +7,7 @@ product: sdk
 keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__, interrupt_mode, per_call, ToolApprovalRequest, edit_notice
 read_when: Read when a tool needs human approval before running, when a resume fails, or when subagent interrupts do not fire.
 updated: 2026-11-19
-sources_hash: 27b1531171ad
+sources_hash: 898baa9c356d
 ---
 
 # Human-in-the-loop (interrupt_on, approve/edit/reject/respond)

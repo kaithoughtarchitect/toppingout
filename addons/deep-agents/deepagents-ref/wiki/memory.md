@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: memory, long-term memory, remember across sessions, cross-thread memory, persistent memory, AGENTS.md, MemoryMiddleware, memory=, /memories/, StoreBackend, per-user memory, user preferences, short-term memory, agent memory, store namespace
 read_when: Read when the agent should remember things across threads or users, when a UI seeds or reads memory files, when memory edits do not show up mid-thread, or when scoping memory per user or org.
-updated: 2026-11-18
+updated: 2026-11-19
 sources_hash: 0a77e827d244
 ---
 
@@ -18,7 +18,7 @@ One-line truth: memory in Deep Agents is just Markdown files the agent reads (in
 
 - `create_deep_agent(memory=["/memories/AGENTS.md"])` injects those files into the system prompt; there is no special memory tool, the agent uses `edit_file`/`write_file`.
 - Long-term memory = route `/memories/` to `StoreBackend(namespace=...)` in a `CompositeBackend`; also pass `store=` to `create_deep_agent` (omit on LangSmith Deployment).
-- `StoreBackend(*, namespace, store=None)` and `StateBackend()`: instances only, no factories in 0.7.39.
+- `StoreBackend(*, namespace, store=None)` and `StateBackend()`: instances only, no factories in 0.7.40.
 - Namespace parts must match `^[A-Za-z0-9\-_.@+:~]+$`; slugify ids. `rt.server_info` only works on LangSmith Deployment; locally use `rt.context` with `context_schema`.
 - The route prefix is stripped: `/memories/AGENTS.md` is stored as key `/AGENTS.md`; seeding with the prefixed key yields `(No memory loaded)`.
 - With a checkpointer memory loads once per thread and is frozen; agent or UI edits appear only in new threads.
@@ -58,7 +58,7 @@ agent = create_deep_agent(
 )
 ```
 
-Signatures (0.7.39): `StoreBackend(*, namespace: Callable[[Runtime], tuple[str, ...]], store: BaseStore | None = None)` and `StateBackend()` (no args). `create_deep_agent(..., memory: list[str] | None = None, ...)`.
+Signatures (0.7.40): `StoreBackend(*, namespace: Callable[[Runtime], tuple[str, ...]], store: BaseStore | None = None)` and `StateBackend()` (no args). `create_deep_agent(..., memory: list[str] | None = None, ...)`.
 
 ## Scoping recipe: per user + per workspace/workspace (custom context)
 
@@ -177,13 +177,13 @@ This deny misses hidden paths such as `/policies/.x` ([[permissions]], Gotchas):
 - Default general-purpose subagent and custom declarative subagents do **not** get `MemoryMiddleware` (code, `graph.py`). Only `mode="fork"` subagents re-add it (they rebuild the parent prompt; since 0.7.35 a fork keeps that prompt byte-identical to the parent's, and its own `system_prompt` goes into the task message instead, so the memory block stays in the shared cached prefix: `graph.py`, `middleware/subagents.py`). They still share the backend, so they can `read_file` `/memories/...`. See [[subagents]].
 
 ## Gotchas
-- Fixed in the docs fetched 2026-11-18: the memory page's Python "full example" accordions now pass instances (`CompositeBackend(default=StateBackend(), routes={"/memories/": StoreBackend(namespace=...)})`) and seed the stripped keys (`"/AGENTS.md"`, `"/langgraph-docs/SKILL.md"`, `"/preferences.md"`), with a note that `CompositeBackend` removes each route prefix (`../sources/docs/oss/python/deepagents/memory.md`). Copies of the older examples still circulate: a factory `backend=lambda rt: ...` raises `TypeError: Backend factories were removed in deepagents 0.7` in 0.7.39 (`FilesystemMiddleware.__init__`), and seeding `"/memories/AGENTS.md"` silently yields `(No memory loaded)`. The backends page's migration note still says factories work with a deprecation warning, and the production page's sync example still calls `StoreBackend(rt, ...)`; code wins ([[backends]], [[production]]).
+- Fixed in the docs fetched 2026-11-18: the memory page's Python "full example" accordions now pass instances (`CompositeBackend(default=StateBackend(), routes={"/memories/": StoreBackend(namespace=...)})`) and seed the stripped keys (`"/AGENTS.md"`, `"/langgraph-docs/SKILL.md"`, `"/preferences.md"`), with a note that `CompositeBackend` removes each route prefix (`../sources/docs/oss/python/deepagents/memory.md`). Copies of the older examples still circulate: a factory `backend=lambda rt: ...` raises `TypeError: Backend factories were removed in deepagents 0.7` in 0.7.40 (`FilesystemMiddleware.__init__`), and seeding `"/memories/AGENTS.md"` silently yields `(No memory loaded)`. The backends page's migration note still says factories work with a deprecation warning, and the production page's sync example still calls `StoreBackend(rt, ...)`; code wins ([[backends]], [[production]]).
 - The fixed docs examples route `/memories/` and `/skills/` to two `StoreBackend`s with the same namespace (`("my-agent",)`), so both routes see one key space: `ls /memories/` also lists `langgraph-docs/`, and `/skills/` also shows `AGENTS.md`. Give each route its own namespace (for example `("my-agent", "memories")` and `("my-agent", "skills")`) if that matters.
 - Memory is frozen per thread when a checkpointer is present (deployments always have one). A UI edit does not reach ongoing threads.
 - `rt.server_info` is only meaningful under LangSmith Deployment / Agent Server (`deepagents>=0.5.0`); locally the namespace lambda can raise. Use `rt.context`.
 - `StoreBackend` without `store=` calls `get_store()`: fine inside the graph, `RuntimeError` when you call it from app code. Pass `store=` if app code also touches the backend.
 - Memory files are fully injected every model call; keep them short and move procedures to [[skills]]. Agents append but rarely compact (see [[agent-builder-memory]]).
-- The `edit_file` description says "must read before editing; errors otherwise", but 0.7.39's tool does not enforce a prior read; `old_string` must still match exactly and uniquely unless `replace_all=True`.
+- The `edit_file` description says "must read before editing; errors otherwise", but 0.7.40's tool does not enforce a prior read; `old_string` must still match exactly and uniquely unless `replace_all=True`.
 - The context-engineering docs list `memory=["~/.deepagents/preferences.md"]`; `~` is just a literal key on State/Store backends. Only `FilesystemBackend` / Deep Agents Code treat it as home (see [[dcode-config]]).
 - Managed Deep Agents have their own memory product surface; see [[managed-capabilities]].
 

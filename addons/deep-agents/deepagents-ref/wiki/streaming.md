@@ -128,7 +128,7 @@ Concurrency:
 
 ## Failed turns (for a Trace tab)
 
-Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. Re-run on 0.7.39 / langgraph 1.2.22 / langchain 1.5.0 on 2026-11-18 (the `task` tool now streams compiled children internally): the same four results. The refusal rows are from code, not a run (0.7.33 adds `ModelRefusalMiddleware` to the stack).
+Checked with a scripted model on 0.7.20 / langgraph 1.2.12 (2026-09-30), and re-run on 0.7.29 / langgraph 1.2.16 / langchain 1.4.6 on 2026-10-21 with the same results. Re-run on 0.7.34 / langgraph 1.2.20 / langchain 1.4.9 on 2026-11-09: unknown tool, bad args, a raising tool and the fix below gave the same results. Re-run on 0.7.39 / langgraph 1.2.22 / langchain 1.5.0 on 2026-11-18 (the `task` tool now streams compiled children internally): the same four results. Not re-run on 0.7.40 (no streaming or middleware code changed). The refusal rows are from code, not a run (0.7.33 adds `ModelRefusalMiddleware` to the stack).
 
 | Failure | Default behaviour |
 |---|---|
@@ -174,7 +174,7 @@ Trace-row recipe with `stream_mode=["updates", "messages", "custom"]`, `subgraph
 - Subagent output returned to the parent is only the last non-empty AI text (or `structured_response` JSON, or since 0.7.33 a refusal notice); the parent never streams subagent tokens unless you subscribe to subgraph/subagent streams.
 - Async subagents ([[async-subagents]]) run on a remote deployment; they do not appear as local subgraph namespaces. On an Agent Server their status updates arrive as user-role messages marked with LangChain notification metadata of source `"async_subagent"` (read with `get_notification_metadata`, since 0.7.33) and, deprecated, `additional_kwargs["deepagents_notification"]` (since 0.7.26). Since 0.7.39 the runs they start on the same deployment, and the notification runs on the parent's thread, stream `values`, `updates`, `messages-tuple` and `custom` with subgraphs and are resumable, so an app that joins them gets tokens ([[async-subagents]]).
 - Since 0.7.33 each sync subagent run carries `metadata["lc_subagent_tool_call_id"]` (the `task` call id), which checkpointers copy into its checkpoints; that links a subagent's stored namespace to the `tool_call_id`, unlike the `tools:<id>` segment.
-- Default recursion limit is `9_999` in 0.7.39 code (frontend docs say "10,000").
+- Default recursion limit is `9_999` in 0.7.40 code (frontend docs say "10,000").
 - For frontends, prefer `useStream` / AG-UI rather than hand-parsing chunks (see [[frontend]], [[protocols]]).
 
 ## Sources

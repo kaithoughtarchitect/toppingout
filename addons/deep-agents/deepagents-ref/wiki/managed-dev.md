@@ -7,7 +7,7 @@ product: managed
 keywords: mda dev, local development, LangSmith Studio, hot reload, mda evals, Harbor, evals, eval-engineering, tutorial, Tavily tool, .mda/build, langgraph dev, test schedule locally, memory not persisting, MDA_DEV, harbor-job.json
 read_when: Read when running or debugging a Managed Deep Agent locally, writing Harbor evals, or working through the tool plus memory plus schedule tutorial.
 updated: 2026-11-19
-sources_hash: 01819d6804b9
+sources_hash: 0b6c56297f48
 ---
 
 # MDA local development, evals and tutorial
@@ -138,6 +138,7 @@ Details for each piece: [[managed-capabilities]] (tools, memory), [[managed-chan
 - User-owned connections cannot be exercised end-to-end locally in general; deploy to test the authorization interrupt (though 0.7.0 made user grants resolve in `mda dev` via your personal key).
 - `mda dev` requires a personal LangSmith API key for user memory / user connections (0.8.2 clarifies PAT requirement).
 - Harbor needs Docker; eval runs pin `harbor[langsmith]==0.21.0` and Python 3.12.
+- Before 0.10.5, `mda dev` restarted the server on every save when LangSmith settings were exported in the shell (changelog fix). Since 0.10.5 `mda deploy` prints the agent identity when it finishes, and `mda prepare` lets build runners compile without credentials.
 
 ## Sources
 

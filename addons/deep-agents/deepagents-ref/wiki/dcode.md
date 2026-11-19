@@ -7,7 +7,7 @@ product: dcode
 keywords: dcode, deepagents-code, Deep Agents Code, terminal coding agent, CLI coding agent, TUI, headless mode, non-interactive, dcode -n, ACP server, slash commands, --model, --resume, --sandbox, install dcode
 read_when: Read when choosing between dcode and the SDK, installing or running dcode, scripting it headless in CI, or looking up a dcode flag or slash command.
 updated: 2026-11-19
-sources_hash: 6acc5d23371b
+sources_hash: 511cb866e931
 ---
 
 # Deep Agents Code (dcode)
@@ -25,14 +25,14 @@ sources_hash: 6acc5d23371b
 - `--sandbox` takes an optional value, so keep the bare form last on the command line.
 - Gotcha: dcode is not in the SDK source, so there are no `deepagents_code` imports to find there.
 - Gotcha: `--startup-cmd` output is not visible to the model; pipe content in instead.
-- SDK version (0.7.39 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
+- SDK version (0.7.40 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
 
 ## What it is, relative to the SDK
 
 - dcode wraps the SDK [[harness]]: planning, filesystem tools, `task` subagents, [[summarization]] and compaction, [[memory]] (`AGENTS.md`) and [[skills]]. You configure it with files and flags. You do not write Python, except for the optional experimental extensions (see [[dcode-extending]]).
 - Architecture: the TUI talks to a local LangGraph agent server (`/restart` restarts it). Threads are checkpointed to SQLite at `~/.deepagents/.state/sessions.db`.
-- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.39; see [[versions]]) separate from the dcode version (0.2.x).
-- The SDK source (0.7.39) has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
+- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.40; see [[versions]]) separate from the dcode version (0.2.x).
+- The SDK source (0.7.40) has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
 - SDK features that dcode exposes: the JS [[interpreters]] (`js_eval`, QuickJS, on by default), which make [[dynamic-subagents]] work out of the box; `RubricMiddleware`, which backs goals and rubrics ([[rubric]], [[dcode-goals]]); forked `general-purpose` subagents; and the sandbox-as-tool pattern for [[sandboxes]].
 - For the product landscape (SDK vs dcode vs Managed), see [[products]]. To build the same thing yourself, see [[create-deep-agent]].
 
@@ -147,6 +147,7 @@ Git trace attribution: with tracing on, dcode runs read-only Git checks around t
 - 0.2.8 (2026-11-13): the local shell gets `DEEPAGENTS_CODE=1`, so scripts can tell they run under dcode; unencodable characters in redirected output are replaced.
 - 0.2.9 (2026-11-16): updated stable model recommendations.
 - 0.2.10 (2026-11-17): agent status reported to terminals with OSC 7501; MCP trust lists load without blocking the server event loop.
+- 0.2.11 (2026-11-18): MCP hook approval policies are honoured; shutdown waits for background worker cleanup to finish.
 
 ## Gotchas
 

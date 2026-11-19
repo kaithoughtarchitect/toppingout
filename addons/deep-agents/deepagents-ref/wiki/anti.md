@@ -11,9 +11,9 @@ updated: 2026-11-19
 
 # Anti — wrong mental models and stale doc examples
 
-If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, the README, or training memory. Checked against 0.7.39 source; code wins.
+If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, the README, or training memory. Checked against 0.7.40 source; code wins.
 
-## Things the docs still show that break in 0.7.39
+## Things the docs still show that break in 0.7.40
 
 | Doc shows | Reality | Page |
 |---|---|---|
@@ -29,16 +29,16 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | Blob offload: "set `artifacts_root` on the middleware" | `FilesystemMiddleware` has no such argument; the `blobs/` root follows `CompositeBackend(artifacts_root=...)` | [[backends]] |
 | Customization: a `FilesystemMiddleware` in `middleware=` "won't inherit the ... `permissions=` passed to `create_deep_agent()`" | Since 0.7.31 an unconfigured replacement inherits them, and different non-empty rules raise `ValueError` (it still does not inherit `backend=`). Code wins | [[middleware]] |
 | Content-builder pin `deepagents>=0.3.5,<0.4.0` | Stale | [[tutorials]] |
-| Subagents page: a fork's `system_prompt` "is appended to the parent's inherited prompt" | Since 0.7.35 the fork keeps the parent's system prompt unchanged and gets its own instructions in the task message (`_FORK_INSTRUCTIONS_KEY`, `middleware/subagents.py`); a `wrap_model_call` looking for them in `request.system_message` finds none. Code wins | [[subagents]] |
+| Subagents page, mode comparison table: a fork's optional system prompt "appends instructions and can reduce cache reuse" (also `create_deep_agent`'s docstring) | Since 0.7.35 the fork keeps the parent's system prompt unchanged and gets its own instructions in the task message (`_FORK_INSTRUCTIONS_KEY`, `middleware/subagents.py`); a `wrap_model_call` looking for them in `request.system_message` finds none. The same page's field table and fork section say so since the 2026-11-19 fetch. Code wins | [[subagents]] |
 | Backends migration note: the factory pattern "still works at runtime and emits a deprecation warning" | `FilesystemMiddleware.__init__` raises `TypeError` for a factory since 0.7 | [[backends]] |
-| Going to production, "sync skills and memories": `StoreBackend(rt, namespace=...)` | `TypeError`: `StoreBackend` takes keyword arguments only (0.7.39 too) | [[production]] |
+| Going to production, "sync skills and memories": `StoreBackend(rt, namespace=...)` | `TypeError`: `StoreBackend` takes keyword arguments only (0.7.40 too) | [[production]] |
 | `deepagents deploy`, `deepagents.toml`, `agent.json` (upstream `examples/deploy-*`) | **Deprecated.** They come from `deepagents-cli` (last release 0.3.0, 2026-08-24; PyPI: "DEPRECATED … Use Managed Deep Agents"). Use `mda` ([[managed]]) or self-host ([[production]]). Checked 2026-09-30 | [[managed]] |
 
 ## Wrong mental models
 
 - **"Wrap a subagent in `.with_retry()` to retry it."** A retried compiled subagent is invoked, not streamed, so after a retry the `task` message's `artifact["checkpoint_ns"]` names the failed run (0.7.36+). Retry `task` with `ToolRetryMiddleware` instead: [[fault-tolerance]].
 - **"Seed `/memories/AGENTS.md` in the store."** The agent reads key `/AGENTS.md`: `CompositeBackend` strips the route prefix, so the seed is never found. The memory docs fixed their examples on 2026-11-18; older copies and training memory still show it: [[memory]].
-- **"Read async notifications from `additional_kwargs[\"deepagents_notification\"]`."** That key is deprecated (still written in 0.7.39). Read `get_notification_metadata(message)` from `langchain_core.messages`; the 2026-11-18 docs do: [[async-subagents]].
+- **"Read async notifications from `additional_kwargs[\"deepagents_notification\"]`."** That key is deprecated (still written in 0.7.40). Read `get_notification_metadata(message)` from `langchain_core.messages`; the 2026-11-18 docs do: [[async-subagents]].
 - **"It remembers across restarts."** Only with a durable checkpointer and store. `InMemorySaver` / `InMemoryStore` / nothing = gone — [[persistence]].
 - **"Memory edits apply immediately."** `memory=` loads once per thread; setting `memory_contents=None` shows `(No memory loaded)` — [[memory]].
 - **"Subagents get my middleware / memory / system prompt."** Isolated subagents don't. Only a `mode="fork"` subagent gets them: memory, the parent's `middleware=`, and the parent's system prompt unchanged (since 0.7.35; its own `system_prompt` goes in the task message). GP subagent inherits skills, custom ones don't — [[subagents]], [[middleware]].
@@ -48,6 +48,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 - **"`grep` takes a regex."** Literal substring, 1000-match cap — [[filesystem-tools]].
 - **"`execute` status success = exit 0."** Check `artifact["exit_code"]` — [[sandboxes]].
 - **"`LocalShellBackend` inherits my env."** Empty env, no `PATH` — [[sandboxes]].
+- **"A `LocalShellBackend` timeout stops the command."** On Windows it stops only the shell; what the shell started keeps running (0.7.40 says so in the timeout message; probe 2026-11-19). On POSIX the process group is killed, but a `setsid` child escapes. A retry can start a second copy: [[backends]].
 - **"`skills=` points at a skill folder."** Point at its parent; otherwise zero skills load silently — [[skills]].
 - **"My middleware sees the skills."** Since 0.7.29 `SkillsMiddleware` runs after your middleware and profile extras, so your `before_model` / `wrap_model_call` doesn't see freshly loaded `skills_metadata` or the skills prompt section. Replace `SkillsMiddleware` by name instead. See [[middleware]], [[skills]].
 - **"`include_tools: [a, b]` works."** It must be a space-separated string; a YAML list matches no tool. See [[skills]].
@@ -87,7 +88,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | `permission denied ... (resolves to X)` or `Error: cannot resolve <path>` | A symlink target is denied, or the path loops or escapes the root (0.7.25, `FilesystemBackend`) | [[permissions]] |
 | Sandbox `grep` finds nothing under `.git` | `BaseSandbox.grep_exclude_dirs` defaults to `(".git",)` (0.7.25) | [[sandboxes]] |
 | `InvalidUpdateError` after parallel `task` calls | Subagents changed the same custom state key, which has no reducer | [[subagents]] |
-| `ValueError: FilesystemMiddleware permissions conflict with the agent permissions` | Your replacement `FilesystemMiddleware(permissions=...)` differs from `create_deep_agent(permissions=...)`; use the same rules or omit them on the middleware (0.7.39; before 0.7.31 the agent's rules were silently dropped) | [[middleware]] |
+| `ValueError: FilesystemMiddleware permissions conflict with the agent permissions` | Your replacement `FilesystemMiddleware(permissions=...)` differs from `create_deep_agent(permissions=...)`; use the same rules or omit them on the middleware (0.7.40; before 0.7.31 the agent's rules were silently dropped) | [[middleware]] |
 | Main agent sees unexpected user-role messages | Async subagent task notifications (notification metadata `lc_source == "async_subagent"`, read with `get_notification_metadata`; the old `additional_kwargs["deepagents_notification"]` is deprecated); they only arrive on the async path | [[async-subagents]] |
 | `ModelRefusalError` from `invoke` | The model returned a `refusal` block; since 0.7.33 that raises instead of ending the run | [[middleware]] |
 | `compact_conversation` result has `status="error"` | Summary generation failed (`Compaction failed: ...`, 0.7.33+); history is unchanged | [[summarization]] |

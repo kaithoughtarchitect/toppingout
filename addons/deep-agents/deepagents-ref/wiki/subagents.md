@@ -7,7 +7,7 @@ product: sdk
 keywords: subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out, model refusal, ModelRefusalError, lc_subagent_tool_call_id, checkpoint_ns, ToolMessage artifact, BackendConsumer, bind_backend
 read_when: Read when a subagent can't see parent middleware/memory, when adding a specialist agent, when a task call is rejected, or when a subagent's model refuses.
 updated: 2026-11-19
-sources_hash: 5d538c806611
+sources_hash: 20c0974338ae
 ---
 
 # Subagents (task tool, SubAgent, CompiledSubAgent)
@@ -90,7 +90,7 @@ The subagent stopped because a model refused the request. Category: <category>. 
 | `skills` | no | none for an isolated child (unless the spec's own `middleware` holds a `SkillsMiddleware`). GP and `mode="fork"` children inherit the parent's `skills`; a fork may not set its own |
 | `permissions` | no | inherits the parent's `permissions`. If set, it **replaces** them |
 | `response_format` | no | none. Accepts a Pydantic model, dataclass, TypedDict, JSON-schema dict, `ToolStrategy`, `ProviderStrategy` or `AutoStrategy` |
-| `mode` | no | `"isolated"`. Can be `"fork"` (beta, >=0.7.13). Any other value raises `ValueError`. The old name `"handoff"` was renamed to `"isolated"` in 0.7.13 (changelog) and is rejected in 0.7.39 |
+| `mode` | no | `"isolated"`. Can be `"fork"` (beta, >=0.7.13). Any other value raises `ValueError`. The old name `"handoff"` was renamed to `"isolated"` in 0.7.13 (changelog) and is rejected in 0.7.40 |
 
 The default child middleware stack (for `create_deep_agent`) is built in `graph.py`:
 `FilesystemMiddleware(backend, permissions)` → `SummarizationMiddleware` → `PatchToolCallsMiddleware` → *spec `middleware` (new names)* → profile `extra_middleware` → `SkillsMiddleware` (only if the spec has `skills`) → prompt caching → `MemoryMiddleware` (forks only, if `memory`) → `ModelRefusalMiddleware` (since 0.7.33) → `_ToolExclusionMiddleware` (if the profile excludes tools) → `HumanInTheLoopMiddleware` (if `interrupt_on`) → `UnsupportedContentMiddleware`. (Order seen in 0.7.39 `graph.py`.)
@@ -149,7 +149,7 @@ analyzer = CompiledSubAgent(
 
 ## Forked subagents (`mode="fork"`, beta)
 
-What each kind of declarative child gets (0.7.39, `graph.py` and `middleware/subagents.py`):
+What each kind of declarative child gets (0.7.40, `graph.py` and `middleware/subagents.py`):
 
 | | isolated (default) | `mode="fork"` |
 | - | - | - |
@@ -164,7 +164,7 @@ What each kind of declarative child gets (0.7.39, `graph.py` and `middleware/sub
 - The child receives the parent's **effective** history, meaning the summarization event is applied ([[summarization]]). The trailing AIMessage that holds the `task` call is dropped, and a `HumanMessage` is appended containing a continuation preamble, then the fork's own `system_prompt` if it has one, then the `description` (`f"{preamble}{instructions}\n\n{description}"` in `_fork_messages`).
 - A declarative fork inherits the full parent state, including private keys, except `structured_response`, the summarization event/session id, `rubric`, `pinned_skills` and `_skill_tools_disclosed` (the rubric grades the parent's goal, pending pins and disclosed skill tools belong to the parent). It also mirrors the parent's system prompt and prompt-producing middleware (Skills with the parent's `skills`, Memory, and the parent `middleware=`), which is good for prompt-cache reuse.
 - A fork inherits the parent's `tools=` unless it sets `tools`, which replaces them. Its spec `middleware` replaces inherited entries with the same `.name` and adds the rest. Middleware that rewrites the inherited system-prompt prefix or changes tool definitions shortens the shared cache prefix.
-- Since 0.7.35 a declarative fork keeps the parent's system prompt **byte-identical**, so it reuses the parent's cached prefix. Its own `system_prompt` is moved to a private spec key (`_FORK_INSTRUCTIONS_KEY`) and delivered in the task message after the inherited history. Probe on 0.7.39 on 2026-11-18: `_fork_messages([...], None, "DESC", instructions="INSTR")` ends the task message with `"...Your actual task is below.]\n\nINSTR\n\nDESC"`. On 0.7.34 it was appended to the system prompt, which broke the cache. The 2026-11-18 docs still say it "is appended to the parent's inherited prompt as an addendum"; the code wins. `skills` on a fork raises `ValueError`.
+- Since 0.7.35 a declarative fork keeps the parent's system prompt **byte-identical**, so it reuses the parent's cached prefix. Its own `system_prompt` is moved to a private spec key (`_FORK_INSTRUCTIONS_KEY`) and delivered in the task message after the inherited history. Probe on 0.7.39 on 2026-11-18: `_fork_messages([...], None, "DESC", instructions="INSTR")` ends the task message with `"...Your actual task is below.]\n\nINSTR\n\nDESC"`. On 0.7.34 it was appended to the system prompt, which broke the cache. Since the 2026-11-19 fetch the docs' field table and fork section agree ("The fork keeps the parent's system prompt unchanged ... its instructions are added to the fork's task message"); the comparison table still says the optional prompt "appends instructions and can reduce cache reuse", which the code does not do. `skills` on a fork raises `ValueError`.
 - The fork *does* carry a `task` tool (so tool lists match the parent's for caching), but any call returns the refusal "You are a subagent and cannot delegate to another subagent...".
 - The `task` listing appends "(inherits your full conversation and system prompt — no need to restate context here)" to fork entries.
 - A compiled fork gets the parent's messages but keeps its own prompt, and it gets only the non-private state.
@@ -197,7 +197,7 @@ In this path each raw `SubAgent` **must** specify `model` and `tools` (`create_s
 - Omitting `tools` gives the child **all of the parent's custom tools**, not none. Set `tools=[...]` to scope it down.
 - The docs' GP example shows `task(name="general-purpose", task="...")`. Those are **not** the real args, and they would be rejected. The real args are `description` and `subagent_type`.
 - The docs' comparison table says forks "cannot use `task`". In code the tool is present but refuses at call time.
-- The docs (2026-11-18) say a fork's `system_prompt` is appended to the inherited prompt and "can reduce cache reuse". Since 0.7.35 it rides in the task message instead and the system prompt is unchanged. Middleware that reads the fork's instructions from `request.system_message` will not find them there.
+- The docs' mode comparison table (2026-11-19) still says a fork's optional system prompt "appends instructions and can reduce cache reuse"; the field table and fork section on the same page were fixed that day. Since 0.7.35 it rides in the task message and the system prompt is unchanged. Middleware that reads the fork's instructions from `request.system_message` will not find them there.
 - The child's report is not shown to the user, so the parent must relay it. The child is stateless across calls: each `task` is a fresh run.
 - Parent `middleware=` (for example `TodoListMiddleware`, `RubricMiddleware` or custom logging) does not reach declarative isolated children, GP excepted for slot overrides. Forks get all of it, merged by name.
 - The parent's `rubric` is not passed to children, so a child running its own `RubricMiddleware` is not graded against the parent's whole goal (changelog 0.7.24: "Preserve the parent rubric during parallel subagent calls"; seen in 0.7.39).

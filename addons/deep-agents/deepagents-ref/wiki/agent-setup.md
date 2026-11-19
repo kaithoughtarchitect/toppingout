@@ -18,16 +18,16 @@ The whole agent wiring in one place: per-workspace Markdown memory, a durable st
 
 **Adapt:** a *workspace* is whatever your agent keeps memory separate by: a user, a project, a customer, a save file. Rename `"app"` in the namespaces to your product name, and `workspace_id` to your unit if you like. The model is the starter default; any `provider:model` string works ([[models]]).
 
-Everything below marked **ran** was executed against `deepagents` 0.7.29, `langgraph` 1.2.16 and `langchain` 1.4.6 on 2026-10-21 (`../scripts/check_recipes.py`, PASS 10/10), and re-run on `deepagents` 0.7.34, `langgraph` 1.2.20 and `langchain` 1.4.9 on 2026-11-09, and on `deepagents` 0.7.39, `langgraph` 1.2.22 and `langchain` 1.5.0 on 2026-11-18, with the same results (PASS 10/10).
+Everything below marked **ran** was executed against `deepagents` 0.7.29, `langgraph` 1.2.16 and `langchain` 1.4.6 on 2026-10-21 (`../scripts/check_recipes.py`, PASS 10/10), and re-run on `deepagents` 0.7.34, `langgraph` 1.2.20 and `langchain` 1.4.9 on 2026-11-09, on `deepagents` 0.7.39, `langgraph` 1.2.22 and `langchain` 1.5.0 on 2026-11-18, and on `deepagents` 0.7.40, `langgraph` 1.2.23 and `langchain` 1.5.2 on 2026-11-19, with the same results (PASS 10/10).
 
 ## Quick reference
 
 - Model (starter default): `"openrouter:openai/gpt-6-luna"` + `OPENROUTER_API_KEY` ([[models]]).
 - Backend: `CompositeBackend(default=StateBackend(), routes={"/memories/": StoreBackend(namespace=ns, store=store)})`. With no sandbox default there's no `execute` tool (**ran**).
-- Permissions, in order: allow write `/memories/**`, then deny write `/**`. Memory writes succeed; other writes return `permission denied` (**ran**). Paths with a hidden segment, such as `/.x`, are the exception: no `**` rule matches them (checked in the source and with `wcmatch`, again on 0.7.34 and on 0.7.39, 2026-11-18: [[permissions]], Gotchas). Large-result offload still works (**ran**). A read-only agent needs more than a deny ([[permissions]], Gotchas).
+- Permissions, in order: allow write `/memories/**`, then deny write `/**`. Memory writes succeed; other writes return `permission denied` (**ran**). Paths with a hidden segment, such as `/.x`, are the exception: no `**` rule matches them (checked in the source and with `wcmatch`, again on 0.7.34, on 0.7.39, 2026-11-18, and on 0.7.40, 2026-11-19: [[permissions]], Gotchas). Large-result offload still works (**ran**). A read-only agent needs more than a deny ([[permissions]], Gotchas).
 - Namespace: `("app", "mem", workspace_id)`. `workspace_id` must be a slug or UUID. `"My Workspace 1"` raises `ValueError` on the first turn, even for "hi" (**ran**).
 - The UI reads store key `/AGENTS.md`, not `/memories/AGENTS.md` (**ran**).
-- Durable persistence: `AsyncSqliteSaver` + `AsyncSqliteStore` locally, `AsyncPostgres*` in production. Both ran through a restart on 0.7.20 (2026-09-30); SQLite ran again on 0.7.29 (2026-10-21), Postgres not re-run on 0.7.29; both re-run on 0.7.34 (2026-11-09) and on 0.7.39 (2026-11-18, Postgres 17 in Docker) with the same result (`../scripts/check_persistence.py`). On Windows, async Postgres needs `WindowsSelectorEventLoopPolicy` ([[persistence]]).
+- Durable persistence: `AsyncSqliteSaver` + `AsyncSqliteStore` locally, `AsyncPostgres*` in production. Both ran through a restart on 0.7.20 (2026-09-30); SQLite ran again on 0.7.29 (2026-10-21), Postgres not re-run on 0.7.29; both re-run on 0.7.34 (2026-11-09), on 0.7.39 (2026-11-18, Postgres 17 in Docker) and on 0.7.40 (2026-11-19, Postgres 17 in Docker) with the same result (`../scripts/check_persistence.py`). On Windows, async Postgres needs `WindowsSelectorEventLoopPolicy` ([[persistence]]).
 - One thread per (workspace, conversation). The framework never binds a thread to a workspace, so the app must.
 - Memory-tab edits don't reach an open thread (**ran**). Use `FreshMemory` or start a new thread (below).
 

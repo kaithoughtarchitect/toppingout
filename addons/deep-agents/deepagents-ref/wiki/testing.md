@@ -12,7 +12,7 @@ sources_hash: c109095fb638
 
 # Testing a deep agent (pytest, fake models)
 
-Script the model's replies with a LangChain fake chat model so tests make no API calls. Deep Agents binds tools to the model, and the stock fakes refuse that, so you need a one-line subclass. The pytest below **passed** on `deepagents` 0.7.20 / `langgraph` 1.2.12 on 2026-09-30, and again on `deepagents` 0.7.29 / `langgraph` 1.2.16 / `langchain` 1.4.6 on 2026-10-21. Not re-run on 0.7.34; **passed** again on `deepagents` 0.7.39 / `langgraph` 1.2.22 / `langchain` 1.5.0 on 2026-11-18.
+Script the model's replies with a LangChain fake chat model so tests make no API calls. Deep Agents binds tools to the model, and the stock fakes refuse that, so you need a one-line subclass. The pytest below **passed** on `deepagents` 0.7.20 / `langgraph` 1.2.12 on 2026-09-30, and again on `deepagents` 0.7.29 / `langgraph` 1.2.16 / `langchain` 1.4.6 on 2026-10-21. Not re-run on 0.7.34; **passed** again on `deepagents` 0.7.39 / `langgraph` 1.2.22 / `langchain` 1.5.0 on 2026-11-18, and on `deepagents` 0.7.40 / `langgraph` 1.2.23 / `langchain` 1.5.2 on 2026-11-19.
 
 ## Quick reference
 

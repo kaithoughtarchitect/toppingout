@@ -7,7 +7,7 @@ product: sdk
 keywords: retrieval, RAG, retrieval augmented generation, vector store, vector search, retriever, agentic RAG, 2-step RAG, knowledge base, semantic search, embeddings, search tool, document search, RubricMiddleware
 read_when: Read when adding RAG or a vector store to a deep agent, deciding how to wire a retrieval tool, or offloading search hits to files and subagents.
 updated: 2026-11-19
-sources_hash: f65221fe1226
+sources_hash: b284608f9389
 ---
 
 # Retrieval and RAG with Deep Agents
@@ -92,10 +92,12 @@ Why it works: orchestrator context holds paths, not text; parallel `task` calls 
 - Return compact results (ids/paths + short snippets) and let the agent `read_file` more; anything over 20,000 tokens is auto-offloaded anyway ([[summarization]]).
 - Put per-user/tenant filters in runtime context (`ToolRuntime.context`), never in model-chosen args ([[context-engineering]]).
 - For persistent corpora the agent curates itself (notes, wiki pages), plain files on a `StoreBackend` route plus `grep`/`glob` are often enough; semantic search over memory is not built in ([[memory]], [[agent-builder-memory]]).
+- Chunking: the retrieval and RAG pages (2026-11-19 fetch) now point to the LangChain guides [Chunk documents for retrieval](https://docs.langchain.com/oss/python/langchain/chunking.md) and [Improve retrieval quality](https://docs.langchain.com/oss/python/langchain/retrieval-optimization.md) for chunk size, splitting strategy and post-indexing tuning. Those guides are not mirrored here (layer 2).
+- Index and query with the same embedding model (and vector dimension); after switching models, re-embed and re-index (RAG tutorial warning, 2026-11-19).
 - Retrieval results are an indirect prompt-injection channel: prompts saying "treat as data" help but are not protection; validate outputs and citations.
 
 ## Gotchas
-- The tutorial's full-code prompt says "Use write_todos", but `write_todos` is not in the 0.7.39 default stack; the model will reference a missing tool unless you add `TodoListMiddleware`.
+- The tutorial's full-code prompt says "Use write_todos", but `write_todos` is not in the 0.7.40 default stack; the model will reference a missing tool unless you add `TodoListMiddleware`.
 - Tutorial uses `StateBackend`, so `/retrieved/` files are per-thread and vanish with the thread. Route `/retrieved/` to a `StoreBackend` if you want reuse.
 - The in-memory vector store re-embeds at every process start; persist it in production.
 - `retrieval.md`'s agentic example uses LangChain `create_agent`, not `create_deep_agent`; the Deep Agents version is the tutorial above.

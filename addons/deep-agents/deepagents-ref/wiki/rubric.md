@@ -63,7 +63,7 @@ RubricMiddleware(*, model, system_prompt=None, tools=None, grader_middleware=Non
    - `criteria`: a list of `{name, passed: True}` or `{name, passed: False, gap}`
    A validator rejects `satisfied` with any failing criterion, and `needs_revision` with all passing criteria.
 4. Coverage guard: the first usable pass **freezes** the criterion names (`_rubric_criteria`). Later passes are told to return exactly that many. An empty or under-counting response triggers **one** grader retry. If `satisfied` is still unbacked, it is downgraded to `needs_revision` with `unverified=True`.
-5. `needs_revision`, if `iteration + 1 < max_iterations`: appends a `HumanMessage(name="rubric_grader", additional_kwargs={"lc_source": "rubric_grader"})` (built with `langchain_core.messages.add_notification_metadata(..., source="rubric_grader")` since 0.7.33, same keys, still so in 0.7.39; the docs now call this notification metadata and say a frontend can read it with `get_notification_metadata`) listing the failing criteria and gaps, plus the passing ones ("do not regress"), and sets `jump_to="model"`.
+5. `needs_revision`, if `iteration + 1 < max_iterations`: appends a `HumanMessage(name="rubric_grader", additional_kwargs={"lc_source": "rubric_grader"})` (built with `langchain_core.messages.add_notification_metadata(..., source="rubric_grader")` since 0.7.33, same keys, still so in 0.7.40; the docs now call this notification metadata and say a frontend can read it with `get_notification_metadata`) listing the failing criteria and gaps, plus the passing ones ("do not regress"), and sets `jump_to="model"`.
 6. At the cap, the result is rewritten to `max_iterations_reached` and the loop ends. The last AI message is left as-is.
 7. A grader exception becomes `grader_error` (the explanation includes the exception type, HTTP status, model and strategy), and the loop ends. `GraphBubbleUp` (for example an interrupt from a grader tool or from `on_evaluation`) propagates as control flow.
 
@@ -91,8 +91,8 @@ RubricMiddleware(*, model, system_prompt=None, tools=None, grader_middleware=Non
 
 ## Gotchas
 
-- **Doc/code mismatch:** the docs say that at the cap `on_evaluation` still receives `result: "needs_revision"` and only `_rubric_status` says `max_iterations_reached`. In 0.7.39 code (unchanged since 0.7.34) the evaluation's `result` is rewritten to `max_iterations_reached` **before** the end event and the callback. Code wins.
-- Not beta: the class has had no `@beta` decorator since 0.7.33 (still none in 0.7.39), so constructing it emits no `LangChainBetaWarning`. The docs dropped their beta label by the 2026-11-18 fetch, so docs and code now agree.
+- **Doc/code mismatch:** the docs say that at the cap `on_evaluation` still receives `result: "needs_revision"` and only `_rubric_status` says `max_iterations_reached`. In 0.7.40 code (unchanged since 0.7.34) the evaluation's `result` is rewritten to `max_iterations_reached` **before** the end event and the callback. Code wins.
+- Not beta: the class has had no `@beta` decorator since 0.7.33 (still none in 0.7.40), so constructing it emits no `LangChainBetaWarning`. The docs dropped their beta label by the 2026-11-18 fetch, so docs and code now agree.
 - The docs' `RubricEvaluation.result` list omits `max_iterations_reached`, and the docs omit the `unverified` field.
 - A non-satisfied ending does **not** change the agent's answer. Check `_rubric_status`, the callback or the stream events before trusting the output.
 - The rubric is sticky on a checkpointed thread. Every later turn on that thread gets graded until you change or clear it.

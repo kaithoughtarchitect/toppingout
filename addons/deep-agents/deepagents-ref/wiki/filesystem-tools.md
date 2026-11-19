@@ -7,7 +7,7 @@ product: sdk
 keywords: filesystem tools, file tools, grep_exclude_dirs, offload_binary_content, ls, read_file, write_file, edit_file, delete, glob, grep, execute, FilesystemMiddleware, tool_token_limit_before_evict, large_tool_results, grep regex, read file limit, tool eviction, big tool output
 read_when: Read when the agent's file tools behave unexpectedly, grep regex finds nothing, read_file truncates, a large tool result is evicted, or execute is missing or reports success on failure.
 updated: 2026-11-19
-sources_hash: 5cc66b138b50
+sources_hash: 2f3ef7b90d47
 ---
 
 # Filesystem tools (ls, read_file, write_file, edit_file, delete, glob, grep, execute)
@@ -68,7 +68,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 ### read_file
 
 - Default window is **100 lines** (tool schema); the backend protocol default of 2000 only applies to direct backend calls.
-- Text output: optional notices, then a status header `@@ lines 1-100 of 350 | next offset 100 @@`, then the source lines **verbatim** (no line-number gutter in 0.7.39). The model must not copy the header into `edit_file`.
+- Text output: optional notices, then a status header `@@ lines 1-100 of 350 | next offset 100 @@`, then the source lines **verbatim** (no line-number gutter in 0.7.40). The model must not copy the header into `edit_file`.
 - Empty file returns `System reminder: File exists but has empty contents`. `limit <= 0` returns a distinct "no lines were read" reminder. Negative `offset` reads from line 1 with a notice.
 - Size cap: if the page exceeds `4 * tool_token_limit_before_evict` chars (80,000 by default) it is truncated with a message suggesting e.g. `execute(command='jq . /file')`. `read_file` results are never evicted to a file.
 - Images (`.png .jpg .jpeg .gif .webp`), audio, PDFs return multimodal content blocks (base64); `offset/limit` ignored. Video is supported when the `deepagents[video]` extra (`av`, `pillow`) is installed: `offset/limit` become seconds, frames sampled every 0.5 s. Any `encoding == "base64"` result is sent as a file block, never as text. See [[multimodal]].
@@ -79,8 +79,8 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 ### write_file / edit_file / delete
 
 - `write_file` overwrites silently (description tells the model it need not read first).
-- `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing; this tool errors otherwise" - that read-before-edit check is **not enforced** in the 0.7.39 middleware.
-- `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29+, still so in 0.7.39). Since 0.7.39 a `StoreBackend` file uploaded with a NUL byte is stored base64, so it counts as binary too ([[backends]]).
+- `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing; this tool errors otherwise" - that read-before-edit check is **not enforced** in the 0.7.40 middleware.
+- `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29+, still so in 0.7.40). Since 0.7.39 a `StoreBackend` file uploaded with a NUL byte is stored base64, so it counts as binary too ([[backends]]).
 - Two mutations (`write_file`/`edit_file`/`delete`) of the same path in one model response: the later ones return `Error: parallel file mutations to the same path are not allowed.`
 - `delete` is hidden from the model when the backend does not override `BackendProtocol.delete`.
 
@@ -100,7 +100,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 - `FilesystemBackend.grep` also has `context_lines`, but it is backend-only (not exposed to the model).
 - Long lines (0.7.33+): a match or context line over `GREP_LINE_CHAR_LIMIT` (2,000) chars is cut to a 2,000-char window centred on the first occurrence of the pattern (the head of the line when the pattern is not in it, as for context lines), with `[N chars clipped]` markers at the cut ends (`_clip_grep_line`). Only `content` mode shows line text.
 - `FilesystemBackend`'s Python fallback (used when `rg` is missing) searches only the named file when `path` is a file (0.7.33+); before, it walked the file's whole parent directory.
-- The in-memory grep (`StateBackend`, `StoreBackend`) skips binary files (0.7.29+, still so in 0.7.39).
+- The in-memory grep (`StateBackend`, `StoreBackend`) skips binary files (0.7.29+, still so in 0.7.40).
 - `BaseSandbox.grep` (0.7.25+) runs `rg` when it is installed in the sandbox and the search root is a directory, else GNU `grep`; patterns or globs that `rg` would read differently (newlines, `[`, `\`, `**`) stay on GNU `grep`. Directories named in the class attribute `grep_exclude_dirs` (default `(".git",)`) are skipped at any depth; subclass to add `node_modules` or set `()` to search everything. A search rooted at an excluded directory still searches it.
 
 ### execute

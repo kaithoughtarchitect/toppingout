@@ -7,7 +7,7 @@ product: dcode
 keywords: dcode config, config.toml, managed_config.toml, API key, /auth, base_url, OPENAI_BASE_URL, gateway, DEEPAGENTS_CODE_, DEEPAGENTS_HOME, .env, provider, custom provider, class_path, recursion_limit, allowed models, retries
 read_when: Read when dcode uses the wrong model or API key, a setting seems ignored, you need a custom or gateway provider, or an admin must pin policy.
 updated: 2026-11-19
-sources_hash: c4b27c03b6ce
+sources_hash: 28dc71170e92
 ---
 
 # dcode configuration, providers and credentials

@@ -6,8 +6,8 @@ status: sourced
 product: all
 keywords: Agent Builder, LangSmith Agent Builder, file-based memory, agent memory lessons, COALA, procedural memory, semantic memory, episodic memory, memory in Postgres, virtual filesystem memory, memory human approval, AGENTS.md learning, tools.json, no-code agent
 read_when: Read when designing file-based agent memory, or wanting real-world lessons on self-updating AGENTS.md, memory approval, and compaction from LangSmith Agent Builder.
-updated: 2026-11-18
-sources_hash: eac8e9399094
+updated: 2026-11-19
+sources_hash: 4f0c2b09ff2b
 ---
 
 # Lessons from Agent Builder's memory system
@@ -56,7 +56,7 @@ Start: `AGENTS.md` = "Summarize meeting notes." Week 1 correction "use bullet po
 
 ## Applying this with the SDK (mapping, not from the blog)
 - Postgres-backed files: a `StoreBackend` on a Postgres-backed LangGraph store, routed via `CompositeBackend` ([[backends]]). If your app seeds files with `upload_files` and they may hold a NUL byte, use 0.7.39+, which stores them base64 instead of as text that JSONB cannot hold (`../sources/package/deepagents/backends/store.py`).
-- HITL on memory writes: `FilesystemPermission(operations=["write"], paths=["/memories/**"], mode="interrupt")` ([[permissions]], [[human-in-the-loop]]). It does not pause `write_file` or `edit_file` on a hidden path such as `/memories/.notes.md` (still so in 0.7.39: [[permissions]], Gotchas); list those tools in `interrupt_on` if every memory write must be approved.
+- HITL on memory writes: `FilesystemPermission(operations=["write"], paths=["/memories/**"], mode="interrupt")` ([[permissions]], [[human-in-the-loop]]). It does not pause `write_file` or `edit_file` on a hidden path such as `/memories/.notes.md` (still so in 0.7.40: [[permissions]], Gotchas); list those tools in `interrupt_on` if every memory write must be approved.
 - Validation before commit: backend policy hooks returning an error string to the model.
 - Keep `AGENTS.md` short; push procedures into [[skills]] and tell the agent which goes where.
 - Background consolidation agent on a cron is the documented pattern in [[memory]].

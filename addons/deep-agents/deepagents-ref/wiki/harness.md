@@ -7,16 +7,16 @@ product: all
 keywords: deep agents harness, agent harness, create_agent, middleware stack, built-in tools, virtual filesystem, StateBackend, write_todos missing, planning removed, execute tool, install deepagents, pip install deepagents, task tool, prompt caching, LangGraph graph
 read_when: Read when starting with Deep Agents, asking what is on or off by default, or wondering why write_todos or execute is missing.
 updated: 2026-11-19
-sources_hash: 17786872fc31
+sources_hash: 0bcc4a161a7f
 ---
 
 # The Deep Agents harness
 
-`deepagents` (PyPI, MIT, v0.7.39) is an opinionated "agent harness": LangChain's `create_agent` tool-calling loop plus a pre-assembled middleware stack (virtual filesystem, subagents, summarization, prompt caching, tool-call repair), compiled as a LangGraph graph. Reach for it when a task is long-horizon, multi-step, produces artifacts, or needs isolated delegation; drop to `create_agent` or raw LangGraph when you want less (see [[products]]).
+`deepagents` (PyPI, MIT, v0.7.40) is an opinionated "agent harness": LangChain's `create_agent` tool-calling loop plus a pre-assembled middleware stack (virtual filesystem, subagents, summarization, prompt caching, tool-call repair), compiled as a LangGraph graph. Reach for it when a task is long-horizon, multi-step, produces artifacts, or needs isolated delegation; drop to `create_agent` or raw LangGraph when you want less (see [[products]]).
 
 ## Quick reference
 
-- `deepagents` 0.7.39 = `create_agent` loop + fixed middleware stack, compiled as a LangGraph `CompiledStateGraph`; entry point is `create_deep_agent(...)`.
+- `deepagents` 0.7.40 = `create_agent` loop + fixed middleware stack, compiled as a LangGraph `CompiledStateGraph`; entry point is `create_deep_agent(...)`.
 - Python >=3.11; `pip install deepagents` (extras `[aws]`, `[quickjs]`, `[video]`); OpenAI etc. need their own integration package.
 - On by default: file tools (`ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `delete`), `task` + `general-purpose` subagent, summarization, tool-call repair, prompt caching, refusal-as-error (0.7.33+).
 - Opt-in only: `write_todos` (add `TodoListMiddleware()`), skills (`skills=`), memory (`memory=`), HITL (`interrupt_on=`), async subagents, JS interpreter.
@@ -35,7 +35,7 @@ sources_hash: 17786872fc31
 - **Behaviour follows the model.** Harness profiles apply per-model prompt suffixes, tool-description overrides and extra middleware automatically ([[models]]).
 - **"Trust the LLM" security model.** The agent can do anything its tools allow; enforce boundaries in tools / backends / sandboxes / [[permissions]], not in the prompt (README "Security").
 
-## Built-in capabilities (0.7.39)
+## Built-in capabilities (0.7.40)
 
 | Capability | On by default? | Provided by | Page |
 | - | - | - | - |
@@ -119,7 +119,7 @@ Provider-native server tools can be passed as dicts in `tools=` (quickstart): `{
 - `../sources/docs/oss/python/deepagents/overview.md`
 - `../sources/docs/oss/python/deepagents/quickstart.md`
 - `../sources/docs/github/deepagents-README.md`
-- `../sources/package/deepagents-0.7.39.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.40.dist-info/METADATA`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_prompt_caching.py`

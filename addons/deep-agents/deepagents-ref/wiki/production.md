@@ -169,7 +169,7 @@ async def agent(config: RunnableConfig):
 
 ## Gotchas
 
-- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt` (still so in the 2026-11-18 fetch). In 0.7.39 (as in 0.7.29) `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
+- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt` (still so in the 2026-11-18 fetch). In 0.7.40 (as in 0.7.29) `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
 - `rt.server_info` is only populated on LangGraph server. In a plain local `agent.invoke`, a namespace lambda reading `rt.server_info.user.identity` raises. For self-hosting read ids from `rt.context` instead.
 - `create_deep_agent` already applies `.with_config({"recursion_limit": 9_999, ...})` (graph.py). You only need a higher limit on the client side (the frontend docs suggest `recursionLimit: 10000`).
 - Deep Agents write internal artifacts (`/conversation_history/...`, `/large_tool_results/...`) to the default backend (the root of `CompositeBackend.artifacts_root`). Keep `StateBackend` as the default so these don't land in a durable store or on disk.

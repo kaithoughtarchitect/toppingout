@@ -8,7 +8,7 @@ You're inside the raw material. It's unedited official docs plus the `deepagents
   - `StoreBackend()` with no `namespace=`: the namespace is required, as a keyword.
   - The README, `overview.md`, `products.md` and the tutorials describe planning (`write_todos`) as on by default. Since 0.7.0 it needs `TodoListMiddleware()`.
   - `task(name=…, task=…)`: the real arguments are `description` and `subagent_type`.
-  - `subagents.md` says a fork's `system_prompt` is appended to the inherited prompt; since 0.7.35 it goes in the fork's task message and the system prompt stays the parent's.
+  - `subagents.md`'s mode comparison table says a fork's optional system prompt "appends instructions"; since 0.7.35 it goes in the fork's task message and the system prompt stays the parent's (the page's field table and fork section say so since 2026-11-19).
   - The `backends.md` migration note says the factory pattern still works with a deprecation warning; it raises `TypeError`.
   - The content-builder tutorial pins `deepagents>=0.3.5,<0.4.0`, which is stale.
   - Blob offload docs say to set `artifacts_root` on the middleware; `FilesystemMiddleware` has no such argument (use `CompositeBackend(artifacts_root=...)`).

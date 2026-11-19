@@ -7,7 +7,7 @@ product: sdk
 keywords: model, provider:model, init_chat_model, choose model, switch model, OpenRouter, Ollama, Bedrock, Azure OpenAI, harness profile, HarnessProfile, provider profile, ProviderProfile, register_harness_profile, register_provider_profile, use_responses_api, excluded_tools, runtime model switching
 read_when: Read when picking or configuring a model, tuning behaviour per model, excluding a tool or middleware for one model, or a profile does not apply.
 updated: 2026-11-19
-sources_hash: 0fef9439c8ea
+sources_hash: 24ed6c95b4df
 ---
 
 # Models and profiles
@@ -77,7 +77,7 @@ model = init_chat_model("openai:gpt-5.5", use_responses_api=True, store=False,
 - Context 1,050,000 tokens. Supported params include `tools`, `tool_choice`, `reasoning`, `reasoning_effort`, `response_format`, `structured_outputs`, `max_tokens`, `seed`. **`temperature` isn't listed.**
 - Related slugs: `openai/gpt-6-luna-pro`; `:batch` variants; `~openai/gpt-luna-latest` (floating alias, so avoid it for reproducibility).
 - Harness profile: none built in for this string, so there's no prompt suffix and no extra middleware. The `openrouter` provider profile above still applies (Azure ignore, attribution) because it's a string. Register your own with `register_harness_profile("openrouter:openai/gpt-6-luna", HarnessProfile(...))` if needed.
-- The Deep Agents docs never mention GPT-6 Luna (the dcode docs show `openai:gpt-5.6-luna`). The 0.7.39 `SummarizationMiddleware` docstring uses `openai:gpt-6-luna` as a cheaper `summarizer=` example ([[summarization]]). The rest of this entry comes from OpenRouter, not LangChain.
+- The Deep Agents docs never mention GPT-6 Luna (the dcode docs show `openai:gpt-5.6-luna`). The 0.7.40 `SummarizationMiddleware` docstring uses `openai:gpt-6-luna` as a cheaper `summarizer=` example ([[summarization]]). The rest of this entry comes from OpenRouter, not LangChain.
 
 Other built-in provider profiles: `openai` (`use_responses_api=True`), `nvidia` (header `X-BILLING-INVOKE-ORIGIN: DeepAgents`).
 
@@ -120,7 +120,7 @@ register_harness_profile(
 | `extra_middleware` | sequence or zero-arg factory | Appended to main, GP and declarative subagent stacks (not compiled/async) | by concrete type |
 | `general_purpose_subagent` | `GeneralPurposeSubagentProfile or None` | `enabled` (None/True/False), `description`, `system_prompt` | field-wise |
 
-Built-in harness profiles in 0.7.39 (registered lazily on first registry access):
+Built-in harness profiles in 0.7.40 (registered lazily on first registry access):
 - `anthropic:claude-sonnet-4-6`, `anthropic:claude-haiku-4-5`: suffix with parallel-tool-calls, investigate-before-answering, tool-result-reflection blocks.
 - `anthropic:claude-opus-4-7`: same plus `<tool_usage>` and `<subagent_usage>` blocks.
 - `openai:gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.3-codex`: Codex behaviour suffix + `extra_middleware=[TodoListMiddleware()]` (so these models get `write_todos`, see [[planning]]).
@@ -133,7 +133,8 @@ No provider-wide built-in for `anthropic` or `openai`; other models (e.g. `claud
 - String model: the string itself is the key. Exact `provider:model`, merged over the bare `provider` profile if both exist; else provider only; else empty profile.
 - Model instance: try `f"{ls_provider}:{model_name}"`, then identifier if it contains `:`, then the provider's profile. Provider comes from `model._get_ls_params()["ls_provider"]`.
 - Subagents resolve their own profile from their own model.
-- Re-registering a key merges (does not replace). Load order: built-ins, then entry-point plugins (`deepagents.harness_profiles`, `deepagents.provider_profiles` groups), then your calls. No wildcard key.
+- Re-registering a key merges (does not replace). Load order: built-ins, then entry-point plugins (`deepagents.provider_profiles`, then `deepagents.harness_profiles`), then your calls. No wildcard key.
+- Since 0.7.40 both plugin groups come from one scan of the installed entry points, on the first `create_deep_agent()` of a process (`_discover_profile_plugins` in `profiles/_builtin_profiles.py`). If that scan raises (for example on broken `dist-info` metadata), one warning is logged and emitted and no plugin of either group loads; before, each group was scanned and could fail on its own. A plugin that fails to load or register is still skipped on its own.
 
 ### Config files
 

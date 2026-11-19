@@ -7,7 +7,7 @@ product: dcode
 keywords: approval modes, manual mode, auto mode, YOLO, --yolo, auto-approve, human in the loop, HITL, approval, shell allow list, -S, allow-fs-tools, sandbox, remote sandbox, daytona, modal, runloop, untrusted repo, project trust, SandboxProvider
 read_when: Read when running dcode unattended or in an untrusted repo, choosing an approval mode, allowing shell commands, or setting up a remote sandbox.
 updated: 2026-11-19
-sources_hash: 14eb3aac2ae1
+sources_hash: e952498a20a0
 ---
 
 # dcode approval modes and remote sandboxes
@@ -69,6 +69,7 @@ dcode -n "Fix the build" -S all       # any command, no confirmation
 
 - Project `.mcp.json` servers are default-deny, whether stdio or remote (remote servers could SSRF or exfiltrate `${VAR}` headers). The interactive prompt offers "Allow once" or "Allow for this project — until changed". Saved approvals go to `[mcp].enabled_project_server_approvals` as `{project_root, name, fingerprint}` entries; any change to the definition triggers a new prompt.
 - Headless runs silently skip unapproved project servers unless `--trust-project-mcp` is passed. Deny lists (`[mcp].disabled_project_servers`, `DEEPAGENTS_CODE_DISABLED_PROJECT_MCP_SERVERS`) always win. `DEEPAGENTS_CODE_DANGEROUSLY_ENABLE_PROJECT_MCP_SERVERS` approves by name across projects and replaces saved approvals.
+- Before 0.2.11 dcode did not honour MCP hook approval policies (changelog: "Honor MCP hook approval policies"); upgrade if you rely on hooks to gate MCP tools.
 - Project hooks need workspace trust, stored in `.state/hooks_trust.json`. Project extensions need extension trust. Plugins are trusted by enabling them.
 - The project `.env` loads by default. Dangerous variables are blocked from dotenv, but `.env`, `Makefile` and build scripts can still influence what runs. Use `DEEPAGENTS_CODE_READ_PROJECT_DOTENV=0` and a remote sandbox for untrusted repositories.
 
@@ -114,7 +115,7 @@ supports_snapshot_name = false        # default false
 region = "us-east-1"
 ```
 
-A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProvider`. It implements `get_or_create(*, sandbox_id=None, **kw)`, which returns an SDK `SandboxBackendProtocol`, and `delete(*, sandbox_id, **kw)`. It can optionally define a `metadata` property returning `SandboxProviderMetadata`. `SandboxBackendProtocol` exists in SDK 0.7.39 `backends/protocol.py`. The `deepagents_code` classes are docs only.
+A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProvider`. It implements `get_or_create(*, sandbox_id=None, **kw)`, which returns an SDK `SandboxBackendProtocol`, and `delete(*, sandbox_id, **kw)`. It can optionally define a `metadata` property returning `SandboxProviderMetadata`. `SandboxBackendProtocol` exists in SDK 0.7.40 `backends/protocol.py`. The `deepagents_code` classes are docs only.
 
 ## Gotchas
 

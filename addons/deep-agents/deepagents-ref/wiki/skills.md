@@ -96,7 +96,7 @@ agent = create_deep_agent(
   -> Read `/skills/org/langgraph-docs/SKILL.md` for full instructions
 ```
 
-plus instructions to `read_file(path, limit=1000)` (default read is 100 lines). With no skills: "(No skills available yet. You can create skills in ...)". Source-level `ls` errors appear as an escaped `<skill_load_warnings>` block (max 20, 1000 chars each). There is no dedicated skill-reading tool; level 2/3 loading is ordinary `read_file` ([[filesystem-tools]]). Stack position (0.7.39): after your middleware and profile extras, right before prompt caching, on the main agent and in subagents ([[middleware]]). Your own middleware therefore runs before it and can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section; replace `SkillsMiddleware` by name if you need that.
+plus instructions to `read_file(path, limit=1000)` (default read is 100 lines). With no skills: "(No skills available yet. You can create skills in ...)". Source-level `ls` errors appear as an escaped `<skill_load_warnings>` block (max 20, 1000 chars each). There is no dedicated skill-reading tool; level 2/3 loading is ordinary `read_file` ([[filesystem-tools]]). Stack position (0.7.40): after your middleware and profile extras, right before prompt caching, on the main agent and in subagents ([[middleware]]). Your own middleware therefore runs before it and can't see this turn's freshly loaded `skills_metadata` or edit the skills prompt section; replace `SkillsMiddleware` by name if you need that.
 
 ## Loading lifecycle and reload
 
@@ -127,7 +127,7 @@ result = agent.invoke(
 ```
 
 - `pinned_skills` is a state key on `SkillsState` (names only, matched exactly against `skills_metadata`). In `before_model`, `SkillsMiddleware` reads each named `SKILL.md`, strips the frontmatter, and appends one `HumanMessage` per skill in the order named: `<skill name="..." path="...">body</skill>`.
-- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. In 0.7.39 `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model. The docs (2026-11-18) now call this notification metadata, read with `langchain_core.messages.get_notification_metadata(message)` (returns `{"source": "pinned_skill", ...}`).
+- Each pinned message has `additional_kwargs["lc_source"] == "pinned_skill"` and `additional_kwargs["skill"] == {"name", "path", "description"}`, so a UI can show a label instead of the text. In 0.7.40 `lc_source` is set by `langchain_core.messages.add_notification_metadata(message, source="pinned_skill")` (`_pinned_skill_message` in `skills.py`); the keys are the same, and LangChain's chat model integrations don't send them to the model. The docs (2026-11-18) now call this notification metadata, read with `langchain_core.messages.get_notification_metadata(message)` (returns `{"source": "pinned_skill", ...}`).
 - The message is a snapshot: editing `SKILL.md` later doesn't change it; pinning again appends a new copy. Earlier messages never change, so the prompt cache holds.
 - Unknown names and unreadable (or over 10 MB, or non-UTF-8) files are skipped with a debug log, no error. The key is cleared once used (reducer appends, so parallel tool calls can each pin).
 - Deep Agents does not parse skill names out of messages. Your app finds them (e.g. a regex for `/name`) and passes them in `pinned_skills`.
@@ -203,7 +203,7 @@ Reading works on any backend; running `scripts/*.py` needs a shell, i.e. a sandb
 - Custom isolated subagents do not inherit skills; the GP subagent and forks do.
 - The skills prompt fragment is kept even though other built-in tool prose was removed in 0.7; it is the only channel for the skill index.
 - In the assembled prompt, the skills block still comes before the memory block (Skills runs before caching, Memory after).
-- In 0.7.39 Skills sits just before prompt caching, after your middleware. Custom middleware that reads `skills_metadata` in `before_model` (expecting it loaded) or edits the skills prompt in `wrap_model_call` runs before Skills and sees neither.
+- In 0.7.40 Skills sits just before prompt caching, after your middleware. Custom middleware that reads `skills_metadata` in `before_model` (expecting it loaded) or edits the skills prompt in `wrap_model_call` runs before Skills and sees neither.
 - `include_tools` must be one space-separated string; a YAML list silently matches no tool (only a warning in the log).
 - A skill tool passed to the agent's `tools=` (not deferred) is always visible; gating only works for tools passed to `SkillsMiddleware(tools=...)`.
 

@@ -7,7 +7,7 @@ product: sdk
 keywords: async subagent, async sub-agent, background task, AsyncSubAgent, start_async_task, Agent Protocol, graph_id, long-running agent, non-blocking subagent, LangSmith Deployment, remote subagent, cancel task, update task, TaskEvent, task notification, deepagents_notification, get_notification_metadata, waiting status, pending status, fork mode, parent_thread_id, update_strategy, enqueue, notify_parent, webhook
 read_when: Read when work should run in the background while the supervisor keeps talking, or when wiring a remote graph as a subagent.
 updated: 2026-11-19
-sources_hash: 874527bb194c
+sources_hash: df07d2f6bb7b
 ---
 
 # Async subagents (background tasks on Agent Protocol servers)

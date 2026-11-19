@@ -7,7 +7,7 @@ product: sdk
 keywords: middleware stack, middleware order, ModelRefusalMiddleware, ModelRefusalError, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware, BackendConsumer, bind_backend, middleware needs backend
 read_when: Read when you need the exact middleware order, where custom middleware lands, how to replace or remove a built-in, or why a hook misbehaves across subagents.
 updated: 2026-11-19
-sources_hash: d6b83aef65c8
+sources_hash: 64e98eaddd5e
 ---
 
 # The middleware stack
@@ -30,7 +30,7 @@ sources_hash: d6b83aef65c8
 - Gotcha: mutating `self` in hooks races across subagents/threads; use state.
 - Gotcha: where docs and `graph.py` disagree on order, code wins.
 
-## Main agent stack, exact order (0.7.39)
+## Main agent stack, exact order (0.7.40)
 
 Core (built first):
 
@@ -62,7 +62,7 @@ Post-processing:
 - Profile `excluded_middleware` filter runs, then your `middleware=` is merged, then the filter runs again (so exclusions also remove your instances).
 - `_ToolExclusionMiddleware(excluded=profile.excluded_tools)` is appended **last** if the profile excludes tools, so no later `wrap_model_call` can restore them; excluded tools are also non-executable.
 
-Confirmed on 0.7.39 (2026-11-19) by capturing the list `create_deep_agent` passes to `create_agent`, with a fake model, `skills`, `memory`, `interrupt_on`, one async subagent and one custom middleware: `FilesystemMiddleware, SubAgentMiddleware, _ParentNotifierMiddleware, SummarizationMiddleware, PatchToolCallsMiddleware, AsyncSubAgentMiddleware, <yours>, SkillsMiddleware, AnthropicPromptCachingMiddleware (class _LazyAnthropicPromptCachingMiddleware), MemoryMiddleware, HumanInTheLoopMiddleware, UnsupportedContentMiddleware, ModelRefusalMiddleware`. The same capture on 0.7.29 (2026-10-21) gave this list without `ModelRefusalMiddleware`, which arrived in 0.7.33.
+Confirmed on 0.7.39 (2026-11-19) by capturing the list `create_deep_agent` passes to `create_agent`, with a fake model, `skills`, `memory`, `interrupt_on`, one async subagent and one custom middleware: `FilesystemMiddleware, SubAgentMiddleware, _ParentNotifierMiddleware, SummarizationMiddleware, PatchToolCallsMiddleware, AsyncSubAgentMiddleware, <yours>, SkillsMiddleware, AnthropicPromptCachingMiddleware (class _LazyAnthropicPromptCachingMiddleware), MemoryMiddleware, HumanInTheLoopMiddleware, UnsupportedContentMiddleware, ModelRefusalMiddleware`. The same capture on 0.7.29 (2026-10-21) gave this list without `ModelRefusalMiddleware`, which arrived in 0.7.33. Re-captured on 0.7.40 / langchain 1.5.2 (2026-11-19): the same list.
 
 Passing a `SkillsMiddleware` in `middleware=` (its `.name` is `"SkillsMiddleware"`) replaces the default in place. If you passed no `skills=`, its `sources` become `skills`, so the default slot exists and the general-purpose subagent gets the same sources.
 
@@ -79,7 +79,7 @@ Forked subagent (`mode="fork"`): uses the parent's `skills` (a fork can't set it
 
 When a subagent run raises `ModelRefusalError` (or a `StructuredOutputValidationError` carrying a refusal), the `task` tool catches it and returns a notice to the parent instead of failing: `The subagent stopped because a model refused the request.`, then the refusal category and explanation when present, then `Retrying the same request is unlikely to succeed; rephrase it or continue without it.` (`_refusal_notice` in `subagents.py`, 0.7.33+). A subagent whose last message holds a refusal block returns the same notice.
 
-In 0.7.39, skills sit in the same place on the main agent and in subagents: after your middleware and profile extras, right before caching.
+In 0.7.40, skills sit in the same place on the main agent and in subagents: after your middleware and profile extras, right before caching.
 
 ## Adding custom middleware
 
@@ -106,7 +106,7 @@ agent = create_deep_agent(model="openai:gpt-5.5", middleware=[log_tool_calls, Co
 
 The `state_schema` is required: a hook update for a key no schema declares is dropped without an error, so without it `turns` never reaches state. Ran on 0.7.39 with a fake model and a checkpointer (2026-11-19): two turns on one thread gave `turns == 2`; the same class without `state_schema` left the key out of the result.
 
-Merge rule (`_apply_custom_middleware`): if `m.name` matches a name in the assembled stack it **replaces in place** (keeps position); otherwise it is spliced after the last core entry (before profile extras, Skills, caching, memory, HITL, UnsupportedContent, ModelRefusal). `create_agent` rejects two middleware with the same name. A replacement `FilesystemMiddleware` without its own `permissions` inherits the agent's `permissions=`; if both have non-empty rules that differ, `create_deep_agent` raises `ValueError` (0.7.39 `graph.py`).
+Merge rule (`_apply_custom_middleware`): if `m.name` matches a name in the assembled stack it **replaces in place** (keeps position); otherwise it is spliced after the last core entry (before profile extras, Skills, caching, memory, HITL, UnsupportedContent, ModelRefusal). `create_agent` rejects two middleware with the same name. A replacement `FilesystemMiddleware` without its own `permissions` inherits the agent's `permissions=`; if both have non-empty rules that differ, `create_deep_agent` raises `ValueError` (0.7.40 `graph.py`).
 
 ### Middleware that needs the backend (`BackendConsumer`, 0.7.36+)
 
@@ -127,7 +127,7 @@ class AuditFiles(AgentMiddleware):
 agent = create_deep_agent(model=..., backend=my_backend, middleware=[AuditFiles()])
 ```
 
-Probe on 0.7.39 on 2026-11-18 (fake model): a middleware with `bind_backend` in `middleware=` and another in a subagent's `middleware` both received the exact `backend` object passed to `create_deep_agent`. Not bound: middleware inside a `CompiledSubAgent` runnable, on an async subagent, or in a stack you build with `create_agent` yourself. No built-in middleware implements it in 0.7.39. Only the reference docs mention it (`../sources/docs/oss/python/reference/deepagents-python.md`).
+Probe on 0.7.39 on 2026-11-18 (fake model): a middleware with `bind_backend` in `middleware=` and another in a subagent's `middleware` both received the exact `backend` object passed to `create_deep_agent`. Not bound: middleware inside a `CompiledSubAgent` runnable, on an async subagent, or in a stack you build with `create_agent` yourself. No built-in middleware implements it in 0.7.40. Only the reference docs mention it (`../sources/docs/oss/python/reference/deepagents-python.md`).
 
 Replace recipes (all need `deepagents>=0.7`):
 
@@ -189,6 +189,7 @@ Raw `SubAgentMiddleware` specs must include `model` and `tools` (else `ValueErro
 - A directly constructed `SummarizationMiddleware` has `trigger=None`, `keep=("messages", 20)`, `trim_tokens_to_summarize=4000`, no arg truncation; the default factory uses fraction thresholds (0.85/0.10) when the model profile exposes `max_input_tokens`, else 170k tokens / keep 6 messages.
 - The from-scratch guide's `visualizer` subagent (raw `SubAgentMiddleware`, `"tools": []`) has no file or execute tools in code, despite the prose saying it writes and saves scripts.
 - Mutating `self` in hooks races across subagents / parallel tools / threads; use state.
+- LangSmith shows empty inputs for the hook spans of Deep Agents' own middleware: each sets `trace_policy = TracePolicy(process_inputs=omit_payload)` (seen in 0.7.40; customization docs 2026-11-19). Your middleware and LangChain's `HumanInTheLoopMiddleware` trace full inputs. List and override: [[customization]], Gotchas.
 - `UnsupportedContentMiddleware` should stay late (in the built stack only `ModelRefusalMiddleware` and tool exclusion follow it) so it sees the final `request.model` (matters with runtime model swaps).
 - Since 0.7.33 a model refusal is an exception, not a final answer. Catch `ModelRefusalError` (`langchain_core.exceptions`) around `invoke`, pass a `ModelFallbackMiddleware`, or exclude `ModelRefusalMiddleware` to get the old behaviour. Tokens may already have streamed before the error.
 
