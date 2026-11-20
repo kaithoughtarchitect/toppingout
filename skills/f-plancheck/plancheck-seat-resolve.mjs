@@ -74,6 +74,14 @@ const CANDIDATE_IDS_FOR_ANTHROPIC_HOST = ["sol"];
 const CANDIDATE_IDS_FOR_OPENAI_HOST = ["claude"];
 const CANDIDATE_IDS_FOR_OTHER_HOST = ["claude", "sol"];
 
+// A second seat from a third family, on by default (owner ruling 2026-11-20: "i want agy on by
+// default for plancheck"): Gemini through agy on the owner's Google subscription, $0 per call. Added
+// beside the claude/codex seat whenever its row passes the same subscription, door and panel checks
+// and its family is neither the host's, the Player's nor the first seat's. Like the first seat, its
+// availability is never probed here: the dispatcher's preflight omits it when agy is missing or
+// not signed in, and the run goes on with the first seat.
+const EXTRA_SEAT_IDS = ["gemini-hydrogen-agy"];
+
 /**
  * Pure. No I/O (argv is injectable for `--self-test`; defaults to `process.argv`). Reads a
  * `--name value` pair off argv.
@@ -177,7 +185,17 @@ export function selectUnattendedSeat({ host, player, roster }) {
     if (row.door === "OpenRouter") continue; // never a metered door, whatever the row claims about `cost`
     if (!Array.isArray(row.pickableAs) || !row.pickableAs.includes("panel")) continue;
     if (excludedVendors.has(row.vendor)) continue; // host's or Player's own family
-    return { ok: true, seat: { id: row.id, door: row.door }, reason: null };
+    const extraSeats = [];
+    const used = new Set([...excludedVendors, row.vendor]);
+    for (const xid of EXTRA_SEAT_IDS) {
+      const x = byId[xid];
+      if (!x || x.cost !== "subscription" || x.door === "OpenRouter") continue;
+      if (!Array.isArray(x.pickableAs) || !x.pickableAs.includes("panel")) continue;
+      if (used.has(x.vendor)) continue;
+      used.add(x.vendor);
+      extraSeats.push({ id: x.id, door: x.door });
+    }
+    return { ok: true, seat: { id: row.id, door: row.door }, extraSeats, reason: null };
   }
 
   return {
@@ -255,7 +273,7 @@ function main() {
 
   const hostVendor = resolvePlayerVendor(host, roster);
   const playerVendor = resolvePlayerVendor(player, roster);
-  const payload = { seats: [{ id: result.seat.id, door: result.seat.door }] };
+  const payload = { seats: [{ id: result.seat.id, door: result.seat.door }, ...(result.extraSeats || [])] };
 
   // On success only: create the --out parent directory if it does not already exist yet, exactly
   // as originally specified — a fresh scratch directory (exactly what a CI job hands
@@ -272,7 +290,7 @@ function main() {
   writeFileSync(outPath, JSON.stringify(payload), "utf8");
 
   console.log(
-    `PLANCHECK_SEAT_RESOLVE_OK ${result.seat.id} ${result.seat.door} host:${hostVendor} player:${playerVendor}`,
+    `PLANCHECK_SEAT_RESOLVE_OK ${[result.seat, ...(result.extraSeats || [])].map((x) => `${x.id} ${x.door}`).join(" + ")} host:${hostVendor} player:${playerVendor}`,
   );
   process.exit(0);
 }
@@ -324,6 +342,37 @@ function selfTest() {
     (() => {
       const r = selectUnattendedSeat({ host: "claude", player: "grok", roster });
       return r.ok === true && r.seat.id === "sol" && r.seat.door === "codex CLI";
+    })(),
+  );
+  check(
+    "agy on by default: host claude adds gemini-hydrogen-agy (Google, $0) beside sol",
+    (() => {
+      const r = selectUnattendedSeat({ host: "claude", player: "grok", roster });
+      return r.ok && r.extraSeats.length === 1 && r.extraSeats[0].id === "gemini-hydrogen-agy" && r.extraSeats[0].door === "agy CLI";
+    })(),
+  );
+  check(
+    "agy on by default: host codex adds it beside claude too",
+    (() => {
+      const r = selectUnattendedSeat({ host: "codex", player: "grok", roster });
+      return r.ok && r.seat.id === "claude" && r.extraSeats.map((x) => x.id).join() === "gemini-hydrogen-agy";
+    })(),
+  );
+  check(
+    "agy seat skipped when the Player is a Google model (never its own family)",
+    (() => {
+      const r = selectUnattendedSeat({ host: "claude", player: "gemini-hydrogen", roster });
+      return r.ok && r.seat.id === "sol" && r.extraSeats.length === 0;
+    })(),
+  );
+  check(
+    "agy seat skipped when its row is metered or missing",
+    (() => {
+      const metered = { ...roster, models: roster.models.map((m) => (m.id === "gemini-hydrogen-agy" ? { ...m, cost: "openrouter" } : m)) };
+      const gone = { ...roster, models: roster.models.filter((m) => m.id !== "gemini-hydrogen-agy") };
+      const a = selectUnattendedSeat({ host: "claude", player: "grok", roster: metered });
+      const b = selectUnattendedSeat({ host: "claude", player: "grok", roster: gone });
+      return a.ok && a.extraSeats.length === 0 && b.ok && b.extraSeats.length === 0;
     })(),
   );
   check(

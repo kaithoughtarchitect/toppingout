@@ -116,7 +116,7 @@ costume. **With a standing choice, use it** (above, including its family, vendor
 --out {scratch}/seats.json`. It imports `resolvePlayerVendor` from this skill's own
 `plancheck-pick.mjs` rather than re-deriving the family rule, and applies the operator's
 fixed claude↔codex rule over this same roster: host claude → seat codex; host codex → seat
-claude; any other resolvable host family → claude, falling back to codex; and it refuses
+claude; any other resolvable host family → claude, falling back to codex; **plus, on by default, `gemini-hydrogen-agy`** (Gemini through agy on the owner's Google subscription, $0) as a second seat whenever its family is neither the host's, the Player's nor the first seat's (the dispatcher's preflight omits it where agy is missing or not signed in, and the run goes on with the first seat); and it refuses
 (exit 2, no file written) rather than seat the host's or Player's own vendor family. It
 never probes door availability, the existing `plancheck-dispatch.mjs` preflight remains the
 single source of availability truth.
@@ -124,8 +124,8 @@ single source of availability truth.
 The resolver's candidates are drawn **only** from this roster's `cost: "subscription"` rows (the $0 CLI
 doors), never a `cost: "openrouter"` metered row, because an unattended run cannot ask
 before spending. The resolver writes exactly
-`{"seats":[{"id":...,"door":...}]}`; model, vendor, and `effort: "high"` still come from the
-roster, never from the seats file it writes. A single resolved seat is the same legitimate
+`{"seats":[{"id":...,"door":...}, ...]}` (one or two seats); model, vendor, and `effort: "high"` still come from the
+roster, never from the seats file it writes. A single resolved seat (no agy seat, or agy omitted at preflight) is the same legitimate
 single-seat cold read Law A already allows (`picker.minSeats:1`). Exit 2 means refuse rather
 than self-review, turning that refusal into a typed halt is the unattended caller's job, not
 this skill's.
