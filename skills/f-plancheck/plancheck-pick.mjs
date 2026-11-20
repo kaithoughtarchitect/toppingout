@@ -20,7 +20,7 @@ const ROSTER_PATH = path.join(DIR, "plancheck-roster.json");
 const PICK_PATH = path.join(DIR, "plancheck-pick.json");
 const HTML_PATH = path.join(DIR, "plancheck-console.html");
 
-const DOORS = new Set(["codex CLI", "claude CLI", "grok CLI", "OpenRouter"]);
+const DOORS = new Set(["codex CLI", "claude CLI", "grok CLI", "agy CLI", "OpenRouter"]);
 
 /** Pure. No I/O. `{ id -> roster row }` for O(1) seat lookup. */
 function modelsById(roster) {
@@ -69,10 +69,12 @@ export function validateRoster(roster) {
 
   // First pass: which vendors already have a $0 CLI door (codex/claude/grok CLI).
   // An OpenRouter row for one of those vendors would duplicate a $0 door with a
-  // pay-per-token one — refused below.
+  // pay-per-token one: refused below. The agy CLI door does not count: it needs
+  // a Google AI Pro sign-in many owners lack, so the OpenRouter Gemini rows stay
+  // as their fallback.
   const cliDoorVendors = new Set();
   for (const m of models) {
-    if (m && typeof m === "object" && m.door && m.door !== "OpenRouter" && m.vendor) {
+    if (m && typeof m === "object" && m.door && m.door !== "OpenRouter" && m.door !== "agy CLI" && m.vendor) {
       cliDoorVendors.add(m.vendor);
     }
   }

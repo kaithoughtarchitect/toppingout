@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "snapshot_date": "2026-11-18",
+  "snapshot_date": "2026-11-20",
   "source": "Single home for f-plancheck seats. Edit this file to change the pool. plancheck-pick.mjs, plancheck-console.html, and plancheck-dispatch.mjs read it. Every seat runs at high reasoning. Claude-family models are never OpenRouter rows (roster rule since 2026-09-02) — the Claude door is the claude CLI. Host family and declared Player family are greyed/refused at pick time.",
   "picker": {
     "minSeats": 1,
@@ -197,6 +197,42 @@
       "released": "2026-11-12",
       "blurb": "Google's Gemini 4 Hydrogen, newer than Carbon and cheaper. Added 2026-11-18.",
       "note": "OpenRouter id google/gemini-4-hydrogen. Dispatched headless via pi at thinking high: pi -p … --model openrouter/google/gemini-4-hydrogen --thinking high. Shares vendor Google with gemini and gemini-carbon — the picker seats one of them."
+    },
+    {
+      "id": "gemini-hydrogen-agy",
+      "name": "Gemini 4 Hydrogen (agy)",
+      "vendor": "Google",
+      "door": "agy CLI",
+      "cliModel": "gemini-4-hydrogen",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "subscription",
+      "blurb": "Gemini 4 Hydrogen through Antigravity's CLI (agy) on the owner's Google AI Pro subscription: no per-call charge. Added 2026-11-20. The OpenRouter row gemini-hydrogen is the same model for owners without agy.",
+      "note": "agy -p \"<read the assignment file>\" --model gemini-4-hydrogen --effort high --output-format stream-json --disable-slash-commands --settings '{\"trustedWorkspaces\":[\"<repo>\"],\"agentMode\":\"\",\"permissions\":{\"deny\":[\"command(*)\",\"write_file(*)\",\"mcp(*)\"]}}'   |   $0 (Google AI Pro). agy runs it as gemini-4-hydrogen-high; agy models lists it. Shares vendor Google with the other Gemini rows: the picker seats one of them."
+    },
+    {
+      "id": "gemini-neon-agy",
+      "name": "Gemini 4 Neon (agy)",
+      "vendor": "Google",
+      "door": "agy CLI",
+      "cliModel": "gemini-4-neon",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "subscription",
+      "blurb": "Gemini 4 Neon through Antigravity's CLI (agy) on the owner's Google AI Pro subscription: no per-call charge. Added 2026-11-20; no plan check run on it yet.",
+      "note": "agy -p … --model gemini-4-neon --effort high … (same argv as gemini-hydrogen-agy)   |   $0 (Google AI Pro). agy runs it as gemini-4-neon-high. Shares vendor Google with the other Gemini rows: the picker seats one of them."
+    },
+    {
+      "id": "gemini-argon-agy",
+      "name": "Gemini 4 Argon (agy)",
+      "vendor": "Google",
+      "door": "agy CLI",
+      "cliModel": "gemini-4-argon",
+      "effort": "high",
+      "pickableAs": ["panel"],
+      "cost": "subscription",
+      "blurb": "Gemini 4 Argon through Antigravity's CLI (agy) on the owner's Google AI Pro subscription: no per-call charge. Added 2026-11-20; no plan check run on it yet.",
+      "note": "agy -p … --model gemini-4-argon --effort high … (same argv as gemini-hydrogen-agy)   |   $0 (Google AI Pro). agy runs it as gemini-4-argon-high. Shares vendor Google with the other Gemini rows: the picker seats one of them."
     },
     {
       "id": "glm",

@@ -2,7 +2,7 @@
 // agy-builder.mjs: set up Antigravity's CLI (agy) as the builder behind the pane link (orca-pi-connect,
 // "An Antigravity builder").
 //
-//   node agy-builder.mjs --model <model> [--mode auto|accept-edits|plan]   write the builder's setup
+//   node agy-builder.mjs --model <model> [--mode auto|skip-permissions|accept-edits|plan]   write the setup
 //   node agy-builder.mjs --check                                         read-only: is it set up, and with what
 //   node agy-builder.mjs --launch --sid <SID> [--conversation <id>]      start agy as the builder (the pane command)
 //   node agy-builder.mjs --self-test                                     tests in a temporary home
@@ -17,7 +17,9 @@
 // environment, and only `--launch` sets it. Re-run with another --model to change the builder's model
 // (`agy models` lists them, e.g. gemini-4-hydrogen-high, claude-sonnet-5-5-high).
 // Modes: auto (the default: agy reviews risky commands itself, routine ones run), accept-edits (shell
-// commands ask, so an unattended run stalls), plan (plans only, never builds: not for a builder).
+// commands ask, so an unattended run stalls), plan (plans only, never builds: not for a builder),
+// skip-permissions (agy's --dangerously-skip-permissions: nothing asks, commands on agy's system denylist and
+// your own deny rules are still blocked; for night shifts and autonomous runs, where no one can answer a prompt).
 //
 // Exit codes: 0 ok · 1 --check found it missing or stale · 2 bad usage · 3 self-test failed · otherwise agy's.
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -29,7 +31,7 @@ import { spawn, spawnSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const SELF = fileURLToPath(import.meta.url)
 const HOOK_SRC = join(here, 'foreman-stop.mjs')
-const MODES = ['auto', 'accept-edits', 'plan']
+const MODES = ['auto', 'skip-permissions', 'accept-edits', 'plan']
 const ENTRY = 'foreman-stop'
 const UUID = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i
 const CONV = /^[A-Za-z0-9-]+$/
@@ -86,7 +88,8 @@ function check(home) {
 // The job's own worktree is trusted for this session only (`--settings` is never saved), the up-front trust
 // `pi --approve` gives: agy otherwise stops a new folder at "Do you trust the contents of this project?".
 function agyArgs(c, conversation, cwd) {
-  const a = ['--model', c.model, '--mode', c.mode, '--settings', JSON.stringify({ trustedWorkspaces: [cwd] })]
+  const mode = c.mode === 'skip-permissions' ? ['--dangerously-skip-permissions'] : ['--mode', c.mode]
+  const a = ['--model', c.model, ...mode, '--settings', JSON.stringify({ trustedWorkspaces: [cwd] })]
   if (conversation) a.push('--conversation', conversation)
   return a
 }
@@ -119,6 +122,10 @@ function selfTest() {
     const dryR = cli('--launch', '--sid', '0f8fad5b-d9cb-469f-a165-70867728950e', '--conversation', '6b8d5e37-4233-4f6e-9ca2-f3d612d388a1', '--dry-run').stdout
     ok('--launch --conversation resumes that conversation', dryR.includes('--conversation 6b8d5e37-4233-4f6e-9ca2-f3d612d388a1'))
     ok('--launch trusts only the folder it starts in, for that session', dry.includes('--settings') && dry.includes('trustedWorkspaces') && dry.includes(JSON.stringify(JSON.stringify([process.cwd()])).slice(3, -3)))
+    write(home, 'claude-sonnet-5-5-high', 'skip-permissions')
+    const drySkip = cli('--launch', '--sid', '0f8fad5b-d9cb-469f-a165-70867728950e', '--dry-run').stdout
+    ok('--mode skip-permissions launches with --dangerously-skip-permissions and no --mode', drySkip.includes('--dangerously-skip-permissions') && !drySkip.includes(' --mode '))
+    write(home, 'claude-sonnet-5-5-high', 'auto')
     ok('--launch refuses a SID that is not a uuid', cli('--launch', '--sid', 'abc', '--dry-run').status === 2)
     ok('--mode must be one agy takes', cli('--model', 'x', '--mode', 'yolo').status === 2)
     writeFileSync(p.hooks, '{not json')
@@ -194,7 +201,7 @@ if (opt.check || opt.launch) {
   child.on('error', (e) => { console.error(`agy-builder: could not start agy (${e.message}): is it on PATH? (agy --version)`); process.exit(127) })
   child.on('exit', (code, signal) => process.exit(code ?? (signal ? 1 : 0)))
 } else {
-  if (!opt.model) { console.error('usage: agy-builder.mjs --model <model> [--mode auto|accept-edits|plan] | --check | --launch --sid <SID> [--conversation <id>] | --self-test'); process.exit(2) }
+  if (!opt.model) { console.error('usage: agy-builder.mjs --model <model> [--mode auto|skip-permissions|accept-edits|plan] | --check | --launch --sid <SID> [--conversation <id>] | --self-test'); process.exit(2) }
   const mode = opt.mode || 'auto'
   if (!MODES.includes(mode)) { console.error(`agy-builder: --mode must be one of ${MODES.join(', ')}`); process.exit(2) }
   if (!/^[A-Za-z0-9._-]+$/.test(opt.model)) { console.error('agy-builder: a model is a name from `agy models`, such as gemini-4-hydrogen-high'); process.exit(2) }

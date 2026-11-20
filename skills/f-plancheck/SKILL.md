@@ -3,7 +3,7 @@ name: f-plancheck
 description: >
   Validate one plan against the codebase with COLD seats (the owner's standing choice, or the
   one-shot picker the first time and on request: 1-5 models from families different than the Player
-  that authored the plan (codex/Astra, Claude, Grok CLIs at $0 subscription;
+  that authored the plan (codex/Astra, Claude, Grok, agy CLIs at $0 subscription;
   OpenRouter doors from a curated roster), so the read is genuinely
   independent. Every seat runs at high reasoning, dispatched in parallel, and
   findings are merged across seats with seat attribution, never voted.
@@ -68,8 +68,9 @@ Anthropic · excluded: Anthropic`.
 
 ## 2. Pick the seats (Law A: every attended run has the owner's pick: the standing choice, or the picker)
 
-**A good default, when the owner asks for one:** `sol` (codex CLI, $0) · `gemini-hydrogen` ·
-`qwen4-max` (both OpenRouter, metered), one seat per vendor. On one plan check (2026-11-18,
+**A good default, when the owner asks for one:** `sol` (codex CLI, $0) · `gemini-hydrogen-agy`
+(agy CLI, $0, when `agy` is on PATH and signed in; else `gemini-hydrogen` on OpenRouter) ·
+`qwen4-max` (OpenRouter, metered), one seat per vendor. On one plan check (2026-11-18,
 one assignment) Sol took 6 minutes with 34 findings, Hydrogen 6 minutes with 15 (8 the others
 missed) and Qwen4 Max 15 minutes with 25 (8 new); Gemini 4 Carbon returned nothing twice.
 
@@ -91,7 +92,7 @@ node .claude/skills/f-plancheck/plancheck-pick.mjs --host <host> --player <playe
 Roster: `.claude/skills/f-plancheck/plancheck-roster.json`, operator-curated, single home
 for seats (edit the file to change the pool; do not copy slugs into this skill); rows carry
 `id, name, vendor, door, cliModel|slug, effort: "high", pickableAs`; doors are `codex CLI`,
-`claude CLI`, `grok CLI` ($0 subscriptions) and `OpenRouter` (pay-per-token,
+`claude CLI`, `grok CLI`, `agy CLI` (Gemini on a Google AI Pro sign-in) ($0 subscriptions) and `OpenRouter` (pay-per-token,
 `OPENROUTER_API_KEY`); Claude-family models are never OpenRouter rows (a roster rule: the
 Claude door is the claude CLI). The operator picks 1–5 seats from distinct vendors; every seat runs at high;
 the tab says "Seats recorded" and they close it.
@@ -231,6 +232,7 @@ cap covers both.
 | codex CLI | `codex exec -m <cliModel> -c model_reasoning_effort="high" --sandbox read-only --skip-git-repo-check -o {scratch}/read-codex-<model>.attempt<n>.last.md -` (assignment on stdin; codex streams its transcript to stderr and writes the final message to the per-attempt `-o` file, the winner is copied to `read-codex-<model>.last.md` and becomes the `.log`) | `read-codex-<model>.log` (+ `.last.md`) |
 | claude CLI | `claude -p --model <cliModel> --effort high --permission-mode plan --tools Read,Grep,Glob,Bash --disallowedTools Edit,Write,NotebookEdit --no-session-persistence --output-format text` (stdin; plan mode blocks writes, probed 2026-09-02) | `read-claude-<model>.log` |
 | grok CLI | `grok --prompt-file <assignment> --output-format json --cwd <repo> --permission-mode plan --disallowed-tools Edit,Write,MultiEdit,NotebookEdit --allow "Bash(<exact read-only command>)" … --reasoning-effort high --no-subagents -m <cliModel>`, plan mode supplies the built-in read-only shell set and blocks writes; the `--allow` rules (`GROK_READ_ONLY_ALLOW_RULES` in the dispatcher: node/npm version, codex/claude/grok/pi help+version, `grok models`, `pi --list-models:*`) admit the extra read-only commands a cold read needs; headless grok cancels the whole turn on any command outside that set, so an attempt counts only when `stopReason` is `end_turn` | `read-grok-<model>.log` (+ raw `read-grok-<model>.json`) |
+| agy CLI | `agy -p "<read the assignment file at <path>, findings only, in your reply>" --model <cliModel> --effort high --output-format stream-json --disable-slash-commands --settings '{"trustedWorkspaces":["<repo>"],"agentMode":"","permissions":{"deny":["command(*)","write_file(*)","mcp(*)"]}}'` (session-only settings, never saved). Probed 2026-11-20 on agy 1.5.13: headless `-p` starts in Auto mode, which ran commands unasked; `--mode plan` writes an implementation plan artifact and ended the turn with an empty `response` at its first refused command; with every command and file write denied, a refused call comes back to the model as an error, the turn carries on and the seat answers from agy's own file tools, so it runs no commands (no `git log`, no `--help`). The `cliModel` is bare (`gemini-4-hydrogen`) and `--effort` picks `gemini-4-hydrogen-high`. The seat's answer is the `result` event's `response`; the raw stream stays in the `.attempt<n>.log`; a seat killed at its timeout leaves `.attempt<n>.partial.md`. `FOREMAN_AGY_SID` is removed from the seat's environment. Receipt: `spend_usd: 0`, a `spend_note` (subscription) and agy's `tokens` | `read-agy-<model>.log` (+ `.attempt<n>.partial.md` when killed) |
 | OpenRouter | `pi -p --mode json --no-session --no-context-files --no-extensions --no-skills --no-prompt-templates --no-mcp --no-approve --tools read,grep,find,ls --model openrouter/<slug> --thinking high @<assignment> "<one-line instruction>"`, pi's read-only tool allowlist (`--no-mcp` because pi 1.x keeps MCP tools through `--tools`); `OPENROUTER_API_KEY` inherited from the environment, never printed. `--mode json` streams pi's events as they happen; the seat's answer is the final assistant text, and the raw stream stays in the `.attempt<n>.log`. A seat killed at its timeout leaves `.attempt<n>.partial.md`, its thinking, tool calls and text so far, and its spend | `read-openrouter-<sanitized slug>.log` (+ `.attempt<n>.partial.md` when killed) |
 
 **2026-09-23, codex door lost `--ignore-user-config`.** A live cold read failed: the
@@ -244,7 +246,7 @@ the other three**, a reader trusting a codex seat's independence should weigh th
 
 Log names: `read-<door>-<model>.log`, model lowercased with `/` and anything outside
 `[a-z0-9.-]` → `-`. The dispatcher preflights every seat (executable, `--version`, key
-presence, catalog entry and output cap for OpenRouter, `grok models`), runs all preflight-ok seats in parallel, retries a
+presence, catalog entry and output cap for OpenRouter, `grok models`, `agy models`), runs all preflight-ok seats in parallel, retries a
 failed seat once, except a quota or rate-limit error, a timeout, an output overflow, an
 OpenRouter 402, or pi running an unknown model as a custom id,
 which are surfaced and omitted at once (reason `usage limit: …`; a quota error is never

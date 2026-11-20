@@ -24,6 +24,7 @@ const DOOR_SLUG = Object.freeze({
   "codex CLI": "codex",
   "claude CLI": "claude",
   "grok CLI": "grok",
+  "agy CLI": "agy",
   OpenRouter: "openrouter",
 });
 
@@ -31,6 +32,7 @@ const CLI_NAME_FOR_DOOR = Object.freeze({
   codex: "codex",
   claude: "claude",
   grok: "grok",
+  agy: "agy",
   openrouter: "pi",
 });
 
@@ -294,6 +296,119 @@ export function parsePiJsonEvents(text) {
   };
 }
 
+/**
+ * The agy door's session-only settings (`--settings`, never saved to the
+ * owner's settings.json). Live-probed 2026-11-20 on agy 1.5.13:
+ * - headless `-p` starts in Auto mode, which ran commands unasked (a probe
+ *   seat ran Get-ChildItem and Select-String, outside the repo too);
+ *   `agentMode: ""` is the Default mode, where anything not allowed needs a
+ *   review, and a review that headless mode cannot ask for ends the turn;
+ * - so every write and every command is denied outright: a denied
+ *   `write_file` (which also covers `edit_file`) or `command` comes back to
+ *   the model as an error, the turn carries on, and the seat still answers
+ *   (probe: asked to create made.txt, edit greet.js and run git status, it
+ *   was refused all three, answered, and the folder stayed clean);
+ * - `--mode plan` is not used: it expands a /plan command that tells the
+ *   model to write an implementation plan artifact and wait for approval,
+ *   and its first refused command ended the turn with an empty `response`.
+ * The seat reads with agy's own file tools (read_file, list_dir, grep_search).
+ */
+export const AGY_DENY_RULES = Object.freeze(["command(*)", "write_file(*)", "mcp(*)"]);
+
+/** Pure. The `--settings` JSON for an agy seat in `cwd`. */
+export function agySeatSettings(cwd) {
+  return JSON.stringify({ trustedWorkspaces: [cwd], agentMode: "", permissions: { deny: [...AGY_DENY_RULES] } });
+}
+
+// agy's quota and rate-limit wording, read only from its own `error` field
+// (never from the seat's findings, which may quote such words).
+const AGY_USAGE_LIMIT_RE = /RESOURCE_EXHAUSTED|\bquota\b|usage limit|rate[ _-]?limit|out of credits|\b429\b|too many requests/i;
+
+/** Pure. The quota / rate-limit line in an agy error message, or null. */
+export function agyUsageLimitOf(errorMessage) {
+  if (!errorMessage) return null;
+  const line = String(errorMessage).split(/\r?\n/).find((l) => AGY_USAGE_LIMIT_RE.test(l));
+  return line ? line.trim().slice(0, 200) : null;
+}
+
+/**
+ * Pure. Reads what `agy -p --output-format stream-json` prints (one event per
+ * line, ending in a `result` event), or the single object `--output-format
+ * json` prints. Returns:
+ * - finalText: `response` when `status` is SUCCESS and it is not blank, else null;
+ * - status, errorMessage (agy's `error`, or why there is no answer), usage
+ *   (agy's token counts), deniedActions, conversationId;
+ * - partialText: the seat's trace so far (tool calls and text, not the file
+ *   contents the tools returned), for a seat killed at its timeout.
+ * A line that is not JSON (a cut-off last line) is skipped.
+ */
+export function parseAgyOutput(text) {
+  let result = null;
+  let conversationId = null;
+  const trace = [];
+  const textByStep = new Map();
+  for (const raw of String(text || "").split("\n")) {
+    const line = raw.replace(/\r$/, "");
+    if (!line.trim()) continue;
+    let e;
+    try { e = JSON.parse(line); } catch { continue; }
+    if (!e || typeof e !== "object") continue;
+    if (e.event === "result" && e.result) result = e.result;
+    else if (e.event === "init" && e.conversation_id) conversationId = e.conversation_id;
+    else if (e.event === "step_update" && e.step_update) {
+      const u = e.step_update;
+      if (u.step_type === "agent_response" && typeof u.text_delta === "string") {
+        if (!textByStep.has(u.step_index)) { textByStep.set(u.step_index, ""); trace.push({ step: u.step_index }); }
+        textByStep.set(u.step_index, textByStep.get(u.step_index) + u.text_delta);
+      } else if (u.step_type === "tool" && u.state === "ACTIVE" && u.tool_info) {
+        trace.push({ line: toolCallLine({ name: u.tool_info.name, arguments: u.tool_info.parameters }) });
+      }
+    } else if (!e.event && typeof e.status === "string") {
+      result = e; // --output-format json: the one result object
+    }
+  }
+  const partialText = trace
+    .map((t) => (t.line != null ? t.line : textByStep.get(t.step)))
+    .filter((t) => typeof t === "string" && t.trim())
+    .join("\n\n");
+  if (!result) {
+    return { finalText: null, status: null, errorMessage: null, usage: null, deniedActions: [], conversationId, partialText };
+  }
+  const response = typeof result.response === "string" ? result.response : "";
+  const ok = result.status === "SUCCESS" && response.trim().length > 0;
+  const denied = Array.isArray(result.denied_actions) ? result.denied_actions : [];
+  let errorMessage = null;
+  if (typeof result.error === "string" && result.error.trim()) errorMessage = result.error.trim();
+  else if (result.status !== "SUCCESS") errorMessage = `agy status ${result.status}`;
+  else if (!ok) {
+    const names = denied.map((d) => d && (d.display_name || d.action)).filter(Boolean);
+    errorMessage = names.length ? `empty response (denied: ${names.join(", ")})` : "empty response";
+  }
+  return {
+    finalText: ok ? response : null,
+    status: result.status,
+    errorMessage,
+    usage: result.usage && typeof result.usage === "object" ? result.usage : null,
+    deniedActions: denied,
+    conversationId: result.conversation_id || conversationId,
+    partialText,
+  };
+}
+
+/** Pure. The seat's environment: an agy seat never carries FOREMAN_AGY_SID (the foreman's agy Stop hook logs only for that session). */
+export function seatEnv(seat, env) {
+  if (seat.doorSlug !== "agy" || !("FOREMAN_AGY_SID" in env)) return env;
+  const copy = { ...env };
+  delete copy.FOREMAN_AGY_SID;
+  return copy;
+}
+
+/** Pure. Whether `agy models` output lists `model` (a bare id, run with --effort) at `effort`. */
+export function agyModelListed(listText, model, effort) {
+  const ids = String(listText || "").split(/\r?\n/).map((l) => l.trim().split(/\s+/)[0]).filter(Boolean);
+  return ids.includes(`${model}-${effort}`) || ids.includes(model);
+}
+
 /** Pure. No I/O. Lowercase; every char outside [a-z0-9.-] becomes "-". */
 export function sanitizeModel(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9.-]/g, "-");
@@ -451,6 +566,17 @@ export function buildArgvForSeat(seat, ctx) {
         "--disallowed-tools", "Edit,Write,MultiEdit,NotebookEdit",
         ...GROK_READ_ONLY_ALLOW_RULES.flatMap((rule) => ["--allow", rule]),
         "--reasoning-effort", EFFORT, "--no-subagents", "-m", seat.model,
+      ];
+    case "agy":
+      // Default mode with every write and command denied (AGY_DENY_RULES);
+      // stream-json so a seat killed at its timeout still leaves its trace.
+      // The model id is bare (gemini-4-hydrogen) and --effort picks the
+      // suffixed one (gemini-4-hydrogen-high): a suffixed id with --effort
+      // is refused as a conflict (probed 2026-11-20).
+      return [
+        "-p", `Execute the cold-seat f-plancheck assignment in the file ${assignmentPathArg} exactly as written. Read that file first. Output findings only, in the shape it specifies, in your reply text (not in a file or an artifact).`,
+        "--model", seat.model, "--effort", EFFORT, "--output-format", "stream-json",
+        "--disable-slash-commands", "--settings", agySeatSettings(ctx.cwd),
       ];
     case "openrouter":
       return [
@@ -657,7 +783,8 @@ async function refreshPiCatalog(env, cwd) {
  */
 async function runPreflight(seat, ctx) {
   const cliName = CLI_NAME_FOR_DOOR[seat.doorSlug];
-  const invocation = resolveCli(cliName, ctx.env);
+  const env = seatEnv(seat, ctx.env);
+  const invocation = resolveCli(cliName, env);
   if (!invocation.command) {
     // `invocation.reason` already distinguishes "not found" from an
     // unresolvable .cmd shim (B8) — propagate it as-is. No process ran, so
@@ -671,7 +798,7 @@ async function runPreflight(seat, ctx) {
     command: invocation.command,
     args: [...invocation.argsPrefix, ...extraArgs],
     cwd: ctx.cwd,
-    env: ctx.env,
+    env,
     shell: invocation.shell,
     input: null,
     timeoutMs: PREFLIGHT_TIMEOUT_MS,
@@ -706,6 +833,17 @@ async function runPreflight(seat, ctx) {
     }
     if (overSeatOutputCap(row.maxOut)) {
       return { ok: false, reason: `model ${seat.model} would ask for ${row.maxOut} output tokens a call (OpenRouter refuses with 402 unless the key can cover them all): set providers.openrouter.modelOverrides["${seat.model}"].maxTokens to ${MAX_SEAT_OUTPUT_TOKENS} in ${agentDir}/models.json`, invocation, version };
+    }
+  }
+
+  if (seat.doorSlug === "agy") {
+    const modelsResult = await probe("models");
+    if (modelsResult.spawnError) return { ok: false, reason: `agy models spawn error: ${modelsResult.spawnError}`, invocation, version };
+    if (modelsResult.timedOut || modelsResult.exitCode !== 0) {
+      return { ok: false, reason: appendStderrHint(`agy models failed (exit ${modelsResult.exitCode}, timed_out=${modelsResult.timedOut}): is agy signed in?`, modelsResult.stderr), invocation, version };
+    }
+    if (!agyModelListed(modelsResult.stdout.toString("utf8"), seat.model, EFFORT)) {
+      return { ok: false, reason: `model ${seat.model}-${EFFORT} not listed by agy models (this sign-in's plan may not offer it)`, invocation, version };
     }
   }
 
@@ -790,6 +928,10 @@ function computeLogText(seat, result, lastMessageText) {
     // pi --mode json: the final assistant text, never the raw event stream
     // (which also holds every file the seat read).
     text = parsePiJsonEvents(result.stdout.toString("utf8")).finalText || "";
+  } else if (seat.doorSlug === "agy") {
+    // agy stream-json: the final `response`, never the raw stream (which
+    // also holds every file the seat read).
+    text = parseAgyOutput(result.stdout.toString("utf8")).finalText || "";
   } else {
     text = result.stdout.toString("utf8");
   }
@@ -894,7 +1036,7 @@ async function dispatchSeat(seat, ctx) {
       command: invocation.command,
       args,
       cwd: ctx.cwd,
-      env: ctx.env,
+      env: seatEnv(seat, ctx.env),
       shell: invocation.shell,
       input: wantsStdin ? ctx.assignmentBytes : null,
       timeoutMs: ctx.timeoutMs,
@@ -992,6 +1134,17 @@ async function dispatchSeat(seat, ctx) {
       }
     }
 
+    // agy (stream-json): success needs status SUCCESS and a non-blank
+    // `response`; a quota or rate-limit error is terminal, like a 402.
+    let agy = null;
+    let agyTerminal = null;
+    if (seat.doorSlug === "agy") {
+      agy = parseAgyOutput(result.stdout.toString("utf8"));
+      if (attemptOk && !agy.finalText) attemptOk = false;
+      const limit = agyUsageLimitOf(agy.errorMessage);
+      if (limit) { attemptOk = false; agyTerminal = `usage limit: ${limit}`; }
+    }
+
     // INC: content floor — transport success still has to look like findings
     // (line-start [SEVERITY] plus payload, or a "no findings" line without
     // unread-refusal words); a transport-clean refusal or chatter does not count.
@@ -1007,7 +1160,12 @@ async function dispatchSeat(seat, ctx) {
     // text is a refusal, not real findings).
     // An OpenRouter seat's raw stream holds every file it read (and its
     // thinking), so it is judged on its final text and errors instead.
-    const usageStdout = pi ? [pi.finalText || "", pi.errorMessage ? `error: ${pi.errorMessage}` : ""].join("\n") : result.stdout.toString("utf8");
+    // An agy seat's stream holds the files it read too, so only its final
+    // text is scanned here; its error field went through agyUsageLimitOf.
+    let usageStdout;
+    if (pi) usageStdout = [pi.finalText || "", pi.errorMessage ? `error: ${pi.errorMessage}` : ""].join("\n");
+    else if (agy) usageStdout = agy.finalText || "";
+    else usageStdout = result.stdout.toString("utf8");
     const usageLine = detectUsageLimit(usageStdout, result.stderr.toString("utf8"));
     if (usageLine) attemptOk = false;
 
@@ -1044,12 +1202,25 @@ async function dispatchSeat(seat, ctx) {
         if (writeAttemptArtifact(ctx.outDir, partialName, pi.partialText, artifactErrors)) attemptRecord.partial_log = partialName;
       }
     }
+    if (agy) {
+      attemptRecord.spend_usd = 0;
+      if (agy.status) attemptRecord.agy_status = agy.status;
+      if (agy.errorMessage) attemptRecord.agy_error = scrubSecrets(agy.errorMessage).slice(0, 300);
+      if (agy.usage) attemptRecord.tokens = agy.usage;
+      if (agy.conversationId) attemptRecord.agy_conversation_id = agy.conversationId;
+      if (!success && agy.partialText.trim()) {
+        const partialName = `${base}.attempt${attemptNum}.partial.md`;
+        if (writeAttemptArtifact(ctx.outDir, partialName, agy.partialText, artifactErrors)) attemptRecord.partial_log = partialName;
+      }
+    }
     if (artifactErrors.length) attemptRecord.artifact_error = scrubSecrets(artifactErrors.join("; "));
     seat.attempts.push(attemptRecord);
 
     if (!success) {
       if (piTerminal) {
         terminalReason = `${scrubSecrets(piTerminal).slice(0, 300)} — not retried`;
+      } else if (agyTerminal) {
+        terminalReason = scrubSecrets(agyTerminal);
       } else if (usageLine) {
         terminalReason = `usage limit: ${scrubSecrets(usageLine)}`;
       } else if (result.timedOut) {
@@ -1060,6 +1231,16 @@ async function dispatchSeat(seat, ctx) {
     }
   }
 
+  if (seat.doorSlug === "agy") {
+    // Subscription: no per-call charge. Tokens are agy's own counts, summed over attempts.
+    seat.spend_usd = 0;
+    seat.spend_note = "subscription (Google AI Pro via agy): no per-call charge";
+    const tokens = {};
+    for (const a of seat.attempts) {
+      for (const [k, v] of Object.entries(a.tokens || {})) if (Number.isFinite(v)) tokens[k] = (tokens[k] || 0) + v;
+    }
+    if (Object.keys(tokens).length) seat.tokens = tokens;
+  }
   if (seat.doorSlug === "openrouter") {
     seat.spend_usd = Math.round(seat.attempts.reduce((sum, a) => sum + (a.spend_usd || 0), 0) * 1e6) / 1e6;
   }
@@ -1076,6 +1257,7 @@ async function dispatchSeat(seat, ctx) {
     else if (seat.doorSlug === "grok" && lastGrokStopReason) seat.reason = `grok stopReason=${lastGrokStopReason}`;
     else if (last.shape_ok === false) seat.reason = "output lacks the findings shape";
     else if (last.pi_error) seat.reason = `pi error: ${last.pi_error}`;
+    else if (last.agy_error && !last.timed_out) seat.reason = `agy error: ${last.agy_error}`;
     else if (seat.doorSlug === "openrouter" && last.exit_code === 0 && !last.timed_out) seat.reason = "pi finished with no final text";
     else if (last.timed_out) seat.reason = `timed out after ${seat.attempts.length} attempt(s)`;
     else if (last.output_limited) seat.reason = "output limit exceeded";
@@ -1128,6 +1310,9 @@ async function dispatchSeat(seat, ctx) {
     } else {
       fs.writeFileSync(path.join(ctx.outDir, seat.log), scrubbedArtifact(lastResult.stdout));
     }
+  } else if (seat.doorSlug === "agy") {
+    // Success required a non-blank `response`; the raw stream stays in `<base>.attempt<N>.log`.
+    fs.writeFileSync(path.join(ctx.outDir, seat.log), scrubbedArtifact(parseAgyOutput(lastResult.stdout.toString("utf8")).finalText), "utf8");
   } else if (seat.doorSlug === "openrouter") {
     // Success required a non-empty final text, so this is the seat's answer;
     // the raw event stream stays in `<base>.attempt<N>.log`.
@@ -1138,7 +1323,7 @@ async function dispatchSeat(seat, ctx) {
 }
 
 function buildReceipt({ assignmentArg, assignmentSha256, cwd, startedAt, endedAt, seats, piCatalog }) {
-  const spent = seats.filter((s) => s.spend_usd != null);
+  const spent = seats.filter((s) => s.doorSlug === "openrouter" && s.spend_usd != null);
   return {
     version: 1,
     assignment: assignmentArg,
@@ -1184,6 +1369,8 @@ function buildReceipt({ assignmentArg, assignmentSha256, cwd, startedAt, endedAt
       if (seat.raw_unparsed) entry.raw_unparsed = true;
       if (seat.log_bytes != null) entry.log_bytes = seat.log_bytes;
       if (seat.spend_usd != null) entry.spend_usd = seat.spend_usd;
+      if (seat.spend_note) entry.spend_note = seat.spend_note;
+      if (seat.tokens) entry.tokens = seat.tokens;
       if (seat.partial_log) entry.partial_log = seat.partial_log;
       if (seat.canonical_copy_error) entry.canonical_copy_error = scrubSecrets(seat.canonical_copy_error);
       if (seat.canonical_stderr_error) entry.canonical_stderr_error = scrubSecrets(seat.canonical_stderr_error);
@@ -1375,11 +1562,13 @@ async function main() {
     // stdout capture), so fall back to that instead of `seat.log`, which
     // for a non-ok seat names a file that was never written.
     const logLabel = seat.status === "ok" ? seat.log : ((last && (last.partial_log || last.stdout_log)) || "—");
-    const spendLabel = seat.spend_usd != null ? `, spent $${seat.spend_usd.toFixed(4)}` : "";
+    let spendLabel = "";
+    if (seat.doorSlug === "agy" && seat.tokens) spendLabel = `, subscription, ${seat.tokens.total_tokens ?? "?"} tokens`;
+    else if (seat.spend_usd != null && seat.doorSlug !== "agy") spendLabel = `, spent $${seat.spend_usd.toFixed(4)}`;
     console.log(`PLANCHECK_SEAT ${seat.id} ${seat.doorSlug} ${seat.model} → ${seat.status} (${ms} ms, ${bytes} B${spendLabel}) ${logLabel}${reasonSuffix}`);
   }
   const totalSpend = seats.reduce((sum, s) => sum + (s.spend_usd || 0), 0);
-  if (seats.some((s) => s.spend_usd != null)) console.log(`PLANCHECK_DISPATCH_SPEND $${totalSpend.toFixed(4)} (OpenRouter seats, from pi's own usage)`);
+  if (seats.some((s) => s.doorSlug === "openrouter" && s.spend_usd != null)) console.log(`PLANCHECK_DISPATCH_SPEND $${totalSpend.toFixed(4)} (OpenRouter seats, from pi's own usage)`);
 
   const okCount = seats.filter((s) => s.status === "ok").length;
   if (okCount === 0) {
