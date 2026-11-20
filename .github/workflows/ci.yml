@@ -27,6 +27,8 @@ jobs:
         run: node skills/f-signoff/endgame.mjs --self-test
       - name: Claude Code builder (stop hook and settings) self-test
         run: node skills/orca-pi-connect/claude-code/claude-builder.mjs --self-test
+      - name: agy builder (stop hook and setup) self-test
+        run: node skills/orca-pi-connect/agy/agy-builder.mjs --self-test
       - name: Names check self-test
         run: node skills/f-signoff/names-check.mjs --self-test
       - name: Greptile waiter self-test

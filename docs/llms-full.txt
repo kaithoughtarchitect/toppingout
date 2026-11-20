@@ -2690,6 +2690,7 @@ Handing work to the builder in Orca: the foreman sends each work order itself an
 
 - "connect to pi"
 - "connect to the claude builder"
+- "connect to the agy builder"
 - "set up the builder pane"
 
 ## When to use it

@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-20
+
+- **The builder can be Antigravity's CLI, `agy`, running any model it lists, over the pane link.** Set it up once: `node .claude/skills/orca-pi-connect/agy/agy-builder.mjs --model <model>` (`agy models` lists them; mode `auto` by default), and put `pane link (agy)` in the repo profile's "Builder delivery" row. The setup adds one `"foreman-stop"` Stop hook to agy's `~/.gemini/config/hooks.json`, beside your own entries; it writes a line only for a builder the launcher started (`--launch --sid <SID>`), so your other agy sessions add nothing. The launcher trusts the job's worktree for that session only, so agy's trust prompt never stops a new worktree. Proven with agy 1.5.13 in a real Orca pane on Windows: both handshake rounds, one line per turn, a resume of the same conversation. `/f-setup` offers it when `agy` is on PATH.
+
 ## 2026-11-19
 
 - **The pane link no longer reports a live builder as down on its first work order.** The foreman took the Stop-log count with `grep -c … || echo 0`; on a log with no line yet for a new session, grep prints `0` and exits 1, so the fallback added a second `0` and `stop-watch.mjs` refused the value (exit 3), which the skill reads as "the link is down, go hand-carried". The count now comes from the waiter itself: `stop-watch.mjs --count` (`skills/orca-pi-connect`, §2).

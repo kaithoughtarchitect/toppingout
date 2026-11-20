@@ -1,11 +1,11 @@
 ---
 name: orca-pi-connect
 description: >
-  Connect the foreman's session to a builder in an Orca pane, Pi or Claude Code (any Claude
-  model), and PROVE the link (a pane the foreman opened itself (or one the owner confirmed) +
+  Connect the foreman's session to a builder in an Orca pane, Pi, Claude Code (any Claude
+  model) or Antigravity's CLI agy (any model agy lists), and PROVE the link (a pane the foreman opened itself (or one the owner confirmed) +
   assigned session id, two-round handshake, Stop-log and session-file evidence), then send
   work-order pointers and wait on the builder's real turn-end signal. Use for /orca-pi-connect,
-  "connect to pi", "connect to the claude builder", "set up the builder pane", or
+  "connect to pi", "connect to the claude builder", "connect to the agy builder", "set up the builder pane", or
   before a Topping Out job whose repo profile says builder delivery = pane link. Orca only
   (another pane host: hand-carry the pointers). Proves and uses the channel; never decides or
   approves anything for the owner. Also answers to its old name, /pi.
@@ -27,7 +27,7 @@ Evidence, not vibes. Every claim is proven by an observable (a Stop-log line, a 
 
 ## A Claude Code builder (any Claude model)
 
-The repo profile's "Builder delivery" row says which harness the pane runs: `pane link (pi)`, the default, or `pane link (claude-code)`. Everything in this skill holds for both; with Claude Code, read these in place of the Pi parts. Proven with Claude Code 2.1.325 and orca 1.4 (a real pane: both handshake rounds, one line per turn, a resume).
+The repo profile's "Builder delivery" row says which harness the pane runs: `pane link (pi)`, the default, `pane link (claude-code)` or `pane link (agy)` (next section). Everything in this skill holds for all three; with Claude Code, read these in place of the Pi parts. Proven with Claude Code 2.1.325 and orca 1.4 (a real pane: both handshake rounds, one line per turn, a resume).
 
 - **One-time setup, by the owner** (it names the model, so it lives outside every repo): `node .claude/skills/orca-pi-connect/claude-code/claude-builder.mjs --model <model> [--permission-mode <mode>]`. It writes `~/.claude/foreman-builder/settings.json` (the model, the permission mode, the Stop hook) and a copy of the hook beside it. Any Claude model works, by name or alias (`claude-haiku-5-5`, `sonnet`, `opus`). Run it again to change the model. **Permission mode:** `auto` (the default: routine actions run, risky ones are refused) suits a builder; `acceptEdits` asks before shell commands, so an unattended run stalls; `bypassPermissions` asks nothing. **MCP servers:** a repo's `.mcp.json` makes Claude Code ask "New MCP server found" in every new folder, and each job's worktree is new, so an unattended builder stops there. `--mcp all`, the default, loads the repo's servers without asking; `--mcp none` loads none. Running the setup again without `--mcp` keeps the earlier choice. A setup made before this option reads MISSING until it is run again.
 - **Trust, once:** Claude Code asks "Do you trust this folder?" in a folder it hasn't seen, and the answer covers every folder inside it. Each job's worktree is new, so the owner trusts the folder the worktrees live in once (Orca's: `~/orca/workspaces/<repo>`): start `claude` there and answer yes. If the prompt, or an MCP prompt, shows in the builder pane anyway, surface it to the owner; never answer it with keystrokes.
@@ -40,6 +40,23 @@ The repo profile's "Builder delivery" row says which harness the pane runs: `pan
 - **§6 step 7:** close the pane the same way; `/exit` alone leaves an empty shell.
 - **Usage:** a Claude builder draws on the owner's Claude plan, the same limit as a Claude foreman. Its first job is an audition (`BUILDER-PROFILES.md`).
 - **What it loads:** the worktree's own `CLAUDE.md`, `.claude/settings.json`, skills and agents, and the owner's user settings. The work order is still the whole instruction (`METHOD.md` §12): it never asks the builder to run a Topping Out skill or agent.
+
+## An Antigravity builder (agy, any model it lists)
+
+`pane link (agy)` in the repo profile. With agy, read these in place of the Pi parts. Proven with agy 1.5.13 and orca 1.4.264 on Windows 11 (a real pane: both handshake rounds, one line per turn, a resume of the same conversation).
+
+- **One-time setup, by the owner** (it names the model, so it lives outside every repo): `node .claude/skills/orca-pi-connect/agy/agy-builder.mjs --model <model> [--mode auto|accept-edits]`. `agy models` lists the names (`gemini-4-hydrogen-high`, `claude-sonnet-5-5-high`, ...). It writes `~/.gemini/foreman-builder/config.json` (the model and the mode), a copy of the stop hook beside it, and one entry, `"foreman-stop"`, in agy's shared `~/.gemini/config/hooks.json`; the owner's other entries there (Orca's `"orca-status"`) stay as they are. Run it again to change the model. **Mode:** `auto` (the default: agy reviews risky commands itself and runs routine ones) suits a builder; `accept-edits` asks before shell commands, so an unattended run stalls; `plan` never builds.
+- **Trust:** agy asks "Do you trust the contents of this project?" in a folder it hasn't trusted, and each job's worktree is new. The launcher passes `--settings` with `trustedWorkspaces` set to the folder it starts in, for that session only (agy never saves `--settings`): the same up-front trust as `pi --approve`, for a worktree of the owner's own repo only. If a trust or permission prompt shows in the pane anyway, surface it to the owner; never answer it with keystrokes.
+- **The wake signal:** the hook (`agy/foreman-stop.mjs`) runs on agy's `Stop` event for every agy session, but writes a line only when `FOREMAN_AGY_SID` is in its environment, which only the launcher sets; the owner's own agy sessions add nothing. A turn agy continues by itself (`continuationActive`, or `fullyIdle: false`) writes nothing. Line format: `STOP tag=<cwd folder> session=<SID> conv=<agy conversation id>`, in its own log: `LOG="$HOME/.gemini/foreman-stops.log"`.
+- **§0 preconditions:** `agy --version`, then `node .claude/skills/orca-pi-connect/agy/agy-builder.mjs --check` (READY, with the model and mode; MISSING: stop and ask the owner to run the setup), in place of the `pi` and extension checks.
+- **§1 split command:** `--command "cd '$WT'; node .claude/skills/orca-pi-connect/agy/agy-builder.mjs --launch --sid $SID"`. agy can't take a session id, so the launcher puts the foreman's `SID` in agy's environment and the hook writes it; the conversation id agy picks is the line's `conv=`.
+- **§1b resume:** `node .claude/skills/orca-pi-connect/agy/agy-builder.mjs --launch --sid <old SID> --conversation <conv>`, with `<conv>` from the last line of that `SID` (`grep "session=<old SID>" "$LOG" | tail -1`): the conversation and its lines keep the old `SID`.
+- **§3 model check:** the pane's banner names the model under the account line (`Gemini 3.8 Flash (Low)`), and the footer shows the mode and model (`auto · Gemini 3.8 Flash · low`); it must be the one `--check` printed.
+- **§4 tool loop:** on Windows agy runs commands in PowerShell, so it may wrap `bash -c` or print `$env:ORCA_TERMINAL_HANDLE`; separate tool calls and the right handle are what count.
+- **§5 session file:** `ls -l ~/.gemini/antigravity-cli/brain/<conv>/.system_generated/logs/transcript_full.jsonl`.
+- **§6 step 7:** close the pane the same way.
+- **Usage:** an agy builder draws on the owner's Google plan (or `GEMINI_API_KEY`), whichever agy is signed in with. Its first job is an audition (`BUILDER-PROFILES.md`).
+- **What it loads:** agy's own settings, rules and MCP servers (`~/.gemini/config/mcp_config.json`), not the repo's `.claude/` skills or `.mcp.json`: work orders name reference files by path, as for Pi.
 
 ## The wake signal
 
