@@ -2583,7 +2583,7 @@ FRONT = {
         ("gemini", "#4285F4", "Gemini Hydrogen", "Google, in Antigravity", "Builds each work order."),
         ("openai", "", "GPT-6.2 Sol", "OpenAI, in Pi", "Builds each work order."),
         ("openai", "", "GPT-6.2 Terra", "OpenAI, in Pi", "Builds each work order."),
-        ("img:zai", "", "GLM 5.3", "Z.ai, on subscription", "Builds each work order."),
+        ("img:zai.svg", "", "GLM 5.3", "Z.ai, on subscription", "Builds each work order."),
     ],
     # optional kit (README "What you need", SETUP.md sections 8b, 8c and 9): shown on the requirements sheet, never counted on the pass
     "req_opt": [
