@@ -2682,7 +2682,7 @@ ONE_JOB = [
 
 
 # D20 part 3: the same five stations under an explicit grant. (you, it or None to keep "With you"'s) per station, per mode.
-# Source: README line 12 and "What it is not"; RULES.md "The one exception: an autonomous run" and "A night shift".
+# Source: README "Three ways to run a job" and "What it is not"; RULES.md "The one exception: an autonomous run" and "A night shift".
 GOAL_AUTO = "/goal autonomous run: <opener>, until done or stopped"
 GOAL_NIGHT = "/goal night shift: jobs 13, 17, until done or stopped"
 ONE_JOB_MODES = {

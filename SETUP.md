@@ -20,6 +20,8 @@ It copies skills to `.claude/skills/`, agents to `.claude/agents/`, the dispatch
 
 **Upgrade** (a newer package over an existing install; only with the records checkout on `<main>`, no job worktree open and no end game pending (in lane mode: no lane has a job in progress on the board, read through `snippets/board_pull.sh`, and `endgame.mjs check --all` is clear); if a sync lands mid-job anyway, the foreman re-reads the method files it changed, listed in the sync commit, before its next step): `node <package>/skills/f-setup/install.mjs --repo <repo> --upgrade` prints the plan from the receipt's revision and what's new from `CHANGELOG.md` (add `--pull` to fast-forward the package checkout first, `--apply` to write; `--apply` ends with every path to commit, new files included). `--check` alone says, read-only, whether the package's remote has anything an upgrade would install: a file unchanged here since the receipt is replaced, one adapted here is kept and listed, to merge by hand with a diff. It refuses while a job is open or an end game is owed. **Files the package added** are copied; **files it removed** are deleted when unadapted here, else listed. The Logbook's cards, index and links are never touched. With `--apply` it rewrites the receipt's revision line. Then update any repo-profile row naming a removed path.
 
+**An install from before 2026-11-11** has the older `/f-setup`, which doesn't pull. Update once by hand: `git pull` in your Topping Out folder, then `/f-setup`. From then on, `/f-setup` alone.
+
 **Upgrade by hand** (a receipt without a git revision, a package without git, or an install from before receipts): for each file the package changed since the old revision, `diff` the repo's copy against the package's. Replace it where the repo's copy is unadapted; merge by hand where it carries adaptations. Copy the files the package added; delete the ones it removed once a diff shows no local adaptation. Never touch the Logbook's cards, index or links (its card templates, `README.md`, `ARCHIVE-SYSTEM.md` and scripts upgrade the same way). Then write the new revision into the receipt.
 
 **The Deep Agents add-on** (only for a product that is an AI agent built on LangChain, LangGraph or Deep Agents): `/f-setup` asks, and on yes installs `/deep`, a reference checked against the real `deepagents` code, LangChain's docs server and, for a new project, a running agent skeleton (`--addon deep-agents [--starter]`). `/deep` becomes the framework check the ground investigation runs at every end game that has a next job. It needs Python 3.11 or later. What it holds, and how its sources are fetched rather than shipped: `addons/deep-agents/README.md`.
@@ -38,6 +40,26 @@ It copies skills to `.claude/skills/`, agents to `.claude/agents/`, the dispatch
 For builders that read agent-neutral folders instead of `.claude/`, mirror the same skills into `.agents/skills/`.
 
 **Adapt:** the skills and agents are repo-agnostic: they read the repo's gates, database change paths and conventions from the repo profile (`templates/REPO-PROFILE.md`) and the constitution (`AGENTS.md` or `CLAUDE.md`), so fill those in rather than editing the skills. If you do adapt a skill, note it in the repo profile so an upgrade can diff it.
+
+### The package, folder by folder
+
+| Path | What it is |
+|---|---|
+| `README.md` | the front page: what it is, what you need, how a job runs |
+| `DESIGN.md` | the look every Topping Out page shares: the hard-hat mark, colours, type, the interaction rules and which source builds each page |
+| `flow.html` | the whole flow as one picture: 45 steps in seven stages, swimlaned by who does each, with the skill, agent and template used |
+| `skills-wiki/` | the map of every skill and agent: start at `skills-wiki/index.md`; `graph.html` pictures the links |
+| `scripts/` | `build_site.py` (builds `docs/`, the site), `build_flow.py` (builds `flow.html`), `build_skills_wiki.py` (builds `skills-wiki/`) and `build_foreman_playbook.py` (builds `Foreman-Playbook.html`): edit these, never the pages they write. `wiki_lint.py`, `wiki_graph_html.py` (the Skill Atlas), `skills_wiki_sync.py` (keeps the wiki honest), `picker_style.py` (applies `DESIGN.md` to the picker consoles), `cross-review-dispatch.mjs` (runs `/xreview` headless on another model family) and the voice trio `speak.ts`, `speak-setup.ts`, `bootstrap-env.ts` |
+| `skills/` | the 30 skills. Topping Out's own: `f-setup`, `f-sketch`, `f-survey`, `f-blueprint`, `f-schedule`, `f-shift`, `f-board`, `f-signoff`, `f-night-shift`, `f-status`, `f-comply`, `f-inspect`, `f-greploop`, and the Logbook's `f-card`, `f-search`, `f-archive`, `f-archive-search`, `f-catchup`, `f-context`, `f-distill`, `f-dream`. Shared: `f-plancheck`, `pack-review`, `xreview`, `adjudicate`, `model-council`, `agent-council`, `speak`, `converse`, and the pane link `orca-pi-connect` (Orca) |
+| `skills/f-schedule/templates/` | `PROJECT.md`, `TICKET.md`, `BOARD.json`: the files `/f-schedule` writes for a project (the one copy); `BOARD-v2.json` is an example of a board cut by v2 |
+| `agents/` | `simplicity-critic`, `handoff-builder`, `spec-validator-fixer`, the review lenses `f-inspect` calls (`lens-*`, including `lens-instructions`, `lens-migrations` and `lens-loose-ends`), the optional `code-explorer`, and `plan-validator` (used only inside `f-plancheck`, as its checklist) |
+| `templates/` | fill-in-the-blanks for every document the method produces, in the order they're used (`METHOD.md`) |
+| `snippets/` | code to copy: the gate runner template, the import-scan script, the mutation-probe harness template, the parallel proof, the test-time counter, the site walk's outside grader, and for two lanes the board's pull and push (`board_pull.sh`, `board_push.sh`) and the tested landing (`land_tested.sh`) |
+| `examples/example-board/` | a made-up project board (synthetic data, generated by `/f-board`): open `board.html` |
+| `foreman/` | what a project starts with: the Logbook (`logbook/`), the blueprints index and the job templates. The rest of `foreman/` is created in your repo (§2) |
+| `addons/deep-agents/` | optional, installed only on yes (above) |
+| `addons/gaffer/` | optional, in this repo only (never installed): Topping Out Gaffer, a voice agent for your boards and live Orca sessions (§8c) |
+| `docs/`, `assets/` | the site at toppingout.dev, generated by `scripts/build_site.py`, and its images: never installed |
 
 ## 2 · Two repos, kept apart (or one, with a boundary)
 
@@ -71,7 +93,7 @@ your-repo/
 │   │   └── deferred/              plans put off before any build
 │   ├── projects/<slug>/           one folder per project                       /f-schedule
 │   │   ├── PROJECT.md             the plan cut into jobs
-│   │   ├── tickets/               TICKET-<nn>.md, one per job
+│   │   ├── tickets/               TICKET-<nn>-<slug>.md, one per job
 │   │   ├── BOARD.json             the board's data (the only place job state lives)   /f-board
 │   │   └── board.html             the board page, generated from BOARD.json    /f-board
 │   ├── jobs/                      JOB_<date>_<slug>.md: the job in progress    work order 1
@@ -245,7 +267,8 @@ tailscale serve --bg --https=4111 http://127.0.0.1:4111
 | A foreman: a coding agent that runs skills (Claude Code tested) | required | |
 | A builder: any coding agent that can read a file, run a shell and write a report | required | `Builder-Playbook.md` |
 | `git`, Node 18+, Python 3.9+, Bash | required | `/f-setup` checks each |
-| Pi and Orca (the workspace) | required | Pi runs the plan check's OpenRouter readers and `agent-council`, and is the default builder; a Claude Code builder (any Claude model, `orca-pi-connect`) can build instead. The pane link (`skills/orca-pi-connect`, §4): the foreman sends each work order to the builder beside it; autonomous runs, the night shift and the cloud setup run through it. Without them you carry one-line pointers by hand, which `/f-setup` warns about |
+| Pi | required | Pi runs the plan check's OpenRouter readers and `agent-council`, and is the default builder. A Claude Code builder (any Claude model) or an agy builder (Antigravity's CLI, any model it lists) can build instead (`orca-pi-connect`, §4) |
+| Orca (the workspace) | required to run without you | the pane link (`skills/orca-pi-connect`, §4): the foreman sends each work order to the builder beside it; autonomous runs, the night shift and the cloud setup run through it. Without Orca a job still runs with you: you carry each one-line pointer to the builder by hand, which `/f-setup` warns about |
 | Greptile | required | the review rounds on every PR (`skills/f-greploop`): the Greptile app installed on the repo. `/f-setup` warns if it isn't |
 | An OpenRouter key | required | the plan check's and the councils' readers from other model families (`f-plancheck`, whose suggested seats are `sol` · `gemini-hydrogen` · `qwen4-max`, or `gemini-hydrogen-agy` in place of `gemini-hydrogen` when Antigravity's `agy` is installed; the councils), and voice. Paid calls only within a cap you set; tests always run with paid keys stripped. `/f-setup` warns if `.env` has no `OPENROUTER_API_KEY` |
 | Antigravity's CLI `agy`, signed in with Google AI Pro | optional | the plan check's Gemini seat on the subscription, no per-call charge (`gemini-hydrogen-agy`, `f-plancheck`); without it that seat runs on OpenRouter (`gemini-hydrogen`) |

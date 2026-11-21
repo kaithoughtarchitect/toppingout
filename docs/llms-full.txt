@@ -1,6 +1,6 @@
 # Topping Out: every skill and agent page
 
-> A spec-driven software factory for Claude Code that works through your tickets overnight, with a planner/executor split: a planner writes each ticket's spec in a fresh session, a cheaper model does the coding, another model family reviews it, and your Claude Code limit lasts far longer. Each job ends with evidence you can check: what was asked, what was built, what was tested, and what reviewers found.
+> Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory with a planner/executor split: a foreman in Claude Code specs every ticket in a fresh session, a cheaper builder codes it, a rival model family reviews it, and nothing merges without evidence. It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
 
 
 ---
