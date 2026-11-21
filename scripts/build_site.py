@@ -2488,14 +2488,6 @@ FRONT = {
     "morning_call": ("J43 picked one default without you",
                      "Sessions renew for 14 days. A cold second opinion agreed, and it stays inside the board's entry.",
                      ["★ Keep it", "Reverse it in a follow-up job"]),
-    # five words a newcomer meets on this page first (README, "Words you'll see")
-    "glossary": [
-        ("Foreman", "The session that plans each job, writes the work orders and checks the work. It never writes product code."),
-        ("Builder", "The cheaper session that writes the code, one work order at a time."),
-        ("Board and head", "A project's jobs drawn as a fishbone. The head is what the product must do when every job is done."),
-        ("Opener", "The few lines a job leaves for the next one. Paste them into a fresh session, and it starts there."),
-        ("Pane link", "Orca runs the foreman and the builder side by side, so each step passes without you."),
-    ],
     # the shift clock: (when, title, text, command, kind)
     "shift": [
         ("By day", "You plan", "Get each ticket ready and answer its open questions, so nothing stalls at night.", "", "you"),
@@ -2587,9 +2579,11 @@ FRONT = {
     # the builders the owner uses (2026-11-21), each in the harness it runs in over the pane link (SETUP.md section 4)
     "req_builders": [
         ("claude", "#D97757", "Claude Sonnet 5.5", "Anthropic, in Claude Code", "Builds each work order."),
+        ("claude", "#D97757", "Claude Haiku 5.5", "Anthropic, in Claude Code", "Builds each work order."),
         ("gemini", "#4285F4", "Gemini Hydrogen", "Google, in Antigravity", "Builds each work order."),
         ("openai", "", "GPT-6.2 Sol", "OpenAI, in Pi", "Builds each work order."),
         ("openai", "", "GPT-6.2 Terra", "OpenAI, in Pi", "Builds each work order."),
+        ("img:zai", "", "GLM 5.3", "Z.ai, on subscription", "Builds each work order."),
     ],
     # optional kit (README "What you need", SETUP.md sections 8b, 8c and 9): shown on the requirements sheet, never counted on the pass
     "req_opt": [
@@ -2795,33 +2789,43 @@ ONE_JOB_VIS = [
 ]
 
 
+# The receipt's headline figures, each read from its README row: (row, pattern, figure, caption). The build stops if a row
+# changes so its pattern no longer matches, so a tile can never show a number the README doesn't.
+RECEIPT_TILES = [
+    ("plan check", r"^(\d+) findings.*?(\d+) applied", "{0}", "plan-check findings, {1} applied before building"),
+    ("inspect 1", r"(\d+) fixes", "{0}", "fixes from the lens inspection, all accepted"),
+    ("review", r"Greptile (\d+/\d+)", "{0}", "Greptile review score"),
+    ("tests", r"(\d+) -> (\d+) passing", "{0}&rarr;{1}", "tests passing, nothing newly red"),
+    ("probes", r"(\d+) of (\d+) mutation", "{0}/{1}", "mutation probes caught"),
+    ("spend", r"([\d.]+) USD in paid calls, against a ([\d.]+) USD cap", "${0}", "in paid calls, against a ${1} cap"),
+]
+
+
 def receipt_html() -> str:
-    """The work docket under the hero: README's "What a finished job looks like", row for row, so the page never claims more than it."""
+    """One real job's receipt as a work docket: the headline figures as stat tiles first, then README's rows, compact.
+    Everything is read from README's "What a finished job looks like", so the page never claims more than it."""
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     m = re.search(r"^## What a finished job looks like\n\n(.+?)\n\n```text\n(.+?)\n```", text, re.S | re.M)
     if not m:
         raise SystemExit("build_site: README.md has no 'What a finished job looks like' block (the front page's receipt reads it)")
-    rows = [re.match(r"(.+?)\s{2,}(.+)", ln).groups() for ln in m.group(2).splitlines() if ln.strip()]
-    keep = [(k, v) for k, v in rows if k not in ("ticket", "record")]
-    record = dict(rows).get("record", "")
-
-    def figures(v: str) -> str:
-        v = esc(v).replace(" -&gt; ", " &rarr; ")
-        return re.sub(r"(\d[\d.,/]*(?: &rarr; \d+)?(?: of \d+)?(?: USD)?)", r"<b>\1</b>", v, count=1)
-
-    body = "".join(f'<div><dt>{esc(k)}</dt><dd>{figures(v)}</dd></div>' for k, v in keep)
-    return ('<div class="rcpt" aria-labelledby="rcpt-h"><div class="rcpt-hd"><span class="al">The proof</span>'
+    rows = dict(re.match(r"(.+?)\s{2,}(.+)", ln).groups() for ln in m.group(2).splitlines() if ln.strip())
+    tiles = []
+    for row, pat, fig, capt in RECEIPT_TILES:
+        hit = re.search(pat, rows.get(row, ""))
+        if not hit:
+            raise SystemExit(f"build_site: README's finished job has no figure for {row!r} (RECEIPT_TILES)")
+        g = [esc(x) for x in hit.groups()]
+        tiles.append(f'<li><b>{fig.format(*g)}</b><span>{capt.format(*g)}</span></li>')
+    detail = "".join(f'<div><dt>{esc(k)}</dt><dd>{esc(v).replace(" -&gt; ", " &rarr; ")}</dd></div>'
+                     for k, v in rows.items() if k != "record")
+    return ('<div class="rcpt" aria-labelledby="rcpt-h"><div class="punch" aria-hidden="true"></div>'
+            '<div class="rcpt-hd"><div><span class="al">The proof &middot; one real job</span>'
             '<h2 id="rcpt-h">What one finished job handed over</h2>'
-            '<p>One real job, run on its own from ticket to merge. The project&rsquo;s name and feature are left out.</p></div>'
-            '<div class="rdoc"><div class="punch" aria-hidden="true"></div>'
-            f'<dl class="rrows">{body}</dl>'
-            f'<div class="rstub"><span><b>On file</b> {esc(record)}</span><em class="rstamp">Merged</em></div></div></div>')
-
-
-def glossary_html() -> str:
-    """Five words the page uses before it explains them."""
-    items = "".join(f'<div><dt>{esc(w)}</dt><dd>{inline(d)}</dd></div>' for w, d in FRONT["glossary"])
-    return f'<div class="gloss"><span class="al">Words you&rsquo;ll see</span><dl>{items}</dl></div>'
+            '<p>Run on its own from ticket to merge. The project&rsquo;s name and feature are left out.</p></div>'
+            '<em class="rstamp">Merged</em></div>'
+            f'<ul class="rtiles">{"".join(tiles)}</ul>'
+            f'<dl class="rrows">{detail}</dl>'
+            f'<div class="rstub"><b>On file</b><span>{esc(rows.get("record", ""))}</span></div></div>')
 
 
 def morning_html() -> str:
@@ -4097,29 +4101,26 @@ FRONT_CSS = r"""
  .steps>li{grid-template-columns:1fr;gap:4px}
  .cmdline code{white-space:normal;overflow-wrap:break-word;font-size:12px;line-height:1.5;padding:12px}
 }
-/* the proof under the hero: one real job's receipt as a work docket (punched top, tear line, the Merged stamp) */
-.rcpt{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:22px;padding:24px 28px;border-bottom:3px solid var(--ink)}
-.rcpt .al,.gloss .al,.mrep .al{align-self:flex-start;display:inline-block;background:#101316;color:#FBB401;font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;padding:8px 10px}
-.rcpt-hd h2{margin:12px 0 8px;font:800 clamp(26px,2.6vw,34px)/.95 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
-.rcpt-hd p{margin:0;font-size:14.5px;line-height:1.5;color:var(--ink-2);max-width:40ch}
-.rdoc{position:relative;background:var(--ground);border:1px solid var(--line);border-top:0;min-width:0}
-.rdoc .punch{height:14px;background:radial-gradient(circle at 12px 7px,var(--panel) 0 3.5px,transparent 4px) 0 0/24px 14px repeat-x;border-bottom:1px dashed var(--line)}
-.rrows{margin:0;padding:6px 18px 4px}
-.rrows>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);align-items:baseline}
-.rrows>div:last-child{border-bottom:0}
-.rrows dt{font:600 10.5px/1.4 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
-.rrows dd{margin:0;font-size:14px;line-height:1.45;color:var(--ink-2)}
-.rrows dd b{font:800 21px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--ink);margin-right:2px;font-variant-numeric:tabular-nums}
-.rstub{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:12px 18px 14px;border-top:2px dashed var(--line);font-size:13px;line-height:1.45;color:var(--ink-3)}
-.rstub b{font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-right:6px}
+/* the proof, after "Watch one job": one real job's receipt as a work docket. Figures first as tiles, then the ledger, compact */
+.rcpt{border-bottom:3px solid var(--ink);background:var(--panel)}
+.rcpt .punch{height:14px;background:radial-gradient(circle at 12px 7px,var(--ground) 0 3.5px,transparent 4px) 0 0/24px 14px repeat-x;border-bottom:1px dashed var(--line)}
+.rcpt .al,.mrep .al{align-self:flex-start;display:inline-block;background:#101316;color:#FBB401;font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;padding:8px 10px}
+.rcpt-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:20px 28px 4px}
+.rcpt-hd h2{margin:12px 0 6px;font:800 clamp(26px,2.6vw,34px)/.95 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.rcpt-hd p{margin:0;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.rcpt-hd .rstamp{margin-top:10px;font-size:22px}
+.rtiles{list-style:none;margin:16px 28px 0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:2px solid var(--ink)}
+.rtiles li{padding:14px 14px 13px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:7px;min-width:0}
+.rtiles li:last-child{border-right:0}
+.rtiles b{font:800 38px/.9 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rtiles span{font-size:12.5px;line-height:1.35;color:var(--ink-3)}
+.rrows{margin:0;padding:12px 28px 4px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+.rrows>div{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:baseline}
+.rrows dt{font:600 10px/1.4 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.rrows dd{margin:0;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.rstub{display:flex;gap:10px;align-items:baseline;padding:12px 28px 18px;font-size:13px;line-height:1.45;color:var(--ink-3)}
+.rstub b{flex:none;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .rstamp{flex:none;font-style:normal;transform:rotate(4deg);border:4px double var(--run);color:var(--run);font:800 18px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px 4px}
-/* five words, before the page uses them */
-.gloss{padding:18px 28px 20px;border-bottom:3px solid var(--ink)}
-.gloss dl{margin:12px 0 0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
-.gloss dl>div{padding:2px 14px 2px 0;margin-right:14px;border-right:1px dashed var(--line)}
-.gloss dl>div:last-child{border-right:0;margin-right:0}
-.gloss dt{font:800 17px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;color:var(--ink)}
-.gloss dd{margin:5px 0 0;font-size:13px;line-height:1.45;color:var(--ink-2)}
 /* the try-it strip */
 .access .pre{font-size:13.5px;line-height:1.5}
 .access .pre a{color:var(--ink)}
@@ -4145,15 +4146,20 @@ FRONT_CSS = r"""
 .ycall ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .ycall li{font:600 12px/1 "Martian Mono",ui-monospace,monospace;border:2px solid #101316;padding:7px 9px}
 .ycall li:first-child{background:#101316;color:#FBB401}
-@media (max-width:1100px){.rcpt{grid-template-columns:1fr}.gloss dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 0}.gloss dl>div{border-right:0}}
+@media (max-width:1100px){.rtiles{grid-template-columns:repeat(3,minmax(0,1fr))}.rtiles li:nth-child(3n){border-right:0}.rtiles li:nth-child(-n+3){border-bottom:1px solid var(--line)}.rrows{grid-template-columns:1fr}}
 @media (max-width:720px){
- .rcpt{padding:18px 16px;gap:14px}
- .rrows{padding:4px 12px}
- .rrows>div{grid-template-columns:1fr;gap:2px}
- .rstub{padding:12px;flex-direction:column;align-items:flex-start}
- .gloss{padding:16px}
- .gloss dl{grid-template-columns:1fr}
- .gloss dl>div{margin-right:0;padding-right:0}
+ .rcpt-hd{padding:16px 16px 2px;gap:10px;flex-direction:column}
+ .rcpt-hd .rstamp{font-size:16px;margin:2px 0 0 4px}
+ .rtiles{margin:14px 16px 0;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rtiles li{padding:12px 10px}
+ .rtiles li:nth-child(3n){border-right:1px solid var(--line)}
+ .rtiles li:nth-child(2n){border-right:0}
+ .rtiles li:nth-child(-n+4){border-bottom:1px solid var(--line)}
+ .rtiles li:nth-child(n+5){border-bottom:0}
+ .rtiles b{font-size:32px}
+ .rrows{padding:10px 16px 2px}
+ .rrows>div{grid-template-columns:1fr;gap:1px}
+ .rstub{padding:10px 16px 16px;flex-direction:column;gap:4px}
  .mrep{padding:14px}
 }
 """
@@ -5666,7 +5672,7 @@ class Site:
                 builders = "".join(tile(b, "builder") for b in F["req_builders"])
                 builders += tile((None, "", "Another builder", "your pick", "Any agent that reads files, runs a shell, writes a report."), "builder")
                 extra = ('<div class="bpick"><h4>And one builder <small>pick one</small></h4>'
-                         '<p>It only builds what the foreman settled, so a cheaper model will do. I use Claude Sonnet 5.5 in Claude Code, Gemini Hydrogen in Antigravity (agy), and GPT-6.2 Sol and GPT-6.2 Terra in Pi.</p>'
+                         '<p>It only builds what the foreman settled, so a cheaper model will do. I use Claude Sonnet 5.5 and Claude Haiku 5.5 in Claude Code, Gemini Hydrogen in Antigravity (agy), GPT-6.2 Sol and GPT-6.2 Terra in Pi, and GLM 5.3.</p>'
                          f'<ul class="kits">{builders}</ul></div>')
             lvn = {"ground": "Record", "extra": "Extra"}.get(lid, f"Level {len(blocks):02d}")
             blocks.append(f'<section class="lvl{" lvl0" if lid in ("ground", "extra") else ""}" id="{lid}"><div class="lvh"><span class="lvn">{lvn}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
@@ -5886,7 +5892,7 @@ class Site:
                    '<div class="jcap" id="jcap" aria-hidden="true"><b class="clk">09:00</b><span class="cap"><b>You plan</b> get each ticket ready by day</span>'
                    '<span class="pips"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></div>'
                    '</div></div>'
-                   f'{receipt_html()}{glossary_html()}{one_job_html()}'
+                   f'{one_job_html()}{receipt_html()}'
                    f'<div class="bb"><dl class="roster">{roster}</dl>'
                    f'<div class="access" id="install"><span class="al">Try it</span>'
                    '<p class="pre"><b>To start:</b> git, Node 18+, Python 3.9+, Bash and Claude Code. <code>/f-setup</code> checks the rest: Pi, Codex (ChatGPT), Orca, Greptile and an OpenRouter key (<a href="#needs">what you need</a>).</p>'
