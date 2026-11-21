@@ -315,6 +315,32 @@ export function parsePiJsonEvents(text) {
  */
 export const AGY_DENY_RULES = Object.freeze(["command(*)", "write_file(*)", "mcp(*)"]);
 
+/**
+ * The plan-check pi folder a repo keeps beside its records (its `models.json`
+ * holds the 65,536 output cap for every OpenRouter seat). A foreman that runs
+ * the dispatcher without PI_CODING_AGENT_DIR got the owner's own ~/.pi, which
+ * has no cap, so every OpenRouter seat was refused at preflight (seen
+ * 2026-11-21). Looked for under --cwd, in this order.
+ */
+export const PLANCHECK_PI_DIR_CANDIDATES = Object.freeze([
+  ["foreman", "plancheck-pi-agent"],
+  ["sprint", "plancheck-pi-agent"],
+]);
+
+/**
+ * Pure (the file check is injected). When PI_CODING_AGENT_DIR is unset, the
+ * repo's own plan-check pi folder if it has a models.json: `{ dir, source }`,
+ * source "env" | "repo" | "none".
+ */
+export function resolvePlancheckPiDir(cwd, env, hasModelsJson) {
+  if (env.PI_CODING_AGENT_DIR) return { dir: env.PI_CODING_AGENT_DIR, source: "env" };
+  for (const parts of PLANCHECK_PI_DIR_CANDIDATES) {
+    const dir = path.join(cwd, ...parts);
+    if (hasModelsJson(dir)) return { dir, source: "repo" };
+  }
+  return { dir: null, source: "none" };
+}
+
 /** Pure. The `--settings` JSON for an agy seat in `cwd`. */
 export function agySeatSettings(cwd) {
   return JSON.stringify({ trustedWorkspaces: [cwd], agentMode: "", permissions: { deny: [...AGY_DENY_RULES] } });
@@ -1429,7 +1455,7 @@ async function main() {
   const outDir = path.resolve(outArg);
   tryOrExit("cannot create --out dir", () => fs.mkdirSync(outDir, { recursive: true }));
 
-  const env = process.env;
+  let env = process.env;
   const startedAt = new Date().toISOString();
   let piCatalog = null;
 
@@ -1478,6 +1504,15 @@ async function main() {
   // ~/.pi is never written. A failed refresh is said and the run carries on
   // with the list it has; each seat's preflight still refuses a missing model.
   if (seats.some((s) => s.doorSlug === "openrouter")) {
+    const piDir = resolvePlancheckPiDir(cwd, env, (d) => fs.existsSync(path.join(d, "models.json")));
+    if (piDir.source === "repo") {
+      env = { ...env, PI_CODING_AGENT_DIR: piDir.dir };
+      console.log(`PLANCHECK_PI_DIR ${piDir.dir} (found in the repo; PI_CODING_AGENT_DIR was not set)`);
+    } else if (piDir.source === "env") {
+      console.log(`PLANCHECK_PI_DIR ${piDir.dir} (PI_CODING_AGENT_DIR)`);
+    } else {
+      console.log("PLANCHECK_PI_DIR none: PI_CODING_AGENT_DIR is not set and the repo has no foreman/plancheck-pi-agent/models.json, so pi uses ~/.pi/agent (no output caps: OpenRouter seats will be refused at preflight)");
+    }
     piCatalog = await refreshPiCatalog(env, cwd);
     console.log(`PLANCHECK_PI_CATALOG ${piCatalog}`);
   }

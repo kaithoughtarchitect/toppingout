@@ -21,6 +21,7 @@ import {
   parsePiJsonEvents,
   parseTokenCount,
   PI_CUSTOM_MODEL_ID_RE,
+  resolvePlancheckPiDir,
 } from "./plancheck-dispatch.mjs";
 
 let n = 0;
@@ -255,6 +256,16 @@ t("the agy roster rows resolve, validate, and keep the OpenRouter Gemini fallbac
   ]);
   for (const id of ids) assert.equal(roster.models.find((m) => m.id === id).cost, "subscription");
   assert.equal(roster.models.find((m) => m.id === "gemini-hydrogen").door, "OpenRouter");
+});
+
+t("the repo's plan-check pi folder is found when PI_CODING_AGENT_DIR is not set", () => {
+  const has = (set) => (d) => set.some((x) => d.split("\\").join("/").endsWith(x));
+  assert.deepEqual(resolvePlancheckPiDir("/r", { PI_CODING_AGENT_DIR: "/x" }, has(["foreman/plancheck-pi-agent"])), { dir: "/x", source: "env" });
+  const f = resolvePlancheckPiDir("/r", {}, has(["foreman/plancheck-pi-agent"]));
+  assert.equal(f.source, "repo"); assert.ok(f.dir.split("\\").join("/").endsWith("foreman/plancheck-pi-agent"));
+  const sp = resolvePlancheckPiDir("/r", {}, has(["sprint/plancheck-pi-agent"]));
+  assert.ok(sp.dir.split("\\").join("/").endsWith("sprint/plancheck-pi-agent"));
+  assert.deepEqual(resolvePlancheckPiDir("/r", {}, has([])), { dir: null, source: "none" });
 });
 
 console.log(`PASS ${n}/${n}`);

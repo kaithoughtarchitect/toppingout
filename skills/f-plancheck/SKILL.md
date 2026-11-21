@@ -196,7 +196,7 @@ short plan that must come back fast (sprint mode uses it).
 
 **OpenRouter seats run in a pi folder of their own.** Set `PI_CODING_AGENT_DIR` to the
 absolute path of a plan-check folder (for example `foreman/plancheck-pi-agent/`; git-ignore
-its `auth.json`, `models-store.json` and `bin/`), never the owner's `~/.pi`. The folder holds:
+its `auth.json`, `models-store.json` and `bin/`), never the owner's `~/.pi`. **When it is unset, the dispatcher finds the repo's own folder itself:** `foreman/plancheck-pi-agent/` (or `sprint/plancheck-pi-agent/`) under `--cwd`, if it has a `models.json`, and prints `PLANCHECK_PI_DIR <path>`; with neither, it prints `PLANCHECK_PI_DIR none` and the OpenRouter seats are refused at preflight. The folder holds:
 
 - `models.json`, the output cap for every OpenRouter model the roster seats: copy
   `plancheck-pi-models.json` from this skill (one `{ "maxTokens": 65536 }` per OpenRouter row;
