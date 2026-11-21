@@ -65,7 +65,7 @@ PHASES = [
    ("or", "Final re-run and the ledger", "Captures, probes and base-vs-head again at the final head. Every requirement and VP passes, or there is no PR.", [("file", "ACCEPTANCE-LEDGER.md")], None),
  ]),
  ("5", "PR and merge", "Merge", "Outward acts: each one needs your word.", [
-   ("or", "PR body", "What changed, acceptance, proof, limitations, rollback, the review record. Scanned for builder names.", [("file", "PR-BODY.md")], None),
+   ("or", "PR body", "Titled J<N> · board <id>: what it delivers, the same as the body's first heading. What changed, acceptance, proof, limitations, rollback, the review record. Scanned for builder names.", [("file", "PR-BODY.md")], None),
    ("op", "Open the PR", "Pushed and opened; you watch it in the browser. Opening is not merging.", [], "open the PR"),
    ("or", "Greptile rounds", "Greptile scores the open PR out of 5. Its findings are checked like any inspection, the builder fixes what's accepted, the tests and sign-off re-run, then the push. Three rounds at most, then it stops for you. It comes with opening the PR; a fourth round is your word.", [("skill", "f-greploop")], None),
    ("or", "PR description check", "Before you're asked to merge: the PR's description is re-read against the final code and results, and anything stale is rewritten.", [], None),
@@ -82,6 +82,7 @@ PHASES = [
    ("or", "Shift handover and opener", "A session brief becomes the shift handover and its answer key, plus the next session's opener as a file beside them, ready to paste.", [("agent", "handoff-builder"), ("file", "foreman/handovers/")], None),
    ("or", "Top out (when the head is reached)", "The other ending, when every job is done: close the last job, top the board out (frozen as the project's record), write the topping out report, then three to five candidate next heads instead of a handover and opener. You pick a head when you're ready and the cycle starts again.", [("file", "TOPPING-OUT-REPORT.md"), ("file", "NEXT-HEADS.md"), ("tool", "render_board.py topout")], None),
    ("or", "Push the records", "The end-game lock clears. Merge main into the records branch (never a rebase), check only records differ, push.", [], None),
+   ("op", "How the next job runs", "The end game's last message is a card: 🚧 YOUR CALL · how does job <N> run? With you, an autonomous run or a night shift, ★ on the recommended one, each with its line to paste. Nothing starts until you paste one. Skipped under a goal, and after a topping out.", [("skill", "f-signoff")], None),
  ]),
 ]
 

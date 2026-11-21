@@ -30,6 +30,7 @@ Writing the plan (f-blueprint), not for planning one ticket's job (the foreman's
 - On a plan without the `gate: plancheck` line, it stops and tells you to run `/f-plancheck` first. A findings row with a blank fate stops it too.
 - Before writing anything, it shows you the head, the job table, the decision jobs, any unmapped verification points or tasks, any disagreements, and the job it recommends first.
 - It writes nothing until you say "go" for the project.
+- The proposal ends with its own card, **🚧 YOUR CALL · one lane or two for this head?**, after the width report and with ★ on the recommended option. It shows even when two lanes aren't set up, and then says what setting them up takes; no answer means one lane.
 - Research and owner decisions are their own jobs, never hidden inside another: a question that ends in your answer is a decision job; research that produces a file is a build job and goes through a PR.
 - Every verification point is carried by at least one job, and every plan task maps to a job or to "not carried, on purpose" with its reason.
 - `foreman/projects/<slug>/` holds `PROJECT.md`, one ticket file per job with the acceptance quoted and a "Why this job" that says in plain sentences what the job makes possible, never only its plan task, and a `BOARD.json` that `render_board.py` validated and rendered.

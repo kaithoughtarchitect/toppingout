@@ -142,7 +142,7 @@ t("the models.json template caps every OpenRouter row in the roster", () => {
   }
 });
 
-// ── the agy CLI door (Gemini on a Google AI Pro subscription) ──
+// ── the agy CLI door (Gemini on the Antigravity subscription) ──
 
 t("the agy argv: assignment named in the prompt, bare model plus --effort, writes and commands denied", () => {
   const cwd = process.cwd();

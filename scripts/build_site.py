@@ -33,7 +33,7 @@ OUT = ROOT / "docs"
 # the custom domain GitHub Pages serves docs/ at; written to docs/CNAME on every build, since the build clears docs/
 DOMAIN = "toppingout.dev"
 SITE_URL = "https://" + DOMAIN + "/"
-# the link preview (1200x630, dark), drawn from the front page's own headline by foreman-site-tools/og-card.mjs
+# the link preview (1200x630, dark), drawn from the front page's own headline by scripts/og-card.mjs
 OG_CARD = "assets/brand/og-card.png"
 # Google Search Console ownership and the IndexNow key for Bing: permanent, written exactly as given on every build
 SITE_KEYS = {"google720c4958b3eb3b19.html": "google-site-verification: google720c4958b3eb3b19.html",
@@ -65,6 +65,9 @@ SHEETS = [
 BRAND_PI = ('M420 280H280V140H0V0H420V280Z', 'M560 560H420V280H560V560Z', 'M140 560H0V140H140V280H280V420H140V560Z')
 BRAND_MARKS = {
     'server': 'M2 3h20v7H2ZM5 5.5v2h2v-2ZM2 14h20v7H2ZM5 16.5v2h2v-2Z',  # drawn for the site: two rack units
+    'gemini': 'M12 0C12 6.6 17.4 12 24 12C17.4 12 12 17.4 12 24C12 17.4 6.6 12 0 12C6.6 12 12 6.6 12 0Z',  # drawn for the site: a four-point spark
+    'tailscale': 'M2 2h5v5H2ZM9.5 2h5v5h-5ZM17 2h5v5h-5ZM2 9.5h5v5H2ZM9.5 9.5h5v5h-5ZM17 9.5h5v5h-5ZM9.5 17h5v5h-5Z',  # drawn for the site: a grid of nodes
+    'headset': 'M12 2a9 9 0 0 0-9 9v7a3 3 0 0 0 3 3h2v-8H5v-2a7 7 0 0 1 14 0v2h-3v8h2a3 3 0 0 0 3-3v-7a9 9 0 0 0-9-9Z',  # drawn for the site: a headset
     'openai': 'M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z',
     'windows': 'M0,0H11.377V11.372H0ZM12.623,0H24V11.372H12.623ZM0,12.623H11.377V24H0Zm12.623,0H24V24H12.623',
     'claude': 'm4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z',
@@ -428,7 +431,7 @@ ORDER_JS = '<script>(function(){var sec=document.getElementById("route"),strip=d
 
 CONVEYOR = '<svg class="conv" aria-hidden="true" focusable="false"><path class="cvl"/><text class="cvt">the tickets, one at a time</text><g class="cvk"></g></svg>\n<script>(function(){var sec=document.getElementById("route");if(!sec)return;var svg=sec.querySelector("svg.conv"),path=svg.querySelector(".cvl"),txt=svg.querySelector(".cvt"),kg=svg.querySelector(".cvk"),\n track=sec.querySelector(".once .track"),loop=sec.querySelector(".shiftbox .loop"),box=sec.querySelector(".shiftbox");if(!track||!loop||!box)return;\nvar still=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches),on=true,L=0,toks=[];\nfor(var i=0;i<3;i++){var g=document.createElementNS("http://www.w3.org/2000/svg","g");g.innerHTML=\'<rect x="-9" y="-6" width="18" height="12" fill="#FBB401" stroke="#101316" stroke-width="1.6"/><path d="M-5 -1.5h10M-5 2h6" stroke="#101316" stroke-width="1.2"/>\';kg.appendChild(g);toks.push(g)}\nfunction draw(){var s=sec.getBoundingClientRect(),tr=track.getBoundingClientRect(),lp=loop.getBoundingClientRect(),bx=box.getBoundingClientRect();\n svg.setAttribute("width",s.width);svg.setAttribute("height",s.height);\n var vert=parseFloat(getComputedStyle(track).borderLeftWidth)>0,sx,sy;\n if(vert){sx=tr.left-s.left+1.5;sy=tr.bottom-s.top}else{sx=tr.right-s.left-1.5;sy=tr.top-s.top+1.5}\n var ex=lp.left-s.left+1.5,ey=lp.top-s.top+(vert?20:0),ob=sec.querySelector(".once").getBoundingClientRect().bottom-s.top,cy=(ob+bx.top-s.top)/2;\n path.setAttribute("d","M"+sx+" "+sy+"V"+cy+"H"+ex+"V"+ey);L=path.getTotalLength();\n txt.setAttribute("x",vert?ex+14:(sx+ex)/2);txt.setAttribute("y",cy-9);txt.setAttribute("text-anchor",vert?"start":"middle")}\nfunction frame(now){if(!on)return;toks.forEach(function(g,i){var u=((now/1000)/9+i/3)%1,pt=path.getPointAtLength(L*u);g.setAttribute("transform","translate("+pt.x+" "+pt.y+")")});requestAnimationFrame(frame)}\ndraw();if(window.ResizeObserver)new ResizeObserver(draw).observe(sec);\nif(still){toks.forEach(function(g){g.style.display="none"});return}\nif(window.IntersectionObserver)new IntersectionObserver(function(es){var v=es[0].isIntersecting;if(v&&!on){on=true;requestAnimationFrame(frame)}else if(!v)on=false}).observe(sec);\nrequestAnimationFrame(frame)})()</script>'
 
-NIGHT_STRIP = '<div class="nstrip" id="nstrip" style="--t:1"><span class="nstars" aria-hidden="true"></span><span class="nmoon" aria-hidden="true"></span><span class="nsun" aria-hidden="true"></span>\n<div class="nrow">\n<div class="ntype"><span class="nt">22:30 &middot; Before bed</span><b>You type one line</b><code><span class="nty">/goal night shift: jobs 11, 12, 13</span><span class="ncar" aria-hidden="true"></span></code></div>\n<div class="nline" role="img" aria-label="An example night: boards 11, 12 and 13 each built, checked and merged, one after another, between 22:40 and 05:50">\n<div class="nclock" aria-hidden="true"><span>Night shift</span><b class="nck">06:30</b></div>\n<div class="ntrack" aria-hidden="true">\n<div class="njob" style="--a:.02;--b:.33"><i class="nfill"></i><b>Board 11</b><span>built, checked</span><em>Merged</em></div>\n<div class="njob" style="--a:.345;--b:.65"><i class="nfill"></i><b>Board 12</b><span>on top of 11</span><em>Merged</em></div>\n<div class="njob" style="--a:.665;--b:.92"><i class="nfill"></i><b>Board 13</b><span>last on the list</span><em>Merged</em></div>\n<span class="ncur"></span></div>\n<div class="nticks" aria-hidden="true"><span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span></div>\n</div>\n<div class="nmorn"><span class="nt">07:00 &middot; Morning</span><b>3 jobs merged</b><span>The links, and anything only you can decide.</span></div>\n</div><button type="button" class="nreplay" hidden>&#8635; Replay the night</button></div>\n<p class="nextra">Name the jobs, or say <code>3 jobs, auto-pick</code> and it picks them. <a href="skills/f-night-shift.html">How it works &rarr;</a></p>\n<script>(function(){var n=document.getElementById("nstrip");if(!n)return;\nvar jobs=[].slice.call(n.querySelectorAll(".njob")),ck=n.querySelector(".nck"),ty=n.querySelector(".nty"),rb=n.querySelector(".nreplay"),cmd=ty.textContent,raf=0;\nfunction set(t){n.style.setProperty("--t",t.toFixed(4));var h=22.5+8*t,hh=Math.floor(h)%24,mm=Math.floor((h%1)*60);ck.textContent=(hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;\n jobs.forEach(function(j){var a=+j.style.getPropertyValue("--a"),b=+j.style.getPropertyValue("--b"),f=Math.max(0,Math.min(1,(t-a)/(b-a)));j.style.setProperty("--f",f.toFixed(3));j.classList.toggle("on",f>0&&f<1);j.classList.toggle("done",f>=1)});\n n.classList.toggle("dawn",t>=1)}\nfunction play(){cancelAnimationFrame(raf);n.classList.add("live");set(0);ty.textContent="";var i=0,t0=0;\n (function type(){ty.textContent=cmd.slice(0,++i);if(i<cmd.length)raf=setTimeout(type,38);else{n.classList.add("typed");raf=requestAnimationFrame(function go(now){if(!t0)t0=now;var t=Math.min(1,(now-t0)/7000);set(t);if(t<1)raf=requestAnimationFrame(go)})}})()}\nset(1);\nif(!window.IntersectionObserver||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;\nrb.hidden=false;rb.addEventListener("click",function(){clearTimeout(raf);n.classList.remove("typed");play()});\nnew IntersectionObserver(function(es,o){if(!es[0].isIntersecting)return;o.disconnect();play()},{threshold:.4}).observe(n)})()</script>'
+NIGHT_STRIP = '<div class="nstrip" id="nstrip" style="--t:1"><span class="nstars" aria-hidden="true"></span><span class="nmoon" aria-hidden="true"></span><span class="nsun" aria-hidden="true"></span>\n<div class="nrow">\n<div class="ntype"><span class="nt">22:30 &middot; Before bed</span><b>You type one line</b><code><span class="nty">/goal night shift: jobs 11, 12, 13</span><span class="ncar" aria-hidden="true"></span></code></div>\n<div class="nline" role="img" aria-label="An example night: jobs 11, 12 and 13 each built, checked and merged, one after another, between 22:40 and 05:50">\n<div class="nclock" aria-hidden="true"><span>Night shift</span><b class="nck">06:30</b></div>\n<div class="ntrack" aria-hidden="true">\n<div class="njob" style="--a:.02;--b:.33"><i class="nfill"></i><b>Job 11</b><span>built, checked</span><em>Merged</em></div>\n<div class="njob" style="--a:.345;--b:.65"><i class="nfill"></i><b>Job 12</b><span>on top of 11</span><em>Merged</em></div>\n<div class="njob" style="--a:.665;--b:.92"><i class="nfill"></i><b>Job 13</b><span>last on the list</span><em>Merged</em></div>\n<span class="ncur"></span></div>\n<div class="nticks" aria-hidden="true"><span>23:00</span><span>01:00</span><span>03:00</span><span>05:00</span></div>\n</div>\n<div class="nmorn"><span class="nt">07:00 &middot; Morning</span><b>3 jobs merged</b><span>The links, and anything only you can decide.</span></div>\n</div><button type="button" class="nreplay" hidden>&#8635; Replay the night</button></div>\n<p class="nextra">Name the jobs, or say <code>3 jobs, auto-pick</code> and it picks them. <a href="skills/f-night-shift.html">How it works &rarr;</a></p>\n<script>(function(){var n=document.getElementById("nstrip");if(!n)return;\nvar jobs=[].slice.call(n.querySelectorAll(".njob")),ck=n.querySelector(".nck"),ty=n.querySelector(".nty"),rb=n.querySelector(".nreplay"),cmd=ty.textContent,raf=0;\nfunction set(t){n.style.setProperty("--t",t.toFixed(4));var h=22.5+8*t,hh=Math.floor(h)%24,mm=Math.floor((h%1)*60);ck.textContent=(hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;\n jobs.forEach(function(j){var a=+j.style.getPropertyValue("--a"),b=+j.style.getPropertyValue("--b"),f=Math.max(0,Math.min(1,(t-a)/(b-a)));j.style.setProperty("--f",f.toFixed(3));j.classList.toggle("on",f>0&&f<1);j.classList.toggle("done",f>=1)});\n n.classList.toggle("dawn",t>=1)}\nfunction play(){cancelAnimationFrame(raf);n.classList.add("live");set(0);ty.textContent="";var i=0,t0=0;\n (function type(){ty.textContent=cmd.slice(0,++i);if(i<cmd.length)raf=setTimeout(type,38);else{n.classList.add("typed");raf=requestAnimationFrame(function go(now){if(!t0)t0=now;var t=Math.min(1,(now-t0)/7000);set(t);if(t<1)raf=requestAnimationFrame(go)})}})()}\nset(1);\nif(!window.IntersectionObserver||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;\nrb.hidden=false;rb.addEventListener("click",function(){clearTimeout(raf);n.classList.remove("typed");play()});\nnew IntersectionObserver(function(es,o){if(!es[0].isIntersecting)return;o.disconnect();play()},{threshold:.4}).observe(n)})()</script>'
 
 
 CLOSER = '<section class="closer" aria-labelledby="closer-h"><div class="haz" role="presentation"></div><div class="cl">__MARK__<div><h2 id="closer-h">Top out your first job.</h2>\n<p>Two lines: install, then set up.</p>__CMD__<a class="gh" href="https://github.com/__REPO__"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="__GH__"/></svg><span><b>__REPOB__</b><small>Open source on GitHub · MIT</small></span><i aria-hidden="true">&#8599;</i></a>\n<a class="clnext" href="#needs">What you need &uarr;</a></div></div></section>'
@@ -690,7 +693,7 @@ ORDER_MAP = {
     "Open the PR": ["PR body", "Open the PR"],
     "Review the PR": ["Greptile rounds", "PR description check"],
     "Merge": ["Merge", "Clean up"],
-    "Close": ["Close the job", "Dev report", "Next-ticket decision", "Confirm the next job", "Ground investigation", "Board close", "Shift handover and opener", "Top out (when the head is reached)", "Push the records"],
+    "Close": ["Close the job", "Dev report", "Next-ticket decision", "Confirm the next job", "Ground investigation", "Board close", "Shift handover and opener", "Top out (when the head is reached)", "Push the records", "How the next job runs"],
 }
 # The Order of works page's own short line per smaller step. build_flow.py belongs to the development session and
 # keeps the full text; the build checks every smaller step has one here.
@@ -722,7 +725,7 @@ ORDER_SHORT = {'Bring the idea': 'What you want built, in your words.',
     'Pack the review': 'One blind brief. Nothing names the builder.',
     'Cross-model review': "Another company's model reviews it cold.", 'Adjudicate': 'Every claim reproduced. Accepted fixes become work orders.',
     'Final re-run and the ledger': 'Everything again at the final commit. Every requirement passes, or no PR.',
-    'PR body': 'What changed, the proof, the limits, the review record.',
+    'PR body': 'Titled J<N> · board <id>: what it delivers. What changed, the proof, the limits, the review record.',
     'Open the PR': 'Pushed and opened. Opening is not merging.',
     'Greptile rounds': 'Scored out of 5, findings fixed. Three rounds at most.',
     'PR description check': 'Re-read against the final code before you are asked to merge.',
@@ -735,7 +738,8 @@ ORDER_SHORT = {'Bring the idea': 'What you want built, in your words.',
     'Board close': 'Merged, and the next job named. One new version.',
     'Shift handover and opener': 'Notes, a quiz and the next opener, ready to paste.',
     'Top out (when the head is reached)': 'Every job done: the board is frozen as the record, with a report and three to five next heads.',
-    'Push the records': 'The records pushed. The job ends.'}
+    'Push the records': 'The records pushed.',
+    'How the next job runs': 'The 🚧 YOUR CALL card: with you, an autonomous run or a night shift, ★ on the pick. Nothing starts until you paste one.'}
 # words the flow does not mark but the method does: confirming the next job is the owner's (METHOD.md section 10, step 7a)
 ORDER_WORDS = {"Confirm the next job": "yes"}
 
@@ -2442,19 +2446,20 @@ FRONT_SUBS = [("#access", "Install"), ("#pillars", "Why Topping Out"), ("#route"
 
 FRONT = {
     "title": "Topping Out",
-    "description": "Open-source software factory for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.",
+    "description": "Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, a cheaper builder codes it, another model family reviews it.",
     "board_kicker": "A software factory methodology",
-    "headline": ["Stop babysitting agents.", "Hire a foreman."],
+    # the promise first (the README's lead, 2026-11-21); the owner's pick: "Hire a foreman." stays as the hi-vis line
+    "headline": ["Go to bed with a ticket list. Wake up to merged PRs.", "Hire a foreman."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
-        ("foreman", "Foreman", "Claude Code. Plans and checks; never writes product code."),
-        ("builder", "Builder", "A cheaper model. Builds; never makes design decisions."),
-        ("inspectors", "Inspectors", "Other AI models. Find problems; never fix them."),
+        ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
+        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on a cheaper model. Builds; never makes design decisions."),
+        ("inspectors", "Inspectors", "Fresh review agents, then another model family: Codex, on your ChatGPT subscription. Find problems; never fix them."),
         ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
-    # the owner's angle (requests file, 2026-10-26): long runs without drift, a cheap builder, a Claude Code limit that lasts.
-    # The link preview (foreman-site-tools/og-card.mjs) carries this same line, read from the built page.
-    "subline": "Works through your tickets overnight without drifting: every job starts fresh from files. A cheap model does the heavy coding, so your Claude Code limit lasts far longer.",
+    # the owner's angle: long runs without drift, a cheaper builder, and proof for every merge (README lead, 2026-11-21).
+    # The link preview (scripts/og-card.mjs) carries the headline, read from the built page.
+    "subline": "A foreman in Claude Code specs every ticket in a fresh session, a cheaper builder codes it, another model family reviews it, and nothing merges without its evidence.",
     "shift_cmd": "/goal night shift: 3 jobs, auto-pick",
     # why Topping Out, in four pillars: (title, the one line); the sign each one is posted as is in SIGNS, same order
     "pillars": [
@@ -2467,19 +2472,37 @@ FRONT = {
     "night_caps": [
         (9, 17.5, "You plan", "get each ticket ready by day"),
         (19, 22.5, "One line starts the shift", "/goal night shift: jobs 11, 12, 13"),
-        (23, 25.5, "Board 11", "built, inspected, merged"),
-        (25.5, 27.5, "Board 12", "on top of board 11's merged code"),
-        (27.5, 29.5, "Board 13", "the shift ends when the list does"),
+        (23, 25.5, "Job 11", "built, inspected, merged"),
+        (25.5, 27.5, "Job 12", "on top of job 11's merged code"),
+        (27.5, 29.5, "Job 13", "the shift ends when the list does"),
         (30.5, 31.5, "One summary", "three jobs merged, waiting for you"),
     ],
     "shift_lede": "List the jobs before bed. Wake up to merged work.",
+    # the morning report under the night: an example, labelled as one. PR titles in the one format (METHOD.md section 10, templates/PR-BODY.md)
+    "morning": [
+        ("J41 · board 11: sign-in with a magic link", "every ledger row PASS · Greptile 5/5"),
+        ("J42 · board 12: magic-link emails, retried and logged", "every ledger row PASS · Greptile 5/5"),
+        ("J43 · board 13: sessions that expire and renew", "every ledger row PASS · Greptile 5/5"),
+    ],
+    # what waits for the owner: a pick a job made alone, inside its board entry, marked for review (CHANGELOG 2026-11-17)
+    "morning_call": ("J43 picked one default without you",
+                     "Sessions renew for 14 days. A cold second opinion agreed, and it stays inside the board's entry.",
+                     ["★ Keep it", "Reverse it in a follow-up job"]),
+    # five words a newcomer meets on this page first (README, "Words you'll see")
+    "glossary": [
+        ("Foreman", "The session that plans each job, writes the work orders and checks the work. It never writes product code."),
+        ("Builder", "The cheaper session that writes the code, one work order at a time."),
+        ("Board and head", "A project's jobs drawn as a fishbone. The head is what the product must do when every job is done."),
+        ("Opener", "The few lines a job leaves for the next one. Paste them into a fresh session, and it starts there."),
+        ("Pane link", "Orca runs the foreman and the builder side by side, so each step passes without you."),
+    ],
     # the shift clock: (when, title, text, command, kind)
     "shift": [
         ("By day", "You plan", "Get each ticket ready and answer its open questions, so nothing stalls at night.", "", "you"),
         ("Evening", "One line starts the shift", "Name the jobs, or let it pick them. Add a spend cap if a walkthrough needs a live key.", "/goal night shift: jobs 11, 12, 13", "you"),
-        ("Night", "Board 11", "A fresh foreman takes it from its opener to the merge, closes it, and writes the next opener.", "", "job"),
-        ("Night", "Board 12", "Starts from the opener board 11 left, on top of its merged code.", "", "job"),
-        ("Night", "Board 13", "Same again. The shift ends when the list does.", "", "job"),
+        ("Night", "Job 11", "A fresh foreman takes it from its opener to the merge, closes it, and writes the next opener.", "", "job"),
+        ("Night", "Job 12", "Starts from the opener job 11 left, on top of its merged code.", "", "job"),
+        ("Night", "Job 13", "Same again. The shift ends when the list does.", "", "job"),
         ("Morning", "One summary", "Each job merged or stopped, the PR links, the spend, and any verdict only you can give.", "", "you"),
     ],
     "shift_rules": [
@@ -2544,28 +2567,15 @@ FRONT = {
         ("f-board", "Track the work", ["foreman"], "Records every job on the project board, from started to merged. Each close names the next job.", "a board that always shows where the project stands"),
         ("f-card", "Keep the lesson", ["foreman"], "Writes one lasting lesson as a Logbook card. Later sessions load the cards that matter.", "a lesson the next session already knows"),
     ],
-    # what the install needs, and what /f-setup lays out (the folders are SETUP.md section 1's)
-    # the requirements: the setup this is built and run on, (name, what it is for); then the optional add-ons
-    "needs": [
-        ("Windows", "What it is built and run on every day, with Git Bash and PowerShell."),
-        ("Claude Code", "The foreman runs here, and the skills are its commands."),
-        ("Git and GitHub", "Work reaches `main` only through a pull request."),
-        ("GitHub CLI", "`gh`: the night shift and the review rounds use it."),
-        ("Node", "Runs the installer and the checks."),
-        ("Python 3", "Draws the project board."),
-        ("Pi, in Orca", "The builder's agent, in the pane beside the foreman."),
-        ("Greptile", "Review rounds on each pull request."),
-        ("OpenRouter", "The plan check, the councils, and voice."),
-        ("A builder", "Any agent that can read a file, run a shell and write a report. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra."),
-    ],
     # the requirements sheet: (logo, brand colour, name, its job here, why); logo None draws its initials
     "req_core": [
         ("windows", "#0078D4", "Windows 11", "the machine", "Built and run here, every day."),
         ("gnubash", "#4EAA25", "Git Bash", "the shell", "Most commands run here."),
         ("powershell", "#5391FE", "PowerShell", "the other shell", "For the calls Git Bash rewrites."),
         ("server", "#E95420", "Linux server", "the cloud option", "Ubuntu 24.04, driven through Orca: jobs run while your computer sleeps. See Cloud setup."),
-        ("claude", "#D97757", "Claude Code", "the foreman", "Plans, inspects, signs off."),
-        ("pi", "", "Pi", "the builder's agent", "The builder runs here, beside the foreman."),
+        ("claude", "#D97757", "Claude Code", "Claude subscription", "The foreman: plans, inspects, signs off."),
+        ("pi", "", "Pi", "the plan check's readers", "The plan check's OpenRouter readers and agent-council, and the default builder harness."),
+        ("openai", "", "Codex", "ChatGPT subscription", "The second model family: the codex CLI, signed in with ChatGPT, runs the independent review and the sol plan-check seat (GPT-6.2 Sol) at no per-call cost."),
         ("img:orca", "", "Orca", "the workspace", "Foreman and builder, side by side."),
         ("img:greptile", "", "Greptile", "the review rounds", "Reviews every PR, up to three rounds."),
         ("img:openrouter", "", "OpenRouter", "the key", "The plan check, the councils, and voice."),
@@ -2574,15 +2584,18 @@ FRONT = {
         ("nodedotjs", "#5FA04E", "Node", "the installer", "Runs the installer and the checks."),
         ("python", "#3776AB", "Python 3", "the board", "Draws the project board."),
     ],
+    # the builders the owner uses (2026-11-21), each in the harness it runs in over the pane link (SETUP.md section 4)
     "req_builders": [
-        ("img:zai.svg", "", "GLM 5.3", "Z.ai, on subscription", "Builds each work order."),
-        ("openai", "", "GPT-6.1 Sol", "OpenAI, on subscription", "Builds each work order."),
-        ("openai", "", "GPT-6.1 Terra", "OpenAI, on subscription", "Builds each work order."),
+        ("claude", "#D97757", "Claude Sonnet 5.5", "Anthropic, in Claude Code", "Builds each work order."),
+        ("gemini", "#4285F4", "Gemini Hydrogen", "Google, in Antigravity", "Builds each work order."),
+        ("openai", "", "GPT-6.2 Sol", "OpenAI, in Pi", "Builds each work order."),
+        ("openai", "", "GPT-6.2 Terra", "OpenAI, in Pi", "Builds each work order."),
     ],
-    "needs_opt": [
-        ("Greptile", "Reviews every pull request, up to three rounds."),
-        ("Orca", "Puts the builder in the pane beside the foreman, so work orders reach it without you."),
-        ("An OpenRouter key", "The plan check, the councils, and voice."),
+    # optional kit (README "What you need", SETUP.md sections 8b, 8c and 9): shown on the requirements sheet, never counted on the pass
+    "req_opt": [
+        ("gemini", "#4285F4", "Antigravity", "Antigravity subscription", "The agy CLI, signed in with your Antigravity subscription: a builder option (Gemini Hydrogen) and the gemini-hydrogen-agy plan-check seat at no per-call cost, on by default in unattended runs. Without it, the Gemini seat runs on OpenRouter."),
+        ("tailscale", "", "Tailscale", "the private network", "Runs jobs on a Linux server of your own while your computer sleeps. See Cloud setup."),
+        ("headset", "", "Topping Out Gaffer", "the voice add-on", "In this repo only: ask your live sessions how they're doing, hear stop alerts, reply by voice. A voice message is never your word for a gated act."),
     ],
     # the skeptic's questions: (question, the answer in one line, one short sentence of proof, the source)
     "skeptic": [
@@ -2616,7 +2629,7 @@ FRONT = {
          "`METHOD.md` section 10, the acceptance ledger"),
         ("Will it fit my project?",
          "Yes. It adds files and overwrites nothing.",
-         "Setup adds one foreman/ folder and a short profile of your project.",
+         "Setup adds the skills and agents under .claude/, one foreman/ folder with a short profile of your project, and a few scripts.",
          "`SETUP.md` section 1"),
         ("Does it work on Mac or Linux?",
          "Linux, yes, on a server of your own. Mac: expected, not yet verified.",
@@ -2627,7 +2640,7 @@ FRONT = {
     "gaps": [
         "The example board is synthetic: a made-up project, labelled as one.",
     ],
-    # the sheets, each with its preview image (docs/assets/see/<preview>-<light|dark>.webp, made by the site tools' previews.mjs)
+    # the sheets, each with its preview image (docs/assets/see/<preview>-<light|dark>.webp, made by scripts/previews.mjs)
     # and the page it was taken from, so the build can say when a preview is older than its page
     "see": [
         ("playbooks.html", "Who does what", "Three roles: what each one does, and never does.", "", "playbooks", "playbooks.html"),
@@ -2638,6 +2651,7 @@ FRONT = {
         ("atlas.html", "Skill Atlas", "Every skill on one map, with its links.", "", "atlas", "raw/atlas.html"),
         ("board.html", "Example board", "Eleven jobs: merged, next, stuck.", "Synthetic data", "board", "raw/board.html"),
         ("requirements.html", "Requirements", "The kit, as a site induction.", "", "requirements", "requirements.html"),
+        ("cloud.html", "Cloud setup", "Your own server: jobs run while your computer sleeps.", "", "cloud", "cloud.html"),
     ],
 }
 
@@ -2781,6 +2795,46 @@ ONE_JOB_VIS = [
 ]
 
 
+def receipt_html() -> str:
+    """The work docket under the hero: README's "What a finished job looks like", row for row, so the page never claims more than it."""
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    m = re.search(r"^## What a finished job looks like\n\n(.+?)\n\n```text\n(.+?)\n```", text, re.S | re.M)
+    if not m:
+        raise SystemExit("build_site: README.md has no 'What a finished job looks like' block (the front page's receipt reads it)")
+    rows = [re.match(r"(.+?)\s{2,}(.+)", ln).groups() for ln in m.group(2).splitlines() if ln.strip()]
+    keep = [(k, v) for k, v in rows if k not in ("ticket", "record")]
+    record = dict(rows).get("record", "")
+
+    def figures(v: str) -> str:
+        v = esc(v).replace(" -&gt; ", " &rarr; ")
+        return re.sub(r"(\d[\d.,/]*(?: &rarr; \d+)?(?: of \d+)?(?: USD)?)", r"<b>\1</b>", v, count=1)
+
+    body = "".join(f'<div><dt>{esc(k)}</dt><dd>{figures(v)}</dd></div>' for k, v in keep)
+    return ('<div class="rcpt" aria-labelledby="rcpt-h"><div class="rcpt-hd"><span class="al">The proof</span>'
+            '<h2 id="rcpt-h">What one finished job handed over</h2>'
+            '<p>One real job, run on its own from ticket to merge. The project&rsquo;s name and feature are left out.</p></div>'
+            '<div class="rdoc"><div class="punch" aria-hidden="true"></div>'
+            f'<dl class="rrows">{body}</dl>'
+            f'<div class="rstub"><span><b>On file</b> {esc(record)}</span><em class="rstamp">Merged</em></div></div></div>')
+
+
+def glossary_html() -> str:
+    """Five words the page uses before it explains them."""
+    items = "".join(f'<div><dt>{esc(w)}</dt><dd>{inline(d)}</dd></div>' for w, d in FRONT["glossary"])
+    return f'<div class="gloss"><span class="al">Words you&rsquo;ll see</span><dl>{items}</dl></div>'
+
+
+def morning_html() -> str:
+    """The night's morning report: three PRs in the one title format, each stamped, and the one call that waits for you."""
+    prs = "".join(f'<li><code>{esc(ti)}</code><span>{esc(note)}</span><em class="rstamp">Merged</em></li>' for ti, note in FRONT["morning"])
+    head, why, opts = FRONT["morning_call"]
+    o = "".join(f"<li>{esc(x)}</li>" for x in opts)
+    return ('<div class="mrep" aria-labelledby="mrep-h"><div class="mrep-hd"><span class="al">07:00 &middot; The morning report</span>'
+            f'<h3 id="mrep-h">{len(FRONT["morning"])} PRs merged while you slept</h3><small>An example morning, from a made-up project.</small></div>'
+            f'<ol class="mprs">{prs}</ol>'
+            f'<div class="ycall"><span class="ylab">&#x1F6A7; Your call</span><b>{esc(head)}</b><p>{esc(why)}</p><ul>{o}</ul></div></div>')
+
+
 def one_job_html() -> str:
     one_job_steps()
     one_job_check_rules()
@@ -2905,10 +2959,12 @@ def enforced_html() -> str:
     lis = []
     for promise, by, rest, gap in enforced_rows():
         kind = "ins" if by.startswith("instruction") else "chk"
+        # the label says no more than the README's own "enforced by" words: a script used only when called, or one that covers part of it
+        label = "Instruction" if kind == "ins" else "When used" if "when used" in by else "In part" if "plus instruction" in by else "Enforced"
         # the README cell is "**by** rest": a rest that opens with a bracket carries on the same sentence
         tail = rest.rstrip(".")
         how = inline(cap(by)) + ((" " + inline(tail) if tail[:1] in "(," else ". " + inline(tail[:1].upper() + tail[1:])) if tail else "") + "."
-        lis.append(f'<li class="{kind}"><details><summary><b>{inline(promise)}</b><span class="eby">{"Instruction" if kind == "ins" else "Enforced"}</span><i aria-hidden="true"></i></summary>'
+        lis.append(f'<li class="{kind}"><details><summary><b>{inline(promise)}</b><span class="eby">{label}</span><i aria-hidden="true"></i></summary>'
                    f'<p><span class="elb">How</span>{how}</p><p class="egap"><span class="elb">What it doesn&rsquo;t stop</span>{inline(gap[:1].upper() + gap[1:])}.</p></details></li>')
     return ('<div class="enf"><h3>Enforced, or only instructed <small>from the README</small></h3>'
             '<p>Most of the method is instructions the agents follow; a few checks are scripts that refuse.</p>'
@@ -3318,7 +3374,7 @@ FRONT_CSS = r"""
 .board>.haz{height:14px}
 .board .bh{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(240px,360px);gap:20px;align-items:center;padding:26px 28px 24px;border-bottom:3px solid var(--ink)}
 .board .bh .mark{height:64px;width:auto;align-self:start}
-.board h1{margin:10px 0 0;font:800 clamp(36px,4.2vw,62px)/.9 "Big Shoulders Display","Arial Narrow",Impact,sans-serif;text-transform:uppercase;letter-spacing:.005em}
+.board h1{margin:10px 0 0;font:800 clamp(34px,3.7vw,54px)/.92 "Big Shoulders Display","Arial Narrow",Impact,sans-serif;text-transform:uppercase;letter-spacing:.005em}
 .board h1 span{display:block}
 .board h1 span+span{color:var(--brand)}
 .jhw{align-self:center;display:flex;flex-direction:column;margin:-14px -16px 0 0;padding-bottom:6px}
@@ -4018,7 +4074,7 @@ FRONT_CSS = r"""
  .wrap{padding:0 16px}
  .board{margin-top:16px}
  .board .bh{grid-template-columns:1fr;gap:10px;padding:18px 16px}
- .jhw{order:-1;margin:0 -8px}
+ .jhw{margin:0 -8px}
  .jh{min-height:230px}
  .jhc{margin:2px 0 14px}
  .board .bh .mark{display:none}
@@ -4040,6 +4096,65 @@ FRONT_CSS = r"""
  .query .resp>b{display:none}
  .steps>li{grid-template-columns:1fr;gap:4px}
  .cmdline code{white-space:normal;overflow-wrap:break-word;font-size:12px;line-height:1.5;padding:12px}
+}
+/* the proof under the hero: one real job's receipt as a work docket (punched top, tear line, the Merged stamp) */
+.rcpt{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:22px;padding:24px 28px;border-bottom:3px solid var(--ink)}
+.rcpt .al,.gloss .al,.mrep .al{align-self:flex-start;display:inline-block;background:#101316;color:#FBB401;font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;padding:8px 10px}
+.rcpt-hd h2{margin:12px 0 8px;font:800 clamp(26px,2.6vw,34px)/.95 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.rcpt-hd p{margin:0;font-size:14.5px;line-height:1.5;color:var(--ink-2);max-width:40ch}
+.rdoc{position:relative;background:var(--ground);border:1px solid var(--line);border-top:0;min-width:0}
+.rdoc .punch{height:14px;background:radial-gradient(circle at 12px 7px,var(--panel) 0 3.5px,transparent 4px) 0 0/24px 14px repeat-x;border-bottom:1px dashed var(--line)}
+.rrows{margin:0;padding:6px 18px 4px}
+.rrows>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);align-items:baseline}
+.rrows>div:last-child{border-bottom:0}
+.rrows dt{font:600 10.5px/1.4 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.rrows dd{margin:0;font-size:14px;line-height:1.45;color:var(--ink-2)}
+.rrows dd b{font:800 21px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;color:var(--ink);margin-right:2px;font-variant-numeric:tabular-nums}
+.rstub{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:12px 18px 14px;border-top:2px dashed var(--line);font-size:13px;line-height:1.45;color:var(--ink-3)}
+.rstub b{font:600 10.5px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-right:6px}
+.rstamp{flex:none;font-style:normal;transform:rotate(4deg);border:4px double var(--run);color:var(--run);font:800 18px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px 4px}
+/* five words, before the page uses them */
+.gloss{padding:18px 28px 20px;border-bottom:3px solid var(--ink)}
+.gloss dl{margin:12px 0 0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
+.gloss dl>div{padding:2px 14px 2px 0;margin-right:14px;border-right:1px dashed var(--line)}
+.gloss dl>div:last-child{border-right:0;margin-right:0}
+.gloss dt{font:800 17px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase;color:var(--ink)}
+.gloss dd{margin:5px 0 0;font-size:13px;line-height:1.45;color:var(--ink-2)}
+/* the try-it strip */
+.access .pre{font-size:13.5px;line-height:1.5}
+.access .pre a{color:var(--ink)}
+.tsteps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.tsteps li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:4px 10px;align-items:center}
+.tsteps .tn{grid-row:span 2;align-self:start;width:28px;height:28px;display:grid;place-items:center;background:var(--hivis);color:#101316;font:800 18px/1 "Big Shoulders Stencil Display","Big Shoulders Display",sans-serif}
+.tsteps .tw{font:600 10.5px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.tsteps li>p,.tsteps li>.cmdline,.tsteps li>div{grid-column:2;margin:0;min-width:0}
+.tsteps p{font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+/* the morning report under the night */
+.mrep{margin-top:18px;border:3px solid var(--ink);background:var(--panel);padding:18px 22px 20px}
+.mrep-hd h3{margin:12px 0 4px;font:800 clamp(24px,2.4vw,30px)/.95 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.mrep-hd small{display:block;font:500 11px/1.5 "Martian Mono",ui-monospace,monospace;color:var(--ink-3)}
+.mprs{list-style:none;margin:14px 0 0;padding:0}
+.mprs li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 14px;align-items:center;padding:10px 0;border-top:1px dashed var(--line)}
+.mprs code{font:600 13px/1.4 "Martian Mono",ui-monospace,monospace;color:var(--ink);overflow-wrap:anywhere;background:none;padding:0}
+.mprs span{grid-column:1;font-size:12.5px;color:var(--ink-3)}
+.mprs .rstamp{grid-column:2;grid-row:1/span 2;font-size:15px}
+.ycall{margin-top:14px;background:#FBB401;color:#101316;border:3px solid #101316;padding:12px 14px 12px}
+.ycall .ylab{display:inline-block;background:#101316;color:#FBB401;font:600 11px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;padding:7px 9px}
+.ycall b{display:block;margin-top:9px;font:800 19px/1.05 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.ycall p{margin:5px 0 8px;font-size:14px;line-height:1.45}
+.ycall ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.ycall li{font:600 12px/1 "Martian Mono",ui-monospace,monospace;border:2px solid #101316;padding:7px 9px}
+.ycall li:first-child{background:#101316;color:#FBB401}
+@media (max-width:1100px){.rcpt{grid-template-columns:1fr}.gloss dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 0}.gloss dl>div{border-right:0}}
+@media (max-width:720px){
+ .rcpt{padding:18px 16px;gap:14px}
+ .rrows{padding:4px 12px}
+ .rrows>div{grid-template-columns:1fr;gap:2px}
+ .rstub{padding:12px;flex-direction:column;align-items:flex-start}
+ .gloss{padding:16px}
+ .gloss dl{grid-template-columns:1fr}
+ .gloss dl>div{margin-right:0;padding-right:0}
+ .mrep{padding:14px}
 }
 """
 
@@ -4909,7 +5024,7 @@ def share_tags(rel: str, title: str, description: str) -> str:
             f'<meta property="og:url" content="{url}"><meta property="og:title" content="{esc(title)}">'
             f'<meta property="og:description" content="{esc(description)}">'
             f'<meta property="og:image" content="{SITE_URL}{OG_CARD}"><meta property="og:image:width" content="1200">'
-            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Stop babysitting agents. Hire a foreman.">'
+            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Go to bed with a ticket list. Wake up to merged PRs. Hire a foreman.">'
             f'<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}">'
             f'<meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="{SITE_URL}{OG_CARD}">')
 
@@ -5298,7 +5413,7 @@ class Site:
                     wrows.append(f'<li><span class="wq">{tags}</span><a href="route.html#{slug}"><b>{num:02d} {esc(step)}</b></a></li>')
         order.append(("y", "You", "y-words", "Your words", "",
                       '<div class="body"><p class="lead">Nothing on this list happens without your word. In an autonomous run, your <code>/goal</code> stands in for most of them; '
-                      '<code>RULES.md</code> lists which.</p><ul class="ywords">' + "".join(wrows) + "</ul></div>", 0))
+                      '<code>RULES.md</code> lists which. Typed by you, in the session: a message relayed by voice (marked <code>[voice]</code>) is never your word.</p><ul class="ywords">' + "".join(wrows) + "</ul></div>", 0))
 
         def nav_btn(j, arrow_left):
             key, title, pid, short, *_ = order[j]
@@ -5522,9 +5637,12 @@ class Site:
                    ["Windows 11", "Git Bash", "PowerShell", "Linux server"]),
                   ("crew", "The crew", "Who plans and who builds.", ["Claude Code"]),
                   ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"]),
-                  ("site", "The workshop", "Where the builder works, who reviews each PR, and the key the outside readers use.", ["Pi", "Orca", "Greptile", "OpenRouter"])]
-        # what each workshop tool does (SETUP.md §9: all four required; Orca and Pi carry the work orders, Greptile reviews every PR)
-        opt_why = {"Pi": "The builder's agent, in the pane beside the foreman: the foreman sends it each work order and waits for it to finish.",
+                  ("site", "The workshop", "Where the builder works, who reviews each job and each PR, and the key the outside readers use.", ["Pi", "Codex", "Orca", "Greptile", "OpenRouter"]),
+                  ("extra", "Optional", "Not needed to start. Each one adds something.", [r[2] for r in F["req_opt"]])]
+        by.update({r[2]: r for r in F["req_opt"]})
+        # what each workshop tool does (SETUP.md §9: all five required; Orca carries the work orders, Greptile reviews every PR)
+        opt_why = {"Pi": "Runs the plan check's OpenRouter readers and agent-council, and is the default builder harness. Claude Code or Antigravity (agy) can build instead, in the same pane.",
+                   "Codex": "The codex CLI, signed in with your ChatGPT subscription: the independent review (another model family reads each job cold) and the plan check's sol seat (GPT-6.2 Sol), at no per-call cost. Required.",
                    "Orca": "Foreman and builder side by side. Autonomous runs, the night shift and the cloud setup run through it.",
                    "Greptile": "Reviews every PR before you merge, up to three rounds, each finding checked and fixed.",
                    "OpenRouter": "Readers from other model families for the plan check and the councils, and voice. Paid calls only within the cap you set."}
@@ -5534,7 +5652,7 @@ class Site:
 
         def tile(row, key, lid=""):
             m, colour, name, role, why = row
-            if lid == "ground":  # the tested machine: shown, not tapped
+            if lid in ("ground", "extra"):  # the tested machine and the optional kit: shown, not tapped
                 return (f'<li class="kit0"><div class="kb0">{mark(m, colour)}<b>{esc(name)}</b><span class="role">{esc(role)}</span><p>{inline(why)}</p></div></li>')
             opt = False  # every level counts (SETUP.md §1)
             return (f'<li class="kit{" opt" if opt else ""}" data-k="{esc(key)}"{" data-opt=1" if opt else ""}><button type="button" aria-pressed="false">{mark(m, colour)}<b>{esc(name)}</b>'
@@ -5548,10 +5666,10 @@ class Site:
                 builders = "".join(tile(b, "builder") for b in F["req_builders"])
                 builders += tile((None, "", "Another builder", "your pick", "Any agent that reads files, runs a shell, writes a report."), "builder")
                 extra = ('<div class="bpick"><h4>And one builder <small>pick one</small></h4>'
-                         '<p>It only builds what the foreman settled, so a cheap model will do. I use GLM 5.3, GPT-6.1 Sol and GPT-6.1 Terra.</p>'
+                         '<p>It only builds what the foreman settled, so a cheaper model will do. I use Claude Sonnet 5.5 in Claude Code, Gemini Hydrogen in Antigravity (agy), and GPT-6.2 Sol and GPT-6.2 Terra in Pi.</p>'
                          f'<ul class="kits">{builders}</ul></div>')
-            lvn = "Record" if lid == "ground" else f"Level {len(blocks):02d}"
-            blocks.append(f'<section class="lvl{" lvl0" if lid == "ground" else ""}" id="{lid}"><div class="lvh"><span class="lvn">{lvn}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
+            lvn = {"ground": "Record", "extra": "Extra"}.get(lid, f"Level {len(blocks):02d}")
+            blocks.append(f'<section class="lvl{" lvl0" if lid in ("ground", "extra") else ""}" id="{lid}"><div class="lvh"><span class="lvn">{lvn}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'
                           f'<ul class="kits">{rows}</ul>{extra}</section>')
         total = sum(len(ns) for lid, _t, _s, ns in levels if lid in ("crew", "paper", "site")) + 1  # + the one builder
         repo = INSTALL["repo"]
@@ -5576,7 +5694,7 @@ class Site:
                 '</div></main>' + REQ_JS + self.foot())
         return self.page("Requirements · Topping Out", "The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.",
                          ROLES_CSS + REQ_CSS, "requirements.html", body,
-                         subs=[("#ground", "Tested on"), ("#crew", "The crew"), ("#paper", "The paperwork"), ("#site", "The workshop"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
+                         subs=[("#ground", "Tested on"), ("#crew", "The crew"), ("#paper", "The paperwork"), ("#site", "The workshop"), ("#extra", "Optional"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
 
     def logbook(self) -> str:
         """The Logbook on one screen, like the other sheets: the three card types (sections read from their templates), a card's
@@ -5768,10 +5886,13 @@ class Site:
                    '<div class="jcap" id="jcap" aria-hidden="true"><b class="clk">09:00</b><span class="cap"><b>You plan</b> get each ticket ready by day</span>'
                    '<span class="pips"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></div>'
                    '</div></div>'
-                   f'{one_job_html()}'
+                   f'{receipt_html()}{glossary_html()}{one_job_html()}'
                    f'<div class="bb"><dl class="roster">{roster}</dl>'
-                   f'<div class="access" id="install"><span class="al">Install</span><p>Get the package. Needs git, Node and Python.</p>{cmd(first)}'
-                   f'<p class="then">Then, in Claude Code, in your repo:</p>{cmd(then)}'
+                   f'<div class="access" id="install"><span class="al">Try it</span>'
+                   '<p class="pre"><b>To start:</b> git, Node 18+, Python 3.9+, Bash and Claude Code. <code>/f-setup</code> checks the rest: Pi, Codex (ChatGPT), Orca, Greptile and an OpenRouter key (<a href="#needs">what you need</a>).</p>'
+                   f'<ol class="tsteps"><li><span class="tn">1</span><span class="tw">Anywhere</span>{cmd(first)}</li>'
+                   f'<li><span class="tn">2</span><span class="tw">In Claude Code, in your repo</span>{cmd(then)}</li>'
+                   '<li><span class="tn">3</span><span class="tw">Your first job</span><p><code>/f-survey</code> turns an idea into a ticket, <code>/f-schedule</code> cuts a big plan into tickets, or paste the first-job opener for a ticket you have.</p></li></ol>'
                    '<p class="then2"><code>/f-setup</code> installs what&rsquo;s missing, profiles your repo and asks only what it can&rsquo;t find. It never overwrites or commits.</p>'
                    f'<a class="gh" href="https://github.com/{esc(repo)}"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="{GH_MARK}"/></svg>'
                    f'<span><b>{esc(repo).replace("/", "/<wbr>")}</b><small>Open source on GitHub · MIT</small></span><i aria-hidden="true">&#8599;</i></a></div></div>'
@@ -5843,7 +5964,7 @@ class Site:
         assert len(RULE_ICONS) == len(F["shift_rules"]), "build_site: one pictogram per shift rule"
         rules = "".join(f'<li>{icon}<span>{inline(r)}</span></li>' for icon, r in zip(RULE_ICONS, F["shift_rules"]))
         out.append(sec(3, "shift", "The night shift") + f'<p class="lede">{inline(F["shift_lede"])} <a href="cloud.html">On a server of your own</a>, your computer can sleep too.</p>'
-                   + NIGHT_STRIP
+                   + NIGHT_STRIP + morning_html()
                    + '<div class="rboard"><div class="rbh"><b>Night shift rules</b><span>All workers · every night</span></div>'
                    + f'<ul>{rules}</ul></div></section>')
 
@@ -5874,24 +5995,22 @@ class Site:
                    'b.forEach(function(x){x.addEventListener("click",function(){show(x.dataset.q)})});show("1")})()</script></section>')
 
         # 04 install, in full: what the board's two commands need and lay out, then updating, then by hand
-        needs = "".join(f"<li><div><b>{esc(k)}</b> <span>{inline(v)}</span></div></li>" for k, v in F["needs"])
         plan = repo_plan()
         fm = [n for n in plan["nodes"] if n["depth"] == 2 and n["path"].startswith("foreman/")]
         tree = "foreman/\n" + "\n".join("  " + esc(n["name"]) for n in fm)  # names only; the repo sheet carries the detail
         upd = INSTALL["steps"][2]
         first, then = INSTALL["steps"][0][2], INSTALL["steps"][1][2]
-        by_req = {r[2]: r for r in F["req_core"]}
-        tag_order = ["Windows 11", "Git Bash", "PowerShell", "Linux server", "Claude Code", "Pi", "Orca", "Greptile", "OpenRouter", "Git", "GitHub and gh", "Node", "Python 3"]
-        assert sorted(tag_order) == sorted(by_req), "build_site: every requirement has a tag on the front page"
+        by_req = {r[2]: r for r in F["req_core"] + F["req_opt"]}
+        tag_order = ["Windows 11", "Git Bash", "PowerShell", "Linux server", "Claude Code", "Codex", "Antigravity", "Pi", "Orca", "Greptile", "OpenRouter", "Git", "GitHub and gh", "Node", "Python 3"]
+        assert set(r[2] for r in F["req_core"]) <= set(tag_order) <= set(by_req), "build_site: every requirement has a tag on the front page"
         # the builders I use sit together, one amber row after the workspace
         bnames = [b[2] for b in F["req_builders"]]
         tag_rows = [by_req[n][:4] for n in tag_order]
         at = tag_order.index("Orca") + 1
         for k, (bm, _bc, bname, bwho, _bwhy) in enumerate(F["req_builders"]):
-            tag_rows.insert(at + k, (bm, "", bname, "the builder, by " + bwho.split(",")[0]))
+            tag_rows.insert(at + k, (bm, "", bname, "the builder, " + bwho.split(", ", 1)[1]))
         req = "".join(f'<li class="ptag{" pb" if nm in bnames else ""}" style="--i:{k}">{brand_mark(m, c)}<b>{esc(nm)}</b><span>{esc(role)}</span></li>'
                       for k, (m, c, nm, role) in enumerate(tag_rows))
-        opt = "".join(f'<li><b>{esc(k)}</b><span>{inline(v)}</span></li>' for k, v in F["needs_opt"])
         repo = INSTALL["repo"]
         out.append(sec(6, "needs", "Requirements", F["install_lede"])
                    + '<div class="req"><div class="rmine" id="ptags"><h3>My setup <small>Inspected, in use</small></h3>'
@@ -6256,10 +6375,12 @@ def main() -> int:
         frame = RAW_SHARE[raw]
         m = re.search(r"<title>(.*?)</title>", text)
         text = (share_tags(frame, html.unescape(m.group(1)) + " · Topping Out", FRONT["description"]) if m else "") + text
+        # a phone gets the page's own narrow layout, not a 980px desktop render
+        head = THEME_HEAD + ("" if 'name="viewport"' in text else '<meta name="viewport" content="width=device-width,initial-scale=1">')
         if not text.lstrip().lower().startswith("<!doctype"):
-            text = "<!doctype html>" + THEME_HEAD + text
+            text = "<!doctype html>" + head + text
         else:
-            text = text.replace(">", ">" + THEME_HEAD, 1)
+            text = text.replace(">", ">" + head, 1)
         (OUT / raw).write_text(text, encoding="utf-8", newline="\n")
         written.append(OUT / raw)
     write("index.html", site.front())
@@ -6291,7 +6412,7 @@ def main() -> int:
         print("WARN install commands on the front page are not confirmed yet (requests file, entry 4): do not launch until they work")
     stale = stale_previews()
     if stale:
-        print(f"WARN previews taken before their pages last changed (re-run previews.mjs): {', '.join(stale)}")
+        print(f"WARN previews taken before their pages last changed (run: node scripts/previews.mjs, then build again): {', '.join(stale)}")
     # DESIGN.md: no em dashes anywhere. The build never rewrites source text; it names each file still carrying one.
     for path in written:
         count = path.read_text(encoding="utf-8").count(chr(0x2014))

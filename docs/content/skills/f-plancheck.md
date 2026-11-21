@@ -29,7 +29,7 @@ When three or more verified critical findings land, or any finding goes against 
 
 ### Does it cost money?
 
-The codex, Claude and Grok CLI seats run on subscriptions. OpenRouter seats are pay-per-token and need `OPENROUTER_API_KEY`. An unattended run uses only the subscription seats.
+The codex, Claude, Grok and agy CLI seats run on subscriptions, with no per-call charge (agy's Gemini seats on the Antigravity subscription). OpenRouter seats are pay-per-token and need `OPENROUTER_API_KEY`. An unattended run uses only the subscription seats: the codex or Claude seat, plus `gemini-hydrogen-agy` by default when agy is installed and signed in.
 
 ### It used to be called something else?
 

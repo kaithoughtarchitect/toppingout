@@ -12,6 +12,7 @@ sample_note: The close report ends with this checklist, exactly as the skill pri
 - The job file has moved to `foreman/completed-jobs/<YYYY-MM>/` and is gone from `foreman/jobs/`.
 - The last line reads `F-SIGNOFF: SIGNED OFF <archive path>`, followed by the end-game checklist.
 - It staged, committed and pushed nothing, and the blueprint is untouched.
+- When the end game is done, its last message ends with the card **🚧 YOUR CALL · how does job <N> run?**: with you, an autonomous run or a night shift, ★ on the recommended one, each with its line to paste. Under a goal, and after a topping out, there is no card.
 
 ## Common questions
 

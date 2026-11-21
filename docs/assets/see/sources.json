@@ -1,11 +1,12 @@
 {
- "route.html": "4237e189510bdf235b45205487e368d9a46c000f",
- "repo.html": "96ab3470cf28171f3f423b7a1a2df523fdfad8a6",
- "skills.html": "ab6315b8c5fb4d352bae0725c7f88d1404b445bb",
- "raw/atlas.html": "2185547d1ea11475b70bab53434facb14672abc7",
+ "route.html": "d96d00b9894e1515fcf756035dbabef0888e1dee",
+ "repo.html": "26955ce23e0df5d7f33d211f566b6b298b209c9d",
+ "skills.html": "4966e42f689b0a29e8057769f55c99678ec9b75a",
+ "raw/atlas.html": "a19639bde7df302de780462f2c9f7713a06764e9",
  "raw/foreman-playbook.html": "9847eb71ddc6e99ebf6c72931c4836aece72372a",
- "raw/board.html": "1348c84ca38a048a620248f608399a36c2ee2567",
- "logbook.html": "b975e94a0a9fd206b964d079115bc26446ed7678",
- "requirements.html": "8511c36e0f8301b4555ba847be655fc85e11de5d",
- "playbooks.html": "9f843cb868a607d7fb222e2067836fe0488b2343"
+ "raw/board.html": "12f26db692bb026d9ac54df0c133b3cbca0b5e13",
+ "logbook.html": "ccf7355978c85708b49cfd85597804a0ca2ffd04",
+ "requirements.html": "a6a36be38e4f8e23e830c02215e4e53e908f2c1c",
+ "playbooks.html": "29823a681c9ded662a2ea2641f40998f36f8e0f4",
+ "cloud.html": "e4c2633f7b9fc4e0dc0a22f9cf101cb68a83487a"
 }

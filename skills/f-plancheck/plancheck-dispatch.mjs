@@ -1260,7 +1260,7 @@ async function dispatchSeat(seat, ctx) {
   if (seat.doorSlug === "agy") {
     // Subscription: no per-call charge. Tokens are agy's own counts, summed over attempts.
     seat.spend_usd = 0;
-    seat.spend_note = "subscription (Google AI Pro via agy): no per-call charge";
+    seat.spend_note = "subscription (Antigravity, via agy): no per-call charge";
     const tokens = {};
     for (const a of seat.attempts) {
       for (const [k, v] of Object.entries(a.tokens || {})) if (Number.isFinite(v)) tokens[k] = (tokens[k] || 0) + v;

@@ -20,17 +20,21 @@ sample_note: The five things the link must prove before any work is sent, exactl
 
 A long tool call looks the same as a finished turn. The Stop log is the only completion signal it trusts.
 
-### Why does it assign the session ID instead of asking Pi?
+### Which builders can it drive?
 
-Asking Pi for its own ID is not proof of identity. The ID is chosen when Pi starts, or worked out from the session files and a fresh Stop-log line.
+Pi (the default), Claude Code running any Claude model, or agy (Antigravity's CLI) running any model it lists. The repo profile's "Builder delivery" row says which: `pane link (pi)`, `pane link (claude-code)` or `pane link (agy)`. Claude Code and agy are set up once with `claude-code/claude-builder.mjs` or `agy/agy-builder.mjs`, which keep the model outside every repo.
 
-### Will it approve Pi's prompts for me?
+### Why does it assign the session ID instead of asking the builder?
 
-No. A trust or tool-approval prompt is surfaced to you, never approved with keystrokes. Starting Pi with `--approve` in the job's own worktree is the one deliberate, up-front trust.
+Asking the builder for its own ID is not proof of identity. The ID is chosen when the builder starts (for agy, the launcher puts it in agy's environment), or worked out from the session files and a fresh Stop-log line.
 
-### Where are the stop extension and watcher?
+### Will it approve the builder's prompts for me?
 
-In this skill's own folder: `pi-extension/foreman-stop.ts` and `stop-watch.mjs`. Copy `foreman-stop.ts` to `~/.pi/agent/extensions/` on a new machine and restart Pi.
+No. A trust or tool-approval prompt is surfaced to you, never approved with keystrokes. The one deliberate, up-front trust is for the job's own worktree: Pi starts with `--approve`, agy's launcher trusts that folder for that session only, and for Claude Code you trust the folder the worktrees live in once.
+
+### Where are the stop signals and the watcher?
+
+In this skill's own folder: `stop-watch.mjs`, Pi's extension `pi-extension/foreman-stop.ts` (copy it to `~/.pi/agent/extensions/` on a new machine and restart Pi), and the Stop hooks `claude-code/foreman-stop.mjs` and `agy/foreman-stop.mjs`, which the setup scripts install.
 
 ### What if the split reports an error?
 

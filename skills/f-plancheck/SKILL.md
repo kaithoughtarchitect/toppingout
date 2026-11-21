@@ -92,7 +92,7 @@ node .claude/skills/f-plancheck/plancheck-pick.mjs --host <host> --player <playe
 Roster: `.claude/skills/f-plancheck/plancheck-roster.json`, operator-curated, single home
 for seats (edit the file to change the pool; do not copy slugs into this skill); rows carry
 `id, name, vendor, door, cliModel|slug, effort: "high", pickableAs`; doors are `codex CLI`,
-`claude CLI`, `grok CLI`, `agy CLI` (Gemini on a Google AI Pro sign-in) ($0 subscriptions) and `OpenRouter` (pay-per-token,
+`claude CLI`, `grok CLI`, `agy CLI` (Gemini on the Antigravity subscription) ($0 subscriptions) and `OpenRouter` (pay-per-token,
 `OPENROUTER_API_KEY`); Claude-family models are never OpenRouter rows (a roster rule: the
 Claude door is the claude CLI). The operator picks 1–5 seats from distinct vendors; every seat runs at high;
 the tab says "Seats recorded" and they close it.

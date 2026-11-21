@@ -9,7 +9,7 @@ Source: `skills/f-inspect/SKILL.md`
 
 ## On site
 
-Near the end of a job, the first of two reviews: the foreman runs it once the build is finished, before any pull request. Small, low-risk jobs skip it. It reviews only this job's changes, makes no fixes and gives no verdict, just findings. The record goes in templates/LENS-INSPECTION.md.
+Near the end of a job, the first of two reviews: the foreman runs it once the build is finished, before any pull request. Small, low-risk jobs skip it. It reviews only this job's changes, makes no fixes and gives no verdict, just findings. Every lens runs on Claude Fable. The record goes in templates/LENS-INSPECTION.md.
 
 ## Say it
 

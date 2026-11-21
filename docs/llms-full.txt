@@ -1767,7 +1767,7 @@ Source: `skills/f-inspect/SKILL.md`
 
 ## On site
 
-Near the end of a job, the first of two reviews: the foreman runs it once the build is finished, before any pull request. Small, low-risk jobs skip it. It reviews only this job's changes, makes no fixes and gives no verdict, just findings. The record goes in templates/LENS-INSPECTION.md.
+Near the end of a job, the first of two reviews: the foreman runs it once the build is finished, before any pull request. Small, low-risk jobs skip it. It reviews only this job's changes, makes no fixes and gives no verdict, just findings. Every lens runs on Claude Fable. The record goes in templates/LENS-INSPECTION.md.
 
 ## Say it
 
@@ -1962,7 +1962,7 @@ When three or more verified critical findings land, or any finding goes against 
 
 ### Does it cost money?
 
-The codex, Claude and Grok CLI seats run on subscriptions. OpenRouter seats are pay-per-token and need `OPENROUTER_API_KEY`. An unattended run uses only the subscription seats.
+The codex, Claude, Grok and agy CLI seats run on subscriptions, with no per-call charge (agy's Gemini seats on the Antigravity subscription). OpenRouter seats are pay-per-token and need `OPENROUTER_API_KEY`. An unattended run uses only the subscription seats: the codex or Claude seat, plus `gemini-hydrogen-agy` by default when agy is installed and signed in.
 
 ### It used to be called something else?
 
@@ -2012,6 +2012,7 @@ Writing the plan (f-blueprint), not for planning one ticket's job (the foreman's
 - On a plan without the `gate: plancheck` line, it stops and tells you to run `/f-plancheck` first. A findings row with a blank fate stops it too.
 - Before writing anything, it shows you the head, the job table, the decision jobs, any unmapped verification points or tasks, any disagreements, and the job it recommends first.
 - It writes nothing until you say "go" for the project.
+- The proposal ends with its own card, **🚧 YOUR CALL · one lane or two for this head?**, after the width report and with ★ on the recommended option. It shows even when two lanes aren't set up, and then says what setting them up takes; no answer means one lane.
 - Research and owner decisions are their own jobs, never hidden inside another: a question that ends in your answer is a decision job; research that produces a file is a build job and goes through a PR.
 - Every verification point is carried by at least one job, and every plan task maps to a job or to "not carried, on purpose" with its reason.
 - `foreman/projects/<slug>/` holds `PROJECT.md`, one ticket file per job with the acceptance quoted and a "Why this job" that says in plain sentences what the job makes possible, never only its plan task, and a `BOARD.json` that `render_board.py` validated and rendered.
@@ -2284,6 +2285,7 @@ Committing or pushing (the owner's word).
 - The job file has moved to `foreman/completed-jobs/<YYYY-MM>/` and is gone from `foreman/jobs/`.
 - The last line reads `F-SIGNOFF: SIGNED OFF <archive path>`, followed by the end-game checklist.
 - It staged, committed and pushed nothing, and the blueprint is untouched.
+- When the end game is done, its last message ends with the card **🚧 YOUR CALL · how does job <N> run?**: with you, an autonomous run or a night shift, ★ on the recommended one, each with its line to paste. Under a goal, and after a topping out, there is no card.
 
 ## How every close ends
 
@@ -2675,7 +2677,7 @@ Source: https://toppingout.dev/skills/orca-pi-connect.md
 
 # orca-pi-connect
 
-Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes.
+Link the foreman to a Pi, Claude Code or agy builder in the Orca pane beside it, and know when it finishes.
 
 Command: `/orca-pi-connect` (old name `/pi`)
 
@@ -2684,7 +2686,7 @@ Source: `skills/orca-pi-connect/SKILL.md`
 
 ## On site
 
-Handing work to the builder in Orca: the foreman sends each work order itself and is woken up when the builder finishes. Comes with Pi's finish signal, starts Pi inside the job's folder without the trust question, and binds a pane it opened itself without asking.
+Handing work to the builder in Orca: the foreman sends each work order itself and is woken up when the builder finishes. Comes with a finish signal for each builder (Pi's extension, a Stop hook for Claude Code and for agy), starts the builder inside the job's folder without the trust question, and binds a pane it opened itself without asking.
 
 ## Say it
 
@@ -2725,17 +2727,21 @@ The five things the link must prove before any work is sent, exactly as the skil
 
 A long tool call looks the same as a finished turn. The Stop log is the only completion signal it trusts.
 
-### Why does it assign the session ID instead of asking Pi?
+### Which builders can it drive?
 
-Asking Pi for its own ID is not proof of identity. The ID is chosen when Pi starts, or worked out from the session files and a fresh Stop-log line.
+Pi (the default), Claude Code running any Claude model, or agy (Antigravity's CLI) running any model it lists. The repo profile's "Builder delivery" row says which: `pane link (pi)`, `pane link (claude-code)` or `pane link (agy)`. Claude Code and agy are set up once with `claude-code/claude-builder.mjs` or `agy/agy-builder.mjs`, which keep the model outside every repo.
 
-### Will it approve Pi's prompts for me?
+### Why does it assign the session ID instead of asking the builder?
 
-No. A trust or tool-approval prompt is surfaced to you, never approved with keystrokes. Starting Pi with `--approve` in the job's own worktree is the one deliberate, up-front trust.
+Asking the builder for its own ID is not proof of identity. The ID is chosen when the builder starts (for agy, the launcher puts it in agy's environment), or worked out from the session files and a fresh Stop-log line.
 
-### Where are the stop extension and watcher?
+### Will it approve the builder's prompts for me?
 
-In this skill's own folder: `pi-extension/foreman-stop.ts` and `stop-watch.mjs`. Copy `foreman-stop.ts` to `~/.pi/agent/extensions/` on a new machine and restart Pi.
+No. A trust or tool-approval prompt is surfaced to you, never approved with keystrokes. The one deliberate, up-front trust is for the job's own worktree: Pi starts with `--approve`, agy's launcher trusts that folder for that session only, and for Claude Code you trust the folder the worktrees live in once.
+
+### Where are the stop signals and the watcher?
+
+In this skill's own folder: `stop-watch.mjs`, Pi's extension `pi-extension/foreman-stop.ts` (copy it to `~/.pi/agent/extensions/` on a new machine and restart Pi), and the Stop hooks `claude-code/foreman-stop.mjs` and `agy/foreman-stop.mjs`, which the setup scripts install.
 
 ### What if the split reports an error?
 

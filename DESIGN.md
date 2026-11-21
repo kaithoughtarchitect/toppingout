@@ -26,7 +26,7 @@ Colours come from the hat. Light is concrete, dark is asphalt.
 | decision / warn | `#A5650F` | `#F0B04A` | to decide, metered, mid scores |
 | fail | `#B3261E` | `#F2847A` | clashes, low scores |
 
-**Every page has a light/dark switch** (top right; the three pickers call it Mode). Its label names the mode it switches to, the choice is saved in the browser under `foreman-theme`, and a two-line script at the top of the page applies it before the page draws. With no saved choice, the page follows the system setting.
+**Every page has a light/dark switch** (top right; the three pickers call it Mode). Its label names the mode it switches to, the choice is saved in the browser under `foreman-theme`, and a two-line script at the top of the page applies it before the page draws. With no saved choice, the website opens dark, whatever the system says (D23 in `scripts/build_site.py`); the three pickers follow the system setting.
 
 Every page defines the light palette on `:root`, redefines it under `@media (prefers-color-scheme: dark)` guarded by `:root:not([data-theme="light"])`, and again under `:root[data-theme="dark"]`. `body` always paints its own background.
 
@@ -89,6 +89,9 @@ Edit the source, never the page it writes.
 
 | Page | Source | Rebuild |
 |---|---|---|
+| The website (toppingout.dev, `docs/`) | `scripts/build_site.py`, with `docs/content/` for each skill's and agent's page | `python scripts/build_site.py` |
+| The "See it" previews on the website's front page | `scripts/previews.mjs` (Node 22+, Chrome; `CHROME_PATH` for another) | after the build: `node scripts/previews.mjs [sheet ...]`, then build again until it prints no "previews taken before" warning |
+| The link preview (`docs/assets/brand/og-card.png`) | `scripts/og-card.mjs`, from the built front page's headline | after the build: `node scripts/og-card.mjs` |
 | Project board | `skills/f-board/render_board.py` | `python skills/f-board/render_board.py <project>/BOARD.json render` |
 | Flow page | `scripts/build_flow.py` | `python scripts/build_flow.py` |
 | Skill Atlas | `scripts/wiki_graph_html.py` | `python scripts/wiki_graph_html.py skills-wiki` |

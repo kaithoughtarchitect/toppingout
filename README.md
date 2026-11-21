@@ -50,15 +50,15 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 
 | You need | For | |
 |---|---|---|
-| Claude Code | the foreman (the tested one) | required |
+| Claude Code, on your Claude subscription | the foreman (the tested one) | required |
 | `git`, Node 18+, Python 3.9+, Bash | the installer, the checks and the work orders | required; `/f-setup` checks each |
-| A builder: Pi, Claude Code (any Claude model) or agy (Antigravity's CLI, any model it lists) | the coding | required, any one (`Builder-Playbook.md`) |
+| A builder: Pi, Claude Code (any Claude model) or Antigravity's agy CLI (any model it lists) | the coding | required, any one (`Builder-Playbook.md`) |
 | Pi | the plan check's OpenRouter readers and `agent-council` | required |
 | Orca | the pane link: the foreman sends each step to the builder in the pane beside it. Autonomous runs and night shifts run through it | needed to run without you; without it you paste one line per step (`SETUP.md` §4) |
-| A second model family's CLI (codex) | the independent review, and the `sol` plan-check seat | required (`METHOD.md` §8); carrying the brief to that session by hand also works |
+| Codex: the codex CLI, signed in with your ChatGPT subscription | the second model family: the independent review, and the `sol` plan-check seat (GPT-6.2 Sol), at no per-call cost | required (`METHOD.md` §8); carrying the brief to that session by hand also works |
 | An OpenRouter key | the plan check's other readers (`qwen4-max`), the councils, voice | required; paid calls only within the cap you set, and tests always run with paid keys stripped |
 | The Greptile app on your repo | up to three review rounds on every PR (`skills/f-greploop`) | required |
-| agy signed in with Google AI Pro | a Gemini plan-check seat (`gemini-hydrogen-agy`) at no per-call cost, seated by default in unattended runs | optional; without it that seat runs on OpenRouter |
+| Antigravity: the agy CLI, signed in with your Antigravity subscription | a builder option (Gemini Hydrogen), and the `gemini-hydrogen-agy` plan-check seat at no per-call cost, seated by default in unattended runs | optional; without it that seat runs on OpenRouter |
 | A Linux server and Tailscale | running jobs while your computer sleeps (`SETUP.md` §8b) | optional |
 
 **Tested on** Windows 11 with Claude Code as the foreman, Git Bash, Node 22 and Python 3.12, on real codebases since September 2026, and on an Ubuntu 24.04 server through Orca. macOS and desktop Linux are expected to work (the scripts are Node, Python and Bash) but aren't verified yet: `SETUP.md` §9, "Tested setup".
@@ -222,7 +222,7 @@ In your project, **between jobs**, type `/f-setup`. It pulls the newest Topping 
 | `Foreman-Playbook.md`, `Builder-Playbook.md` | how to do the foreman's part well, and how to run any builder |
 | `CHANGELOG.md`, `ROADMAP.md`, `CONTRIBUTING.md` | what changed, what's next, how to help |
 | `DESIGN.md` | the look every Topping Out page shares |
-| `flow.html` | the whole flow as one picture: 45 steps in seven stages (open in a browser) |
+| `flow.html` | the whole flow as one picture: 46 steps in seven stages (open in a browser) |
 | `skills/` | the 30 skills, each with a `SKILL.md` |
 | `agents/` | the review lenses and helper agents the skills call |
 | `templates/`, `snippets/` | fill-in-the-blanks for every document the method writes, and code to copy |

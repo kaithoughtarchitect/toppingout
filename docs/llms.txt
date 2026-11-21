@@ -6,7 +6,7 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 
 ## Pages
 
-- [Topping Out](https://toppingout.dev/): Open-source software factory for Claude Code: a planner specs each ticket, a cheaper model builds it, another model family reviews it. Runs overnight.
+- [Topping Out](https://toppingout.dev/): Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, a cheaper builder codes it, another model family reviews it.
 - [Playbooks](https://toppingout.dev/playbooks.html): Who does what: the foreman's, the builder's and your job, and the playbook each role follows.
 - [Order of works](https://toppingout.dev/route.html): Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.
 - [Your repo](https://toppingout.dev/repo.html): A site plan of every folder Topping Out adds to your repo, and where one job's files appear.
@@ -61,7 +61,7 @@ Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/topping
 - [f-status](https://toppingout.dev/skills/f-status.md): Tell you in plain words where things stand and what's next.
 - [f-survey](https://toppingout.dev/skills/f-survey.md): Turn a rough request into clear decisions, one round of questions at a time.
 - [model-council](https://toppingout.dev/skills/model-council.md): Ask a panel of AI models, each answering on its own, to help settle a design choice.
-- [orca-pi-connect](https://toppingout.dev/skills/orca-pi-connect.md): Link the foreman to a Pi or Claude Code builder in the Orca pane beside it, and know when it finishes.
+- [orca-pi-connect](https://toppingout.dev/skills/orca-pi-connect.md): Link the foreman to a Pi, Claude Code or agy builder in the Orca pane beside it, and know when it finishes.
 - [pack-review](https://toppingout.dev/skills/pack-review.md): Bundle the goal, the rules and the changes into one brief for an outside reviewer.
 - [speak](https://toppingout.dev/skills/speak.md): Read one reply out loud as a short spoken summary.
 - [xreview](https://toppingout.dev/skills/xreview.md): Review another session's work with fresh eyes: list each claim, never rewrite it.

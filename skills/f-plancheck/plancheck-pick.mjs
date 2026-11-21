@@ -70,7 +70,7 @@ export function validateRoster(roster) {
   // First pass: which vendors already have a $0 CLI door (codex/claude/grok CLI).
   // An OpenRouter row for one of those vendors would duplicate a $0 door with a
   // pay-per-token one: refused below. The agy CLI door does not count: it needs
-  // a Google AI Pro sign-in many owners lack, so the OpenRouter Gemini rows stay
+  // an Antigravity subscription many owners lack, so the OpenRouter Gemini rows stay
   // as their fallback.
   const cliDoorVendors = new Set();
   for (const m of models) {
