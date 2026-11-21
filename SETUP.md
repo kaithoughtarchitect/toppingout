@@ -204,6 +204,36 @@ Jobs and night shifts can run on a small Linux server you rent, driven through O
 - **Watching it:** `free -h` and `uptime` over SSH, or your provider's dashboard.
 - **Your phone (optional):** Orca Mobile pairs with the server over Tailscale (the phone on your tailnet): `orca-ide pair --mobile --address <ts-ip>`, then scan the QR code (a secret). Mobile pairing needs the service listening on every interface, so install it with `--bind 0.0.0.0 --refuse-public` instead (the firewall still allows port 6768 only on Tailscale, and Orca refuses public addresses).
 
+## 8c · Voice agent add-on (Topping Out Gaffer)
+
+`addons/gaffer/` is an **optional, repo-only add-on** (not installed into project repos by `/f-setup`). Run it straight from your Topping Out checkout when you want hands-free spoken briefings, board/owner-queue checks, and unprompted stop alerts over Bluetooth headphones on your PC or phone. Say `"Gaffer, ..."` (or `"Orca"` / `"Radio"`).
+
+**Keys:**
+- **`OPENROUTER_API_KEY` (required):** runs the Brain (`anthropic/claude-haiku-5.5`), Grok Voice TTS (`x-ai/grok-voice-tts-1.0`), and OpenRouter audio STT fallback (`openai/gpt-audio-mini` on WAV/MP3, `google/gemini-3.8-flash` on WebM/Ogg).
+- **`OPENAI_API_KEY` (optional):** when set (and `GAFFER_STT_PROVIDER` is not `openrouter`), defaults speech-to-text to OpenAI's dedicated `gpt-4o-mini-transcribe` endpoint instead of a chat audio model.
+
+**Run locally (PC):**
+```bash
+npx tsx addons/gaffer/server.ts
+```
+Open `http://127.0.0.1:4111` and tap **CONNECT GAFFER** (zero paid calls and zero Orca polling happen before you connect with audio unlocked).
+
+**Phone access over Tailscale:** remote requests are locked by default. Set either `GAFFER_ALLOWED_TAILSCALE_USER` (matches Tailscale Serve's `Tailscale-User-Login` header) or `GAFFER_TOKEN` (shared secret sent via `X-ToppingOut-Token` header and exchanged for an `HttpOnly; SameSite=Strict` cookie via `POST /api/auth`, never in URL query strings), then expose privately on your tailnet:
+```bash
+GAFFER_ALLOWED_TAILSCALE_USER="you@example.com" npx tsx addons/gaffer/server.ts
+tailscale serve --bg --https=4111 http://127.0.0.1:4111
+```
+
+**Settings (`GAFFER_*`; legacy `ORCA_VOICE_*` aliases also work):**
+- `GAFFER_HOST` / `GAFFER_PORT`: bind address and port (default `127.0.0.1:4111`).
+- `GAFFER_TOKEN` / `GAFFER_ALLOWED_TAILSCALE_USER`: remote auth gate (one is required for Tailscale/remote access).
+- `GAFFER_LLM_MODEL` / `GAFFER_LLM_PROVIDER`: override Brain model (`anthropic/claude-haiku-5.5` via OpenRouter default).
+- `GAFFER_STT_PROVIDER` (`openai` or `openrouter`), `GAFFER_STT_MODEL` (`gpt-4o-mini-transcribe`), `GAFFER_OR_STT_MODEL` (`openai/gpt-audio-mini`), `GAFFER_LANGUAGE` (`en` default, `auto` disables).
+- `SPEAK_GROK_VOICE`: Grok voice (`leo` default).
+- `GAFFER_STYLE` (`brief` default, or `speak`), `GAFFER_ALL_STOPS` (`0` default: only decision stops; `1` alerts on all stops), `GAFFER_MANAGED_BUILDER_ALERTS` (`0` default: suppresses routine work-order stops on managed Builders while their paired Foreman is working; `1` alerts on them), `GAFFER_POLL_MS` (default `2500`, minimum `2500`), `GAFFER_ALERT_COOLDOWN_MS` (default `30000`), `GAFFER_LOCAL_AUDIO` (`1` enables headless Windows MediaPlayer fallback), `GAFFER_OWNER_NAME` (optional greeting name).
+
+**Safety note:** Every confirmed voice message is prefixed with `[voice] `, refuses leading `/`, `!`, or `#` command prefixes, and refuses standalone gated acts (`merge`, `push`, `open the PR`, `greploop`, migrations) until `RULES.md` defines voice approval authority.
+
 ## 9 · Tested setup
 
 **Tested:** Windows 11, Claude Code as the foreman, Git Bash for work orders, Node 22, Python 3.12, on real repos since September 2026. That is the only configuration every step has run on. **Also run:** jobs and night shifts on an Ubuntu 24.04 server through Orca (§8b).

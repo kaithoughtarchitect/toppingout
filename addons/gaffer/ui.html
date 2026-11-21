@@ -1,0 +1,2314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#101316" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Topping Out Gaffer</title>
+  <script id="foreman-theme">
+    (function () {
+      var r = document.documentElement, K = "foreman-theme";
+      try {
+        var t = localStorage.getItem(K);
+        if (t === "light" || t === "dark") r.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" type="image/png" id="faviconLink" href="data:image/png;base64,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" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Big+Shoulders+Stencil+Display:wght@800&family=Martian+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style id="foreman-system">
+    /* Topping Out design system: concrete & asphalt, hi-vis #FBB401, square corners, no shadows, no hover lift */
+    :root {
+      color-scheme: light;
+      --ground: #ECEEEA;
+      --ground-deep: #E2E6E0;
+      --panel: #F8F9F6;
+      --panel-soft: #F1F3EF;
+      --line: #C9CFC7;
+      --line-soft: #DADFD8;
+      --ink: #15181A;
+      --ink-2: #454C50;
+      --muted: #6A7276;
+      --hivis: #FBB401;
+      --hivis-ink: #101316;
+      --brand: #946400;
+      --brand-soft: rgba(251, 180, 1, 0.18);
+      --brand-border: rgba(148, 100, 0, 0.55);
+      --good: #2F6B3A;
+      --good-soft: rgba(47, 107, 58, 0.12);
+      --run: #1D4E89;
+      --run-soft: rgba(29, 78, 137, 0.10);
+      --warn: #A5650F;
+      --warn-soft: rgba(165, 101, 15, 0.13);
+      --fail: #B3261E;
+      --fail-soft: rgba(179, 38, 30, 0.12);
+      --scroll-thumb: rgba(21, 24, 26, 0.22);
+      --scroll-thumb-hi: rgba(21, 24, 26, 0.42);
+      --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+      --stencil: "Big Shoulders Stencil Display", "Big Shoulders Display", "Arial Narrow", sans-serif;
+      --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --mono: "Martian Mono", ui-monospace, Consolas, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --ground: #101316;
+        --ground-deep: #0C0F11;
+        --panel: #171B1E;
+        --panel-soft: #1F2427;
+        --line: #2C3337;
+        --line-soft: #23292C;
+        --ink: #E7EAE5;
+        --ink-2: #B4BBB6;
+        --muted: #808983;
+        --brand: #FBB401;
+        --brand-soft: rgba(251, 180, 1, 0.13);
+        --brand-border: rgba(251, 180, 1, 0.55);
+        --good: #8FCB7C;
+        --good-soft: rgba(143, 203, 124, 0.13);
+        --run: #80AFE9;
+        --run-soft: rgba(128, 175, 233, 0.13);
+        --warn: #F0B04A;
+        --warn-soft: rgba(240, 176, 74, 0.14);
+        --fail: #F2847A;
+        --fail-soft: rgba(242, 132, 122, 0.14);
+        --scroll-thumb: rgba(231, 234, 229, 0.16);
+        --scroll-thumb-hi: rgba(251, 180, 1, 0.55);
+      }
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ground: #101316;
+      --ground-deep: #0C0F11;
+      --panel: #171B1E;
+      --panel-soft: #1F2427;
+      --line: #2C3337;
+      --line-soft: #23292C;
+      --ink: #E7EAE5;
+      --ink-2: #B4BBB6;
+      --muted: #808983;
+      --brand: #FBB401;
+      --brand-soft: rgba(251, 180, 1, 0.13);
+      --brand-border: rgba(251, 180, 1, 0.55);
+      --good: #8FCB7C;
+      --good-soft: rgba(143, 203, 124, 0.13);
+      --run: #80AFE9;
+      --run-soft: rgba(128, 175, 233, 0.13);
+      --warn: #F0B04A;
+      --warn-soft: rgba(240, 176, 74, 0.14);
+      --fail: #F2847A;
+      --fail-soft: rgba(242, 132, 122, 0.14);
+      --scroll-thumb: rgba(231, 234, 229, 0.16);
+      --scroll-thumb-hi: rgba(251, 180, 1, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      border-radius: 0;
+      -webkit-tap-highlight-color: transparent;
+      scrollbar-width: thin;
+      scrollbar-color: var(--scroll-thumb) transparent;
+    }
+
+    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: var(--scroll-thumb); }
+    *::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hi); }
+    *::-webkit-scrollbar-corner { background: transparent; }
+
+    /* Topping Out interaction law: nothing lifts or scales on hover/active */
+    :where(button, a, [role="button"]):is(:hover, :active, :focus, :focus-visible) {
+      transform: none !important;
+    }
+    :focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--ground);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 14.5px;
+      line-height: 1.48;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* Top bar + hazard stripe */
+    .topbar {
+      position: relative;
+      background: var(--ground);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .topbar::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -5px;
+      height: 4px;
+      background: repeating-linear-gradient(-45deg, var(--hivis) 0 8px, var(--hivis-ink) 8px 16px);
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-hat {
+      width: 28px;
+      height: 28px;
+      flex: none;
+      display: block;
+    }
+    :root[data-theme="dark"] .brand-hat {
+      filter: drop-shadow(1px 0 0 #ECEEEA) drop-shadow(-1px 0 0 #ECEEEA) drop-shadow(0 1px 0 #ECEEEA) drop-shadow(0 -1px 0 #ECEEEA);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .brand-hat {
+        filter: drop-shadow(1px 0 0 #ECEEEA) drop-shadow(-1px 0 0 #ECEEEA) drop-shadow(0 1px 0 #ECEEEA) drop-shadow(0 -1px 0 #ECEEEA);
+      }
+    }
+
+    .wordmark {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.45rem;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .wordmark em {
+      font-style: normal;
+      color: var(--brand);
+    }
+
+    .brand-tag {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brand);
+      background: var(--brand-soft);
+      border: 1px solid var(--brand-border);
+      padding: 3px 7px 2px;
+      white-space: nowrap;
+    }
+
+    .meta-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .meta-chip {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 5px 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .meta-chip b { color: var(--ink); font-weight: 600; }
+
+    .live-sq {
+      width: 7px;
+      height: 7px;
+      background: var(--muted);
+      display: inline-block;
+    }
+    .live-sq.live { background: var(--good); }
+    .live-sq.err { background: var(--fail); }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .t-btn {
+      appearance: none;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+    }
+    .t-btn:hover { border-color: var(--ink); }
+    .t-btn.active-good {
+      background: var(--good-soft);
+      border-color: var(--good);
+      color: var(--good);
+    }
+    .t-btn.active-hivis {
+      background: var(--hivis);
+      border-color: var(--hivis-ink);
+      color: var(--hivis-ink);
+    }
+    .t-btn.danger {
+      color: var(--fail);
+      border-color: var(--fail);
+    }
+
+    /* Main shell & 3-column zero-scroll desktop cockpit */
+    .shell {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 18px 14px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .col-left, .col-mid, .col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    @media (min-width: 1040px) {
+      html, body {
+        height: 100dvh;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      .shell {
+        flex: 1;
+        min-height: 0;
+        max-width: 1460px;
+        padding: 18px 20px 18px;
+      }
+      .workspace {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 350px minmax(0, 1fr) 365px;
+        gap: 16px;
+        align-items: stretch;
+      }
+      .col-left, .col-mid, .col-right {
+        min-height: 0;
+        height: 100%;
+      }
+      .col-left { overflow-y: auto; padding-right: 2px; }
+      .col-mid .panel, .col-right .panel {
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+      }
+      .log, .sessions {
+        flex: 1;
+        max-height: none !important;
+        min-height: 0;
+      }
+    }
+
+    @media (min-width: 760px) and (max-width: 1039px) {
+      .shell { max-width: 980px; padding: 18px 18px 28px; }
+      .workspace {
+        display: grid;
+        grid-template-columns: 350px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .col-right { grid-column: 1 / -1; }
+      .sessions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: none !important;
+      }
+    }
+
+    /* Section panels & numbered headers (01, 02, 03) */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 9px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sec-title {
+      margin: 0;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.45rem;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.015em;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .step-no {
+      font-family: var(--stencil);
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1;
+      color: var(--hivis-ink);
+      background: var(--hivis);
+      padding: 3px 7px 2px;
+      letter-spacing: 0.04em;
+    }
+
+    .sec-meta {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .count-stencil {
+      font-family: var(--stencil);
+      font-size: 1.45rem;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    /* 01 Site Gaffer console */
+    .radio-btn {
+      width: 100%;
+      appearance: none;
+      border: 2px solid var(--hivis-ink);
+      background: var(--hivis);
+      color: var(--hivis-ink);
+      padding: 20px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      text-align: left;
+      transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+    }
+    .radio-btn:hover { background: #ffc326; }
+
+    .radio-btn.connected {
+      background: var(--panel-soft);
+      border-color: var(--hivis);
+      color: var(--ink);
+    }
+    .radio-btn.connected:hover { border-color: var(--ink); }
+
+    .radio-btn.recording {
+      background: var(--good);
+      border-color: var(--hivis-ink);
+      color: var(--hivis-ink);
+    }
+
+    .radio-btn.thinking {
+      background: var(--run);
+      border-color: var(--hivis-ink);
+      color: #ffffff;
+    }
+    :root[data-theme="dark"] .radio-btn.thinking { color: var(--hivis-ink); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .radio-btn.thinking { color: var(--hivis-ink); }
+    }
+
+    .radio-btn.speaking {
+      background: var(--hivis);
+      border-color: var(--hivis-ink);
+      color: var(--hivis-ink);
+    }
+
+    .radio-main { display: flex; flex-direction: column; gap: 4px; }
+    .radio-kicker {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+    .radio-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 2rem;
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: 0.015em;
+    }
+    .radio-icon-box {
+      width: 48px;
+      height: 48px;
+      flex: none;
+      border: 1.5px solid currentColor;
+      display: grid;
+      place-items: center;
+    }
+    .radio-icon-box svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    /* Stepped VU meter */
+    .vu-block {
+      background: var(--ground-deep);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .vu-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .eq-bars {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 3px;
+      height: 18px;
+      align-items: end;
+    }
+    .eq-bar {
+      height: 4px;
+      background: var(--line);
+      transition: height 0.06s linear, background-color 0.1s ease;
+    }
+    .meter-track {
+      position: relative;
+      width: 100%;
+      height: 5px;
+      background: var(--line-soft);
+    }
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--good);
+      transition: width 0.05s linear;
+    }
+    .meter-thresh {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      left: 33%;
+      width: 2px;
+      background: var(--ink);
+      pointer-events: none;
+    }
+
+    .status-line {
+      font-size: 0.84rem;
+      color: var(--ink-2);
+      min-height: 2.3em;
+      margin: 0;
+    }
+
+    /* Mode selector (Topping Out square control strip) */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--line);
+    }
+    .mode-btn {
+      appearance: none;
+      background: var(--panel-soft);
+      color: var(--muted);
+      border: 0;
+      border-right: 1px solid var(--line);
+      padding: 9px 6px;
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .mode-btn:last-child { border-right: 0; }
+    .mode-btn:hover { color: var(--ink); }
+    .mode-btn.active {
+      background: var(--hivis);
+      color: var(--hivis-ink);
+    }
+
+    .radio-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .hw-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: var(--ground-deep);
+      border: 1px solid var(--line);
+    }
+    .hw-drawer.open { display: flex; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .field select {
+      width: 100%;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      padding: 8px 9px;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .field select:focus { border-color: var(--hivis); }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .slider-row input[type="range"] { flex: 1; accent-color: var(--hivis); cursor: pointer; }
+
+    /* Site Notice (Topping Out exact spec: hi-vis yellow sign, 2px black border, black plate label) */
+    .site-notice {
+      display: none;
+      flex-direction: column;
+      background: var(--hivis);
+      color: var(--hivis-ink);
+      border: 2px solid var(--hivis-ink);
+    }
+    .site-notice.visible { display: flex; }
+    .notice-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--hivis-ink);
+      color: var(--hivis);
+      padding: 6px 12px;
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .notice-body {
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.42;
+    }
+    .notice-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 2px solid var(--hivis-ink);
+    }
+    .notice-actions.single { grid-template-columns: 1fr; }
+    .notice-btn {
+      appearance: none;
+      border: 0;
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .notice-btn.yes {
+      background: var(--hivis-ink);
+      color: var(--hivis);
+      border-right: 1px solid var(--hivis);
+    }
+    .notice-btn.yes:hover { background: #22272c; }
+    .notice-btn.no {
+      background: var(--hivis);
+      color: var(--hivis-ink);
+    }
+    .notice-btn.no:hover { background: #e5a300; }
+
+    /* 02 Dialogue log */
+    .followup-tag {
+      display: none;
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      background: var(--hivis);
+      color: var(--hivis-ink);
+      padding: 3px 7px 2px;
+    }
+
+    .log {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .log-empty {
+      border: 1px dashed var(--line);
+      background: var(--panel-soft);
+      padding: 20px 14px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .log-empty strong { color: var(--ink); }
+
+    .msg {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      font-size: 0.88rem;
+      line-height: 1.48;
+      max-width: 94%;
+    }
+    .msg.you {
+      align-self: flex-end;
+      border-left: 4px solid var(--run);
+      background: var(--run-soft);
+    }
+    .msg.orca {
+      align-self: flex-start;
+      border-left: 4px solid var(--ink);
+    }
+    .msg.alert {
+      align-self: stretch;
+      max-width: 100%;
+      border: 1px solid var(--brand-border);
+      border-left: 4px solid var(--hivis);
+      background: var(--brand-soft);
+    }
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .msg.alert .msg-meta { color: var(--brand); }
+
+    .composer {
+      display: flex;
+      border: 1px solid var(--line);
+      background: var(--ground-deep);
+    }
+    .composer:focus-within { border-color: var(--hivis); }
+    .composer input {
+      flex: 1;
+      background: transparent;
+      border: 0;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .composer input::placeholder { color: var(--muted); }
+    .composer button {
+      appearance: none;
+      background: var(--hivis);
+      color: var(--hivis-ink);
+      border: 0;
+      border-left: 1px solid var(--hivis-ink);
+      padding: 0 16px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .composer button:hover { background: #ffc326; }
+
+    /* 03 Live Sessions dockets */
+    .sessions {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .sess-row {
+      position: relative;
+      width: 100%;
+      appearance: none;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--line);
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      color: var(--ink);
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: border-color 0.12s ease, background-color 0.12s ease;
+    }
+    .sess-row:hover { border-color: var(--ink); }
+    .sess-row.st-working { border-left-color: var(--run); }
+    .sess-row.st-done { border-left-color: var(--good); }
+    .sess-row.st-waiting { border-left-color: var(--hivis); }
+    .sess-row.active-target {
+      background: var(--brand-soft);
+      border-color: var(--hivis);
+      box-shadow: inset 0 0 0 1px var(--hivis);
+    }
+    .sess-row.managed-child {
+      margin-left: 16px;
+      width: calc(100% - 16px);
+      border-left-style: dashed;
+      background: var(--ground-deep);
+    }
+    .badge.role-foreman {
+      background: var(--ink);
+      color: var(--ground);
+      border-color: var(--ink);
+    }
+    .badge.role-builder {
+      background: transparent;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+    .badge.owed-tag {
+      background: var(--hivis);
+      color: var(--hivis-ink);
+      border-color: var(--hivis-ink);
+      font-weight: 700;
+    }
+
+    .sess-left { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .sess-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sess-meta {
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .sess-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 7px 2px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: var(--panel);
+    }
+    .badge.working { background: var(--run); border-color: var(--run); color: #ffffff; }
+    :root[data-theme="dark"] .badge.working { color: var(--hivis-ink); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .badge.working { color: var(--hivis-ink); }
+    }
+    .badge.done { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+    .badge.waiting { background: var(--hivis); border-color: var(--hivis-ink); color: var(--hivis-ink); }
+    .badge.active-tag {
+      background: var(--hivis);
+      border-color: var(--hivis-ink);
+      color: var(--hivis-ink);
+    }
+
+    @media (max-width: 720px) {
+      .topbar { padding: 10px 14px; }
+      .meta-strip { order: 3; width: 100%; }
+      .top-actions { margin-left: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-hat" id="brandHat" alt="Topping Out hard hat" />
+      <span class="wordmark">TOPPING <em>OUT</em></span>
+      <span class="brand-tag">GAFFER</span>
+      <div class="meta-strip">
+        <span class="meta-chip"><span class="live-sq" id="sseDot"></span> LINK <b id="linkWord">INIT</b></span>
+        <span class="meta-chip">VOICE <b id="voiceTag">LEO</b></span>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="t-btn" id="styleBtn" title="Switch between short Brief updates and full /speak explainers">STYLE: BRIEF</button>
+      <button class="t-btn active-good" id="watchBtn" title="Unprompted spoken alerts when sessions stop">ALERTS: ON</button>
+      <button class="t-btn" id="testAlertBtn" title="Speak a test alert into your headphones">TEST</button>
+      <button class="t-btn" id="themeBtn" title="Switch light concrete / dark asphalt mode">MODE</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="workspace">
+      <!-- 01 SITE GAFFER -->
+      <div class="col-left">
+        <section class="panel">
+          <div class="sec-head">
+            <h2 class="sec-title"><span class="step-no">01</span> SITE GAFFER</h2>
+            <span class="sec-meta" id="orbSub">STANDBY</span>
+          </div>
+
+          <button id="orbBtn" class="radio-btn" type="button">
+            <div class="radio-main">
+              <span class="radio-kicker" id="orbKicker">HANDS-FREE CHANNEL</span>
+              <span class="radio-title" id="orbLabel">CONNECT GAFFER</span>
+            </div>
+            <div class="radio-icon-box">
+              <svg id="orbSvg" viewBox="0 0 24 24">
+                <path d="M3 14h3v7H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1v-7h3"/>
+              </svg>
+            </div>
+          </button>
+
+          <div class="vu-block">
+            <div class="vu-head">
+              <span>MIC INPUT LEVEL</span>
+              <span id="vuState">IDLE · $0</span>
+            </div>
+            <div class="eq-bars" id="eqBars"></div>
+            <div class="meter-track">
+              <div class="meter-fill" id="meterFill"></div>
+              <div class="meter-thresh" title="Voice trigger line"></div>
+            </div>
+          </div>
+
+          <p class="status-line" id="statusLine">Connect once, pick your headphones, then walk around hands-free.</p>
+
+          <div class="mode-grid">
+            <button class="mode-btn active" data-mode="wake">WAKE "GAFFER"</button>
+            <button class="mode-btn" data-mode="always">ALWAYS ON</button>
+            <button class="mode-btn" data-mode="manual">TAP / EARBUD</button>
+          </div>
+
+          <div class="radio-foot">
+            <button class="t-btn" id="hwToggleBtn">AUDIO &amp; MIC</button>
+            <button class="t-btn danger" id="disconnectBtn" style="display:none;">DISCONNECT</button>
+          </div>
+
+          <div class="hw-drawer" id="hwDrawer">
+            <label class="field">
+              Microphone
+              <select id="micSelect"><option value="">System Default Mic</option></select>
+            </label>
+            <label class="field">
+              Headphones / Output
+              <select id="spkSelect"><option value="">System Default Output</option></select>
+            </label>
+            <div class="slider-row">
+              <span>Sensitivity</span>
+              <input id="sensSlider" type="range" min="1" max="5" step="1" value="3" />
+              <span id="sensLabel" style="color:var(--ink);font-weight:600;">3/5</span>
+            </div>
+            <div class="slider-row" style="justify-content:space-between;">
+              <span>Voice Barge-In (Headphones)</span>
+              <button type="button" class="t-btn active-good" id="bargeInBtn">BARGE-IN: ON</button>
+            </div>
+            <div class="slider-row" style="justify-content:space-between;">
+              <span>Managed Builder Alerts</span>
+              <button type="button" class="t-btn" id="managedBuildersBtn">MANAGED BUILDERS: QUIET</button>
+            </div>
+            <label class="field">
+              Access Token (remote / Tailscale only)
+              <input id="tokenInput" type="password" placeholder="Optional GAFFER_TOKEN" autocomplete="off"
+                style="width:100%;background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:8px 9px;font-family:var(--mono);font-size:0.78rem;outline:none;" />
+            </label>
+          </div>
+        </section>
+
+        <!-- Site notice: Browser Audio Lock -->
+        <div class="site-notice" id="muteCard">
+          <div class="notice-bar"><span>SITE NOTICE: AUDIO LOCKED</span><span>ACTION</span></div>
+          <div class="notice-body">Browser muted sound before you connected. Tap once to unlock headphones and replay the alert.</div>
+          <div class="notice-actions single">
+            <button class="notice-btn yes" id="unlockAudioBtn">UNLOCK &amp; PLAY ALERT</button>
+          </div>
+        </div>
+
+        <!-- Site notice: Owner's Word Confirmation Gate -->
+        <div class="site-notice" id="confirmCard">
+          <div class="notice-bar"><span>OWNER'S WORD REQUIRED</span><span>HOLDING</span></div>
+          <div class="notice-body" id="confirmBody"></div>
+          <div class="notice-actions">
+            <button class="notice-btn yes" id="confirmYesBtn">YES, SEND IT</button>
+            <button class="notice-btn no" id="confirmNoBtn">CANCEL</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 DIALOGUE -->
+      <div class="col-mid">
+        <section class="panel">
+          <div class="sec-head">
+            <h2 class="sec-title"><span class="step-no">02</span> DIALOGUE</h2>
+            <div class="sec-meta">
+              <span class="followup-tag" id="followUpBadge">WINDOW OPEN</span>
+              <button class="t-btn" id="clearLogBtn" style="padding:3px 7px;">CLEAR</button>
+            </div>
+          </div>
+
+          <div class="log" id="log">
+            <div class="log-empty" id="logEmpty">
+              Say <strong>"Gaffer, what needs my word?"</strong> or select any session docket on the right for a spoken briefing.
+            </div>
+          </div>
+
+          <form class="composer" id="textForm">
+            <input id="textInput" type="text" placeholder="Ask about a session or stage a reply..." autocomplete="off" />
+            <button type="submit">SEND</button>
+          </form>
+        </section>
+      </div>
+
+      <!-- 03 LIVE SESSIONS -->
+      <div class="col-right">
+        <section class="panel">
+          <div class="sec-head">
+            <h2 class="sec-title"><span class="step-no">03</span> SESSIONS</h2>
+            <div class="sec-meta">
+              <span class="count-stencil" id="sessCount">0</span>
+              <button class="t-btn" id="refreshBtn" style="padding:3px 7px;">REFRESH</button>
+            </div>
+          </div>
+
+          <div class="sessions" id="sessionsList">
+            <div class="sess-meta">Loading live Orca sessions...</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <audio id="speechPlayer" playsinline></audio>
+  <audio id="keepAliveAudio" loop playsinline></audio>
+
+  <script>
+    // Reuse embedded hard-hat mark from favicon so single-file HTML stays self-contained
+    const fav = document.getElementById("faviconLink");
+    const brandHat = document.getElementById("brandHat");
+    if (fav && brandHat) brandHat.src = fav.href;
+
+    // Topping Out shared theme toggle (`foreman-theme`)
+    const themeBtn = document.getElementById("themeBtn");
+    function currentTheme() {
+      const attr = document.documentElement.getAttribute("data-theme");
+      if (attr === "light" || attr === "dark") return attr;
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    function renderThemeBtn() {
+      const next = currentTheme() === "dark" ? "LIGHT" : "DARK";
+      themeBtn.textContent = next;
+    }
+    renderThemeBtn();
+    themeBtn.addEventListener("click", () => {
+      const next = currentTheme() === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("foreman-theme", next); } catch {}
+      renderThemeBtn();
+    });
+
+    const orbBtn = document.getElementById("orbBtn");
+    const orbSvg = document.getElementById("orbSvg");
+    const orbLabel = document.getElementById("orbLabel");
+    const orbKicker = document.getElementById("orbKicker");
+    const orbSub = document.getElementById("orbSub");
+    const vuState = document.getElementById("vuState");
+    const statusLine = document.getElementById("statusLine");
+    const meterFill = document.getElementById("meterFill");
+    const eqBarsEl = document.getElementById("eqBars");
+    const sseDot = document.getElementById("sseDot");
+    const linkWord = document.getElementById("linkWord");
+    const voiceTag = document.getElementById("voiceTag");
+    const styleBtn = document.getElementById("styleBtn");
+    const watchBtn = document.getElementById("watchBtn");
+    const testAlertBtn = document.getElementById("testAlertBtn");
+    const hwToggleBtn = document.getElementById("hwToggleBtn");
+    const hwDrawer = document.getElementById("hwDrawer");
+    const disconnectBtn = document.getElementById("disconnectBtn");
+    const sensSlider = document.getElementById("sensSlider");
+    const sensLabel = document.getElementById("sensLabel");
+    const bargeInBtn = document.getElementById("bargeInBtn");
+    const managedBuildersBtn = document.getElementById("managedBuildersBtn");
+    const micSelect = document.getElementById("micSelect");
+    const spkSelect = document.getElementById("spkSelect");
+    const tokenInput = document.getElementById("tokenInput");
+    const confirmCard = document.getElementById("confirmCard");
+    const muteCard = document.getElementById("muteCard");
+    const unlockAudioBtn = document.getElementById("unlockAudioBtn");
+    const confirmBody = document.getElementById("confirmBody");
+    const confirmYesBtn = document.getElementById("confirmYesBtn");
+    const confirmNoBtn = document.getElementById("confirmNoBtn");
+    const followUpBadge = document.getElementById("followUpBadge");
+    const logEl = document.getElementById("log");
+    const logEmpty = document.getElementById("logEmpty");
+    const clearLogBtn = document.getElementById("clearLogBtn");
+    const sessionsList = document.getElementById("sessionsList");
+    const sessCount = document.getElementById("sessCount");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const textForm = document.getElementById("textForm");
+    const textInput = document.getElementById("textInput");
+    const speechPlayer = document.getElementById("speechPlayer");
+    const keepAliveAudio = document.getElementById("keepAliveAudio");
+
+    const EQ_COUNT = 16;
+    const eqBars = [];
+    for (let i = 0; i < EQ_COUNT; i++) {
+      const b = document.createElement("div");
+      b.className = "eq-bar";
+      eqBarsEl.appendChild(b);
+      eqBars.push(b);
+    }
+
+    const ICONS = {
+      headset: '<path d="M3 14h3v7H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1v-7h3"/>',
+      mic: '<rect x="9" y="2" width="6" height="11"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
+      bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+      wave: '<line x1="3" y1="10" x2="3" y2="14"/><line x1="7" y1="6" x2="7" y2="18"/><line x1="11" y1="3" x2="11" y2="21"/><line x1="15" y1="7" x2="15" y2="17"/><line x1="19" y1="5" x2="19" y2="19"/>',
+    };
+
+    let connected = false;
+    let listenMode = localStorage.getItem("orcaVoiceMode") || "wake";
+    let replyStyle = localStorage.getItem("orcaVoiceStyle") || "brief";
+    let watchEnabled = true;
+    let managedBuilderAlerts = false;
+    function renderManagedBuildersBtn() {
+      if (!managedBuildersBtn) return;
+      managedBuildersBtn.textContent = managedBuilderAlerts
+        ? "MANAGED BUILDERS: ALERT"
+        : "MANAGED BUILDERS: QUIET";
+      managedBuildersBtn.classList.toggle("active-hivis", managedBuilderAlerts);
+    }
+    renderManagedBuildersBtn();
+    if (managedBuildersBtn) {
+      managedBuildersBtn.addEventListener("click", async () => {
+        try {
+          const next = !managedBuilderAlerts;
+          const res = await fetchWithTimeout("/api/managed-builders", {
+            method: "POST",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ enabled: next }),
+          }, 10000);
+          const data = await res.json();
+          managedBuilderAlerts = Boolean(data.managedBuilderAlerts);
+          renderManagedBuildersBtn();
+        } catch (err) {
+          addLog("alert", "ERROR", err.message || String(err));
+        }
+      });
+    }
+    let activeSessionId = null;
+    let isPlaying = false;
+    let isBusy = false;
+    let isRecording = false;
+    let muteUntil = 0;
+    let wakeLock = null;
+    let eventSource = null;
+    let mediaStream = null;
+    let audioCtx = null;
+    let analyser = null;
+    let pcmProcessor = null;
+    let pcmMuteGain = null;
+    let pcmSampleRate = 48000;
+    let preRollChunks = [];
+    let preRollSamples = 0;
+    let pcmRecordingChunks = [];
+    let vadRaf = null;
+    let speechStartAt = 0;
+    let lastVoiceAt = 0;
+    let voicedMs = 0;
+    let bargeInMs = 0;
+    let lastVadTickAt = 0;
+    let manualRecording = false;
+    let playbackQueue = [];
+    let deferredAlertQueue = [];
+    let queuedVoiceBlob = null;
+    let playbackResolve = null;
+    let blockedAudioSrc = null;
+    let tabSuperseded = false;
+    let bargeInEnabled = localStorage.getItem("orcaVoiceBargeIn") !== "0";
+    function renderBargeInBtn() {
+      if (!bargeInBtn) return;
+      bargeInBtn.textContent = bargeInEnabled ? "BARGE-IN: ON" : "BARGE-IN: OFF";
+      bargeInBtn.classList.toggle("active-good", bargeInEnabled);
+    }
+    renderBargeInBtn();
+    if (bargeInBtn) {
+      bargeInBtn.addEventListener("click", () => {
+        bargeInEnabled = !bargeInEnabled;
+        localStorage.setItem("orcaVoiceBargeIn", bargeInEnabled ? "1" : "0");
+        renderBargeInBtn();
+      });
+    }
+    let selectedMicId = localStorage.getItem("orcaVoiceMicId") || "";
+    let selectedSpkId = localStorage.getItem("orcaVoiceSpkId") || "";
+    let accessToken = localStorage.getItem("orcaVoiceToken") || "";
+    if (tokenInput) {
+      tokenInput.value = accessToken;
+      tokenInput.addEventListener("change", () => {
+        accessToken = tokenInput.value.trim();
+        localStorage.setItem("orcaVoiceToken", accessToken);
+        void ensureCookieAuth().then(() => {
+          if (connected) void connectSse(true);
+          void loadState();
+          void loadSessions();
+        });
+      });
+    }
+
+    function authHeaders(extra = {}) {
+      const h = { "X-ToppingOut-Gaffer": "1", ...extra };
+      if (accessToken) h["X-ToppingOut-Token"] = accessToken;
+      return h;
+    }
+
+    async function fetchWithTimeout(url, opts = {}, timeoutMs = 30000) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(new Error("Request timed out.")), timeoutMs);
+      try {
+        return await fetch(url, { ...opts, signal: ctrl.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function ensureCookieAuth() {
+      if (!accessToken) return;
+      try {
+        await fetchWithTimeout("/api/auth", { method: "POST", headers: authHeaders() }, 8000);
+      } catch {}
+    }
+
+    function speakFallbackError(text) {
+      if (!text || !("speechSynthesis" in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1.05;
+        window.speechSynthesis.speak(u);
+      } catch {}
+    }
+
+    const tabId = `${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
+    const tabChannel = "BroadcastChannel" in window ? new BroadcastChannel("gaffer-tab") : null;
+    if (tabChannel) {
+      tabChannel.onmessage = (ev) => {
+        if (ev.data?.type === "claim" && ev.data.tabId !== tabId) {
+          tabSuperseded = true;
+          disconnectAll();
+          sseDot.className = "live-sq";
+          linkWord.textContent = "MUTED";
+          statusLine.textContent = "A newer Topping Out Gaffer tab took over audio.";
+        }
+      };
+      tabChannel.postMessage({ type: "claim", tabId });
+    }
+
+    const THRESHOLDS = [0.036, 0.022, 0.013, 0.008, 0.004];
+    const savedSens = localStorage.getItem("orcaVoiceSens");
+    if (savedSens) sensSlider.value = savedSens;
+    sensLabel.textContent = `${sensSlider.value}/5`;
+    sensSlider.addEventListener("input", () => {
+      localStorage.setItem("orcaVoiceSens", sensSlider.value);
+      sensLabel.textContent = `${sensSlider.value}/5`;
+    });
+
+    function getThreshold() {
+      return THRESHOLDS[Math.max(0, Math.min(4, Number(sensSlider.value) - 1))];
+    }
+
+    hwToggleBtn.addEventListener("click", () => {
+      hwDrawer.classList.toggle("open");
+      if (hwDrawer.classList.contains("open")) void refreshDevices();
+    });
+
+    clearLogBtn.addEventListener("click", () => {
+      logEl.querySelectorAll(".msg").forEach((n) => n.remove());
+      if (logEmpty) logEmpty.style.display = "block";
+    });
+
+    function updateHwButtonLabel() {
+      const activeTrack = mediaStream?.getAudioTracks?.()[0];
+      const liveLabel = activeTrack?.label || micSelect.options[micSelect.selectedIndex]?.text || "";
+      if (liveLabel && liveLabel !== "System Default Mic") {
+        const short = liveLabel.length > 22 ? `${liveLabel.slice(0, 21)}...` : liveLabel;
+        hwToggleBtn.textContent = `MIC: ${short}`;
+      } else {
+        hwToggleBtn.textContent = "AUDIO & MIC";
+      }
+    }
+
+    async function refreshDevices() {
+      if (!navigator.mediaDevices?.enumerateDevices) return;
+      try {
+        const devs = await navigator.mediaDevices.enumerateDevices();
+        const mics = devs.filter((d) => d.kind === "audioinput");
+        const spks = devs.filter((d) => d.kind === "audiooutput");
+
+        micSelect.innerHTML = '<option value="">System Default Mic</option>';
+        for (const m of mics) {
+          if (!m.deviceId || m.deviceId === "default") continue;
+          const opt = document.createElement("option");
+          opt.value = m.deviceId;
+          opt.textContent = m.label || `Mic ${m.deviceId.slice(0, 6)}`;
+          if (m.deviceId === selectedMicId) opt.selected = true;
+          micSelect.appendChild(opt);
+        }
+
+        spkSelect.innerHTML = '<option value="">System Default Output</option>';
+        for (const s of spks) {
+          if (!s.deviceId || s.deviceId === "default") continue;
+          const opt = document.createElement("option");
+          opt.value = s.deviceId;
+          opt.textContent = s.label || `Output ${s.deviceId.slice(0, 6)}`;
+          if (s.deviceId === selectedSpkId) opt.selected = true;
+          spkSelect.appendChild(opt);
+        }
+        spkSelect.disabled = typeof speechPlayer.setSinkId !== "function";
+        updateHwButtonLabel();
+      } catch {}
+    }
+
+    async function applyOutputDevice() {
+      if (typeof speechPlayer.setSinkId !== "function") return;
+      try {
+        await speechPlayer.setSinkId(selectedSpkId || "");
+        if (typeof keepAliveAudio.setSinkId === "function") {
+          await keepAliveAudio.setSinkId(selectedSpkId || "");
+        }
+      } catch (e) {
+        console.warn("setSinkId failed:", e);
+      }
+    }
+
+    micSelect.addEventListener("change", async () => {
+      selectedMicId = micSelect.value;
+      localStorage.setItem("orcaVoiceMicId", selectedMicId);
+      if (connected) {
+        disconnectAll();
+        await connectAll();
+      }
+    });
+
+    spkSelect.addEventListener("change", async () => {
+      selectedSpkId = spkSelect.value;
+      localStorage.setItem("orcaVoiceSpkId", selectedSpkId);
+      await applyOutputDevice();
+      statusLine.textContent = `Output switched to ${spkSelect.options[spkSelect.selectedIndex]?.text || "Default"}.`;
+    });
+
+    function renderStyleBtn() {
+      const isSpeak = replyStyle === "speak";
+      styleBtn.textContent = isSpeak ? "STYLE: /SPEAK" : "STYLE: BRIEF";
+      styleBtn.classList.toggle("active-hivis", isSpeak);
+    }
+
+    async function syncStyleToServer(style) {
+      replyStyle = style === "speak" ? "speak" : "brief";
+      localStorage.setItem("orcaVoiceStyle", replyStyle);
+      renderStyleBtn();
+      try {
+        await fetchWithTimeout("/api/style", {
+          method: "POST",
+          headers: authHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ style: replyStyle }),
+        }, 10000);
+      } catch {}
+    }
+
+    renderStyleBtn();
+    styleBtn.addEventListener("click", () => {
+      const next = replyStyle === "speak" ? "brief" : "speak";
+      void syncStyleToServer(next);
+      statusLine.textContent =
+        next === "speak"
+          ? "/speak mode active: full plain-English explainers (30 to 60s) for replies and alerts."
+          : "Brief mode active: short 1 to 2 sentence updates.";
+    });
+
+    function setMode(mode) {
+      listenMode = mode;
+      localStorage.setItem("orcaVoiceMode", mode);
+      document.querySelectorAll(".mode-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.mode === mode);
+      });
+      if (connected && !isRecording && !isBusy && !isPlaying) updateOrb("idle");
+    }
+    setMode(listenMode);
+
+    document.querySelectorAll(".mode-btn").forEach((b) => {
+      b.addEventListener("click", () => setMode(b.dataset.mode));
+    });
+
+    function escapeHtml(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function addLog(kind, label, text) {
+      if (logEmpty) logEmpty.style.display = "none";
+      const div = document.createElement("div");
+      div.className = `msg ${kind}`;
+      const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      div.innerHTML = `<div class="msg-meta"><span>${escapeHtml(label)}</span><span>${ts}</span></div><div>${escapeHtml(text)}</div>`;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+      while (logEl.querySelectorAll(".msg").length > 45) {
+        const first = logEl.querySelector(".msg");
+        if (first) first.remove();
+      }
+    }
+
+    function updatePending(pending, followUpActive, nextActiveId) {
+      if (nextActiveId !== undefined) activeSessionId = nextActiveId;
+      followUpBadge.style.display = followUpActive && listenMode === "wake" ? "inline-block" : "none";
+      if (pending) {
+        confirmBody.textContent = `Target: "${pending.sessionTitle}". Message: "${pending.message}"`;
+        confirmCard.classList.add("visible");
+      } else {
+        confirmCard.classList.remove("visible");
+      }
+    }
+
+    function updateOrb(state, customMsg) {
+      orbBtn.classList.remove("connected", "recording", "thinking", "speaking");
+      if (!connected) {
+        orbSvg.innerHTML = ICONS.headset;
+        orbKicker.textContent = "HANDS-FREE CHANNEL";
+        orbLabel.textContent = "CONNECT GAFFER";
+        orbSub.textContent = "STANDBY";
+        vuState.textContent = "IDLE · $0";
+        statusLine.textContent = customMsg || "Connect once, pick your headphones, then walk around hands-free.";
+        return;
+      }
+      if (state === "recording") {
+        orbBtn.classList.add("recording");
+        orbSvg.innerHTML = ICONS.mic;
+        orbKicker.textContent = "VOICE DETECTED";
+        orbLabel.textContent = manualRecording ? "TAP TO SEND" : "LISTENING";
+        orbSub.textContent = "ON AIR";
+        vuState.textContent = "CAPTURING";
+        statusLine.textContent = customMsg || "Speak naturally. Sends automatically after a short pause.";
+      } else if (state === "thinking") {
+        orbBtn.classList.add("thinking");
+        orbSvg.innerHTML = ICONS.bolt;
+        orbKicker.textContent = "CHECKING ORCA";
+        orbLabel.textContent = "WORKING";
+        orbSub.textContent = "BUSY";
+        vuState.textContent = "QUERYING";
+        statusLine.textContent = customMsg || "Reading live session and synthesizing Grok voice.";
+      } else if (state === "speaking") {
+        orbBtn.classList.add("speaking");
+        orbSvg.innerHTML = ICONS.wave;
+        orbKicker.textContent = "HEADPHONE OUTPUT";
+        orbLabel.textContent = "TAP TO STOP";
+        orbSub.textContent = "SPEAKING";
+        vuState.textContent = "PLAYBACK";
+        statusLine.textContent = customMsg || "Speaking into your headphones.";
+      } else {
+        orbBtn.classList.add("connected");
+        orbSvg.innerHTML = listenMode === "manual" ? ICONS.mic : ICONS.headset;
+        orbKicker.textContent = listenMode === "manual" ? "PUSH TO TALK" : "CHANNEL LIVE · $0 IDLE";
+        orbLabel.textContent =
+          listenMode === "manual"
+            ? "TAP TO TALK"
+            : listenMode === "wake"
+              ? 'SAY "GAFFER..."'
+              : "LISTENING";
+        orbSub.textContent = "ARMED";
+        vuState.textContent = "ARMED · $0";
+        statusLine.textContent =
+          customMsg ||
+          (listenMode === "manual"
+            ? "Ready. Tap the button or your earbud play/pause control to speak."
+            : listenMode === "wake"
+              ? 'Ready. Say "Gaffer, what needs my word?" anytime.'
+              : "Ready. Speak anytime: silent until your voice crosses the threshold.");
+      }
+    }
+
+    function makeSilentWavUrl() {
+      const sampleRate = 8000;
+      const numSamples = sampleRate;
+      const buf = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buf);
+      const writeStr = (off, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
+      };
+      writeStr(0, "RIFF");
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeStr(8, "WAVE");
+      writeStr(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, "data");
+      view.setUint32(40, numSamples * 2, true);
+      view.setInt16(44, 1, true);
+      return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+    }
+
+    async function enablePocketKeepAlive() {
+      if (!keepAliveAudio.src) keepAliveAudio.src = makeSilentWavUrl();
+      keepAliveAudio.volume = 0.01;
+      try { await keepAliveAudio.play(); } catch {}
+
+      if ("wakeLock" in navigator) {
+        try { wakeLock = await navigator.wakeLock.request("screen"); } catch {}
+      }
+
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: "Topping Out Gaffer",
+          artist: "Site Agent for Topping Out & Orca",
+        });
+        const handleHeadsetButton = () => {
+          if (isPlaying) stopPlayback();
+          else if (connected && !isBusy) {
+            if (isRecording) stopRecordingAndSend();
+            else startRecording(true);
+          }
+        };
+        try {
+          navigator.mediaSession.setActionHandler("play", handleHeadsetButton);
+          navigator.mediaSession.setActionHandler("pause", handleHeadsetButton);
+          navigator.mediaSession.setActionHandler("nexttrack", handleHeadsetButton);
+        } catch {}
+      }
+    }
+
+    function stopPlayback(opts = {}) {
+      playbackQueue = [];
+      speechPlayer.onended = null;
+      speechPlayer.onerror = null;
+      speechPlayer.pause();
+      speechPlayer.currentTime = 0;
+      isPlaying = false;
+      bargeInMs = 0;
+      const done = playbackResolve;
+      playbackResolve = null;
+      if (done) done();
+      if (opts.forBargeIn) {
+        muteUntil = 0;
+      } else {
+        muteUntil = Date.now() + 350;
+        updateOrb("idle", "Playback stopped.");
+      }
+    }
+
+    async function enqueueAudio(src) {
+      if (!src || tabSuperseded) return;
+      playbackQueue.push(src);
+      if (isPlaying) return;
+      await drainPlaybackQueue();
+    }
+
+    function flushDeferredAlerts() {
+      if (!deferredAlertQueue.length || isRecording || isPlaying || isBusy) return;
+      if (confirmCard.classList.contains("visible")) return;
+      const next = deferredAlertQueue.shift();
+      if (next) void enqueueAudio(next);
+    }
+
+    async function drainPlaybackQueue() {
+      let wasInterrupted = false;
+      while (playbackQueue.length > 0) {
+        const src = playbackQueue.shift();
+        isPlaying = true;
+        bargeInMs = 0;
+        // Never cancelRecording() for an incoming alert or playback start.
+        updateOrb("speaking");
+        await new Promise((resolveDone) => {
+          let settled = false;
+          let watchdog = null;
+          const armWatchdog = (ms) => {
+            if (watchdog) clearTimeout(watchdog);
+            watchdog = setTimeout(() => {
+              try { speechPlayer.pause(); } catch {}
+              done();
+            }, ms);
+          };
+          const done = () => {
+            if (settled) return;
+            settled = true;
+            if (watchdog) { clearTimeout(watchdog); watchdog = null; }
+            if (playbackResolve === done) playbackResolve = null;
+            speechPlayer.onended = null;
+            speechPlayer.onerror = null;
+            speechPlayer.onloadedmetadata = null;
+            resolveDone();
+          };
+          playbackResolve = done;
+          speechPlayer.onended = done;
+          speechPlayer.onerror = done;
+          speechPlayer.onloadedmetadata = () => {
+            const d = Number(speechPlayer.duration);
+            if (Number.isFinite(d) && d > 0) {
+              armWatchdog(Math.min(180000, Math.max(20000, Math.ceil((d + 12) * 1000))));
+            }
+          };
+          armWatchdog(60000);
+          speechPlayer.src = src;
+          speechPlayer.play().catch((err) => {
+            if (err && err.name === "NotAllowedError") {
+              blockedAudioSrc = src;
+              muteCard.classList.add("visible");
+              statusLine.textContent = "Browser muted audio. Tap Unlock or Connect once.";
+            }
+            done();
+          });
+        });
+        if (!isPlaying) {
+          wasInterrupted = true;
+          break;
+        }
+      }
+      isPlaying = false;
+      if (!wasInterrupted) {
+        muteUntil = Date.now() + (bargeInEnabled ? 450 : 1250);
+        if (connected && !isBusy && !isRecording) updateOrb("idle");
+        flushDeferredAlerts();
+      }
+    }
+
+    function encodeWav16k(chunks, srcRate) {
+      let totalLen = 0;
+      for (const c of chunks) totalLen += c.length;
+      const merged = new Float32Array(totalLen);
+      let off = 0;
+      for (const c of chunks) {
+        merged.set(c, off);
+        off += c.length;
+      }
+
+      const targetRate = 16000;
+      let samples = merged;
+      if (srcRate && Math.abs(srcRate - targetRate) > 100) {
+        const ratio = srcRate / targetRate;
+        const outLen = Math.max(1, Math.round(merged.length / ratio));
+        samples = new Float32Array(outLen);
+        for (let i = 0; i < outLen; i++) {
+          const pos = i * ratio;
+          const idx = Math.floor(pos);
+          const frac = pos - idx;
+          const s0 = merged[idx] || 0;
+          const s1 = merged[Math.min(idx + 1, merged.length - 1)] || 0;
+          samples[i] = s0 + (s1 - s0) * frac;
+        }
+      }
+
+      const pcmBytes = samples.length * 2;
+      const buf = new ArrayBuffer(44 + pcmBytes);
+      const view = new DataView(buf);
+      const writeStr = (o, s) => {
+        for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i));
+      };
+      writeStr(0, "RIFF");
+      view.setUint32(4, 36 + pcmBytes, true);
+      writeStr(8, "WAVE");
+      writeStr(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, targetRate, true);
+      view.setUint32(28, targetRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, "data");
+      view.setUint32(40, pcmBytes, true);
+      let p = 44;
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+        p += 2;
+      }
+      return new Blob([buf], { type: "audio/wav" });
+    }
+
+    function cancelRecording() {
+      isRecording = false;
+      manualRecording = false;
+      pcmRecordingChunks = [];
+      voicedMs = 0;
+    }
+
+    function startRecording(manual = false) {
+      if (!mediaStream || isRecording) return;
+      // Seed with 1000ms pre-roll ring buffer so first syllables ("Gaffer", "Orca", barge-in words) are never clipped.
+      pcmRecordingChunks = preRollChunks.map((c) => c.slice());
+      manualRecording = manual;
+      speechStartAt = Date.now();
+      lastVoiceAt = Date.now();
+      voicedMs = 0;
+      isRecording = true;
+      updateOrb("recording");
+    }
+
+    function stopRecordingAndSend() {
+      if (!isRecording) return;
+      const chunks = pcmRecordingChunks;
+      const totalVoiced = voicedMs;
+      const wasManual = manualRecording;
+      isRecording = false;
+      manualRecording = false;
+      pcmRecordingChunks = [];
+      voicedMs = 0;
+      if (!wasManual && totalVoiced < 180) {
+        if (!isBusy) updateOrb("idle");
+        flushDeferredAlerts();
+        return;
+      }
+      const blob = encodeWav16k(chunks, pcmSampleRate);
+      if (isBusy) {
+        // Queue latest utterance captured while a previous STT/upload was still in flight.
+        queuedVoiceBlob = blob;
+        updateOrb("thinking", "Queued next utterance...");
+        return;
+      }
+      void uploadVoiceBlob(blob);
+    }
+
+    async function uploadVoiceBlob(blob) {
+      if (blob.size < 1200) { updateOrb("idle"); flushDeferredAlerts(); return; }
+      isBusy = true;
+      updateOrb("thinking");
+      try {
+        const res = await fetchWithTimeout(`/api/voice?mode=${encodeURIComponent(listenMode)}`, {
+          method: "POST",
+          headers: authHeaders({ "Content-Type": blob.type || "audio/wav" }),
+          body: blob,
+        }, 35000);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Voice request failed");
+
+        if (data.ignored) {
+          updateOrb(
+            "idle",
+            data.transcript
+              ? `Heard "${data.transcript}". Waiting for "Gaffer".`
+              : "Background noise ignored."
+          );
+          return;
+        }
+
+        if (data.transcript) addLog("you", "OWNER", data.transcript);
+        if (data.replyText) addLog("orca", "GAFFER", data.replyText);
+        updatePending(data.pendingConfirmation, data.followUpActive, data.activeSessionId);
+        void loadSessions();
+
+        // Network round-trip is complete; clear isBusy before playback so voice barge-in works on replies too.
+        isBusy = false;
+        if (data.audioBase64) {
+          await enqueueAudio(`data:audio/mpeg;base64,${data.audioBase64}`);
+        } else if (data.ttsError) {
+          addLog("alert", "TTS ERROR", data.ttsError);
+          speakFallbackError(data.replyText || "Voice playback failed. Please try again.");
+        }
+      } catch (err) {
+        const msg = err.message || String(err);
+        addLog("alert", "ERROR", msg);
+        updateOrb("idle", `Error: ${msg}`);
+        speakFallbackError("Topping Out Gaffer error. Please try again.");
+      } finally {
+        isBusy = false;
+        const nextBlob = queuedVoiceBlob;
+        queuedVoiceBlob = null;
+        if (nextBlob && connected) {
+          void uploadVoiceBlob(nextBlob);
+        } else {
+          if (connected && !isPlaying && !isRecording) updateOrb("idle");
+          flushDeferredAlerts();
+        }
+      }
+    }
+
+    async function sendText(text) {
+      if (!text.trim() || isBusy) return;
+      isBusy = true;
+      updateOrb("thinking");
+      addLog("you", "OWNER", text);
+      try {
+        const res = await fetchWithTimeout("/api/text", {
+          method: "POST",
+          headers: authHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ text, mode: "manual", speak: true }),
+        }, 35000);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Request failed");
+        if (data.replyText) addLog("orca", "GAFFER", data.replyText);
+        updatePending(data.pendingConfirmation, data.followUpActive, data.activeSessionId);
+        void loadSessions();
+        isBusy = false;
+        if (data.audioBase64) {
+          await enqueueAudio(`data:audio/mpeg;base64,${data.audioBase64}`);
+        } else if (data.ttsError) {
+          addLog("alert", "TTS ERROR", data.ttsError);
+          speakFallbackError(data.replyText || "Voice playback failed.");
+        }
+      } catch (err) {
+        const msg = err.message || String(err);
+        addLog("alert", "ERROR", msg);
+        speakFallbackError("Topping Out Gaffer request failed.");
+      } finally {
+        isBusy = false;
+        if (connected && !isPlaying && !isRecording) updateOrb("idle");
+        flushDeferredAlerts();
+      }
+    }
+
+    function renderEq(rms, thresh, active) {
+      const ratio = Math.min(1, rms / (thresh * 3));
+      const litCount = active ? Math.round(ratio * EQ_COUNT) : 0;
+      for (let i = 0; i < EQ_COUNT; i++) {
+        const on = i < litCount;
+        eqBars[i].style.height = on ? `${Math.min(18, 6 + Math.round((i / EQ_COUNT) * 12))}px` : "4px";
+        eqBars[i].style.background = !on
+          ? "var(--line)"
+          : isPlaying
+            ? "var(--hivis)"
+            : i >= Math.floor(EQ_COUNT * 0.33)
+              ? "var(--good)"
+              : "var(--muted)";
+      }
+    }
+
+    function startVadLoop() {
+      const buf = new Float32Array(analyser.fftSize);
+      const SILENCE_MS = 1850;
+      const MAX_UTT_MS = 25000;
+      const MAX_MANUAL_MS = 45000;
+      lastVadTickAt = Date.now();
+
+      if (vadRaf) clearInterval(vadRaf);
+      const tick = () => {
+        if (!connected || !analyser) return;
+        const now = Date.now();
+        const dt = Math.min(150, Math.max(0, now - lastVadTickAt));
+        lastVadTickAt = now;
+
+        // Cap manual recording length so a pocket earbud tap never records forever.
+        if (isRecording && manualRecording && now - speechStartAt >= MAX_MANUAL_MS) {
+          stopRecordingAndSend();
+          return;
+        }
+
+        analyser.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+        const rms = Math.sqrt(sum / buf.length);
+        const thresh = getThreshold();
+        const pct = Math.min(100, Math.round((rms / (thresh * 3)) * 100));
+        meterFill.style.width = `${pct}%`;
+        meterFill.style.background = rms >= thresh ? "var(--good)" : "var(--muted)";
+        renderEq(isPlaying ? thresh * 2.2 : rms, thresh, connected && (!isBusy || isPlaying || isRecording));
+
+        // Voice barge-in on headphones: sustained speech above a higher threshold interrupts playback
+        // and immediately captures the interrupting sentence (including 1000ms pre-roll).
+        if (isPlaying && bargeInEnabled && listenMode !== "manual" && !isBusy) {
+          const bargeThresh = Math.max(thresh * 1.85, 0.032);
+          if (rms >= bargeThresh) {
+            bargeInMs += dt;
+            if (bargeInMs >= 250) {
+              bargeInMs = 0;
+              stopPlayback({ forBargeIn: true });
+              startRecording(false);
+              voicedMs = 250;
+              return;
+            }
+          } else {
+            bargeInMs = Math.max(0, bargeInMs - dt * 1.5);
+          }
+          return;
+        }
+
+        // Keep capturing while STT is in flight so rapid wake utterances are never dropped.
+        const canAutoListen =
+          listenMode !== "manual" && !isPlaying && now > muteUntil;
+
+        if (canAutoListen) {
+          if (rms >= thresh) {
+            lastVoiceAt = now;
+            if (!isRecording) startRecording(false);
+            if (isRecording) voicedMs += dt;
+          } else if (isRecording && !manualRecording) {
+            if (now - lastVoiceAt >= SILENCE_MS || now - speechStartAt >= MAX_UTT_MS) {
+              stopRecordingAndSend();
+            }
+          }
+        }
+      };
+      // Use setInterval (not requestAnimationFrame) so VAD keeps running when phone screen locks!
+      vadRaf = setInterval(tick, 50);
+    }
+
+    async function loadState() {
+      try {
+        await ensureCookieAuth();
+        const res = await fetchWithTimeout("/api/state", { headers: authHeaders() }, 8000);
+        const d = await res.json();
+        if (!d.ok) return;
+        if (d.voice && voiceTag) voiceTag.textContent = String(d.voice).toUpperCase();
+        if (typeof d.watchEnabled === "boolean") {
+          watchEnabled = d.watchEnabled;
+          watchBtn.textContent = watchEnabled ? "ALERTS: ON" : "ALERTS: OFF";
+          watchBtn.classList.toggle("active-good", watchEnabled);
+        }
+        if (typeof d.managedBuilderAlerts === "boolean") {
+          managedBuilderAlerts = d.managedBuilderAlerts;
+          renderManagedBuildersBtn();
+        }
+        if (localStorage.getItem("orcaVoiceStyle")) {
+          void syncStyleToServer(replyStyle);
+        } else if (d.brain?.replyStyle) {
+          replyStyle = d.brain.replyStyle;
+          renderStyleBtn();
+        }
+        updatePending(d.brain?.pendingConfirmation, d.brain?.followUpActive, d.brain?.activeSessionId);
+      } catch {}
+    }
+
+    async function connectSse(audioUnlocked = true) {
+      await ensureCookieAuth();
+      if (eventSource) eventSource.close();
+      return new Promise((resolveReady) => {
+        let done = false;
+        const finish = () => {
+          if (!done) { done = true; resolveReady(); }
+        };
+        const timer = setTimeout(finish, 1500);
+        eventSource = new EventSource(audioUnlocked ? "/events?audio=1" : "/events");
+        eventSource.addEventListener("connected", (ev) => {
+          clearTimeout(timer);
+          sseDot.className = "live-sq live";
+          linkWord.textContent = "LIVE";
+          try {
+            const d = JSON.parse(ev.data);
+            if (d.voice && voiceTag) voiceTag.textContent = String(d.voice).toUpperCase();
+            if (typeof d.watchEnabled === "boolean") {
+              watchEnabled = d.watchEnabled;
+              watchBtn.textContent = watchEnabled ? "ALERTS: ON" : "ALERTS: OFF";
+              watchBtn.classList.toggle("active-good", watchEnabled);
+            }
+            if (!localStorage.getItem("orcaVoiceStyle") && d.state?.replyStyle) {
+              replyStyle = d.state.replyStyle;
+              renderStyleBtn();
+            }
+            updatePending(d.state?.pendingConfirmation, d.state?.followUpActive, d.state?.activeSessionId);
+          } catch {}
+          finish();
+        });
+        eventSource.addEventListener("alert", (ev) => {
+          try {
+            const a = JSON.parse(ev.data);
+            addLog("alert", `SITE ALERT · ${a.sessionTitle}`, a.spokenText);
+            updatePending(
+              a.state?.pendingConfirmation,
+              true,
+              a.state?.activeSessionId ?? a.sessionId
+            );
+            void loadSessions();
+            if (a.audioUrl && !a.playedLocally) {
+              // Hold alert audio while user is speaking or a confirmation is staged; play right after.
+              if (isRecording || confirmCard.classList.contains("visible")) {
+                deferredAlertQueue.push(a.audioUrl);
+              } else {
+                void enqueueAudio(a.audioUrl);
+              }
+            }
+          } catch (err) {
+            console.error("alert parse error", err);
+          }
+        });
+        eventSource.addEventListener("watch", (ev) => {
+          try {
+            const d = JSON.parse(ev.data);
+            watchEnabled = Boolean(d.enabled);
+            watchBtn.textContent = watchEnabled ? "ALERTS: ON" : "ALERTS: OFF";
+            watchBtn.classList.toggle("active-good", watchEnabled);
+          } catch {}
+        });
+        eventSource.addEventListener("managedBuilders", (ev) => {
+          try {
+            const d = JSON.parse(ev.data);
+            managedBuilderAlerts = Boolean(d.enabled);
+            renderManagedBuildersBtn();
+          } catch {}
+        });
+        eventSource.addEventListener("quiet", (ev) => {
+          try {
+            const d = JSON.parse(ev.data);
+            addLog(
+              "orca",
+              "QUIET BUILDER STOP",
+              `${d.builderTitle} stopped (managed by ${d.foremanTitle}; muted)`
+            );
+            void loadSessions();
+          } catch {}
+        });
+        eventSource.addEventListener("style", (ev) => {
+          try {
+            const d = JSON.parse(ev.data);
+            if (d.style === "brief" || d.style === "speak") {
+              replyStyle = d.style;
+              localStorage.setItem("orcaVoiceStyle", replyStyle);
+              renderStyleBtn();
+            }
+          } catch {}
+        });
+        eventSource.onerror = () => {
+          sseDot.className = "live-sq err";
+          linkWord.textContent = "RETRY";
+          finish();
+        };
+      });
+    }
+
+    async function connectAll() {
+      try {
+        statusLine.textContent = "Connecting microphone and headphones...";
+        const audioConstraints = {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        };
+        if (selectedMicId) audioConstraints.deviceId = { ideal: selectedMicId };
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+        await refreshDevices();
+        await applyOutputDevice();
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        pcmSampleRate = audioCtx.sampleRate || 48000;
+        const src = audioCtx.createMediaStreamSource(mediaStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        src.connect(analyser);
+
+        // Continuous PCM tap for 1000ms pre-roll ring buffer and native 16kHz WAV capture
+        preRollChunks = [];
+        preRollSamples = 0;
+        const maxPreRollSamples = Math.round(pcmSampleRate * 1.0);
+        pcmProcessor = audioCtx.createScriptProcessor(2048, 1, 1);
+        pcmMuteGain = audioCtx.createGain();
+        pcmMuteGain.gain.value = 0;
+        pcmProcessor.onaudioprocess = (ev) => {
+          if (!connected) return;
+          const input = ev.inputBuffer.getChannelData(0);
+          const copy = new Float32Array(input.length);
+          copy.set(input);
+          preRollChunks.push(copy);
+          preRollSamples += copy.length;
+          while (preRollSamples > maxPreRollSamples && preRollChunks.length > 1) {
+            const removed = preRollChunks.shift();
+            if (removed) preRollSamples -= removed.length;
+          }
+          if (isRecording) {
+            pcmRecordingChunks.push(copy);
+          }
+        };
+        src.connect(pcmProcessor);
+        pcmProcessor.connect(pcmMuteGain);
+        pcmMuteGain.connect(audioCtx.destination);
+
+        await enablePocketKeepAlive();
+        connected = true;
+        muteCard.classList.remove("visible");
+        blockedAudioSrc = null;
+        disconnectBtn.style.display = "inline-flex";
+        connectSse(true);
+        startVadLoop();
+        updateOrb("idle");
+      } catch (err) {
+        statusLine.textContent = `Mic error: ${err.message}. On mobile, open via Tailscale HTTPS.`;
+      }
+    }
+
+    function disconnectAll() {
+      connected = false;
+      if (vadRaf) { clearInterval(vadRaf); vadRaf = null; }
+      cancelRecording();
+      stopPlayback();
+      if (keepAliveAudio) keepAliveAudio.pause();
+      if (wakeLock) { try { wakeLock.release(); } catch {} wakeLock = null; }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((t) => t.stop());
+        mediaStream = null;
+      }
+      if (pcmProcessor) { try { pcmProcessor.disconnect(); } catch {} pcmProcessor.onaudioprocess = null; pcmProcessor = null; }
+      if (pcmMuteGain) { try { pcmMuteGain.disconnect(); } catch {} pcmMuteGain = null; }
+      preRollChunks = [];
+      preRollSamples = 0;
+      if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
+      analyser = null;
+      meterFill.style.width = "0%";
+      renderEq(0, 1, false);
+      disconnectBtn.style.display = "none";
+      queuedVoiceBlob = null;
+      deferredAlertQueue = [];
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      sseDot.className = "live-sq";
+      linkWord.textContent = "OFF";
+      updateOrb("idle");
+    }
+
+    unlockAudioBtn.addEventListener("click", async () => {
+      muteCard.classList.remove("visible");
+      await enablePocketKeepAlive();
+      await connectSse(true);
+      const src = blockedAudioSrc;
+      blockedAudioSrc = null;
+      if (src) void enqueueAudio(src);
+    });
+
+    orbBtn.addEventListener("click", () => {
+      if (!connected) { void connectAll(); return; }
+      if (isPlaying) { stopPlayback(); return; }
+      if (isRecording) stopRecordingAndSend();
+      else startRecording(true);
+    });
+
+    disconnectBtn.addEventListener("click", disconnectAll);
+
+    watchBtn.addEventListener("click", async () => {
+      try {
+        const next = !watchEnabled;
+        const res = await fetchWithTimeout("/api/watch", {
+          method: "POST",
+          headers: authHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ enabled: next }),
+        }, 10000);
+        const data = await res.json();
+        watchEnabled = Boolean(data.watchEnabled);
+        watchBtn.textContent = watchEnabled ? "ALERTS: ON" : "ALERTS: OFF";
+        watchBtn.classList.toggle("active-good", watchEnabled);
+      } catch (err) {
+        addLog("alert", "ERROR", err.message || String(err));
+      }
+    });
+
+    testAlertBtn.addEventListener("click", async () => {
+      try {
+        if (!connected) {
+          await enablePocketKeepAlive();
+          await connectSse(true);
+        }
+        await fetchWithTimeout("/api/test-alert", { method: "POST", headers: authHeaders() }, 20000);
+      } catch (err) {
+        addLog("alert", "ERROR", err.message || String(err));
+        speakFallbackError("Test alert failed.");
+      }
+    });
+
+    confirmYesBtn.addEventListener("click", () => void sendText("Yes, send it."));
+    confirmNoBtn.addEventListener("click", () => void sendText("Cancel that."));
+
+    textForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = textInput.value.trim();
+      if (!val) return;
+      textInput.value = "";
+      void sendText(val);
+    });
+
+    async function loadSessions() {
+      try {
+        const res = await fetchWithTimeout("/api/sessions", { headers: authHeaders() }, 12000);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        if (!data.sessions.length) {
+          sessCount.textContent = "0";
+          sessionsList.innerHTML = '<div class="sess-meta">No active Orca sessions found.</div>';
+          return;
+        }
+        sessCount.textContent = String(data.sessions.length);
+        sessionsList.innerHTML = "";
+        // Order sessions so managed Builders render indented directly beneath their owning Foreman.
+        const all = data.sessions.slice(0, 20);
+        const byForeman = new Map();
+        const placed = new Set();
+        for (const s of all) {
+          if (s.role === "builder" && s.pairedForemanId) {
+            const arr = byForeman.get(s.pairedForemanId) || [];
+            arr.push(s);
+            byForeman.set(s.pairedForemanId, arr);
+          }
+        }
+        const ordered = [];
+        for (const s of all) {
+          if (s.role === "builder" && s.pairedForemanId && all.some((x) => x.id === s.pairedForemanId)) {
+            continue;
+          }
+          if (!placed.has(s.id)) {
+            placed.add(s.id);
+            ordered.push({ session: s, isChild: false });
+            for (const child of byForeman.get(s.id) || []) {
+              if (!placed.has(child.id)) {
+                placed.add(child.id);
+                ordered.push({ session: child, isChild: true });
+              }
+            }
+          }
+        }
+
+        for (const { session: s, isChild } of ordered) {
+          const st =
+            s.state === "working"
+              ? "working"
+              : s.state === "done"
+                ? "done"
+                : s.state === "waiting"
+                  ? "waiting"
+                  : "other";
+          const isActive = s.id === activeSessionId;
+          const roleBadge =
+            s.role === "foreman"
+              ? '<span class="badge role-foreman">FOREMAN</span>'
+              : s.role === "builder"
+                ? '<span class="badge role-builder">MANAGED BUILDER</span>'
+                : "";
+          const owedBadge = s.owed ? '<span class="badge owed-tag">OWED</span>' : "";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `sess-row st-${st}${isActive ? " active-target" : ""}${isChild ? " managed-child" : ""}`;
+          btn.title = s.owed
+            ? `Owed: ${s.owed}`
+            : "Select for a spoken briefing on this session";
+          btn.innerHTML = `
+            <div class="sess-left">
+              <div class="sess-name">${escapeHtml(s.title)}</div>
+              <div class="sess-meta">${escapeHtml(s.repo || s.agent)} · ${escapeHtml(s.agent)} · ${s.writable ? "WRITABLE" : "READ-ONLY"}${s.pairedForemanTitle ? ` · VIA ${escapeHtml(s.pairedForemanTitle)}` : ""}</div>
+            </div>
+            <div class="sess-tags">
+              ${owedBadge}
+              ${roleBadge}
+              ${isActive ? '<span class="badge active-tag">ACTIVE</span>' : ""}
+              <span class="badge ${st}">${escapeHtml(s.state)}</span>
+            </div>
+          `;
+          btn.addEventListener("click", () => {
+            void sendText(`Give me a status summary of "${s.title}".`);
+          });
+          sessionsList.appendChild(btn);
+        }
+      } catch (err) {
+        sessionsList.innerHTML = `<div class="sess-meta">Could not load sessions: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    refreshBtn.addEventListener("click", () => void loadSessions());
+
+    // Do NOT open SSE before Connect Gaffer (keeps server at zero paid calls and zero polling while idle).
+    sseDot.className = "live-sq";
+    linkWord.textContent = "OFF";
+    void loadState();
+    void refreshDevices();
+    void loadSessions();
+    setInterval(() => {
+      if (connected) void loadSessions();
+    }, 10000);
+  </script>
+</body>
+</html>

@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-21
+
+- **Optional voice agent add-on: Topping Out Gaffer (`addons/gaffer`).** A repo-only local HTTP + SSE voice console for live Orca agent sessions: ask for session status, inspect project boards (`BOARD.json`) and the owner's-word queue (`owed:` / `YOUR CALL` / open board decisions), receive unprompted stop alerts in headphones (PC or phone over Tailscale), and dispatch replies with a `[voice] ` prefix behind a deterministic server read-back and spoken yes/cancel/repeat gate. Pairs Foremen with managed Builders by shared Orca `tabId` so routine Builder work-order stops stay quiet while the Foreman is working (still alerting on trust/permission prompts and Foreman `owed:` stops), and routes managed-Builder replies safely to the owning Foreman by default. Refuses standalone gated acts (`merge`, `push`, `open the PR`, `greploop`) and leading `/`, `!`, or `#` command prefixes; verifies live terminal state before sending and parses `orca terminal send --json` receipts with `--retry-request` support. Runs on `OPENROUTER_API_KEY` (Brain `anthropic/claude-haiku-5.5`, TTS Grok Voice, OpenRouter STT fallback) plus optional `OPENAI_API_KEY` for dedicated transcription. Zero paid calls and zero Orca polling until a listener connects with audio unlocked. See `SETUP.md` §8c and `addons/gaffer/README.md`.
+
 ## 2026-11-20
 
 - **Plan check: the agy Gemini seat is on by default.** An unattended plan check with no standing choice (an autonomous run, a night shift) now seats `gemini-hydrogen-agy` beside the codex or Claude seat: a third model family on your Google subscription, $0 per call. Where agy is missing or not signed in, the dispatcher's preflight leaves it out and the run goes on with the one seat. A repo's standing choice is unchanged: to add it there, say "change the plan check seats".

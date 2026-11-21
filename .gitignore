@@ -7,6 +7,11 @@ scratch/
 *.tmp
 *.part
 
+# local secrets / environment files
+.env
+.env.*
+!.env.example
+
 # picker receipts: a pick is a one-off record for one session, never package content
 council-pick.json
 plancheck-pick.json
