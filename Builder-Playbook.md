@@ -1,15 +1,15 @@
 # Builder Playbook
 
-How to run any builder on a job, so it builds well and doesn't trip. Written for a light builder (a fast, inexpensive model); a strong builder needs less spelled out, never less checked.
+How to run any builder on a job, so it builds well and doesn't trip. One default for every builder, whatever the model: the foreman plans, and every work order is written the same way.
 Drawn from real jobs run with Topping Out. In records, commits and PRs the builder is only ever "the builder".
 
 ---
 
 ## The one idea
 
-**A light builder builds well. It doesn't design well.**
+**A builder builds well. It doesn't design well.**
 
-- At gate 1 of one job, a light builder's own plan found 2 of 3 hard points. It missed the security one: it trusted a user ID taken from the request and used an ordinary key where a delegation credential was needed.
+- At gate 1 of one job, a builder's own plan found 2 of 3 hard points. It missed the security one: it trusted a user ID taken from the request and used an ordinary key where a delegation credential was needed.
 - Built from the foreman's corrected plan, the same builder produced a clean commit, full captures and an honest report.
 
 So the foreman does all the thinking, and the builder does precise execution.
@@ -19,8 +19,7 @@ So the foreman does all the thinking, and the builder does precise execution.
 ## Before the job
 
 1. **Run a pre-flight first.** It checks the builder's environment is ready: shell, git on the target repo, reading and writing outside the project folder, tools, permissions. Nothing starts until it says READY.
-2. **Tell the foreman up front which builder it is**, so it adapts every work order from work order 1 (`BUILDER-PROFILES.md` says what each kind needs spelled out).
-3. **Keep audition points out of reach.** If you test the builder's planning, the foreman keeps hint-bearing notes (the shift handover, linked-ticket notes) out of the files the work order lets the builder read.
+2. **Tell the foreman up front how the builder is reached** (hand-carried pointers or a pane link, `METHOD.md` §7e), so work order 1 is written for that delivery. The work order style is the same for every builder.
 
 ---
 
@@ -28,12 +27,13 @@ So the foreman does all the thinking, and the builder does precise execution.
 
 | Rule | Why |
 |---|---|
-| **Decisions, never questions.** The work order says what to build and how, not "decide X" | judgment is a light builder's weak spot |
-| **One job per work order.** Split any step carrying more than one decision | less for it to reason about |
+| **Decisions, never questions.** The work order says what to build and how, not "decide X" | judgment is a builder's weak spot |
+| **One outcome per task.** A work order may carry one or several tasks, each one independently checkable outcome with its own commit and every check | each outcome is checked on its own, and a review can name the commit that broke it |
 | **Exact commands, exact paths, a prefix line of variables on every command** | many builders' shells don't keep variables between calls, and none should guess |
+| **Scripts from a named template.** The builder writes the gate runners and scripts by copying the template the work order names (`snippets/run-gates-*.sh`), then runs the checks on them | a copied template plus mechanical checks leaves nothing to guess |
 | **Test-first.** The foreman names the tests that must FAIL at the current head; the builder makes them pass | turns "think of edge cases" into "make these red tests green" |
 | **The hostile-input checklist** (below) in every work order that writes or changes code | on one job, every bug found in the first task came from this area |
-| **"Done when: …" right under the opening line** names the finish line: the tests that pass at head, one commit, the report written | the builder can check itself against it before it stops |
+| **"Done when: …" right under the opening line** names the finish line: the tests that pass at head, one commit per task, the report written | the builder can check itself against it before it stops |
 | **Opens with a state check, ends with one report file and STOP** | survives a stopped or compacted session |
 | **The report opens with "Needs from the foreman"**: none, or BLOCKED on X | a stop that needs a decision isn't buried under a success summary |
 | **"Report only what you observed. Do not explain differences away."** | a builder once called two new skipped tests "environment-dependent" when its own new test module caused them |
@@ -42,7 +42,7 @@ So the foreman does all the thinking, and the builder does precise execution.
 
 ### Make test breadth mechanical
 
-A light builder's weakest areas are test breadth and judgment: on one job, four of fourteen work orders only repaired gaps found in review. These four steps turn "think of every edge case" into lists that must be empty:
+A builder's weakest areas are test breadth and judgment: on one job, four of fourteen work orders only repaired gaps found in review. These four steps turn "think of every edge case" into lists that must be empty:
 
 | Step | In the work order | Why |
 |---|---|---|
@@ -53,7 +53,7 @@ A light builder's weakest areas are test breadth and judgment: on one job, four 
 
 Target: roughly 8–9 work orders for a mid-sized ticket, not 14.
 
-**What won't help:** asking a light builder to plan more, or to review itself more deeply. Keep the thinking with the foreman and make every check mechanical.
+**What won't help:** asking the builder to plan more, or to review itself more deeply. Keep the thinking with the foreman and make every check mechanical.
 
 ### The hostile-input checklist
 
@@ -87,20 +87,22 @@ Put this in the work order, word for word if needed:
 
 ## When to switch builders
 
-Switch to a stronger builder (`BUILDER-PROFILES.md`) **only** if a task review finds:
+Switch builders **only** if a task review finds:
 
 - a **security-class bug**: credentials, leaked data, trusting unverified input; or
-- a **repeat** of something the work order already warned about.
+- a **repeat** of something the work order explicitly warned about.
 
-Ordinary edge-case findings are normal. They get fixed in the next work order.
+Ordinary edge-case findings are normal. They go test-first into the next work order.
 
-Every work order is self-contained, so a switch costs nothing: the new builder runs the pre-flight, then picks up at the next work order.
+**How to switch:** the foreman writes a new pre-flight for the new builder (`templates/BUILDER-PREFLIGHT.txt`, `METHOD.md` §3) and makes sure the next work order is self-contained: a state check, all decisions written in, no reliance on memory of earlier work orders. The owner runs the pre-flight in the new builder, then the work order. Because every work order is written this way, a switch costs nothing.
 
 **Don't miss the switch signal.** When the foreman writes a new pre-flight (for example `...BUILDER-B-PREFLIGHT.txt`), that is it asking you to change builder. On one job that was missed, and the old builder ran it.
 
+If you want to compare builders yourself, keep the notes in a private file outside every repo (per job: builder, harness, work orders, repair work orders, owner minutes, defects by review round), never in the method's records (`RULES.md`).
+
 ---
 
-## Where a light builder fits
+## What the builder is given
 
 - **Good:** tasks with a settled design, clear tests and narrow files: repairs, adapters, readers, test suites, mechanical wiring.
 - **Keep an eye on:** anything touching identity, credentials, auth, or data that leaves the service.

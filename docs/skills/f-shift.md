@@ -28,8 +28,8 @@ The builder's side (the builder gets work orders, never this skill), not for cut
 ## It's working if
 
 - If the last job's close-out isn't finished, it stops at the end-game lock and names the missing steps.
-- It reads the method files in full: `README.md`, `RULES.md` with its "Foreman rules" section, `METHOD.md`, `OVERRIDES.md`, `Foreman-Playbook.md` and `BUILDER-PROFILES.md`, then the job's own handover and ticket.
-- Its first reply confirms the job's facts: the ticket and project, the builder, form A or B, the delivery, the repos and day folder, the gates, and what needs your word this job (and, if you started an autonomous run, which of those acts its goal covers).
+- It reads the method files in full: `README.md`, `RULES.md` with its "Foreman rules" section, `METHOD.md`, `OVERRIDES.md`, `Foreman-Playbook.md` and `Builder-Playbook.md`, then the job's own handover and ticket.
+- Its first reply confirms the job's facts: the ticket and project, whether the builder has a pre-flight, the delivery, the repos and day folder, the gates, and what needs your word this job (and, if you started an autonomous run, which of those acts its goal covers).
 - Anything unclear is measured or listed as an owed question, not assumed.
 - It lists the Logbook cards in force for the job's area, CRITICAL and HIGH first.
 - It runs the site walk, including the outside grade (a model from the other family grades its cold answers), then stops and waits for your "go".

@@ -18,7 +18,7 @@ EVERY command with this exact prefix line:
   REC="<records>"; DAY="<day folder>"; SUT="<target repo>"; WT="<worktree>";
 
 FILES YOU MAY READ IN THIS STEP - ONLY THESE
-  $DAY/<gate runner>, $DAY/<other runner>, <job template path>, and
+  <records>/.../snippets/run-gates-*.sh, $DAY/<gate runner>, $DAY/<other runner>, <job template path>, and
   the test files PART 4 names inside $WT. Do not open other day-folder notes.
 
 PART 0 - STATE CHECK
@@ -45,8 +45,9 @@ PART 1 - CUT THE WORKTREE BY NAME
 1.4  git -C "$WT" branch --show-current     expected: <branch>
 1.5  git -C "$WT" status --short     paste it (only files on the profile's dirty-file allowlist may appear; they are never staged).
 
-PART 2 - CHECK THE RUNNERS (do not edit them)
-<Strong builder instead: "PART 2 - WRITE THE RUNNERS: copy <records>/.../snippets/run-gates-*.sh to $DAY/run-gates-<ticket>.sh, set WT= and LOG= first, rewrite the header, then run the checks below.">
+PART 2 - WRITE THE RUNNERS, THEN CHECK THEM
+2.0  Copy <records>/.../snippets/run-gates-*.sh to $DAY/run-gates-<ticket>.sh (one per gate), set WT= and LOG= first,
+     rewrite the header, then run the checks below.
 2.1  bash -n <each runner> && echo syntax-ok
 2.2  tr -cd '\r' < <each runner> | wc -c     (must be 0)
 2.3  grep -n '^WT=' <each runner>     (must name $WT)

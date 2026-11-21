@@ -10,7 +10,7 @@ Each job ends with evidence you can check: what was asked, what was built, what 
 >
 > **What Topping Out does:** splits the work. A foreman plans each job in a fresh session and never writes code, a cheaper builder does the typing, inspectors from another model family check it, and you give the word for what matters.
 >
-> **Even a very cheap builder works.** The weaker the builder, the tighter the foreman writes the work orders: one checkable outcome each, every decision already settled ([builder profiles](BUILDER-PROFILES.md)).
+> **Even a cheap builder works.** The foreman writes the plan and every work order the same way for every builder: settled decisions, exact commands, one checkable outcome per task ([Builder Playbook](Builder-Playbook.md)).
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 
@@ -74,10 +74,10 @@ The name comes from the building site: the ceremony held when the last beam goes
 | If you are... | Read |
 |---|---|
 | A new foreman | this README → `METHOD.md` → `RULES.md` → `OVERRIDES.md` → `Foreman-Playbook.md` → `templates/` |
-| The owner | this README → `METHOD.md` §"The owner's loop" → `BUILDER-PROFILES.md` |
+| The owner | this README → `METHOD.md` §"The owner's loop" → `Builder-Playbook.md` |
 | Setting it up in a new repo | `SETUP.md` |
 | Updating an existing install | the next section |
-| Choosing or running a builder | `BUILDER-PROFILES.md` + `Builder-Playbook.md` |
+| Choosing or running a builder | `Builder-Playbook.md` |
 
 ## Updating
 
@@ -119,13 +119,11 @@ In your project, **between jobs**, start a session and type `/f-setup`. It pulls
                                           │
  WORK ORDER 1  setup + baseline (worktree, job file, t0 captures) ── no code
                                           │
- WORK ORDER 2  form A (default): "plan in force + T1" (the foreman wrote and validated the plan)
-          form B (an audition): the builder writes the plan as plain steps (WORK-ORDER-2-PLAN.txt)
+ GATE 1   /f-plancheck on the foreman's own plan (cold seats, other families; before work order 2)
                                           │
- GATE 1   form A: /f-plancheck on the foreman's own plan (cold seats, other families; before work order 2)
-          form B: the foreman reviews the builder's plan ──> findings
+ WORK ORDER 2  "plan in force + T1" (the foreman wrote and validated the plan)
                                           │
- WORK ORDER 3..N  one decision-complete task per work order, test-first, one commit each
+ WORK ORDER 3..N  one or several decision-complete tasks per work order, test-first, one commit per task
       │  after EACH: disk check → work order review (re-probe, verify test-first, switch-rule line)
       │  next work orders drafted while the current one runs
                                           │
@@ -168,9 +166,8 @@ In your project, **between jobs**, start a session and type `/f-setup`. It pulls
 | `METHOD.md` | the full method, stage by stage, with the "why" behind each step |
 | `OVERRIDES.md` | where the method beats the bundled skills and agents (read before using them) |
 | `RULES.md` | the non-negotiables, and the list of acts that need the owner's word |
-| `BUILDER-PROFILES.md` | what each builder did; the audition; the switch rule |
 | `Foreman-Playbook.md` | the foreman's playbook (named after the role): how to do the foreman's part well: planning, work order checklist, review order, your own mistakes to avoid. `Foreman-Playbook.html` is the same as a page, built by `scripts/build_foreman_playbook.py` |
-| `Builder-Playbook.md` | running any builder without hiccups, a light one especially (`Builder-Playbook.html` is its page) |
+| `Builder-Playbook.md` | running any builder without hiccups: the one work order style, the switch rule (`Builder-Playbook.html` is its page) |
 | `SETUP.md` | installing the skills and agents into a repo |
 | `skills/f-schedule/templates/` | `PROJECT.md`, `TICKET.md`, `BOARD.json`: the files `/f-schedule` writes for a project (the one copy); `BOARD-v2.json` is an example of a board cut by v2 |
 | `templates/` | fill-in-the-blanks for every document the method produces, in the order they're used (see `METHOD.md`) |
@@ -187,13 +184,13 @@ In your project, **between jobs**, start a session and type `/f-setup`. It pulls
 
 ## Precedence
 
-When two sources disagree: **the owner's own words → `RULES.md` → `METHOD.md` → `OVERRIDES.md` → `BUILDER-PROFILES.md` / `SETUP.md` → `Foreman-Playbook.md` (the why behind the foreman rules in `RULES.md`) / `Builder-Playbook.md` → `templates/` → the bundled `skills/` and `agents/`.** The bundled skills and agents are general; `OVERRIDES.md` lists exactly where the method beats them.
+When two sources disagree: **the owner's own words → `RULES.md` → `METHOD.md` → `OVERRIDES.md` → `SETUP.md` → `Foreman-Playbook.md` (the why behind the foreman rules in `RULES.md`) / `Builder-Playbook.md` → `templates/` → the bundled `skills/` and `agents/`.** The bundled skills and agents are general; `OVERRIDES.md` lists exactly where the method beats them.
 
 ## What it is not
 
 - **Not autonomous by default.** By default you give the word for every push, PR, review round and merge (except the job's own cleanup and records push after a verified merge): the owner is the one piece a confident report can't talk round. **Autonomy comes only from an explicit grant:** an autonomous run (`/goal autonomous run: <path to the job's opener>`) or a night shift covers exactly the acts `RULES.md` ("The one exception") lists, for the jobs it names, and repairs what goes red and stops only on the conditions `RULES.md` ("The one exception") lists. A standing goal never covers the other gated acts.
 - **Not a second judge on top of the foreman.** Reviews are layered by *independence* (a fresh session, a different reader), not by stacking graders. Separate reviewers reduce some failure modes; they don't guarantee correct code.
-- **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build. How much the work order has to spell out depends on the builder (see `BUILDER-PROFILES.md`). In Orca the foreman drives it in the pane beside it: Pi, or Claude Code running whichever Claude model you choose (`SETUP.md` §4).
+- **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build. Every builder gets the same kind of work order (`Builder-Playbook.md`). In Orca the foreman drives it in the pane beside it: Pi, or Claude Code running whichever Claude model you choose (`SETUP.md` §4).
 
 ## What software enforces, and what is only instructed
 

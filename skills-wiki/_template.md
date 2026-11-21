@@ -14,7 +14,7 @@ Slash: `/skill-name`. Folder: `skills/skill-name/SKILL.md`.
 
 One line: what it does. Do not paste the SKILL.md.
 
-**On site:** where it sits in the flow, or "form B only".
+**On site:** where it sits in the flow.
 
 ## See also
 

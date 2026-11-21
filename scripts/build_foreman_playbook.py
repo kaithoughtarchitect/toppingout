@@ -33,7 +33,7 @@ BUILDER_KICKERS = {
     "Handing work orders over": ("handover", "A pointer, never pasted text"),
     "After every work order": ("after", "Disk before words"),
     "When to switch builders": ("switch", "Only on these two signals"),
-    "Where a light builder fits": ("fits", "Settled design, clear tests"),
+    "What the builder is given": ("fits", "Settled design, clear tests"),
 }
 BOOKS = [
     {"src": "Foreman-Playbook.md", "out": "Foreman-Playbook.html", "kickers": FOREMAN_KICKERS,

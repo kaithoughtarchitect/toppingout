@@ -38,15 +38,14 @@ So: **distrust your own work exactly as much as the builder's.** Every safeguard
 | **Find the hard points first**: where a wrong plan ships a real defect, especially security (credentials, the verified user, data leaving the service) | the misses that matter most at plan level are exactly this kind |
 | **Have your own plan cold-read with `/f-plancheck`** (optionally `simplicity-critic`) before work order 2. **One read; judge findings against your locked decisions; record each fate; no second read unless the owner says so** | in Topping Out, no builder plan exists for gate 1 to catch your mistakes |
 | **Write down what must NOT change** (defaults, other services' files, schema) | the builder can't know a default is off-limits unless the work order says so |
-| **For an audition: fence the hint-bearing files** | the shift handover and linked-ticket notes state the answers; move them aside or list the only readable files |
 
 ---
 
 ## Writing a work order
 
 Before sending, check every work order against this list:
-- [ ] **"Done when" sits right under the opening line**: the finish line the builder can check itself against (the tests that pass at head, one commit, the report written).
-- [ ] **One outcome.** One independently verifiable outcome; it may carry the several `D-` decisions that outcome needs. Two outcomes: split it.
+- [ ] **"Done when" sits right under the opening line**: the finish line the builder can check itself against (the tests that pass at head, one commit per task, the report written).
+- [ ] **One outcome per task.** A work order may carry one or several tasks; each task is one independently verifiable outcome with the `D-` decisions it needs, its own commit and every check.
 - [ ] **Every decision labelled `D-…` and final**, down to the exact expression or data shape.
 - [ ] **Every command exact**, with the prefix line of variables; `NEW` and `AFFECTED` defined once.
 - [ ] **The state check pins the worktree, branch and exact HEAD sha** (re-pinned after the previous work order's review).

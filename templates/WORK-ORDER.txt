@@ -1,5 +1,5 @@
 FOREMAN PRE-SEND CHECKLIST (tick every box before the pointer goes out; RULES.md "Foreman rules")
-[ ] One independently verifiable outcome (it may carry several D- decisions; two outcomes = two work orders).
+[ ] One or several tasks; each task is one independently verifiable outcome (it may carry several D- decisions) with its own PART B, commit and checks.
 [ ] Every decision labelled D-... and final, down to the exact expression or data shape.
 [ ] Every command exact; prefix line on every command; NEW, BEFORE and AFFECTED defined once (the affected set from import_scan.py over the modules this work order touches; the whole test folder when the set is empty, the work order touches a conftest, fixture, helper or a file the scan can't follow, or the profile says "Whole suite every work order: yes"; a set over half the suite's test files runs once as the whole folder, with no BEFORE).
 [ ] State check pins worktree, branch and the exact HEAD sha (re-pinned after the previous work order's review).
@@ -30,9 +30,9 @@ CLIPBOARD CHECK - the foreman's cross-check that the pointer's line range is rig
 
 >>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>
 You are the builder on J<N>. This is work order <m>.
-Done when: <the tests that pass at head>, one commit, the report written.
-Read the whole work order before you act. ONE outcome: <task, in one line>,
-test-first, one commit, captures, one report, STOP.
+Done when: <the tests that pass at head>, one commit per task, the report written.
+Read the whole work order before you act. Tasks: <each task, in one line>.
+Per task: test-first, one commit, captures. Then one report, STOP.
 Every design decision below is made. Do not change or extend any of
 them. If one cannot be built exactly as written, stop and say why.
 Do not wait for anything.
@@ -116,6 +116,9 @@ TESTS THAT CANNOT FAIL FIRST (named by the foreman; not run red)
 
 BUILD
 -----
+<Several tasks in this work order: give each task its own decisions, checklist, tests and
+ B.1-B.5 block (headed "TASK T<k>"), run them in order, one commit per task; a STOP in one task
+ stops the whole work order.>
 B.1  Implement D-<x> to D-<v> in <file>.
 B.2  Run NEW: all pass. Run AFFECTED: RAN_OK, its failing-test IDs
      identical to BEFORE's, and its passed count = BEFORE's passed + your

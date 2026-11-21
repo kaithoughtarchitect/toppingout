@@ -29,9 +29,9 @@ _Score = Impact × Probability. 15-25 critical, 10-14 high, 5-9 medium, 1-4 low.
 | 0: Setup and t0 | work order 1 report | ⬜ | |
 | 1: Requirements | `SCOPING.md` | ⬜ | |
 | 2: Design | settled decisions `D-…` in `SCOPING.md` | ⬜ | |
-| 3: Plan and gate 1 | Form A: `PLAN.md` + its `gate: plancheck` line · Form B (audition): the builder's plan + `GATE1-REVIEW.md` | ⬜ | |
+| 3: Plan and gate 1 | `PLAN.md` + its `gate: plancheck` line | ⬜ | |
 | 4: Tasks | the plan in force (below) | ⬜ | |
-| 5: Build | one work order per task, each reviewed | ⬜ | |
+| 5: Build | one or several tasks per work order, each work order reviewed | ⬜ | |
 | 6: Gate 2 and inspections | `GATE2-REVIEW.md`, lens inspection, independent inspection | ⬜ | |
 | 7: Verification | final re-run + acceptance ledger | ⬜ | |
 
@@ -65,7 +65,7 @@ _One paragraph the foreman rewrites at every phase boundary: what's decided and 
 
 ## Phase 3: Plan and gate 1
 
-**Form:** <A: the foreman's plan | B: an audition> · **Plan:** <day folder>/PLAN.md · **Gate 1:** <Form A: the `**gate: plancheck**` line f-plancheck wrote | Form B: GATE1-REVIEW.md path>
+**Plan:** <day folder>/PLAN.md (the foreman's) · **Gate 1:** <the `**gate: plancheck**` line f-plancheck wrote>
 
 | Finding | Fate (applied / rejected with reason) |
 | --- | --- |
@@ -75,7 +75,7 @@ _One paragraph the foreman rewrites at every phase boundary: what's decided and 
 
 | Task | Outcome (one, independently verifiable) | Work order | Commit | Review | Status |
 | --- | --- | --- | --- | --- | --- |
-| T1 | | <Form A: 2 (plan in force + T1) · Form B: 3> | | | ⬜ |
+| T1 | | 2 (plan in force + T1) | | | ⬜ |
 
 ## Phase 5: Build
 

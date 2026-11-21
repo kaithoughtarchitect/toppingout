@@ -1450,7 +1450,7 @@ PB_MAP = {
     ("F", "Planning (the scoping and the plan)"): "plan",
     ("F", "Writing a work order"): "write", ("B", "Every work order"): "write",
     ("B", "Handing work orders over"): "hand",
-    ("B", "Where a light builder fits"): "build", ("B", "When to switch builders"): "build",
+    ("B", "What the builder is given"): "build", ("B", "When to switch builders"): "build",
     ("F", "Reviewing a work order"): "review", ("B", "After every work order"): "review", ("F", "When the builder stops"): "review",
     ("F", "The end game"): "always", ("F", "Talking to the owner"): "always", ("F", "Tool hygiene (small things that cost time)"): "always",
     ("F", "Your own scorecard"): "always", ("F", "When you write code yourself (the converged case)"): "always",
@@ -1883,13 +1883,12 @@ PLAIN = {
         ("r", "Find the risky parts first, security above all", "these are the planning mistakes that matter most"),
         ("r", "Have the plan read once by a fresh reviewer (`/f-plancheck`) before work order 2", "nobody else checks the foreman's plan"),
         ("r", "Write down what must not change", "the builder can't guess what's off-limits"),
-        ("r", "When testing a builder, hide the notes that give the answers away", "otherwise the test proves nothing"),
     ],
     "f-writing-a-work-order": [
         ("p", "Check every work order against this list before sending it."),
         ("h", "What it says"),
         ("r", 'Say what "done" means, right at the top', "the builder can check itself against it"),
-        ("r", "One outcome per work order. Two outcomes: split it", ""),
+        ("r", "One outcome per task; a work order may carry one or several tasks", ""),
         ("r", "Every decision labelled and final", ""),
         ("r", "Every command written out exactly", ""),
         ("r", "Pin the exact version of the code it starts from", ""),
@@ -1989,13 +1988,13 @@ PLAIN = {
     "b-before-the-job": [
         ("p", "Before work order 1."),
         ("r", "Run a setup check. Nothing starts until it says READY", ""),
-        ("r", "Tell the foreman which builder this is", "so it writes every work order to suit"),
-        ("r", "When testing a builder, keep the answers out of its reach", ""),
+        ("r", "Tell the foreman how the builder is reached", "every builder gets the same kind of work order"),
     ],
     "b-every-work-order": [
         ("p", "What every work order gives the builder."),
-        ("r", "Answers, never questions", "judgment is a light builder's weak spot"),
-        ("r", "One step, one decision", "less to reason about"),
+        ("r", "Answers, never questions", "judgment is a builder's weak spot"),
+        ("r", "One or several tasks, each with its own commit and every check", "each outcome is checked on its own"),
+        ("r", "Scripts are copied from a named template, then checked", ""),
         ("see", "The rest of what it carries: the foreman's work order checklist", "f-writing-a-work-order"),
         ("h", "What it reports"),
         ("r", "One report at the end, then stop", "survives a session that stops halfway"),
@@ -2008,7 +2007,7 @@ PLAIN = {
         ("r", "Every safety check is tested by trying to break it, straight away", ""),
         ("r", "A standard list of six common gaps, checked every time", ""),
         ("r", "The report lists what wasn't tested", ""),
-        ("n", "Aim for about 8 or 9 work orders for a mid-sized ticket. Don't ask a light builder to plan or review more: keep the thinking with the foreman."),
+        ("n", "Aim for about 8 or 9 work orders for a mid-sized ticket. Don't ask the builder to plan or review more: keep the thinking with the foreman."),
         ("h", "Bad inputs to test for"),
         ("r", "A missing field gives a clear error, never a default", ""),
         ("r", "A wrong type gives the same error", ""),
@@ -2031,13 +2030,13 @@ PLAIN = {
         ("r", "It tries to break the new code and puts any problems in the next work order", ""),
     ],
     "b-when-to-switch-builders": [
-        ("p", "Switch to a stronger builder only if a review finds:"),
+        ("p", "Switch builders only if a review finds:"),
         ("r", "A security problem", ""),
         ("r", "A repeat of something the work order warned about", ""),
         ("n", "Everyday test gaps are normal and get fixed in the next work order. Switching costs nothing, because each work order stands alone. When the foreman writes a new setup check, it is asking you to switch."),
     ],
-    "b-where-a-light-builder-fits": [
-        ("p", "What to give a light builder."),
+    "b-what-the-builder-is-given": [
+        ("p", "What to give the builder."),
         ("r", "Good at: settled designs, clear tests, small focused changes", ""),
         ("r", "Watch closely: anything touching logins, credentials or data leaving the service", ""),
         ("r", "Not its job: scoping, planning, choosing between designs", ""),
@@ -2047,8 +2046,8 @@ PLAIN = {
 PLAIN_HASH = {
     "f-job": "09819ffef0",
     "f-before-you-plan": "ac3f147d05",
-    "f-planning": "6e58c46fdf",
-    "f-writing-a-work-order": "9b34f06469",
+    "f-planning": "cc9465b88d",
+    "f-writing-a-work-order": "8f85a49163",
     "f-reviewing-a-work-order": "2d933087ab",
     "f-when-the-builder-stops": "66ea3cb562",
     "f-when-you-write-code-yourself": "25d508d8f5",
@@ -2057,12 +2056,12 @@ PLAIN_HASH = {
     "f-tool-hygiene": "9f36e5fffc",
     "f-your-own-scorecard": "1aac6f628f",
     "b-job": "ffc33f1ee4",
-    "b-before-the-job": "add6c507cc",
-    "b-every-work-order": "2953598084",
+    "b-before-the-job": "c986d78075",
+    "b-every-work-order": "f46749ce0f",
     "b-handing-work-orders-over": "78a50f75cb",
     "b-after-every-work-order": "252dedbb5a",
-    "b-when-to-switch-builders": "158e786ae1",
-    "b-where-a-light-builder-fits": "e2b46bedc2",
+    "b-when-to-switch-builders": "91e3942981",
+    "b-what-the-builder-is-given": "e2b46bedc2",
     "y-job": "3ef2917545",
 }
 
@@ -5269,7 +5268,7 @@ class Site:
             def dn(does, never):
                 return (f'<div class="dn"><div class="do"><h3>Does</h3><ul>{lst(does)}</ul></div>'
                         f'<div class="no"><h3>{never_h}</h3><ul>{lst(never)}</ul></div></div>')
-            return (('<p class="lead">The builder is a cheaper model than the foreman. A light builder is a small one, a strong builder a bigger one.</p>' if role == "builder" else "")
+            return (('<p class="lead">The builder is a cheaper model than the foreman. Every builder gets the same kind of work order.</p>' if role == "builder" else "")
                     + f'<div class="pl">{dn(*PLAIN_ROLES[role])}</div><div class="ex">{dn(*roles[role])}</div>'
                     + (f'<p class="jobnote">{note}</p>' if note else ""))
 

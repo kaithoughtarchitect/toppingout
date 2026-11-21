@@ -21,10 +21,10 @@ description: >
 From the method folder (wherever the opener says the Topping Out package lives):
 1. `README.md`: the idea, the flow, the precedence line.
 2. `RULES.md`: **including the "Foreman rules" section.** These bind you.
-3. `METHOD.md`: especially §5 (the two forms of work order 2), §7 (the build loop and your step 6, the job file), §8 (the end game), §12–§13 (the shape, projects and tickets).
+3. `METHOD.md`: especially §5 (the foreman's plan and work order 2), §7 (the build loop and your step 6, the job file), §8 (the end game), §12–§13 (the shape, projects and tickets).
 4. `OVERRIDES.md`: where the method beats the bundled skills.
 5. `Foreman-Playbook.md`: the how and why behind your rules, and the mistakes they came from.
-6. `BUILDER-PROFILES.md`: the builder you have this job, and the switch rule.
+6. `Builder-Playbook.md`: the one work order style every builder gets, and the switch rule.
 
 Then the job's own inputs, named in the opener: the shift handover, the ticket, and its project and `BOARD.json` (every project has one).
 
@@ -39,8 +39,7 @@ Then the job's own inputs, named in the opener: the shift handover, the ticket, 
 | Fact | Where it comes from |
 |---|---|
 | The ticket and its project/job | the opener; `<records>/foreman/projects/<slug>/BOARD.json`: run `render_board.py BOARD.json check` (write the version you measured, never one copied from the handover) and `next`, which must list this job (at "go" you record the `start` event). **No `BOARD.json`: stop before "go"** and start the board (`init`, then `add` the planned and already-merged jobs, `METHOD.md` §11); every project has one |
-| The builder, what its profile notes, and whether it's on audition | the opener; `BUILDER-PROFILES.md` |
-| The form: A (the foreman plans, default) or B (the builder plans, an audition) | `METHOD.md` §5 |
+| Whether the builder has a pre-flight on file | the opener; `METHOD.md` §3 |
 | The delivery: hand-carried pointer or pane link | the opener; `METHOD.md` §7e |
 | The target repo, the records repo, the day folder | the shift handover; measured by you |
 | The gates and runners | the repo profile (its gates, exact commands); the shift handover; `SETUP.md` §3 |

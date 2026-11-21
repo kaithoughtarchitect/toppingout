@@ -13,7 +13,7 @@ J<N>: ticket <KEY>, <goal>. Why this ticket: `<next-ticket decision file>` (proj
 The last thing done (e.g. job <N-1> merged as PR #<n>, `<merge sha>`, closed and archived), and any ask in flight.
 
 ## Verbal decisions
-Choices the owner ratified in conversation, including accepted deviations and rejected options with why (e.g. the builder chosen, whether it's on audition, rulings on inspections).
+Choices the owner ratified in conversation, including accepted deviations and rejected options with why (e.g. how the builder is reached, rulings on inspections).
 
 ## Pending approvals
 Everything proposed but NOT yet approved, so the new session never treats it as approved: records push, tracker transitions, branch and worktree deletions (outside the post-merge cleanup the foreman does itself), yes/no items.
@@ -52,4 +52,4 @@ The acts listed in `RULES.md`, plus this ticket's own: files outside scope, defa
 **Last key's mistakes:** <the `KEY-WRONG` items from this job's outside grade, copied from this job's dev report, or none>. Don't repeat them in the new key.
 
 ## How we work
-Mode 1; the builder (strong / light / on audition); the pre-flight; work order 1's scope; both base-vs-head runs; never naming the builder. **The new session writes its readiness answers and all its own files in its own day folder** (the date it starts), and reads the shift handover and answer key from `foreman/handovers/`.
+Mode 1; how the builder is reached (hand-carried pointer or pane link); the pre-flight; work order 1's scope; both base-vs-head runs; never naming the builder. **The new session writes its readiness answers and all its own files in its own day folder** (the date it starts), and reads the shift handover and answer key from `foreman/handovers/`.

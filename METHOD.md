@@ -76,7 +76,7 @@ Topping Out has four roles: the foreman, the builder, the inspectors (the lens a
 
 Template: `templates/WORK-ORDER-1-SETUP.txt`.
 
-**The builder:** cuts the worktree **by name** from `<remote>/<main>` (the profile's remote and main branch, written into the work order); checks HEAD in two separate calls; writes the job file header; checks the gate runners (**who writes them:** for a light builder the foreman writes them from `snippets/` and the builder only verifies them; a strong builder writes them from `snippets/` itself); captures **t0** on every gate, one at a time; answers a few mechanism questions from the code.
+**The builder:** cuts the worktree **by name** from `<remote>/<main>` (the profile's remote and main branch, written into the work order); checks HEAD in two separate calls; writes the job file header; writes the gate runners from the named template in `snippets/` and checks them; captures **t0** on every gate, one at a time; answers a few mechanism questions from the code.
 
 **With a pane link** (§7e) the builder's pane has to start inside the job's worktree, so the order flips: the **foreman** cuts the job worktree first (by name, from `<remote>/<main>`, the same command), starts the builder there, and work order 1 **verifies** the worktree instead of cutting it. The base worktree, if needed, is still the builder's.
 
@@ -86,31 +86,23 @@ Template: `templates/WORK-ORDER-1-SETUP.txt`.
 
 ## 5 · Work order 2: the plan
 
-There are two forms. **The foreman-plans form is the default**; the builder-plans form is only for an audition.
+**The foreman always plans.** It writes its scoping (`templates/SCOPING.md`, forks settled) plus `templates/PLAN.md` (tasks, verification points, the tests each task must fail first). It has its own plan cold-read with **`/f-plancheck`** (seats from other model families; optionally `simplicity-critic` too) before work order 2, because no builder plan exists for gate 1 to catch its mistakes. **Work order 2 is then "plan in force + T1"**: the builder copies the plan into the job file and builds the first task, from `templates/WORK-ORDER.txt`.
 
-**A · The foreman plans (default).** The foreman writes the plan itself: its scoping (`templates/SCOPING.md`, forks settled) plus `templates/PLAN.md` (tasks, verification points, the tests each task must fail first). It has its own plan cold-read with **`/f-plancheck`** (seats from other model families; optionally `simplicity-critic` too) before work order 2, because no builder plan exists for gate 1 to catch its mistakes. **Work order 2 is then "plan in force + T1"**: the builder copies the plan into the job file and builds the first task, from `templates/WORK-ORDER.txt`.
-
-**B · The builder plans (an audition).** The builder writes the plan itself, as plain numbered steps in the job file (`templates/WORK-ORDER-2-PLAN.txt`): requirements verbatim, design, verified citations, a verification-point table, tasks. **Plain steps only**, no planning commands or agents: say so in the work order. The foreman judges it at gate 1 (`templates/GATE1-REVIEW.md`).
-
-**The audition** (form B only). For an untried builder, the foreman writes down the ticket's hard points *before* reading the plan, and keeps them out of every file the builder may open. The builder's plan must find them unaided. See `BUILDER-PROFILES.md`.
+**Why the builder never plans:** on one job a builder's own plan found 2 of 3 hard points and missed the security one (it trusted a user ID taken from the request). Built from the foreman's corrected plan, the same builder produced clean commits (`Builder-Playbook.md`, "The one idea").
 
 ---
 
 ## 6 · Gate 1: the plan review
 
-**Who:** the foreman. **When:** after "go", while work order 1 runs, finished **before** it reads the builder's plan. It first writes its **own scoping** (`templates/SCOPING.md`; the design forks settled, each with evidence and rejects) so it has its own answers before judging. For a light builder this scoping is the most important document in the job: every later work order's `D-` decisions come from it.
-**Produces:** `GATE1-REVIEW.md` (`templates/GATE1-REVIEW.md`): the audition verdict (if any), then numbered findings G1..Gn, each with evidence and a disposition.
-**In form A** there is no builder plan: gate 1 is **`/f-plancheck`** on the foreman's own plan (cold seats from other model families; it writes the `gate: plancheck` line), used under the f-plancheck discipline (§13), with its findings fixed before work order 2 (record the verdict in the job file).
-**Then:** the next work order carries **the plan in force**, meaning the builder's plan with every accepted finding applied. The foreman's decisions go in; the builder's wrong ones go out.
+**Who:** the foreman. **When:** after "go", while work order 1 runs, finished **before** work order 2. It first writes its **own scoping** (`templates/SCOPING.md`; the design forks settled, each with evidence and rejects), then its plan (§5). The scoping is the most important document in the job: every later work order's `D-` decisions come from it.
+**Gate 1 is `/f-plancheck`** on the foreman's own plan (cold seats from other model families; it writes the `gate: plancheck` line), used under the f-plancheck discipline (§13), with its findings fixed before work order 2 (record the verdict in the job file).
+**Then:** work order 2 carries **the plan in force**, meaning the foreman's plan with every accepted finding applied.
 
 ---
 
-## 7 · The build loop: one task per work order
+## 7 · The build loop: one or several tasks per work order
 
-**How big a work order is follows the builder's strength** (record it in the job file at work order 1):
-- **Light builder (the default): one task per work order**, from `templates/WORK-ORDER.txt`.
-- **Strong builder:** one work order may carry several tasks, still with one commit per task and every check per task.
-Either way the foreman reviews every commit before gate 2, and keeps the job file current (below).
+**A work order may carry one or several tasks**, from `templates/WORK-ORDER.txt`, the same for every builder: each task is one independently checkable outcome with the `D-` decisions it needs, its own commit and every check. The foreman reviews every commit before gate 2, and keeps the job file current (below).
 
 Each work order (`templates/WORK-ORDER.txt`):
 1. opens with a **state check** pinning the worktree, branch and **exact HEAD SHA** (count and last subject as diagnostics), so it survives a stopped or compacted builder and a pipelined draft can't run on the wrong tree;
@@ -131,13 +123,13 @@ Each work order (`templates/WORK-ORDER.txt`):
 
 **Work order numbering:** work orders are numbered in order (1, 2, 3...). A correction to work order *m*'s own task, whether because it stopped or because its review found a gap in it, is `<m>b` (e.g. 8b, 12b), not a new number. New work gets the next number.
 
-**Work order 2:** in form A (default) it's an ordinary `WORK-ORDER.txt` whose PART A copies the plan in force into the job file; in form B the builder plans from `templates/WORK-ORDER-2-PLAN.txt`.
+**Work order 2:** an ordinary `WORK-ORDER.txt` whose PART A copies the plan in force into the job file.
 
 **Mutation probes:** for each guard, a probe removes it and runs the tests. Only **BITES** (tests go red) passes. **A probe bites when its named test fails for any reason**, an assertion or an exception, so the harness reports the first error line, never only an assertion's tag (a test that raises under the mutation is a bite, not a wrong result). **Before sending a work order, the foreman checks every probe anchor still matches exactly once** in the tree as it will be after that work order's edits (an anchor broken by an edit makes a probe silently test nothing). **GREEN** (tests still pass without the guard) is a finding: the test doesn't test the guard. **Every work order carries the stop rule** (`templates/WORK-ORDER.txt` rule 7): on GREEN, the builder reports and STOPS, and never re-aims. Two builders in two jobs "fixed" a GREEN by re-aiming the probe, and both times it hid a missing test (in one, a well-shaped forged value was refused only by the guard, and no test covered it).
 
 ### 7b · The work order as it matured
 
-Eight refinements that made a light builder reliable, plus four added later to cut the repair work orders (9–12). `templates/WORK-ORDER.txt` carries all of them.
+Eight refinements that made the builder reliable, plus four added later to cut the repair work orders (9–12). `templates/WORK-ORDER.txt` carries all of them.
 
 | # | Refinement | What it looks like |
 |---|---|---|
@@ -307,7 +299,7 @@ Under a goal (an autonomous run, a night shift) the foreman tops out on its own 
 | Need | In Topping Out |
 |---|---|
 | Exploration | the site walk (§2) and the foreman's scoping (§6) |
-| Requirements, design, tasks | **the foreman**, in `SCOPING.md` + `PLAN.md` (or, for an audition, the builder by plain steps) |
+| Requirements, design, tasks | **the foreman**, in `SCOPING.md` + `PLAN.md` |
 | Checking a plan | **`f-plancheck`**: a cold read from other model families, of the blueprint before `/f-schedule` (§13) and each job's `PLAN.md` at gate 1 (§6). `plan-validator` is only its checklist; never call it directly |
 | Over-engineering check | `simplicity-critic` (optional), on the foreman's plan or a large project cut |
 | Surveys, blueprints, status | `f-survey`, `f-blueprint`, `f-status` |
@@ -321,7 +313,7 @@ Under a goal (an autonomous run, a night shift) the foreman tops out on its own 
 | Closing a job | `f-signoff`: the acceptance ledger, no deferrals, the job header and the board close built in (§10) |
 | Continuing in a new session | `handoff-builder` (§1) |
 
-**Why this shape:** a light builder can't be trusted with design (an audition showed it), and every phase gate is one more place for it to guess. Moving all judgment to one session, and handing the builder only settled decisions and mechanical checks, is what let a cheap builder ship production code.
+**Why this shape:** a builder can't be trusted with design (a builder's own plan once missed the security hard point, §5), and every phase gate is one more place for it to guess. Moving all judgment to one session, and handing the builder only settled decisions and mechanical checks, is what let a cheap builder ship production code.
 
 **Where the builder is a separate harness** (e.g. a Pi session): it can't spawn Claude Code's `.claude/agents` agents. Don't ask it to use them: the work order is the whole instruction. The agents run on the foreman's side. A Claude Code builder could run them, and the rule is the same: the work order never asks it to.
 

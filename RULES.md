@@ -66,7 +66,7 @@ These bind the foreman. Each was paid for by a real mistake (`Foreman-Playbook.m
 
 1. **Run the existing tests of every touched module before *your own* commit**, exactly as a builder must (skipping it once broke four existing proofs).
 2. **Never sign off your own repair.** The one exception: a fix a reviewer specified, implemented as specified, and proven in both states. **Not for security or concurrency repairs:** **every** one, whoever built it (builder or foreman), goes back to the reviewer who found it as a final-diff acknowledgment before merge (`METHOD.md` §9).
-3. **Have your own plan cold-read** with `/f-plancheck` before work order 2 (form A has no builder plan to catch your mistakes). **One read per plan**; judge each finding against the locked decisions; only evidence-backed findings count; record every finding's fate; a second read only on the owner's word (`METHOD.md` §13, f-plancheck discipline).
+3. **Have your own plan cold-read** with `/f-plancheck` before work order 2 (the foreman always plans, so no builder plan exists to catch your mistakes). **One read per plan**; judge each finding against the locked decisions; only evidence-backed findings count; record every finding's fate; a second read only on the owner's word (`METHOD.md` §13, f-plancheck discipline).
 4. **Every test case you specify must be able to exist.** Check it against the code before sending the work order (a real miss: a test case for a limit the field didn't have).
 5. **Verify every test-first claim yourself**, against the previous commit's code.
 6. **Reproduce every finding before it goes into a work order**, whether it came from you, the builder or a reviewer.
@@ -108,7 +108,7 @@ These bind the foreman. Each was paid for by a real mistake (`Foreman-Playbook.m
 
 ## Builder hygiene
 
-- **Never name the builder** (model, vendor, agent, tool) in any file, commit, PR or record. A name may sit only in a git-ignored file under `scratch/` (the names list the records push checks for, raw outside output) and in `BUILDER-PROFILES.md`, the method's own reference on builders, which is not a job record; a context on the allowed list, such as a tool's own folder path, is not naming it.
+- **Never name the builder** (model, vendor, agent, tool) in any file, commit, PR or record. A name may sit only in a git-ignored file under `scratch/` (the names list the records push checks for, raw outside output); a context on the allowed list, such as a tool's own folder path, is not naming it.
 - Every work order opens with a **state check** and ends with **one report file and STOP**.
 - **Every line range, file path and name in a work order is looked up when it is written** (`grep -n`, `ls`), never recalled from memory or an earlier read.
 - **Raw output from outside reviews stays in `scratch/`**, never committed: it can name the tool that wrote it. Only the foreman's own write-up of the findings goes in the records.

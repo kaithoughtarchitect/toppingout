@@ -61,7 +61,7 @@ your-repo/
 │   ├── cross-review-dispatch.mjs  sends the independent review to another AI company's session   install
 │   └── speak.ts, speak-setup.ts, bootstrap-env.ts   the voice add-on (optional)   install
 ├── foreman/                       everything the method owns
-│   ├── method/                    the method itself: METHOD.md, RULES.md, the two playbooks, BUILDER-PROFILES.md, templates/ (every document the method writes)   install
+│   ├── method/                    the method itself: METHOD.md, RULES.md, the two playbooks, templates/ (every document the method writes)   install
 │   ├── REPO-PROFILE-<product>.md  your gates, shell, test adapter, remotes      you, at setup
 │   ├── test-adapter.sh            how this repo's tests are run and read        you, at setup
 │   ├── ideas/                     IDEA-<date>_<slug>.md                        /f-sketch
@@ -243,7 +243,7 @@ tailscale serve --bg --https=4111 http://127.0.0.1:4111
 | Part | Needed | Notes |
 |---|---|---|
 | A foreman: a coding agent that runs skills (Claude Code tested) | required | |
-| A builder: any coding agent that can read a file, run a shell and write a report | required | `BUILDER-PROFILES.md` |
+| A builder: any coding agent that can read a file, run a shell and write a report | required | `Builder-Playbook.md` |
 | `git`, Node 18+, Python 3.9+, Bash | required | `/f-setup` checks each |
 | Pi and Orca (the workspace) | required | Pi runs the plan check's OpenRouter readers and `agent-council`, and is the default builder; a Claude Code builder (any Claude model, `orca-pi-connect`) can build instead. The pane link (`skills/orca-pi-connect`, §4): the foreman sends each work order to the builder beside it; autonomous runs, the night shift and the cloud setup run through it. Without them you carry one-line pointers by hand, which `/f-setup` warns about |
 | Greptile | required | the review rounds on every PR (`skills/f-greploop`): the Greptile app installed on the repo. `/f-setup` warns if it isn't |

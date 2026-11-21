@@ -1,6 +1,6 @@
 # J<N> plan: <KEY>, <goal>
 
-**By:** the foreman, <date> (form A, the foreman plans: `METHOD.md` §5). **Built on:** `<scoping file>` (forks F1–F<n> settled). **Cold-read by:** `/f-plancheck` on <date> (`gate: plancheck` line below; seats <families>), findings applied or answered: <list or "none">.
+**By:** the foreman, <date> (the foreman always plans: `METHOD.md` §5). **Built on:** `<scoping file>` (forks F1–F<n> settled). **Cold-read by:** `/f-plancheck` on <date> (`gate: plancheck` line below; seats <families>), findings applied or answered: <list or "none">.
 The builder receives this as **the plan in force** in work order 2 and copies it into the job file's Phases 1–4.
 
 ## 1 · Requirements
@@ -16,7 +16,7 @@ Components (new modules, classes, signatures), data flow for each path, error ha
 |---|---|---|---|---|
 | T1 | | D-… | | |
 
-One task = one work order (light builder). Repairs from a review go in PART A of the next work order, or a `<m>b` correction.
+A work order may carry one or several tasks, one commit and every check per task (`METHOD.md` §7). Repairs from a review go in PART A of the next work order, or a `<m>b` correction.
 
 ## 4 · Verification points
 The table `/f-signoff` and the acceptance ledger read (columns exactly):

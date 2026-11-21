@@ -1,9 +1,7 @@
 # J<N> scoping: <KEY>, <goal>
 
 **By:** the foreman, <date>. **Measured at:** worktree `<name>`, HEAD `<sha>`. **Status:** F1–F<n> SETTLED below, rejects recorded.
-⚠️ If the builder is on audition: **not a builder input before gate 1.** Its plan is judged against §4 without having seen this file; after gate 1, these decisions go into the next work order.
-
-Written BEFORE reading the builder's plan, so the foreman has its own answers when it judges one.
+Written before the plan (`templates/PLAN.md`): every `D-` decision in the work orders comes from §4.
 
 ## 0 · What was read
 Every file read, with line ranges: the ticket (live transcript), the code this ticket extends, the contracts it crosses, the precedent tests it will copy. Mark any reference implementation as "not an implementation".
@@ -21,7 +19,8 @@ Rejected names, and why (one noun per concept).
 | # | Requirement (verbatim, original language) | State at `<sha>`: HELD / PARTIALLY HELD / ABSENT | Evidence (file:line) |
 |---|---|---|---|
 
-## 2 · The hard points (the audition's a/b/c, if used), in your own terms, with evidence
+## 2 · The hard points, in your own terms, with evidence
+The places where a wrong plan would ship a real defect (security-class first: credentials, the verified user, data leaving the service). The plan must answer each one before `/f-plancheck` cold-reads it (`Foreman-Playbook.md`, "Find the hard points first").
 
 ## 3 · The forks
 For each F<i>: the question, and what each option would require, with file:line.

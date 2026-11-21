@@ -38,7 +38,7 @@ The repo profile's "Builder delivery" row says which harness the pane runs: `pan
 - **§3 model check:** the pane's banner names the model under the version line (`Haiku 5.5 · …`); it must be the one `--check` printed.
 - **§5 session file:** `ls -l ~/.claude/projects/*/"$SID".jsonl`.
 - **§6 step 7:** close the pane the same way; `/exit` alone leaves an empty shell.
-- **Usage:** a Claude builder draws on the owner's Claude plan, the same limit as a Claude foreman. Its first job is an audition (`BUILDER-PROFILES.md`).
+- **Usage:** a Claude builder draws on the owner's Claude plan, the same limit as a Claude foreman. Before its first job it runs a new pre-flight (`METHOD.md` §3, `Builder-Playbook.md` "Before the job").
 - **What it loads:** the worktree's own `CLAUDE.md`, `.claude/settings.json`, skills and agents, and the owner's user settings. The work order is still the whole instruction (`METHOD.md` §12): it never asks the builder to run a Topping Out skill or agent.
 
 ## An Antigravity builder (agy, any model it lists)
@@ -55,7 +55,7 @@ The repo profile's "Builder delivery" row says which harness the pane runs: `pan
 - **§4 tool loop:** on Windows agy runs commands in PowerShell, so it may wrap `bash -c` or print `$env:ORCA_TERMINAL_HANDLE`; separate tool calls and the right handle are what count.
 - **§5 session file:** `ls -l ~/.gemini/antigravity-cli/brain/<conv>/.system_generated/logs/transcript_full.jsonl`.
 - **§6 step 7:** close the pane the same way.
-- **Usage:** an agy builder draws on the owner's Google plan (or `GEMINI_API_KEY`), whichever agy is signed in with. Its first job is an audition (`BUILDER-PROFILES.md`).
+- **Usage:** an agy builder draws on the owner's Google plan (or `GEMINI_API_KEY`), whichever agy is signed in with. Before its first job it runs a new pre-flight (`METHOD.md` §3, `Builder-Playbook.md` "Before the job").
 - **What it loads:** agy's own settings, rules and MCP servers (`~/.gemini/config/mcp_config.json`), not the repo's `.claude/` skills or `.mcp.json`: work orders name reference files by path, as for Pi.
 
 ## The wake signal
