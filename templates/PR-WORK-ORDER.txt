@@ -26,7 +26,7 @@ A.1  node "<skills>/f-signoff/names-check.mjs" --names "<names file>" [--allow "
      (must print nothing; if it prints anything, STOP)
 A.2  git -C "$WT" push <remote> <branch>        (never --force)
 A.3  git -C "$WT" ls-remote <remote> refs/heads/<branch>   -> must equal <final head sha>
-A.4  Open the PR on <host> from <branch> to <main>, title "<KEY> <title>",
+A.4  Open the PR on <host> from <branch> to <main>, title "J<N> · board <id>: <what it delivers>" (the PR body's first heading, exactly),
      body = the file above, exactly: <host CLI or API command>
 A.5  Paste the PR number and URL.
 

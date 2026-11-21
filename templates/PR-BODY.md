@@ -1,4 +1,6 @@
-# <KEY> <title>
+# J<N> · board <id>: <what it delivers, in plain words>
+
+> **The PR title is this heading, exactly** (`METHOD.md` §10 step 1): `J<N> · board <id>: <what it delivers>`, e.g. `J82 · board 12: tenancy wrappers for LangGraph (TenantSaver, TenantStore)`. A PR outside any job (no job file, no records): `Owner: <what it changes>`.
 
 **Scan the finished body for builder names before opening the PR.**
 
