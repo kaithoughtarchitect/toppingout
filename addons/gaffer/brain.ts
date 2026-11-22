@@ -4,6 +4,7 @@
 // - Server-generated verbatim read-back of staged target + sanitized message
 // - Live target re-verification right before delivery
 import { gafferEnv } from "./env.js";
+import { forSpeech } from "./speech.js";
 import {
   OrcaClient,
   SessionDetails,
@@ -265,6 +266,71 @@ export function parseStandbyIntent(transcript: string): boolean {
   return EXPLICIT_STANDBY_PHRASES.has(cleaned) || LEADING_STANDBY_RE.test(cleaned);
 }
 
+const STRICT_CUT_RESUME_PHRASES = new Set([
+  "finish that",
+  "finish reading",
+  "finish what you were saying",
+  "read the rest",
+  "what got cut off",
+  "finish it",
+]);
+
+const CONTEXTUAL_RESUME_PHRASES = new Set([
+  "continue",
+  "keep going",
+  "go on",
+  "the rest",
+  "what did i miss",
+]);
+
+export function parseResumeIntent(
+  transcript: string,
+  opts: { hasCutSpeech?: boolean } = {}
+): boolean {
+  const cleaned = transcript
+    .trim()
+    .toLowerCase()
+    .replace(WAKE_PREFIX_RE, "")
+    .replace(/[.,!?¡¿"']+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return false;
+  if (STRICT_CUT_RESUME_PHRASES.has(cleaned)) return true;
+  if (opts.hasCutSpeech !== false && CONTEXTUAL_RESUME_PHRASES.has(cleaned)) return true;
+  return false;
+}
+
+/**
+ * Given the full spoken text and the approximate fraction played before interruption (0..1),
+ * return only the unheard sentences (biased slightly earlier so nothing is lost to audio buffering).
+ */
+export function computeUnheardTail(fullText: string, playedRatio: number): string {
+  const clean = fullText.trim();
+  if (!clean) return "";
+  const ratio = Number.isFinite(playedRatio) ? Math.max(0, Math.min(1, playedRatio)) : 0;
+  if (ratio >= 0.92) return "";
+  const sentences = (clean.match(/[^.!?]+(?:[.!?]+|$)/g) || [clean])
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (sentences.length <= 1 || ratio <= 0.12) return clean;
+
+  const targetChar = Math.floor(clean.length * ratio);
+  let acc = 0;
+  let startIdx = 0;
+  for (let i = 0; i < sentences.length; i++) {
+    const len = sentences[i].length + 1;
+    if (acc + len > targetChar) {
+      const progressInSentence = (targetChar - acc) / len;
+      startIdx = progressInSentence < 0.35 && i > 0 ? i - 1 : i;
+      break;
+    }
+    acc += len;
+    startIdx = i + 1;
+  }
+  if (startIdx >= sentences.length) return "";
+  return sentences.slice(startIdx).join(" ").trim();
+}
+
 function describeRuntimeStack(): { stt: string; brain: string; tts: string } {
   const openrouterKey = process.env.OPENROUTER_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
@@ -402,15 +468,7 @@ const TOOLS = [
 ];
 
 export function stripMarkdownForSpeech(text: string): string {
-  return text
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/\*([^*]+)\*/g, "$1")
-    .replace(/^#+\s+/gm, "")
-    .replace(/^[-*•]\s+/gm, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return forSpeech(text);
 }
 
 export function createDefaultLlmClient(): LlmClient {
@@ -484,6 +542,7 @@ export class VoiceBrain {
   private activeSessionTitle: string | null = null;
   private pendingConfirmation: PendingConfirmation | null = null;
   private followUpUntil = 0;
+  private lastCutSpeech: { text: string; remainder: string; sessionTitle: string | null; at: number } | null = null;
   private replyStyle: ReplyStyle =
     gafferEnv("STYLE") === "speak" ? "speak" : "brief";
 
@@ -522,6 +581,30 @@ export class VoiceBrain {
     const prev = this.pendingConfirmation;
     this.pendingConfirmation = null;
     return prev;
+  }
+
+  recordInterruptedSpeech(fullText: string, playedRatio: number, sessionTitle?: string | null): boolean {
+    const remainder = computeUnheardTail(fullText, playedRatio);
+    if (!remainder) {
+      this.lastCutSpeech = null;
+      return false;
+    }
+    this.lastCutSpeech = {
+      text: fullText.trim(),
+      remainder,
+      sessionTitle: sessionTitle ?? null,
+      at: this.nowFn(),
+    };
+    return true;
+  }
+
+  hasCutSpeech(): boolean {
+    if (!this.lastCutSpeech) return false;
+    if (this.nowFn() - this.lastCutSpeech.at > 5 * 60_000) {
+      this.lastCutSpeech = null;
+      return false;
+    }
+    return true;
   }
 
   private pruneExpiredPending(): boolean {
@@ -581,9 +664,9 @@ export class VoiceBrain {
     }
 
     if (now < this.followUpUntil) {
-      // Allow explicit standby commands ("standby", "over") as 1 word; otherwise require 2+ words
-      // in the 60s follow-up window so stray backchannels never trigger LLM calls or extend the window.
-      if (parseStandbyIntent(text)) {
+      // Allow explicit standby ("standby", "over") and cut-speech resume ("continue") as 1 word;
+      // otherwise require 2+ words in the 60s follow-up window so stray backchannels never call the LLM.
+      if (parseStandbyIntent(text) || (this.hasCutSpeech() && parseResumeIntent(text))) {
         return { accept: true, cleaned: text };
       }
       const words = text
@@ -806,6 +889,25 @@ export class VoiceBrain {
         activeSessionTitle: this.activeSessionTitle,
         pendingConfirmation: null,
         followUpActive: false,
+      };
+    } else if (parseResumeIntent(gate.cleaned, { hasCutSpeech: this.hasCutSpeech() })) {
+      const cut = this.hasCutSpeech() ? this.lastCutSpeech : null;
+      this.lastCutSpeech = null;
+      const reply = cut
+        ? cut.remainder === cut.text
+          ? cut.remainder
+          : `Here is the rest: ${cut.remainder}`
+        : "Nothing was cut off just now.";
+      this.history.push({ role: "user", content: gate.cleaned }, { role: "assistant", content: reply });
+      this.trimHistory();
+      this.followUpUntil = this.nowFn() + FOLLOWUP_WINDOW_MS;
+      return {
+        ignored: false,
+        replyText: reply,
+        activeSessionId: this.activeSessionId,
+        activeSessionTitle: this.activeSessionTitle,
+        pendingConfirmation: null,
+        followUpActive: true,
       };
     }
 

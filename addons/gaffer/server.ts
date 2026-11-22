@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { OrcaClient } from "./orca.js";
 import { ListenMode, VoiceBrain } from "./brain.js";
 import { SessionWatcher, WatchAlert } from "./watcher.js";
-import { playMp3Locally, synthesizeGrokSpeech, transcribeAudio } from "./speech.js";
+import { playMp3Locally, spokenFailureMessage, synthesizeGrokSpeech, transcribeAudio } from "./speech.js";
 import { classifyTopology } from "./toppingout.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -57,6 +57,7 @@ export interface ServerDeps {
   auth?: AuthConfig;
   port?: number;
   host?: string;
+  nowFn?: () => number;
 }
 
 class HttpError extends Error {
@@ -246,6 +247,11 @@ export function createVoiceServer(deps: ServerDeps = {}) {
   const audioUnlockedClients = new Set<ServerResponse>();
   const audioCache = new Map<string, Buffer>();
   const audioOrder: string[] = [];
+  const nowFn = deps.nowFn ?? (() => Date.now());
+  const SSE_REPLAY_MAX = 25;
+  const SSE_REPLAY_MAX_AGE_MS = 90_000;
+  let sseEventSeq = 0;
+  const sseReplayBuffer: Array<{ id: number; event: string; data: Record<string, unknown>; timestamp: number }> = [];
   // Local Windows playback is opt-in (GAFFER_LOCAL_AUDIO=1) so closing the browser
   // pauses all paid alert LLM + TTS calls automatically ($0 idle spend).
   const pcAudioFallback = deps.localAudioFallback ?? gafferEnv("LOCAL_AUDIO") === "1";
@@ -270,8 +276,20 @@ export function createVoiceServer(deps: ServerDeps = {}) {
     return `/api/audio/${encodeURIComponent(id)}`;
   }
 
-  function broadcastSse(event: string, data: unknown): void {
-    const frame = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  function broadcastSse(event: string, data: unknown): number {
+    const id = ++sseEventSeq;
+    const frame = `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    if (event === "alert" && data && typeof data === "object") {
+      sseReplayBuffer.push({
+        id,
+        event,
+        data: data as Record<string, unknown>,
+        timestamp: nowFn(),
+      });
+      while (sseReplayBuffer.length > SSE_REPLAY_MAX) {
+        sseReplayBuffer.shift();
+      }
+    }
     for (const client of sseClients) {
       try {
         client.write(frame);
@@ -280,6 +298,7 @@ export function createVoiceServer(deps: ServerDeps = {}) {
         audioUnlockedClients.delete(client);
       }
     }
+    return id;
   }
 
   async function emitSpokenAlert(
@@ -301,11 +320,18 @@ export function createVoiceServer(deps: ServerDeps = {}) {
     );
 
     console.log(`🔔 [ALERT] (${alert.sessionTitle}) ${alert.spokenText}`);
+    const baseState = brain.getState();
     broadcastSse("alert", {
       ...alert,
       audioUrl,
       playedLocally,
-      state: brain.getState(),
+      state: {
+        ...baseState,
+        activeSessionId: alert.sessionId,
+        activeSessionTitle: alert.sessionTitle,
+        pendingConfirmation: null,
+        followUpActive: true,
+      },
     });
 
     if (playedLocally && mp3) {
@@ -409,21 +435,50 @@ export function createVoiceServer(deps: ServerDeps = {}) {
 
       if (req.method === "GET" && pathname === "/events") {
         const audioReady = url.searchParams.get("audio") === "1";
+        const lastIdRaw = String(req.headers["last-event-id"] || url.searchParams.get("lastEventId") || "").trim();
+        const rawLastEventId = /^\d+$/.test(lastIdRaw) ? Number(lastIdRaw) : 0;
+        const serverRestarted = rawLastEventId > sseEventSeq;
+        const lastEventId = serverRestarted ? 0 : rawLastEventId;
         res.writeHead(200, {
           "Content-Type": "text/event-stream; charset=utf-8",
           "Cache-Control": "no-cache, no-transform",
           Connection: "keep-alive",
           "X-Accel-Buffering": "no",
         });
+        // Fresh client (rawLastEventId === 0): stamp id: sseEventSeq so cursor starts at head.
+        // Server restart (rawLastEventId > sseEventSeq): reset cursor to id: 0 (cursorReset: true)
+        // and replay any fresh (<90s) alerts emitted since restart.
+        // Normal reconnect (0 < lastEventId <= sseEventSeq): omit id on connected so cursor only
+        // advances as each replayed alert actually arrives.
+        const connectedIdLine = serverRestarted
+          ? "id: 0\n"
+          : rawLastEventId === 0
+            ? `id: ${sseEventSeq}\n`
+            : "";
         res.write(
-          `event: connected\ndata: ${JSON.stringify({
+          `${connectedIdLine}event: connected\ndata: ${JSON.stringify({
             ok: true,
+            lastEventId: serverRestarted ? 0 : lastEventId > 0 ? lastEventId : sseEventSeq,
+            cursorReset: serverRestarted,
             state: brain.getState(),
             watchEnabled: watcher.isEnabled(),
             managedBuilderAlerts: watcher.isManagedBuilderAlertsEnabled(),
             voice: (process.env.SPEAK_GROK_VOICE || "leo").trim().toLowerCase(),
           })}\n\n`
         );
+        if (lastEventId > 0 || serverRestarted) {
+          const cutoff = nowFn() - SSE_REPLAY_MAX_AGE_MS;
+          for (const item of sseReplayBuffer) {
+            if (item.id > lastEventId && item.timestamp >= cutoff) {
+              res.write(
+                `id: ${item.id}\nevent: ${item.event}\ndata: ${JSON.stringify({
+                  ...item.data,
+                  replayed: true,
+                })}\n\n`
+              );
+            }
+          }
+        }
         sseClients.add(res);
         if (audioReady) audioUnlockedClients.add(res);
 
@@ -527,6 +582,22 @@ export function createVoiceServer(deps: ServerDeps = {}) {
         const replyStyle = brain.getReplyStyle();
         broadcastSse("style", { style: replyStyle });
         sendJson(res, 200, { ok: true, replyStyle });
+        return;
+      }
+
+      if (req.method === "POST" && pathname === "/api/playback-cut") {
+        const raw = await readBody(req, 64 * 1024);
+        const parsed = parseJsonBody<{ text?: string; playedRatio?: number; sessionTitle?: string }>(raw);
+        const hasRemainder = await serialize(async () =>
+          typeof parsed.text === "string" && parsed.text.trim().length > 0
+            ? brain.recordInterruptedSpeech(
+                parsed.text,
+                typeof parsed.playedRatio === "number" ? parsed.playedRatio : 0,
+                parsed.sessionTitle ?? null
+              )
+            : false
+        );
+        sendJson(res, 200, { ok: true, hasRemainder });
         return;
       }
 
@@ -662,7 +733,7 @@ export function createVoiceServer(deps: ServerDeps = {}) {
       const status = err instanceof HttpError ? err.status : 500;
       const msg = err instanceof Error ? err.message : String(err);
       if (status >= 500) console.error(`[gaffer] HTTP error: ${msg}`);
-      sendJson(res, status, { ok: false, error: msg });
+      sendJson(res, status, { ok: false, error: msg, spokenError: spokenFailureMessage(err) });
     }
   });
 

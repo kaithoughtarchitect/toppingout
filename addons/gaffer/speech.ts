@@ -124,6 +124,85 @@ export function normalizeTranscript(raw: string): string {
     );
 }
 
+const URL_RE = /(?:https?:\/\/|www\.)\S*[^\s.,;:!?)\]]/gi;
+const UUID_RE = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
+// Internal prefixed ids: colon/underscore ids (task:3f9a1b2c, sess_a1b2c3d4, alert_1700000_ab12) or
+// known internal prefixes with a hyphenated mixed letter+digit token (sess-a1b2c3d4).
+// Preserves hyphenated branch/session names like fix-login-2fa, work-order-12, toppingout-release-2026.
+const PREFIXED_ID_RE =
+  /\b(?:[a-z][a-z0-9]*[_:](?=[A-Za-z0-9_]*\d)[A-Za-z0-9_]{6,}|(?:sess|task|orca|call|live|req|alert|term|inc)-(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[a-zA-Z])[A-Za-z0-9]{6,})\b/g;
+// Git commit SHAs (7-40 lowercase hex chars containing at least one digit AND one a-f letter).
+// Preserves pure numbers (120000000000 tokens, phone numbers) and plain words (decade, defaced).
+const COMMIT_SHA_RE = /\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b/g;
+
+/**
+ * Clean prose for headphone TTS: strip markdown, code fences, URLs, UUIDs, commit SHAs,
+ * and internal prefixed IDs. Never run this on verbatim confirmation read-backs.
+ */
+export function forSpeech(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/`([^`\n]*)`/g, "$1")
+    .replace(URL_RE, " ")
+    .replace(UUID_RE, " ")
+    .replace(PREFIXED_ID_RE, " ")
+    .replace(COMMIT_SHA_RE, " ")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/~~([^~]+)~~/g, "$1")
+    .replace(/(?<![\w*])\*(?!\s)([^*]+)(?<!\s)\*(?![\w*])/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/^\s*[-*+•]\s+/gm, "")
+    .replace(/[→←↔⇒⇐•|#*]/g, " ")
+    .replace(/\(\s*\)/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .trim();
+}
+
+export type SpokenFailureCode =
+  | "orca_unreachable"
+  | "stt_failed"
+  | "llm_failed"
+  | "tts_failed"
+  | "timeout"
+  | "send_refused"
+  | "unknown";
+
+const SPOKEN_FAILURES: Record<SpokenFailureCode, string> = {
+  orca_unreachable: "I couldn't reach Orca just now. Check that Orca is running and ask again.",
+  stt_failed: "I couldn't transcribe that clip. Try saying it again.",
+  llm_failed: "The model didn't answer just now. Try asking again in a moment.",
+  tts_failed: "Voice synthesis failed just now. Check the log or try again.",
+  timeout: "That took too long and timed out. Try asking again.",
+  send_refused: "Orca refused that send. Nothing was typed.",
+  unknown: "Something went wrong on that turn. Try asking again.",
+};
+
+export function classifyFailure(err: unknown): SpokenFailureCode {
+  if (typeof err === "string" && err in SPOKEN_FAILURES) {
+    return err as SpokenFailureCode;
+  }
+  const msg = (err instanceof Error ? err.message : String(err || "")).toLowerCase();
+  const name = err instanceof Error ? err.name.toLowerCase() : "";
+  if (name === "timeouterror" || name === "aborterror" || msg.includes("timed out") || msg.includes("timeout")) {
+    return "timeout";
+  }
+  if (msg.includes("stt failed") || msg.includes("transcrib")) return "stt_failed";
+  if (msg.includes("tts") || msg.includes("empty speech")) return "tts_failed";
+  if (msg.includes("llm request failed") || msg.includes("openrouter")) return "llm_failed";
+  if (msg.includes("refused")) return "send_refused";
+  if (msg.includes("orca")) return "orca_unreachable";
+  return "unknown";
+}
+
+export function spokenFailureMessage(codeOrErr: SpokenFailureCode | unknown): string {
+  return SPOKEN_FAILURES[classifyFailure(codeOrErr)];
+}
+
 async function transcribeViaOpenRouter(
   audioBuffer: Buffer,
   mimeType: string,

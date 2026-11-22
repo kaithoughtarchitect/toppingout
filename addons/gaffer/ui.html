@@ -1220,7 +1220,10 @@
     let deferredAlertQueue = [];
     let queuedVoiceBlob = null;
     let playbackResolve = null;
+    let currentPlayingItem = null;
     let blockedAudioSrc = null;
+    let lastSseEventId = 0;
+    const seenAlertIds = new Set();
     let tabSuperseded = false;
     let bargeInEnabled = localStorage.getItem("orcaVoiceBargeIn") !== "0";
     function renderBargeInBtn() {
@@ -1579,7 +1582,27 @@
       }
     }
 
+    function reportCutPlayback(item) {
+      if (!item || !item.text) return;
+      const dur = Number(speechPlayer.duration);
+      const cur = Number(speechPlayer.currentTime);
+      if (!Number.isFinite(dur) || dur <= 0 || cur >= dur - 0.5) return;
+      const playedRatio = Math.max(0, Math.min(1, cur / dur));
+      void fetchWithTimeout("/api/playback-cut", {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          text: item.text,
+          playedRatio,
+          sessionTitle: item.sessionTitle || null,
+        }),
+      }, 6000).catch(() => {});
+    }
+
     function stopPlayback(opts = {}) {
+      const cutItem = currentPlayingItem;
+      currentPlayingItem = null;
+      if (cutItem && !opts.silent) reportCutPlayback(cutItem);
       playbackQueue = [];
       speechPlayer.onended = null;
       speechPlayer.onerror = null;
@@ -1594,13 +1617,19 @@
         muteUntil = 0;
       } else {
         muteUntil = Date.now() + 350;
-        updateOrb("idle", "Playback stopped.");
+        updateOrb(
+          "idle",
+          cutItem?.text ? 'Playback stopped. Say "Gaffer, finish that" for the rest.' : "Playback stopped."
+        );
       }
     }
 
-    async function enqueueAudio(src) {
-      if (!src || tabSuperseded) return;
-      playbackQueue.push(src);
+    async function enqueueAudio(itemOrSrc, meta = {}) {
+      const item = typeof itemOrSrc === "string"
+        ? { src: itemOrSrc, text: meta.text || "", sessionTitle: meta.sessionTitle || null }
+        : itemOrSrc;
+      if (!item || !item.src || tabSuperseded) return;
+      playbackQueue.push(item);
       if (isPlaying) return;
       await drainPlaybackQueue();
     }
@@ -1615,7 +1644,8 @@
     async function drainPlaybackQueue() {
       let wasInterrupted = false;
       while (playbackQueue.length > 0) {
-        const src = playbackQueue.shift();
+        const item = playbackQueue.shift();
+        currentPlayingItem = item;
         isPlaying = true;
         bargeInMs = 0;
         // Never cancelRecording() for an incoming alert or playback start.
@@ -1650,10 +1680,10 @@
             }
           };
           armWatchdog(60000);
-          speechPlayer.src = src;
+          speechPlayer.src = item.src;
           speechPlayer.play().catch((err) => {
             if (err && err.name === "NotAllowedError") {
-              blockedAudioSrc = src;
+              blockedAudioSrc = item;
               muteCard.classList.add("visible");
               statusLine.textContent = "Browser muted audio. Tap Unlock or Connect once.";
             }
@@ -1664,8 +1694,10 @@
           wasInterrupted = true;
           break;
         }
+        currentPlayingItem = null;
       }
       isPlaying = false;
+      currentPlayingItem = null;
       if (!wasInterrupted) {
         muteUntil = Date.now() + (bargeInEnabled ? 450 : 1250);
         if (connected && !isBusy && !isRecording) updateOrb("idle");
@@ -1781,7 +1813,11 @@
           body: blob,
         }, 35000);
         const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "Voice request failed");
+        if (!data.ok) {
+          const e = new Error(data.error || "Voice request failed");
+          e.spokenError = data.spokenError || "";
+          throw e;
+        }
 
         if (data.ignored) {
           updateOrb(
@@ -1801,7 +1837,10 @@
         // Network round-trip is complete; clear isBusy before playback so voice barge-in works on replies too.
         isBusy = false;
         if (data.audioBase64) {
-          await enqueueAudio(`data:audio/mpeg;base64,${data.audioBase64}`);
+          await enqueueAudio(`data:audio/mpeg;base64,${data.audioBase64}`, {
+            text: data.pendingConfirmation ? "" : data.replyText || "",
+            sessionTitle: data.activeSessionTitle || null,
+          });
         } else if (data.ttsError) {
           addLog("alert", "TTS ERROR", data.ttsError);
           speakFallbackError(data.replyText || "Voice playback failed. Please try again.");
@@ -1810,7 +1849,7 @@
         const msg = err.message || String(err);
         addLog("alert", "ERROR", msg);
         updateOrb("idle", `Error: ${msg}`);
-        speakFallbackError("Topping Out Gaffer error. Please try again.");
+        speakFallbackError(err.spokenError || "Something went wrong on that turn. Try asking again.");
       } finally {
         isBusy = false;
         const nextBlob = queuedVoiceBlob;
@@ -1836,13 +1875,20 @@
           body: JSON.stringify({ text, mode: "manual", speak: true }),
         }, 35000);
         const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "Request failed");
+        if (!data.ok) {
+          const e = new Error(data.error || "Request failed");
+          e.spokenError = data.spokenError || "";
+          throw e;
+        }
         if (data.replyText) addLog("orca", "GAFFER", data.replyText);
         updatePending(data.pendingConfirmation, data.followUpActive, data.activeSessionId);
         void loadSessions();
         isBusy = false;
         if (data.audioBase64) {
-          await enqueueAudio(`data:audio/mpeg;base64,${data.audioBase64}`);
+          await enqueueAudio(`data:audio/mpeg;base64,${data.audioBase64}`, {
+            text: data.pendingConfirmation ? "" : data.replyText || "",
+            sessionTitle: data.activeSessionTitle || null,
+          });
         } else if (data.ttsError) {
           addLog("alert", "TTS ERROR", data.ttsError);
           speakFallbackError(data.replyText || "Voice playback failed.");
@@ -1850,7 +1896,7 @@
       } catch (err) {
         const msg = err.message || String(err);
         addLog("alert", "ERROR", msg);
-        speakFallbackError("Topping Out Gaffer request failed.");
+        speakFallbackError(err.spokenError || "Something went wrong on that turn. Try asking again.");
       } finally {
         isBusy = false;
         if (connected && !isPlaying && !isRecording) updateOrb("idle");
@@ -1978,13 +2024,22 @@
           if (!done) { done = true; resolveReady(); }
         };
         const timer = setTimeout(finish, 1500);
-        eventSource = new EventSource(audioUnlocked ? "/events?audio=1" : "/events");
+        const params = new URLSearchParams();
+        if (audioUnlocked) params.set("audio", "1");
+        if (lastSseEventId > 0) params.set("lastEventId", String(lastSseEventId));
+        const qs = params.toString();
+        eventSource = new EventSource(qs ? `/events?${qs}` : "/events");
         eventSource.addEventListener("connected", (ev) => {
           clearTimeout(timer);
           sseDot.className = "live-sq live";
           linkWord.textContent = "LIVE";
           try {
             const d = JSON.parse(ev.data);
+            if (d.cursorReset && typeof d.lastEventId === "number") {
+              lastSseEventId = d.lastEventId;
+            } else if (lastSseEventId === 0 && typeof d.lastEventId === "number" && d.lastEventId > 0) {
+              lastSseEventId = d.lastEventId;
+            }
             if (d.voice && voiceTag) voiceTag.textContent = String(d.voice).toUpperCase();
             if (typeof d.watchEnabled === "boolean") {
               watchEnabled = d.watchEnabled;
@@ -2001,7 +2056,17 @@
         });
         eventSource.addEventListener("alert", (ev) => {
           try {
+            const seq = Number(ev.lastEventId);
+            if (Number.isFinite(seq) && seq > lastSseEventId) lastSseEventId = seq;
             const a = JSON.parse(ev.data);
+            if (a.id && seenAlertIds.has(a.id)) return;
+            if (a.id) {
+              seenAlertIds.add(a.id);
+              if (seenAlertIds.size > 60) {
+                const oldest = seenAlertIds.values().next().value;
+                if (oldest) seenAlertIds.delete(oldest);
+              }
+            }
             addLog("alert", `SITE ALERT · ${a.sessionTitle}`, a.spokenText);
             updatePending(
               a.state?.pendingConfirmation,
@@ -2010,11 +2075,12 @@
             );
             void loadSessions();
             if (a.audioUrl && !a.playedLocally) {
+              const audioItem = { src: a.audioUrl, text: a.spokenText || "", sessionTitle: a.sessionTitle || null };
               // Hold alert audio while user is speaking or a confirmation is staged; play right after.
               if (isRecording || confirmCard.classList.contains("visible")) {
-                deferredAlertQueue.push(a.audioUrl);
+                deferredAlertQueue.push(audioItem);
               } else {
-                void enqueueAudio(a.audioUrl);
+                void enqueueAudio(audioItem);
               }
             }
           } catch (err) {
@@ -2127,7 +2193,7 @@
       connected = false;
       if (vadRaf) { clearInterval(vadRaf); vadRaf = null; }
       cancelRecording();
-      stopPlayback();
+      stopPlayback({ silent: true });
       if (keepAliveAudio) keepAliveAudio.pause();
       if (wakeLock) { try { wakeLock.release(); } catch {} wakeLock = null; }
       if (mediaStream) {
@@ -2145,6 +2211,7 @@
       disconnectBtn.style.display = "none";
       queuedVoiceBlob = null;
       deferredAlertQueue = [];
+      lastSseEventId = 0;
       if (eventSource) {
         eventSource.close();
         eventSource = null;

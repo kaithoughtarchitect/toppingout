@@ -19,9 +19,11 @@ import {
   LlmClient,
   VOICE_SEND_PREFIX,
   VoiceBrain,
+  computeUnheardTail,
   isStandaloneGatedAct,
   parseConfirmationIntent,
   parseRepeatIntent,
+  parseResumeIntent,
   parseStandbyIntent,
 } from "./brain.js";
 import {
@@ -31,8 +33,14 @@ import {
   parseJStatus,
   readActiveJobs,
 } from "./toppingout.js";
-import { isHallucinatedSilence, normalizeTranscript } from "./speech.js";
-import { SessionWatcher, detectTransition } from "./watcher.js";
+import {
+  classifyFailure,
+  forSpeech,
+  isHallucinatedSilence,
+  normalizeTranscript,
+  spokenFailureMessage,
+} from "./speech.js";
+import { SessionWatcher, coalesceHeldAlerts, detectTransition } from "./watcher.js";
 import {
   GAFFER_COOKIE_NAME,
   GAFFER_CSRF_HEADER,
@@ -1517,6 +1525,425 @@ test("15. HTTP server enriches /api/sessions with Topping Out topology and toggl
     }).then((r) => r.json());
     assert.equal(toggleRes.ok, true);
     assert.equal(toggleRes.managedBuilderAlerts, true);
+  } finally {
+    await app.close();
+  }
+});
+
+test("16. forSpeech sanitizer, closed failure phrases, and verbatim confirmation read-back invariant", async () => {
+  const dirty = [
+    "### **Head 1** finished J42 on WO-2 (PR-12).",
+    "Session fix-login-2fa, work-order-12, and toppingout-release-2026 used 120000000000 tokens.",
+    "See [the board](https://example.com/board) or https://internal.local/run/123.",
+    "Commit b1323be and uuid 550e8400-e29b-41d4-a716-446655440000 and task:3f9a1b2c and sess-a1b2c3d4.",
+    "```ts\nconst secret = 1;\n```",
+    "This decade looks clean → ready for your word.",
+  ].join("\n");
+
+  const clean = forSpeech(dirty);
+  assert.ok(clean.includes("Head 1 finished J42 on WO-2"));
+  assert.ok(clean.includes("PR-12"));
+  assert.ok(clean.includes("Session fix-login-2fa"), `Branch/session name stripped: ${clean}`);
+  assert.ok(clean.includes("work-order-12"), `Hyphenated name stripped: ${clean}`);
+  assert.ok(clean.includes("toppingout-release-2026"), `Repo/date name stripped: ${clean}`);
+  assert.ok(clean.includes("120000000000 tokens"), `Pure number stripped: ${clean}`);
+  assert.ok(clean.includes("See the board"));
+  assert.ok(clean.includes("decade looks clean"));
+  assert.ok(!clean.includes("https://"), `URL leaked: ${clean}`);
+  assert.ok(!clean.includes("b1323be"), `Commit SHA leaked: ${clean}`);
+  assert.ok(!clean.includes("550e8400"), `UUID leaked: ${clean}`);
+  assert.ok(!clean.includes("task:3f9a1b2c"), `Prefixed ID leaked: ${clean}`);
+  assert.ok(!clean.includes("sess-a1b2c3d4"), `Internal hyphenated ID leaked: ${clean}`);
+  assert.ok(!clean.includes("const secret"), `Code fence leaked: ${clean}`);
+  assert.ok(!clean.includes("**") && !clean.includes("###") && !clean.includes("→"));
+
+  assert.equal(classifyFailure(new Error("OpenRouter STT failed (502): bad gateway")), "stt_failed");
+  assert.equal(classifyFailure(new Error("Grok TTS failed (503): unavailable")), "tts_failed");
+  assert.equal(classifyFailure(new Error("OPENROUTER_API_KEY is not set (needed for Grok Voice TTS).")), "tts_failed");
+  assert.equal(classifyFailure(new Error("LLM request failed (429): rate limit")), "llm_failed");
+  assert.equal(classifyFailure(new Error("Request timed out.")), "timeout");
+  assert.equal(classifyFailure(new Error("Orca CLI exited 1")), "orca_unreachable");
+  const spokenErr = spokenFailureMessage(new Error("OpenRouter STT failed (502): https://openrouter.ai/api"));
+  assert.ok(!spokenErr.includes("502") && !spokenErr.includes("https://"));
+
+  // Safety invariant: verbatim confirmation read-back MUST NOT be stripped by forSpeech
+  const orca = new OrcaClient(makeMockOrca());
+  let calls = 0;
+  const brain = new VoiceBrain(orca, {
+    async chat() {
+      calls += 1;
+      return {
+        content: null,
+        tool_calls: [
+          {
+            id: `tc_${calls}`,
+            type: "function",
+            function: {
+              name: "stage_reply",
+              arguments: JSON.stringify({ session_query: "Head 1", message: "cherry-pick b1323be" }),
+            },
+          },
+        ],
+      };
+    },
+  });
+  const staged = await brain.handleUserUtterance("Tell Head 1 cherry-pick b1323be", "always");
+  assert.ok(
+    staged.replyText.includes('"cherry-pick b1323be"'),
+    `Verbatim staged read-back must preserve exact text; got: ${staged.replyText}`
+  );
+});
+
+test("17. watcher coalesces simultaneous and held alerts into one briefing and retries cleanly on TTS failure", async () => {
+  let ts = 1000;
+  let stateA = "working";
+  let stateB = "working";
+  const msgA = "f-status\nwhere: J10\ndone: build\nstate: waiting\nowed: approve deploy\nnext: ship";
+  const msgB = "f-status\nwhere: J11\ndone: tests\nstate: waiting\nowed: pick option A or B\nnext: code";
+
+  const orca = new OrcaClient({
+    async runJson(args) {
+      if (args[0] === "agent" && args[1] === "list") {
+        return {
+          ok: true,
+          result: {
+            agents: [
+              {
+                orcaSessionId: "s-a",
+                kind: "terminal",
+                agent: "claude",
+                state: stateA,
+                repo: "repo-a",
+                workspace: "main",
+                paneKey: "t1:l1",
+                title: "Head 1",
+                lastAssistantMessage: msgA,
+                updatedAt: ts,
+              },
+              {
+                orcaSessionId: "s-b",
+                kind: "terminal",
+                agent: "claude",
+                state: stateB,
+                repo: "repo-b",
+                workspace: "main",
+                paneKey: "t2:l1",
+                title: "Head 2",
+                lastAssistantMessage: msgB,
+                updatedAt: ts + 5,
+              },
+            ],
+          },
+        };
+      }
+      if (args[0] === "terminal" && args[1] === "list") {
+        return {
+          ok: true,
+          result: {
+            terminals: [
+              { handle: "term-a", tabId: "t1", leafId: "l1", connected: true, writable: true, agentIdentity: "claude", preview: msgA, lastOutputAt: ts },
+              { handle: "term-b", tabId: "t2", leafId: "l1", connected: true, writable: true, agentIdentity: "claude", preview: msgB, lastOutputAt: ts + 5 },
+            ],
+          },
+        };
+      }
+      if (args[0] === "terminal" && args[1] === "read") {
+        const isA = args.includes("term-a");
+        return { ok: true, result: { terminal: { tail: (isA ? msgA : msgB).split("\n") } } };
+      }
+      return { ok: true, result: {} };
+    },
+  });
+
+  const brain = new VoiceBrain(orca, {
+    async chat(messages) {
+      const text = String(messages[messages.length - 1]?.content || "");
+      if (text.includes("Head 2")) {
+        return {
+          content: '{"shouldAlert":true,"needsDecision":true,"spokenAlert":"Head 2 wants you to pick option A or B."}',
+        };
+      }
+      return {
+        content: '{"shouldAlert":true,"needsDecision":false,"spokenAlert":"Head 1 finished the build."}',
+      };
+    },
+  });
+
+  const emitted: Array<{ title: string; text: string; needsDecision: boolean }> = [];
+  let failOnce = true;
+  const watcher = new SessionWatcher(orca, brain, {
+    hasListener: () => true,
+    onAlert: async (a) => {
+      if (failOnce) {
+        failOnce = false;
+        throw new Error("Grok TTS failed (503)");
+      }
+      emitted.push({ title: a.sessionTitle, text: a.spokenText, needsDecision: a.needsDecision });
+    },
+  });
+
+  await watcher.tick(); // baseline: both working
+
+  // Both stop in the same tick; first attempt fails TTS -> neither tracked state nor brain activeSessionId advances
+  ts = 2000;
+  stateA = "done";
+  stateB = "done";
+  await watcher.tick();
+  assert.equal(emitted.length, 0);
+  assert.equal(brain.getState().activeSessionId, null, "Failed TTS must not record proactive alert into brain state");
+
+  // Next tick retries cleanly and coalesces BOTH into 1 single alert with decision-first ordering!
+  await watcher.tick();
+  assert.equal(emitted.length, 1, "Two simultaneous stops must coalesce into 1 briefing");
+  assert.equal(brain.getState().activeSessionId, "s-b", "Successful alert delivery must update brain activeSessionId");
+  assert.equal(emitted[0].needsDecision, true);
+  assert.ok(emitted[0].text.startsWith("2 sessions need your attention."));
+  assert.ok(
+    emitted[0].text.indexOf("Head 2") < emitted[0].text.indexOf("Head 1"),
+    `Decision session must be announced first; got: ${emitted[0].text}`
+  );
+
+  // Direct unit check on coalesceHeldAlerts dedup + 3-item cap
+  const baseSession = {
+    id: "id-1",
+    kind: "terminal",
+    agent: "claude",
+    title: "S1",
+    repo: "r",
+    workspace: "main",
+    branch: "main",
+    state: "done",
+    updatedAt: 1,
+    preview: "",
+    connected: true,
+    writable: true,
+    terminalHandle: "h1",
+    incarnationId: null,
+    hostId: null,
+    tabId: null,
+    leafId: null,
+    worktreePath: null,
+  };
+  const { alert: capped } = coalesceHeldAlerts([
+    { session: { ...baseSession, id: "s1", title: "S1" }, spokenAlert: "One.", needsDecision: false, timestamp: 10 },
+    { session: { ...baseSession, id: "s2", title: "S2" }, spokenAlert: "Two.", needsDecision: true, timestamp: 20 },
+    { session: { ...baseSession, id: "s3", title: "S3" }, spokenAlert: "Three.", needsDecision: false, timestamp: 30 },
+    { session: { ...baseSession, id: "s4", title: "S4" }, spokenAlert: "Four.", needsDecision: false, timestamp: 40 },
+  ]);
+  assert.ok(capped.spokenText.includes("Plus 1 more in the log."));
+});
+
+test("18. SSE Last-Event-ID replays missed alerts within 90s and skips stale alerts", async () => {
+  let fakeNow = 1_000_000;
+  const orca = new OrcaClient(makeMockOrca());
+  const brain = new VoiceBrain(orca, { async chat() { return { content: "Ok." }; } });
+  const app = createVoiceServer({
+    orca,
+    brain,
+    startWatcher: false,
+    nowFn: () => fakeNow,
+    synthesize: async () => Buffer.from("FAKE_MP3"),
+  });
+  await new Promise<void>((res) => app.server.listen(0, "127.0.0.1", () => res()));
+  const addr = app.server.address();
+  assert.ok(addr && typeof addr === "object");
+  const base = `http://127.0.0.1:${addr.port}`;
+
+  const readSseSnippet = async (path: string, headers: Record<string, string> = {}) => {
+    const ctrl = new AbortController();
+    const res = await fetch(`${base}${path}`, { headers, signal: ctrl.signal });
+    const reader = res.body!.getReader();
+    const dec = new TextDecoder();
+    let out = "";
+    const timer = setTimeout(() => ctrl.abort(), 120);
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        out += dec.decode(value, { stream: true });
+      }
+    } catch {
+      /* aborted after snippet */
+    } finally {
+      clearTimeout(timer);
+    }
+    return out;
+  };
+
+  try {
+    // Emit alert #1
+    await fetch(`${base}/api/test-alert`, {
+      method: "POST",
+      headers: { [GAFFER_CSRF_HEADER]: "1" },
+    });
+    const firstSnap = await readSseSnippet("/events?audio=1");
+    const connIdMatch = firstSnap.match(/id:\s*(\d+)\nevent:\s*connected/);
+    assert.ok(connIdMatch, `Expected id on connected frame; got:\n${firstSnap}`);
+    const lastSeenId = Number(connIdMatch[1]);
+    assert.ok(lastSeenId >= 1);
+
+    // Client disconnects; alert #2 fires 5s later while offline
+    fakeNow += 5_000;
+    await fetch(`${base}/api/test-alert`, {
+      method: "POST",
+      headers: { [GAFFER_CSRF_HEADER]: "1" },
+    });
+
+    // Reconnect with Last-Event-ID -> replays ONLY alert #2 with replayed: true,
+    // and connected frame MUST NOT jump id ahead of alert #2 before replay finishes!
+    const replayedSnap = await readSseSnippet("/events?audio=1", {
+      "Last-Event-ID": String(lastSeenId),
+    });
+    assert.ok(
+      !replayedSnap.includes(`id: ${lastSeenId + 1}\nevent: connected`),
+      `connected frame must not advance cursor ahead of replayed alert; got:\n${replayedSnap}`
+    );
+    const alertMatches = replayedSnap.match(/event:\s*alert/g) || [];
+    assert.equal(alertMatches.length, 1, `Expected 1 replayed alert; got:\n${replayedSnap}`);
+    assert.ok(replayedSnap.includes(`id: ${lastSeenId + 1}\nevent: alert`));
+    assert.ok(replayedSnap.includes('"replayed":true'));
+
+    // Advance 95s past 90s staleness window -> reconnect with same Last-Event-ID gets 0 stale alerts
+    fakeNow += 95_000;
+    const staleSnap = await readSseSnippet("/events?audio=1", {
+      "Last-Event-ID": String(lastSeenId),
+    });
+    assert.equal((staleSnap.match(/event:\s*alert/g) || []).length, 0, "Stale alerts must not replay");
+
+    // Server restart recovery: client sends Last-Event-ID higher than server's sequence -> resets cursor to 0
+    // and replays fresh (<90s) alerts emitted after restart!
+    fakeNow += 1_000;
+    await fetch(`${base}/api/test-alert`, {
+      method: "POST",
+      headers: { [GAFFER_CSRF_HEADER]: "1" },
+    });
+    const restartedSnap = await readSseSnippet("/events?audio=1", {
+      "Last-Event-ID": "999",
+    });
+    assert.ok(restartedSnap.includes("id: 0\nevent: connected"), `Expected id: 0 reset on restart; got:\n${restartedSnap}`);
+    assert.ok(restartedSnap.includes('"cursorReset":true'));
+    assert.equal(
+      (restartedSnap.match(/event:\s*alert/g) || []).length,
+      1,
+      `Expected fresh post-restart alert to replay; got:\n${restartedSnap}`
+    );
+  } finally {
+    await app.close();
+  }
+});
+
+test("19. cut-playback resume ('finish that') speaks unheard tail with zero LLM calls and never bypasses confirmation", async () => {
+  const briefing =
+    "Head 1 finished all tests. The diff touched four files cleanly. It is waiting on your word to open the PR.";
+  assert.equal(computeUnheardTail(briefing, 0.05), briefing);
+  assert.equal(computeUnheardTail(briefing, 0.96), "");
+  const midTail = computeUnheardTail(briefing, 0.55);
+  assert.ok(midTail.includes("waiting on your word to open the PR."));
+  assert.ok(!midTail.startsWith("Head 1 finished all tests."));
+  assert.equal(parseResumeIntent("Gaffer, finish that"), true);
+  assert.equal(parseResumeIntent("continue"), true);
+  assert.equal(parseResumeIntent("continue", { hasCutSpeech: false }), false);
+  assert.equal(parseResumeIntent("what did I miss", { hasCutSpeech: true }), true);
+  assert.equal(parseResumeIntent("what did I miss", { hasCutSpeech: false }), false);
+  assert.equal(parseResumeIntent("what got cut off", { hasCutSpeech: false }), true);
+  assert.equal(parseResumeIntent("yes"), false);
+
+  const orca = new OrcaClient(makeMockOrca());
+  let llmCalls = 0;
+  let shouldThrowLlm = false;
+  let stageReplyMode = true;
+  const brain = new VoiceBrain(orca, {
+    async chat() {
+      llmCalls += 1;
+      if (shouldThrowLlm) throw new Error("LLM request failed (503): upstream https://openrouter.ai down");
+      if (!stageReplyMode) return { content: "Continuing with the walkthrough." };
+      return {
+        content: null,
+        tool_calls: [
+          {
+            id: `tc_${llmCalls}`,
+            type: "function",
+            function: {
+              name: "stage_reply",
+              arguments: JSON.stringify({ session_query: "Head 1", message: "looks good" }),
+            },
+          },
+        ],
+      };
+    },
+  });
+
+  const app = createVoiceServer({
+    orca,
+    brain,
+    startWatcher: false,
+    synthesize: async () => Buffer.from("FAKE_MP3"),
+  });
+  await new Promise<void>((res) => app.server.listen(0, "127.0.0.1", () => res()));
+  const addr = app.server.address();
+  assert.ok(addr && typeof addr === "object");
+  const base = `http://127.0.0.1:${addr.port}`;
+
+  try {
+    // 1. Report cut playback via HTTP endpoint
+    const cutRes = await fetch(`${base}/api/playback-cut`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", [GAFFER_CSRF_HEADER]: "1" },
+      body: JSON.stringify({ text: briefing, playedRatio: 0.65, sessionTitle: "Head 1" }),
+    }).then((r) => r.json());
+    assert.equal(cutRes.ok, true);
+    assert.equal(cutRes.hasRemainder, true);
+
+    // 2. "Gaffer, finish that" resumes unheard tail with ZERO LLM calls
+    const before = llmCalls;
+    const resumed = await fetch(`${base}/api/text`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", [GAFFER_CSRF_HEADER]: "1" },
+      body: JSON.stringify({ text: "Gaffer, finish that", mode: "wake", speak: false }),
+    }).then((r) => r.json());
+    assert.equal(llmCalls, before, "Resume must not invoke LLM");
+    assert.ok(resumed.replyText.startsWith("Here is the rest:"));
+    assert.ok(resumed.replyText.includes("waiting on your word to open the PR."));
+
+    // 2b. With NO cut speech, generic "continue" and "what did I miss" go to the LLM (not hijacked!),
+    // while explicit "what got cut off" still answers directly
+    stageReplyMode = false;
+    const beforeGeneric = llmCalls;
+    const genericCont = await brain.handleUserUtterance("Gaffer, continue", "wake");
+    assert.equal(llmCalls, beforeGeneric + 1, "Generic 'continue' with no cut speech must reach LLM");
+    assert.equal(genericCont.replyText, "Continuing with the walkthrough.");
+
+    const beforeMiss = llmCalls;
+    const missStatus = await brain.handleUserUtterance("Gaffer, what did I miss?", "wake");
+    assert.equal(llmCalls, beforeMiss + 1, "'What did I miss' with no cut speech must reach LLM for a status update");
+    assert.equal(missStatus.replyText, "Continuing with the walkthrough.");
+
+    const beforeStrict = llmCalls;
+    const strictEmpty = await brain.handleUserUtterance("Gaffer, what got cut off?", "wake");
+    assert.equal(llmCalls, beforeStrict, "Explicit 'what got cut off' must not call LLM");
+    assert.equal(strictEmpty.replyText, "Nothing was cut off just now.");
+    stageReplyMode = true;
+
+    // 3. While a staged reply is pending, "continue" hits confirmation gate, NOT resume
+    await brain.handleUserUtterance("Tell Head 1 looks good", "always");
+    brain.recordInterruptedSpeech(briefing, 0.5, "Head 1");
+    const duringConfirm = await brain.handleUserUtterance("continue", "wake");
+    assert.ok(duringConfirm.replyText.includes("Say yes or cancel"));
+    assert.equal(brain.hasPendingConfirmation(), true);
+    brain.cancelPendingConfirmation();
+
+    // 4. Server 500 includes a clean spokenError without raw HTTP status/URL
+    shouldThrowLlm = true;
+    const errRes = await fetch(`${base}/api/text`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", [GAFFER_CSRF_HEADER]: "1" },
+      body: JSON.stringify({ text: "What is happening?", mode: "manual", speak: false }),
+    });
+    assert.equal(errRes.status, 500);
+    const errBody = await errRes.json();
+    assert.equal(errBody.ok, false);
+    assert.ok(typeof errBody.spokenError === "string" && errBody.spokenError.length > 0);
+    assert.ok(!errBody.spokenError.includes("503") && !errBody.spokenError.includes("https://"));
   } finally {
     await app.close();
   }

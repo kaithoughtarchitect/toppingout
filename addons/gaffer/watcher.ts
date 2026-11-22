@@ -97,6 +97,67 @@ interface HeldAlert {
   timestamp: number;
 }
 
+const ORDINALS = ["First", "Second", "Third"];
+
+/**
+ * Coalesce 2+ simultaneous or held alerts into one spoken briefing so headphones get
+ * one clean TTS turn instead of stacked back-to-back alerts.
+ */
+export function coalesceHeldAlerts(items: HeldAlert[]): { primary: HeldAlert; alert: WatchAlert } {
+  // Keep newest alert per sessionId, then sort: decisions first, oldest timestamp first.
+  const latestBySession = new Map<string, HeldAlert>();
+  for (const item of items) {
+    latestBySession.set(item.session.id, item);
+  }
+  const ordered = [...latestBySession.values()].sort((a, b) => {
+    if (a.needsDecision !== b.needsDecision) return a.needsDecision ? -1 : 1;
+    return a.timestamp - b.timestamp;
+  });
+
+  const primary = ordered[0];
+  if (ordered.length === 1) {
+    return {
+      primary,
+      alert: {
+        id: `alert_${primary.timestamp}_${Math.random().toString(16).slice(2, 8)}`,
+        sessionId: primary.session.id,
+        sessionTitle: primary.session.title,
+        spokenText: primary.spokenAlert,
+        needsDecision: primary.needsDecision,
+        timestamp: primary.timestamp,
+      },
+    };
+  }
+
+  const anyDecision = ordered.some((i) => i.needsDecision);
+  const shown = ordered.slice(0, 3);
+  const extraCount = ordered.length - shown.length;
+  const header = anyDecision
+    ? `${ordered.length} sessions need your attention.`
+    : `${ordered.length} sessions stopped.`;
+  const parts = shown.map((item, idx) => `${ORDINALS[idx]}, ${item.spokenAlert}`);
+  if (extraCount > 0) {
+    parts.push(`Plus ${extraCount} more in the log.`);
+  }
+  const titleLabel =
+    ordered.length === 2
+      ? `${ordered[0].session.title}, ${ordered[1].session.title}`
+      : `${ordered.length} sessions`;
+  const latestTs = Math.max(...ordered.map((i) => i.timestamp));
+
+  return {
+    primary,
+    alert: {
+      id: `alert_${latestTs}_${Math.random().toString(16).slice(2, 8)}`,
+      sessionId: primary.session.id,
+      sessionTitle: titleLabel,
+      spokenText: `${header} ${parts.join(" ")}`,
+      needsDecision: anyDecision,
+      timestamp: latestTs,
+    },
+  };
+}
+
 export class SessionWatcher {
   private orca: OrcaClient;
   private brain: VoiceBrain;
@@ -220,21 +281,16 @@ export class SessionWatcher {
     void this.tick();
   }
 
-  private async deliverAlert(item: HeldAlert): Promise<void> {
+  private async deliverAlerts(items: HeldAlert[]): Promise<void> {
+    if (!items.length) return;
     const emit = async () => {
       if (this.brain.hasPendingConfirmation()) {
-        this.heldAlerts.push(item);
+        this.heldAlerts.push(...items);
         return;
       }
-      this.brain.recordProactiveAlert(item.session, item.spokenAlert);
-      await this.opts.onAlert({
-        id: `alert_${item.timestamp}_${Math.random().toString(16).slice(2, 8)}`,
-        sessionId: item.session.id,
-        sessionTitle: item.session.title,
-        spokenText: item.spokenAlert,
-        needsDecision: item.needsDecision,
-        timestamp: item.timestamp,
-      });
+      const { primary, alert } = coalesceHeldAlerts(items);
+      await this.opts.onAlert(alert);
+      this.brain.recordProactiveAlert(primary.session, alert.spokenText);
     };
     if (this.opts.serialize) {
       await this.opts.serialize(emit);
@@ -247,18 +303,11 @@ export class SessionWatcher {
     if (!this.heldAlerts.length) return;
     if (this.brain.hasPendingConfirmation()) return;
     const queued = this.heldAlerts.splice(0, this.heldAlerts.length);
-    for (const item of queued) {
-      if (this.brain.hasPendingConfirmation()) {
-        this.heldAlerts.unshift(item);
-        break;
-      }
-      try {
-        await this.deliverAlert(item);
-      } catch (err) {
-        this.heldAlerts.unshift(item);
-        this.opts.onError?.(err);
-        break;
-      }
+    try {
+      await this.deliverAlerts(queued);
+    } catch (err) {
+      this.heldAlerts.unshift(...queued);
+      this.opts.onError?.(err);
     }
   }
 
@@ -280,6 +329,7 @@ export class SessionWatcher {
       const topology = classifyTopology(sessions);
       const sessionById = new Map(sessions.map((s) => [s.id, s]));
       const now = this.nowFn();
+      const tickAlerts: Array<{ item: HeldAlert; sessionId: string; nextEntry: TrackedSession }> = [];
 
       for (const s of sessions) {
         const prev = this.tracked.get(s.id);
@@ -384,7 +434,9 @@ export class SessionWatcher {
               if (this.brain.hasPendingConfirmation()) {
                 this.heldAlerts.push(alertItem);
               } else {
-                await this.deliverAlert(alertItem);
+                tickAlerts.push({ item: alertItem, sessionId: s.id, nextEntry });
+                // Defer updating tracked until delivery succeeds so TTS errors retry on next tick.
+                continue;
               }
             }
           } catch (err) {
@@ -400,6 +452,18 @@ export class SessionWatcher {
         }
 
         this.tracked.set(s.id, nextEntry);
+      }
+
+      if (tickAlerts.length > 0) {
+        try {
+          await this.deliverAlerts(tickAlerts.map((entry) => entry.item));
+          for (const entry of tickAlerts) {
+            this.tracked.set(entry.sessionId, entry.nextEntry);
+          }
+        } catch (err) {
+          // Leave prev state untouched for every undelivered session so the next tick retries cleanly.
+          this.opts.onError?.(err);
+        }
       }
 
       this.initialized = true;
