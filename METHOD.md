@@ -43,6 +43,16 @@ Topping Out has four roles: the foreman, the builder, the inspectors (the lens a
 2. Verify the machine yourself (git heads, worktrees, containers). **Where your command disagrees with the shift handover, your command wins.** Say so. One drift is expected: a handover can't name the commit that holds it, so `<main>` being a few **records commits** ahead of the handover's base is a match; a **product** commit since that base is a real disagreement. The same holds for local `<main>` against `<remote>/<main>`: **records-only commits not yet pushed are a match**, reported as "push pending, carried by this job's records push", never a blocker (`RULES.md` rule 7); an unpushed **product** commit is a real disagreement.
 2a. Check that no test file sits in the records where the product's test runner would collect it (`RULES.md` rule 11).
 3. Re-read the **live ticket** yourself and transcribe it verbatim (open it in the browser with the browser tools, or ask the owner to; screenshot its linked-issues panel). Never trust a shift handover's summary of a ticket.
+3a. **Difficulty and the builder.** Read the ticket's `Difficulty` line; a ticket without one (a tracker ticket, a ticket written before this rule) is rated now, the same way. The rating is how hard the job is, not how big: count the checklist items that apply:
+   - new design, with no pattern in the repo to follow;
+   - a barrier (`migrations`, `schema`, `deps`, `ci`, `config`, `outside:<name>`);
+   - more than one module area touched or consumed;
+   - a security or hostile-input hard point (auth, permissions, secrets, untrusted input);
+   - thin tests where the job works (from the ticket's starting point);
+   - a question the ticket leaves open for scoping;
+   - an estimate of 7 work orders or more.
+
+   0 or 1 item is **1**, 2 is **2**, 3 is **3**, 4 is **4**, 5 or more is **5**. A rating of 1 or 2 recommends the **standard** builder, 4 or 5 the **strong** one, and 3 is the foreman's call with its reason (the repo profile's "Builders"). Report the rating, the items and the recommendation with the step 4 report; **the owner picks the builder with the "go"**, and the job file's header records the pick and the recommendation. **One builder for the whole job:** the pick is made before the pre-flight (§3) and keeps the job to the end. In an autonomous run or a night shift the profile's default builder is the pick; a recommendation that differs from it goes in the dev report. With one builder in the profile (or no "Builders" row, which means one builder), the rating is still recorded and the check at the close still runs.
 4. Report every owed decision and every disagreement with the shift handover, unprompted. **If the owner reshapes the ticket** at the site walk, write one line at the top of the site-walk answers, `Owner reshaped the ticket: "<the owner's words>"` (rule 17 in `RULES.md`), naming the opener's steps it supersedes; work order 1 copies the same line to the top of the job file. The rest of the records point to that line instead of marking each step.
 5. **STOP and wait for "go".** Choosing the ticket is not authorising the build. In an autonomous run the owner's goal is the "go", and the foreman answers its own survey (`RULES.md`), unless a question has no clear recommendation that the second opinion doesn't settle, or the site walk found a scope-changing disagreement (`RULES.md`).
 
@@ -56,9 +66,9 @@ Topping Out has four roles: the foreman, the builder, the inspectors (the lens a
 **Produces:** a report ending **READY** or **BLOCKED: <what>**.
 **Checks:** the shell; git on the target repo; reading *and writing* outside its project folder; tools on PATH; what it does without asking a human.
 
-**When:** it writes no product files (its only side effect is a `git fetch`), so it may run **before** the owner's "go". Work order 1 needs the "go".
+**When:** it writes no product files (its only side effect is a `git fetch`), so it may run **before** the owner's "go", on the builder the rating recommends (§2 step 3a). If the owner picks the other builder at the "go", that builder gets its own pre-flight before work order 1: that is the pick, not a switch. Work order 1 needs the "go".
 
-**Why:** a builder in a new app (for example a desktop IDE that sandboxes its project folder) can fail at work order 2 for environmental reasons. The pre-flight costs five minutes and removes that whole class of failure. **A new builder always gets a new pre-flight**, and when the foreman writes one mid-job, that's the signal to switch builders.
+**Why:** a builder in a new app (for example a desktop IDE that sandboxes its project folder) can fail at work order 2 for environmental reasons. The pre-flight costs five minutes and removes that whole class of failure. **A new builder always gets a new pre-flight**, and when the foreman writes one mid-job, that's the signal to switch builders. A switch happens only at a HALT, with the owner (§4, "Budgets"); it is logged in the job file when it happens (the work order it happened at, and why), and the close marks that job's difficulty check `not valid`.
 
 ---
 
@@ -388,7 +398,7 @@ A job's lessons shouldn't live only in its records. The **Logbook** (`foreman/lo
 - **Upkeep at every close** (`/f-signoff` Step 3.2a, no owner input): finished jobs without cards are caught up (three per close), and every 10th close (the repo profile's "Logbook upkeep every") applies a guarded `/f-dream` and writes a `/f-distill` preview. Promoting cards into rules stays the owner's word.
 - **`/f-catchup`**: by hand, to seed the Logbook from many completed jobs at once.
 - **`/f-dream`**: by hand any time (dry run first), and automatically every 10th close with its guards.
-- **`/f-distill`** (previewed every 10th close; applied when you say): promote the best cards into halt-shaped rules: product lessons into the repo's **constitution**, method lessons into Topping Out's `RULES.md` or playbooks. **Only on the owner's word.**
+- **`/f-distill`** (previewed every 10th close; applied when you say): promote the best cards into halt-shaped rules: product lessons into the repo's **constitution**, method lessons into Topping Out's `RULES.md` or playbooks. For each lesson it first asks whether a check could carry it instead of text alone (a test, a lint, a type, a script): a product check becomes a job on the board, a method check a proposed Topping Out change, each shown failing on the real past mistake before the rule says `checked by`. **Only on the owner's word.**
 
 **Rules:** cards carry evidence and provenance; **a card never overrides `RULES.md`** (where one disagrees, the foreman says so); cards are the foreman's records, but promoting one into a rule needs the owner.
 

@@ -238,7 +238,7 @@ The Logbook stays tidy without anyone remembering to tidy it. Read `foreman/logb
 1. **Catch-up, every close.** Completed jobs (`foreman/completed-jobs/*/JOB_*.md`) that **no card names in its `job:`** and that **no earlier `upkeep.md` line lists under `looked at`** get their cards now, following `/f-catchup`'s automatic mode (its skill file, read and followed: it is never invoked by its description). At most **three jobs per close**, oldest first; the rest wait for the next close. A job looked at once is never looked at again, whether it got cards, warranted none (a routine job), or couldn't be verified.
 2. **Every Nth close** (the repo profile's "Logbook upkeep every", default 10, counted in `upkeep.md` since the last dream line):
    - **Dream, applied with guards:** `/f-dream`'s automatic mode over the jobs since the last dream: it saves its proposal under `foreman/logbook/archived/dreams/<id>/` and applies only the items its guards allow (its skill file). Everything it changes is listed in the dev report.
-   - **Distill, preview only:** `/f-distill`'s preview mode writes `<day folder>/DISTILL-PREVIEW.md` (the scored, halt-shaped bullets and their destinations). **Nothing is written to the constitution, `RULES.md` or a playbook.** The dev report's "Logbook upkeep" line says how many bullets wait; the owner applies them with `/f-distill` on their word, whenever they like.
+   - **Distill, preview only:** `/f-distill`'s preview mode writes `<day folder>/DISTILL-PREVIEW.md` (the scored, halt-shaped bullets, their destinations, and the checks proposed for lessons a machine can check). **Nothing is written to the constitution, `RULES.md` or a playbook.** The dev report's "Logbook upkeep" line says how many bullets wait; the owner applies them with `/f-distill` on their word, whenever they like.
 3. **The archive, once, last:** count live cards; over 250, run `/f-archive` here through to the end (its automatic mode). This is the only place a close archives: `/f-card` steps run during a close (Step 2.4, Step 3.2) don't start it.
 4. **Retry-safe:** every card a dream retired or the archive moved leaves `current` and is written under `moved:` (from, to), so a retry doesn't read it as a missing target. Every file written or removed here is a target.
 5. Append the run's line to `upkeep.md`. Recount the index and links from the card files (`/f-card` Step 9) if anything changed.
@@ -332,7 +332,7 @@ _(From Step 2.4)_
 
 ## Logbook upkeep
 
-- Looked at: [job paths or none] · cards written: [n] · dream: [proposal id, n changes, n left for the owner, or not due] · archive: [NNN or not due] · distill preview: [path, n bullets waiting, or not due] · anything owed to the owner
+- Looked at: [job paths or none] · cards written: [n] · dream: [proposal id, n changes, n left for the owner, or not due] · archive: [NNN or not due] · distill preview: [path, n bullets and n checks waiting, or not due] · anything owed to the owner
 
 ## Archive Location
 

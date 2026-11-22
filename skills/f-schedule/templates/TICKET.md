@@ -21,6 +21,7 @@
 **Consumes:** <interfaces read from other modules: a function, a type, a table; or "none">.
 **Requires:** <what its machine must have: `screen`, `browser`, `owner`, `windows`, `macos`, `linux`, `docker`, `postgres`, `gpu`, `reach:<name>`; or "any machine">.
 **Estimated work orders:** <n>, under the repo profile's "Max work orders per job".
+**Difficulty:** <1-5> (<the checklist items that apply, `METHOD.md` §2 step 3a>) · **Builder recommended:** <standard / strong>. How hard, not how big: the owner picks the builder at the site walk, and it keeps the job to the end.
 **Decisions this job owns:** <the shared questions it settles (a name, a format, an error policy), from the project's decision list; or "none">.
 
 ## Starting point (measured, with the commands)
@@ -33,4 +34,4 @@ One PR, one module area, roughly 8–9 work orders at most. If scoping shows it'
 **To decide:** <the question>. **Owner:** <who>. **Options and evidence:** <each option, what it costs, what it unblocks>. **Until decided:** <what stays visibly unavailable>.
 
 ## Record (filled at close)
-Job: <J-number, archived job file> · PR: <#n> · Merge: <sha> · Verified: `M^{tree}` `<tree>` = the reviewed / merge-preview tree `<tree>` (`METHOD.md` §10 step 3) · Footprint misses: <files, or none>
+Job: <J-number, archived job file> · PR: <#n> · Merge: <sha> · Verified: `M^{tree}` `<tree>` = the reviewed / merge-preview tree `<tree>` (`METHOD.md` §10 step 3) · Footprint misses: <files, or none> · Difficulty: <held / off: rated n, went like m / not valid: builder swapped>

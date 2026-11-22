@@ -88,6 +88,7 @@ PART 5 - THE JOB FILE
 **Inspections:** lens inspection: <run | SKIP (QUICK)> · independent inspection: run
 **Validation strategy:** <code-read | check | harness | UI>
 **Budgets:** repair work orders per task <n> · wall time <…> · foreman tokens <…>
+**Difficulty:** <1-5> · builder <standard | strong> (<the owner's pick at the go | the profile's default>), recommended <standard | strong> (METHOD.md §2 step 3a)
 **Foreman:** the foreman
 **Builder:** the builder
 **Target repo:** <path> · **Worktree:** <absolute path> · **Branch:** <branch>

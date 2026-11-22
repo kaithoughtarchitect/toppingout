@@ -34,6 +34,7 @@
 | Extra paid spend | $<n> (a live key, a paid review seat, a paid step that cleared a blocker; the command or usage reading it came from; for a blocker: what, why, from and to, and the undo done), or $0. Never the builder's own bill |
 | Footprint misses | files the merge changed outside the job's `footprint`, `barriers` and the board's noise files, and declared folders it never touched (`/f-signoff` Step 3.2b, recorded with `footprint-check`), or `none`, or `no footprint on this board` |
 | Probes | <n>/<n> bite |
+| Difficulty | rated <n> (<items>), recommended <standard / strong>, built by <standard / strong> (the owner's pick, or the default in an autonomous run or a night shift). Then one of: `held`; `off: rated <n>, went like <m>` with why; `not valid: builder swapped at work order <n>, <why>`. **Off** means: rated 1 or 2 and the job had a HALT, more than 3 repair work orders, or a real bug past the builder's reviews; or rated 4 or 5 and it had no corrections and finished at or under its estimate. A third `off` in a row (read the last two dev reports) gets a Logbook card on the checklist (`/f-card`), for `/f-distill` |
 | Findings | gate 1 <n>, work order reviews <n>, gate 2 <n>, lens inspection <n or SKIP> (accepted <n>), independent inspection <n> (accepted <n>), Greptile <rounds, findings> (accepted <n>), fix review <n> |
 
 ## The foreman's scorecard (grade yourself as honestly as the builder)

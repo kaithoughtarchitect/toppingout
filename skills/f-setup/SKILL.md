@@ -100,6 +100,7 @@ Write `foreman/REPO-PROFILE-<product>.md` from `foreman/method/templates/REPO-PR
 | PR review bot | `.greptile*` config, or a Greptile comment on a recent PR (`gh pr list --state merged -L 5`, then its comments) |
 | Host merge strategy | `gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed` |
 | Builder delivery | `orca` on PATH and the owner's builder: Pi (`pi` on PATH) → `pane link (pi)`; Claude Code with a Claude model → `pane link (claude-code)`, then have the owner run `claude-builder.mjs --model <model>` and check it with `claude-builder.mjs --check` (READY) (`orca-pi-connect`, "A Claude Code builder"); Antigravity's CLI (`agy` on PATH) → `pane link (agy)`, then have the owner run `agy-builder.mjs --model <model>` and check it with `agy-builder.mjs --check` (READY) (`orca-pi-connect`, "An Antigravity builder"); neither → `hand-carried pointer` (the fallback; Step 0 already warned) |
+| Builders | `one builder` (the delivery above) unless the owner names a second, then `standard = <delivery>`, `strong = <delivery>` and the default for autonomous runs; labels only, never a model (`METHOD.md` §2 step 3a) |
 | Max work orders per job | `9` (the default) unless the owner names another |
 | Cutting a plan (`/f-schedule` v2) | noise files: `CHANGELOG.md` and `README.md` where they exist, plus any docs test every job appends to (`tests/test_docs.py`); hot files: `none` until a job finds one; re-proof allowance `2` |
 | Foreman launch command | the command running this session (`claude`, with the flags the owner uses) |
