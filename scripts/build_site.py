@@ -2448,8 +2448,8 @@ FRONT = {
     "title": "Topping Out",
     "description": "Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, a cheaper builder codes it, another model family reviews it.",
     "board_kicker": "A software factory methodology",
-    # the promise first (the README's lead, 2026-11-21); the owner's pick: "Hire a foreman." stays as the hi-vis line
-    "headline": ["Go to bed with a ticket list. Wake up to merged PRs.", "Hire a foreman."],
+    # the owner's pick (2026-11-22): the original headline back; "Hire a foreman." stays as the hi-vis line
+    "headline": ["Stop babysitting agents.", "Hire a foreman."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
         ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
@@ -5030,7 +5030,7 @@ def share_tags(rel: str, title: str, description: str) -> str:
             f'<meta property="og:url" content="{url}"><meta property="og:title" content="{esc(title)}">'
             f'<meta property="og:description" content="{esc(description)}">'
             f'<meta property="og:image" content="{SITE_URL}{OG_CARD}"><meta property="og:image:width" content="1200">'
-            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Go to bed with a ticket list. Wake up to merged PRs. Hire a foreman.">'
+            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Stop babysitting agents. Hire a foreman.">'
             f'<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}">'
             f'<meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="{SITE_URL}{OG_CARD}">')
 
