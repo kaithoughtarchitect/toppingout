@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-23
+
+- **The board shows who built each job and how its rating held.** `start` takes `--builder standard|strong` and `--difficulty <1-5>` at the "go" and stamps the start date; `close` takes `--work-orders <n>`, `--report <dev report>` and `--difficulty held|off|not-valid`, the dev report's own figures, and stamps the close date. The job card adds Builder, Difficulty (the rating and its check), the work orders it took beside the estimate, the dates with the days they span, the footprint check ("missed 2: …" or "clean") and the dev report's path; the job list names the builder on jobs in progress and merged; the footer adds a tally (jobs per builder, swaps, checks held, off and not valid). `--builder` takes only the two labels, never a model or vendor name. A job restarted after a HALT on the other label gets a "builder swapped" note by itself and closes `not-valid`: the tool refuses any other check. Every field is optional, so an existing board renders as before until its next job passes them (`skills/f-board/SKILL.md`, `METHOD.md` §4 and §10).
+
 ## 2026-11-22
 
 - **The site's headline is back to "Stop babysitting agents. Hire a foreman."** (toppingout.dev, its link preview card and every page's preview text).

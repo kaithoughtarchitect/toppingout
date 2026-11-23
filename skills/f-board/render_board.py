@@ -14,9 +14,13 @@ summaries), then run `render`.
   The board opens in the browser on its first page and at a topping out (FOREMAN_BOARD_NO_OPEN=1: never).
   render_board.py BOARD.json check                      validate only
   render_board.py BOARD.json next [--after-close <job>] eligible jobs (now, or after closing <job>)
-  render_board.py BOARD.json start   <job> --run J7
+  render_board.py BOARD.json start   <job> --run J7 [--builder standard|strong] [--difficulty 1-5]
+                                     (--builder is a label from the repo profile's Builders row, never a model
+                                     name; a restart after a HALT on the other label records the swap)
   render_board.py BOARD.json close   <job> --pr "#22" --merge <sha> (--next <job> | --no-next --reason "...")
                                      [--run J7] [--note "..."] [--standfirst "..."]
+                                     [--work-orders n] [--report <dev report path>] [--difficulty held|off|not-valid]
+                                     (a job whose builder was swapped closes not-valid, whatever is passed)
   render_board.py BOARD.json halt    <job> --reason "..." --to open|decision [--decision "..."]
   render_board.py BOARD.json decided <job> --note "the owner's decision, quoted"
   render_board.py BOARD.json add     <job> --title "..." [--needs a,b] [--decision "..."] [--summary "..."]
@@ -93,6 +97,9 @@ DONE = ("merged", "resolved")
 SHA = re.compile(r"^[0-9a-f]{7,40}$")
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,15}$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+BUILDERS = ("standard", "strong")   # labels only: the repo profile's Builders row maps them to a delivery (RULES.md)
+CHECKS = ("held", "off", "not-valid")   # the dev report's Difficulty check (METHOD.md §2 step 3a)
+CHECK_LABEL = {"held": "held", "off": "off", "not-valid": "not valid"}
 WARNINGS = []
 
 
@@ -237,6 +244,26 @@ def eligible(board):
 
 def is_str(v):
     return isinstance(v, str) and v.strip() != ""
+
+
+def swapped(b):
+    """The builder changed during the job (only possible at a restart after a HALT)."""
+    bl = b.get("builders") if isinstance(b.get("builders"), list) else []
+    return any(x != y for x, y in zip(bl, bl[1:]))
+
+
+def builder_text(b):
+    bl = b.get("builders") or []
+    return " → ".join(x for i, x in enumerate(bl) if i == 0 or bl[i - 1] != x)
+
+
+def day_span(b):
+    try:
+        a, z = datetime.date.fromisoformat(b["started"]), datetime.date.fromisoformat(b["closed"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    n = (z - a).days + 1
+    return f"{n} day{'s' if n != 1 else ''}"
 
 
 def validate(board):
@@ -425,6 +452,27 @@ def validate(board):
         if res is not None and not (LANE_MODE and isinstance(res, dict) and res.get("lane") in LANE_NAMES
                                     and is_str(res.get("run")) and st == "open" and kind(b) == "build"):
             e.append(f"job {bid}: reserved must be {{lane: A|B, run: J<n>}} on an open build job, in lane mode")
+        bl = b.get("builders")
+        if bl is not None and not (isinstance(bl, list) and bl and all(x in BUILDERS for x in bl)):
+            e.append(f"job {bid}: builders must be a non-empty list of {', '.join(BUILDERS)} (labels, never a model name)")
+        dif = b.get("difficulty")
+        if dif is not None and (type(dif) is not int or not 1 <= dif <= 5):
+            e.append(f"job {bid}: difficulty must be a whole number 1 to 5, got {dif!r}")
+        chk = b.get("difficulty_check")
+        if chk is not None and chk not in CHECKS:
+            e.append(f"job {bid}: difficulty_check must be one of {', '.join(CHECKS)}, got {chk!r}")
+        elif chk is not None and swapped(b) and chk != "not-valid":
+            e.append(f"job {bid}: its builder was swapped, so difficulty_check must be not-valid")
+        wo = b.get("work_orders")
+        if wo is not None and (type(wo) is not int or wo < 1):
+            e.append(f"job {bid}: work_orders must be a positive whole number, got {wo!r}")
+        for f in ("started", "closed"):
+            if f in b and not (isinstance(b[f], str) and DATE.match(b[f])):
+                e.append(f"job {bid}: {f} must be a YYYY-MM-DD date, got {b[f]!r}")
+        if isinstance(b.get("started"), str) and isinstance(b.get("closed"), str) and b["closed"] < b["started"]:
+            e.append(f"job {bid}: closed {b['closed']} is before started {b['started']}")
+        if "report" in b and not is_str(b["report"]):
+            e.append(f"job {bid}: report must be the dev report's path")
         fc = b.get("footprint_check")
         if fc is not None and not (isinstance(fc, dict) and all(
                 isinstance(fc.get(k, []), list) and all(isinstance(x, str) for x in fc.get(k, [])) for k in ("missed", "unused"))):
@@ -626,9 +674,16 @@ def after_close(board, bid):
 
 
 def ev_start(board, args):
-    pos, vals, flags = parse(args, ("--run", "--standfirst", "--lane", "--quote"), ("--overlap-ok",))
+    pos, vals, flags = parse(args, ("--run", "--standfirst", "--lane", "--quote", "--builder", "--difficulty"), ("--overlap-ok",))
     bid = one_job(pos, "start")
     b = job(board, bid)
+    builder = vals.get("--builder")
+    if builder is not None and builder not in BUILDERS:
+        raise Usage(f"--builder is a label, {' or '.join(BUILDERS)}, from the repo profile's Builders row "
+                    f"(never a model or vendor name: RULES.md), got {builder!r}")
+    dif = vals.get("--difficulty")
+    if dif is not None and dif not in ("1", "2", "3", "4", "5"):
+        raise Usage(f"--difficulty is the ticket's rating, 1 to 5 (METHOD.md §2 step 3a), got {dif!r}")
     by_id = {x["id"]: x for x in board["jobs"]}
     lane = vals.get("--lane")
     if lanes_on(board):
@@ -668,6 +723,15 @@ def ev_start(board, args):
     if shown_state(b, by_id) != "ready":
         raise Usage(f"job {bid} is {shown_state(b, by_id)}; only a ready job can start")
     b["state"], b["run"] = "in-progress", need(vals, "--run")
+    if builder:
+        prev = b.get("builders") or []
+        if prev and prev[-1] != builder:
+            b.setdefault("notes", []).append(f"builder swapped {prev[-1]} → {builder} at {b['run']}, after a HALT: "
+                                             f"the difficulty check closes as not valid")
+        b["builders"] = prev + [builder]
+    if dif:
+        b["difficulty"] = int(dif)
+    b.setdefault("started", datetime.date.today().isoformat())
     if lanes_on(board):
         b["lane"] = lane
         b.pop("reserved", None)
@@ -680,11 +744,13 @@ def ev_start(board, args):
 
 
 def ev_close(board, args):
-    pos, vals, flags = parse(args, ("--pr", "--merge", "--run", "--next", "--reason", "--note", "--standfirst"), ("--no-next",))
+    pos, vals, flags = parse(args, ("--pr", "--merge", "--run", "--next", "--reason", "--note", "--standfirst",
+                                    "--work-orders", "--report", "--difficulty"), ("--no-next",))
     bid = one_job(pos, "close")
     b = job(board, bid)
     if stored(b) != "in-progress":
         raise Usage(f"job {bid} is {b['state']}; close expects the job in progress")
+    extra = close_extras(b, vals)
     j = vals.get("--run")
     if j is not None and j != b.get("run"):
         raise Usage(f"--run {j} does not match the recorded run {b.get('run')}")
@@ -710,7 +776,7 @@ def ev_close(board, args):
             raise Usage(f"Lane {lane} reserved {mine[0]}: close with --next {mine[0]}, or unreserve {mine[0]} --lane {lane} first")
         if "--no-next" in flags and not vals.get("--reason"):
             raise Usage("--no-next needs --reason")
-        b.update(state="merged", pr=need(vals, "--pr"), merge=merge)
+        b.update(state="merged", pr=need(vals, "--pr"), merge=merge, **extra)
         b.pop("lane", None)
         if vals.get("--note"):
             b.setdefault("notes", []).append(vals["--note"])
@@ -726,7 +792,7 @@ def ev_close(board, args):
             raise Usage("--no-next needs --reason")
     elif nxt not in cands:
         raise Usage(f"--next {nxt} is not eligible after this close; eligible: {cands or 'none'}")
-    b.update(state="merged", pr=need(vals, "--pr"), merge=merge)
+    b.update(state="merged", pr=need(vals, "--pr"), merge=merge, **extra)
     if vals.get("--note"):
         b.setdefault("notes", []).append(vals["--note"])
     board["next"] = nxt
@@ -735,6 +801,30 @@ def ev_close(board, args):
     if not vals.get("--standfirst"):
         WARNINGS.append(f"standfirst unchanged: {board['project'].get('standfirst', '')!r}; pass --standfirst if it no longer says where the project stands")
     bump(board, vals.get("--standfirst"))
+
+
+def close_extras(b, vals):
+    """What the dev report knows at the close: work orders taken, its path, the difficulty check, the date."""
+    out = {"closed": datetime.date.today().isoformat()}
+    wo = vals.get("--work-orders")
+    if wo is not None:
+        if not re.match(r"^[1-9]\d{0,2}$", wo):
+            raise Usage(f"--work-orders is the number of work orders the job took, got {wo!r}")
+        out["work_orders"] = int(wo)
+    if vals.get("--report") is not None:
+        if not is_str(vals["--report"]):
+            raise Usage("--report is the dev report's path")
+        out["report"] = vals["--report"]
+    chk = vals.get("--difficulty")
+    if chk is not None and chk not in CHECKS:
+        raise Usage(f"--difficulty is the dev report's check, {', '.join(CHECKS)}, got {chk!r}")
+    if swapped(b):
+        if chk not in (None, "not-valid"):
+            raise Usage(f"the builder was swapped during this job ({builder_text(b)}): the check is not-valid")
+        chk = "not-valid"
+    if chk:
+        out["difficulty_check"] = chk
+    return out
 
 
 def ev_halt(board, args):
@@ -1514,8 +1604,24 @@ def job_detail(i, b, by_id, nxt):
         cells.append(("Lands after", "<br>".join(gates)))
     if b.get("footprint"):
         cells.append(("Footprint", "<br>".join(esc(x) for x in b["footprint"] + b.get("barriers", []))))
-    if b.get("est_work_orders"):
-        cells.append(("Estimate", f'{b["est_work_orders"]} work orders'))
+    if b.get("builders"):
+        cells.append(("Builder", esc(builder_text(b)) + (" (swapped at a HALT)" if swapped(b) else "")))
+    if b.get("difficulty") or b.get("difficulty_check"):
+        cells.append(("Difficulty", " · ".join(x for x in (b.get("difficulty") and f'rated {b["difficulty"]}',
+                                                           b.get("difficulty_check") and f'check {CHECK_LABEL[b["difficulty_check"]]}') if x)))
+    if b.get("est_work_orders") or b.get("work_orders"):
+        est = f'{b["est_work_orders"]} work orders' if b.get("est_work_orders") else "none"
+        took = f' · took {b["work_orders"]}' if b.get("work_orders") else ""
+        cells.append(("Estimate", est + took))
+    if b.get("started"):
+        span = day_span(b)
+        cells.append(("Dates", esc(b["started"]) + (f' to {esc(b["closed"])}, {span}' if span else ", started")))
+    fc = b.get("footprint_check")
+    if isinstance(fc, dict):
+        miss, unused = fc.get("missed", []), fc.get("unused", [])
+        cells.append(("Footprint check", "<br>".join(
+            ([f'missed {len(miss)}: {esc(", ".join(miss))}'] if miss else [])
+            + ([f'unused: {esc(", ".join(unused))}'] if unused else [])) or "clean"))
     cells += [(k, esc(v)) for k, v in (("PR", b.get("pr")), ("Merge", b.get("merge"))) if v]
     spec = "".join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in cells)
     flags = []
@@ -1529,6 +1635,7 @@ def job_detail(i, b, by_id, nxt):
     lesson = f'<p class="jlesson"><b>Lesson</b> {esc(b["lesson"])}</p>' if b.get("lesson") else ""
     figs = f'<div class="figs">{"".join(fig_html(x) for x in b.get("figures", []))}</div>' if b.get("figures") else ""
     ticket = f'<p class="jk">Ticket: {esc(b["ticket"])}</p>' if b.get("ticket") else ""
+    ticket += f'<p class="jk">Dev report: {esc(b["report"])}</p>' if b.get("report") else ""
     side = "".join(flags) or '<p class="flag none">Nothing recorded against this job.</p>'
     return (f'<article class="jobp" id="job-{esc(b["id"])}" data-i="{i}" data-state="{st}"><div class="jobmain">'
             f'<div class="jobhead"><span class="jn">{esc(b["id"])}</span><h3 class="jt">{esc(b["title"])}</h3>'
@@ -1557,9 +1664,11 @@ def job_rows(jobs, by_id, nxt):
             detail = f'<b>To decide:</b> {esc(b.get("decision") or "")}'
         elif st in DONE:
             detail = " · ".join(x for x in (b.get("pr") and f'PR {esc(b["pr"])}', b.get("merge") and f'merge {esc(b["merge"])}',
+                                            b.get("builders") and esc(builder_text(b)),
                                             b.get("resolution") and esc(b["resolution"])) if x)
         elif st == "in-progress":
-            detail = " · ".join(x for x in (b.get("lane") and f'Lane {esc(b["lane"])}', b.get("run") and esc(b["run"]), b.get("pr") and f'PR {esc(b["pr"])}') if x)
+            detail = " · ".join(x for x in (b.get("lane") and f'Lane {esc(b["lane"])}', b.get("run") and esc(b["run"]),
+                                            b.get("builders") and esc(builder_text(b)), b.get("pr") and f'PR {esc(b["pr"])}') if x)
         else:
             detail = "Needs met: " + ", ".join(esc(x) for x in b.get("needs") or []) if b.get("needs") else "Needs nothing first"
         isn = b["id"] in nxt
@@ -1838,6 +1947,26 @@ def logo_uri(path):
         return ""
 
 
+def builder_tally(jobs):
+    """One footer line: which builder took how many jobs, and how the difficulty ratings held."""
+    by = {}
+    for b in jobs:
+        if b.get("builders"):
+            by[b["builders"][-1]] = by.get(b["builders"][-1], 0) + 1
+    sw = sum(1 for b in jobs if swapped(b))
+    checks = {}
+    for b in jobs:
+        if b.get("difficulty_check"):
+            checks[b["difficulty_check"]] = checks.get(b["difficulty_check"], 0) + 1
+    parts = []
+    if by:
+        parts.append("Builders: " + ", ".join(f'{k} {by[k]} job{"s" if by[k] != 1 else ""}' for k in BUILDERS if k in by)
+                     + (f" ({sw} swapped)" if sw else ""))
+    if checks:
+        parts.append("difficulty checks: " + ", ".join(f"{CHECK_LABEL[k]} {checks[k]}" for k in CHECKS if k in checks))
+    return " · ".join(parts)
+
+
 def render(board, standalone=False):
     """One page that answers, top to bottom: where is this going (the head), what needs the owner, what's
     happening now, how far along (the spine), each job (its card), every job (the list). Nothing is cut short
@@ -1945,6 +2074,9 @@ def render(board, standalone=False):
     sup = board.get("superseded", [])
     if sup:
         foot.append("<p>Split: " + "; ".join(f'{esc(x.get("id"))} {esc(x.get("title", ""))} → {esc(", ".join(x.get("by", [])))} (v{esc(x.get("at_version", "?"))})' for x in sup) + "</p>")
+    tally = builder_tally(jobs)
+    if tally:
+        foot.append(f"<p>{esc(tally)}</p>")
     facts = project.get("facts") or []
     if facts:
         foot.append('<p>Standing facts</p><ul>' + "".join(f"<li>{esc(a)}</li>" for a in facts) + "</ul>")

@@ -819,5 +819,92 @@ class BoardLanes(unittest.TestCase):
     def test_set_next_is_replaced_by_reserve(self):
         self.refused(2, "set-next", "01")
 
+class BoardBuilder(unittest.TestCase):
+    """The builder label, the difficulty rating and its check, work orders taken, dates and the dev report."""
+    setUp, tearDown, run_tool, data, digest, edit, ok, refused = (
+        Board.setUp, Board.tearDown, Board.run_tool, Board.data, Board.digest, Board.edit, Board.ok, Board.refused)
+
+    def page(self):
+        return (self.dir / "board.html").read_text(encoding="utf-8")
+
+    def j01(self):
+        return next(b for b in self.data()["jobs"] if b["id"] == "01")
+
+    def test_start_records_builder_difficulty_and_date(self):
+        self.ok("start", "01", "--run", "J2", "--builder", "strong", "--difficulty", "4")
+        b = self.j01()
+        self.assertEqual((b["builders"], b["difficulty"]), (["strong"], 4))
+        self.assertRegex(b["started"], r"^\d{4}-\d{2}-\d{2}$")
+        page = self.page()
+        self.assertIn("<dt>Builder</dt><dd>strong</dd>", page)
+        self.assertIn("rated 4", page)
+        self.assertIn("J2 · strong", page)
+
+    def test_builder_is_a_label_never_a_model_name(self):
+        out = self.refused(2, "start", "01", "--run", "J2", "--builder", "some-model-7")
+        self.assertIn("never a model", out)
+        self.refused(2, "start", "01", "--run", "J2", "--difficulty", "6")
+        self.edit(lambda s: s["jobs"][1].__setitem__("builders", ["vendor-x"]))
+        rc, out = self.run_tool("check")
+        self.assertEqual(rc, 1, out)
+
+    def test_close_records_work_orders_report_and_check(self):
+        self.ok("start", "01", "--run", "J2", "--builder", "standard", "--difficulty", "2")
+        self.ok("close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02",
+                "--work-orders", "7", "--report", "foreman/reports/2026-11-23/DEV-REPORT.md", "--difficulty", "off")
+        b = self.j01()
+        self.assertEqual((b["work_orders"], b["difficulty_check"]), (7, "off"))
+        self.assertEqual(b["closed"], b["started"])
+        page = self.page()
+        self.assertIn("Dev report: foreman/reports/2026-11-23/DEV-REPORT.md", page)
+        self.assertIn("rated 2 · check off", page)
+        self.assertIn("1 day", page)
+        self.assertIn("Builders: standard 1 job · difficulty checks: off 1", page)
+
+    def test_close_refuses_a_bad_check_or_count(self):
+        self.ok("start", "01", "--run", "J2")
+        self.refused(2, "close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02", "--difficulty", "fine")
+        self.refused(2, "close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02", "--work-orders", "0")
+
+    def test_a_swap_after_a_halt_is_noted_and_closes_not_valid(self):
+        self.ok("start", "01", "--run", "J2", "--builder", "standard", "--difficulty", "3")
+        self.ok("halt", "01", "--reason", "the builder looped", "--to", "open")
+        self.ok("start", "01", "--run", "J3", "--builder", "strong")
+        b = self.j01()
+        self.assertEqual(b["builders"], ["standard", "strong"])
+        self.assertTrue(any("builder swapped standard → strong at J3" in n for n in b["notes"]))
+        out = self.refused(2, "close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02", "--difficulty", "held")
+        self.assertIn("not-valid", out)
+        self.ok("close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02")
+        self.assertEqual(self.j01()["difficulty_check"], "not-valid")
+        page = self.page()
+        self.assertIn("standard → strong (swapped at a HALT)", page)
+        self.assertIn("Builders: strong 1 job (1 swapped) · difficulty checks: not valid 1", page)
+
+    def test_same_builder_restart_is_not_a_swap(self):
+        self.ok("start", "01", "--run", "J2", "--builder", "strong")
+        self.ok("halt", "01", "--reason", "x", "--to", "open")
+        self.ok("start", "01", "--run", "J3", "--builder", "strong")
+        self.ok("close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02", "--difficulty", "held")
+        b = self.j01()
+        self.assertEqual(b["difficulty_check"], "held")
+        self.assertFalse(any("swapped" in n for n in b.get("notes", [])))
+
+    def test_footprint_check_shows_on_the_card(self):
+        self.ok("start", "01", "--run", "J2")
+        self.ok("close", "01", "--pr", "#2", "--merge", "abcdef1", "--next", "02", "--work-orders", "3")
+        self.edit(lambda s: s["jobs"][1].update(footprint=["src/"], footprint_check={"missed": ["a.py", "b.py"], "unused": []}))
+        self.ok()
+        page = self.page()
+        self.assertIn("missed 2: a.py, b.py", page)
+        self.assertIn("none · took 3", page)
+
+    def test_old_boards_render_without_the_new_rows(self):
+        self.ok("start", "01", "--run", "J2")
+        page = self.page()
+        for x in ("<dt>Builder</dt>", "<dt>Difficulty</dt>", "Builders:", "Dev report:"):
+            self.assertNotIn(x, page)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
