@@ -2715,7 +2715,7 @@ ONE_JOB_RULES = ["**What goes red is repaired, not a stop.**", "Ask only where t
                  "shift boss"]
 ONE_JOB_STOPS = ("<b>It still stops and waits</b>, one line saying why, on: the same check still failing after two fixes; a security problem or an "
                  "unresolved critical finding; the automated review under 5/5 after three rounds; spend reaching your cap.")
-ONE_JOB_NEVER = ("<b>Your goal never covers</b> tracker moves, messages, edits outside the ticket&rsquo;s files, migrations, a force push, "
+ONE_JOB_NEVER = ("<b>Your goal never covers</b> tracker moves, messages, edits outside the ticket&rsquo;s files or migrations (unless your repo profile holds a standing grant for them), a force push, "
                  "a fourth automated review, spend over the cap, or starting the next job.")
 ONE_JOB_NIGHT = "<b>The shift ends</b> at any stop in a job, when the whole goal is built, at the spend cap, or when a job passes 16 hours."
 
