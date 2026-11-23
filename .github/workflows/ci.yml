@@ -58,6 +58,6 @@ jobs:
       - name: Site walk grader self-test
         run: node snippets/site_walk_grade.mjs --self-test
       - name: Topping Out Gaffer tests
-        run: npx --yes tsx --test addons/gaffer/gaffer.test.ts
+        run: npx --yes tsx addons/gaffer/gaffer.test.ts
       - name: Snippet shell syntax
         run: bash -n snippets/run-gates.sh && bash -n snippets/parallel_proof.sh && bash -n snippets/board_push.sh && bash -n snippets/board_pull.sh && bash -n snippets/land_tested.sh

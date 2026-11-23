@@ -58,5 +58,7 @@ tailscale serve --bg --https=4111 http://127.0.0.1:4111
 ## Tests
 
 ```bash
-npx tsx --test addons/gaffer/gaffer.test.ts
+npx tsx addons/gaffer/gaffer.test.ts
 ```
+
+Run the file directly, not under `--test`: on Node 22 the `--test` runner can crash at random reading the test's output (nodejs/node#66164; `test-guard.ts` has the details).
