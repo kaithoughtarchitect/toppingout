@@ -2,11 +2,9 @@
 
 [![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Go to bed with a ticket list, wake up to merged PRs, each with its proof.**
+**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory with a planner/executor split: a foreman on Opus or Fable specs every ticket in a fresh session, a builder on whatever model you choose codes it (a frontier model, a fast one or a cheap one, per job), a rival model family reviews it, and nothing merges without evidence.**
 
-Topping Out is a spec-driven software factory with a planner/executor split: a foreman in Claude Code, on the Claude model you trust most, specs every ticket in a fresh session; a builder on whatever model you choose codes it; a rival model family reviews it; and nothing merges without evidence. Frontier, fast or cheap: you pick the builder for each job.
-
-It runs in Orca, with Pi, Claude Code or agy as the builder, on any model it can run. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
 
 > **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and your planning model spends your usage on typing.
 >

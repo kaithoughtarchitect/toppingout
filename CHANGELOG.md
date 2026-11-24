@@ -4,7 +4,7 @@ What changed for a project that upgrades, newest first. `/f-setup` shows the ent
 
 ## 2026-11-24
 
-- **The pitch: you choose the builder.** The README, `AGENTS.md` and the site no longer say the builder is a cheaper model: the foreman runs in Claude Code on the Claude model you trust most, and the builder on whatever model you pick for each job, a frontier model, a fast one or a cheap one. The method is what makes any of them safe. The README lead is now one bold sentence, and "Try it" lists every required tool up front.
+- **The pitch: you choose the builder.** The README, `AGENTS.md` and the site no longer say the builder is a cheaper model: the foreman runs on Opus or Fable, and the builder on whatever model you pick for each job, a frontier model, a fast one or a cheap one. The method is what makes any of them safe. "Try it" lists every required tool up front.
 
 ## 2026-11-23
 
