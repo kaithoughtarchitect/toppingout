@@ -97,6 +97,8 @@ H4 data riding along in a chained error or a payload (e.g. Python
    __context__/__cause__, a wrapped error's message): <a marker string
    like "SECRET-PEER-TEXT" must appear nowhere>.
 H5 trusting unverified input: <what untrusted value must never reach>.
+H6 time: no test compares a fixed date or time with today's (it passes now
+   and turns red on its own later); the clock is injected or frozen.
 <For a database proof instead: isolation of the disposable DB; never
  the shared port; it cannot pass for the wrong reason; no secrets or
  DSNs in failure output.>

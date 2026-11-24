@@ -27,7 +27,7 @@ For each changed function: decision arms and boundaries. Mentally mutate (`<`↔
 
 Rank uncovered behavior: error/rollback paths first, then boundaries, then negative cases, then concurrency/timeout. Happy-path-only is a cap, not a pass.
 
-Flag: assertion-free tests, golden outputs copied from the implementation, over-mocking, tests the same session wrote. Do not flag cosmetic smells.
+Flag: assertion-free tests, golden outputs copied from the implementation, over-mocking, tests the same session wrote, a test that compares a fixed date or time with today's (a time bomb: inject or freeze the clock), and a test that can hang with no timeout of its own. Do not flag cosmetic smells.
 
 Recommend the repo’s own shapes: a characterization test that pins current behavior before a controller refactor; deterministic tables through the pure core for thresholds, no snapshots. Spec the missing assert; full snippets only when tiny.
 

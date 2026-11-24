@@ -25,8 +25,13 @@ Copy one into `<records>/test-adapter.sh` and adjust the command line. Every ada
 
 ```bash
 PAID_KEYS="OPENROUTER_API_KEY OPENAI_API_KEY"   # from the repo profile
-no_paid() { local a=(); for k in $PAID_KEYS; do a+=(-u "$k"); done; env "${a[@]}" "$@"; }
+# the hang guard: no run outlives TEST_TIMEOUT seconds (the repo profile's "Test time" row: about twice one
+# whole-suite run); a run it stops exits 124, which ran_ok reports as a process failure, never a pass
+TEST_TIMEOUT="${FOREMAN_TEST_TIMEOUT:-3600}"
+no_paid() { local a=() t=(); for k in $PAID_KEYS; do a+=(-u "$k"); done; command -v timeout >/dev/null && t=(timeout --kill-after=30 "$TEST_TIMEOUT"); "${t[@]}" env "${a[@]}" "$@"; }
 ```
+
+**The hang guard** is there because a test run can hang without failing (a lock never released, a server never started), and a hung run holds the job, and a night shift, for hours with nothing on the screen. `timeout` comes with Git Bash and Linux; on macOS it is `gtimeout` from coreutils, and without either the guard is off (say so in the repo profile).
 
  Runners that report in JSON write it **next to the output file** (`<output>.json`), so each run has its own.
 
@@ -48,7 +53,7 @@ ran_ok()     { local ex; ex=$(cat "$2"); [ "$ex" -le 1 ] && ! grep -qE 'no tests
 ```bash
 run_tests()  { local out=$1 ex=$2; shift 2; no_paid python -m unittest -v "$@" >"$out" 2>&1; echo $? >"$ex"; }
 failed_ids() { grep -E '^(FAIL|ERROR): ' "$1" | sed -E 's/^(FAIL|ERROR): //' | sort -u; }
-ran_ok()     { grep -qE '^Ran [1-9][0-9]* tests?' "$1" && ! grep -qE 'Failed to import test module|^ImportError' "$1"; }
+ran_ok()     { [ "$(cat "$2" 2>/dev/null)" != 124 ] && grep -qE '^Ran [1-9][0-9]* tests?' "$1" && ! grep -qE 'Failed to import test module|^ImportError' "$1"; }
 ```
 
 **jest** (vitest: the same, with `no_paid npx vitest run --reporter=json --outputFile="$out.json"`)
@@ -56,7 +61,7 @@ ran_ok()     { grep -qE '^Ran [1-9][0-9]* tests?' "$1" && ! grep -qE 'Failed to 
 ```bash
 run_tests()  { local out=$1 ex=$2; shift 2; no_paid npx jest --json --outputFile="$out.json" "$@" >"$out" 2>&1; echo $? >"$ex"; }
 failed_ids() { node -e 'const r=require(require("path").resolve(process.argv[1]+".json"));for(const f of r.testResults)for(const a of f.assertionResults||[])if(a.status==="failed")console.log(f.name+" > "+a.fullName)' "$1" | sort -u; }
-ran_ok()     { node -e 'const r=require(require("path").resolve(process.argv[1]+".json"));process.exit(r.numTotalTests>0&&!r.testResults.some(f=>f.status==="failed"&&!(f.assertionResults||[]).length)?0:1)' "$1"; }
+ran_ok()     { [ "$(cat "$2" 2>/dev/null)" != 124 ] && node -e 'const r=require(require("path").resolve(process.argv[1]+".json"));process.exit(r.numTotalTests>0&&!r.testResults.some(f=>f.status==="failed"&&!(f.assertionResults||[]).length)?0:1)' "$1"; }
 ```
 
 **go test**
@@ -64,7 +69,7 @@ ran_ok()     { node -e 'const r=require(require("path").resolve(process.argv[1]+
 ```bash
 run_tests()  { local out=$1 ex=$2; shift 2; no_paid go test -json "$@" >"$out" 2>&1; echo $? >"$ex"; }
 failed_ids() { grep '"Action":"fail"' "$1" | grep '"Test":' | sed -E 's/.*"Package":"([^"]*)".*"Test":"([^"]*)".*/\1 \2/' | sort -u; }
-ran_ok()     { grep -q '"Action":"run"' "$1" && ! grep -qE '\[(build|setup) failed\]' "$1"; }
+ran_ok()     { [ "$(cat "$2" 2>/dev/null)" != 124 ] && grep -q '"Action":"run"' "$1" && ! grep -qE '\[(build|setup) failed\]' "$1"; }
 ```
 
 **cargo test**
@@ -72,7 +77,7 @@ ran_ok()     { grep -q '"Action":"run"' "$1" && ! grep -qE '\[(build|setup) fail
 ```bash
 run_tests()  { local out=$1 ex=$2; shift 2; no_paid cargo test --no-fail-fast "$@" >"$out" 2>&1; echo $? >"$ex"; }
 failed_ids() { grep -E '^test .* \.\.\. FAILED$' "$1" | awk '{print $2}' | sort -u; }
-ran_ok()     { grep -qE '^running [1-9]' "$1" && ! grep -q 'error: could not compile' "$1"; }
+ran_ok()     { [ "$(cat "$2" 2>/dev/null)" != 124 ] && grep -qE '^running [1-9]' "$1" && ! grep -q 'error: could not compile' "$1"; }
 ```
 
 **Another runner:** write the same three functions, then **prove the adapter** before the first job: two fixture runs where base and head fail **different** tests (same count), and `comm -13` must print the head-only one. Record the proof in the repo profile.
@@ -85,6 +90,10 @@ ran_ok()     { grep -qE '^running [1-9]' "$1" && ! grep -q 'error: could not com
 - **A big set runs once, as the whole suite.** When the set holds more than half the suite's test files (a core module that most tests import), running it before and after would cost nearly two whole runs. The work order then runs the whole suite once, with no `BEFORE`, and compares it with the previous work order's whole-suite output if there is one (the same failing IDs, the passed count up by exactly the new tests); a test red in it that no earlier output covers is re-run alone in the base worktree and labelled (`templates/BASE-VS-HEAD.txt` 1.4). Measured on one project's job: its core module's set was 24 to 28 of 45 test files, 66 to 88% of a run's time.
 - **The whole test folder instead** when the derived set is empty, when the work order touches a conftest, a fixture, a test helper or a file the scan can't follow (data, SQL, config), or for a stack the scan can't read.
 - **A fast suite keeps the whole suite every work order.** When one whole-suite run takes under about 5 minutes, the repo profile says "Whole suite every work order: yes" and `AFFECTED` is the whole test folder. The rule follows the measured time.
+
+## Slow tests stay out of the gate
+
+A test that takes minutes by design (a load or soak test, a long live check) gets a marker (`@pytest.mark.load`, a jest project, a Go build tag) and the whole-suite gate leaves it out (`-m "not load"`). It still runs: by hand, on a named command the repo profile's Gates row records, when the job touches what it measures. A slow test that is really a slow unit test (a sleep, a real network call) is a finding to fix, not a test to move out.
 
 ## Speed: one suite at a time, several workers in it
 

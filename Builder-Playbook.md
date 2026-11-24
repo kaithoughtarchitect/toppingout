@@ -65,6 +65,7 @@ Put this in the work order, word for word if needed:
 - Data that **skipped validation** on the way in (in Python, objects built with `model_construct`) → revalidate at the boundary, nested parts included.
 - An error raised while handling another can **carry the first one's payload** with it (in Python, `__context__`, prompt text included) → record a flag, raise after the handler, and check nothing is chained.
 - Hash or sign only **validated** data.
+- **Time:** no test compares a fixed date or time with today's: it passes on the day it's written and turns every gate red on its own later. Inject or freeze the clock.
 
 ---
 
