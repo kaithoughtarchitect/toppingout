@@ -2,13 +2,15 @@
 
 [![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory with a planner/executor split: a foreman in Claude Code specs every ticket in a fresh session, a cheaper builder codes it, a rival model family reviews it, and nothing merges without evidence.**
+**Go to bed with a ticket list, wake up to merged PRs, each with its proof.**
 
-It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+Topping Out is a spec-driven software factory with a planner/executor split: a foreman in Claude Code, on the Claude model you trust most, specs every ticket in a fresh session; a builder on whatever model you choose codes it; a rival model family reviews it; and nothing merges without evidence. Frontier, fast or cheap: you pick the builder for each job.
 
-> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and the expensive model spends your usage on typing.
+It runs in Orca, with Pi, Claude Code or agy as the builder, on any model it can run. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+
+> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and your planning model spends your usage on typing.
 >
-> **What it does:** splits the work. The foreman plans each job and never writes code, a cheaper builder does the typing from exact work orders, inspectors from another model family check it, and you give the word for merges and pushes, or hand it over for one job or a night shift.
+> **What it does:** splits the work. The foreman plans each job and never writes code, the builder you pick for the job does the typing from exact work orders, inspectors from another model family check it, and you give the word for merges and pushes, or hand it over for one job or a night shift.
 >
 > **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
 
@@ -21,7 +23,7 @@ One real job, run on its own from ticket to merge (an autonomous run; the projec
 ```text
 ticket      one feature, one branch, one PR
 plan check  5 findings from a cross-family reader, 4 applied before building
-build       work orders written by the foreman, built test-first by a cheaper model
+build       work orders written by the foreman, built test-first by the builder you chose
 inspect 1   lens inspection: 18 fixes found and accepted
 inspect 2   independent review (another model family): no findings
 review      Greptile 5/5
@@ -36,7 +38,7 @@ Every job's PR is titled the same way, `J<N> · board <id>: <what it delivers>`,
 
 ## Try it
 
-You need `git`, Node 18+, Python 3.9+ and Bash, and Claude Code ([What you need](#what-you-need) has the rest).
+You need `git`, Node 18+, Python 3.9+, Bash and Claude Code, plus a builder, Pi, the codex CLI, an OpenRouter key and the Greptile app ([What you need](#what-you-need) says what each is for).
 
 **How to start:**
 
@@ -63,9 +65,7 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 
 **Tested on** Windows 11 with Claude Code as the foreman, Git Bash, Node 22 and Python 3.12, on real codebases since September 2026, and on an Ubuntu 24.04 server through Orca. macOS and desktop Linux are expected to work (the scripts are Node, Python and Bash) but aren't verified yet: `SETUP.md` §9, "Tested setup".
 
-## How a job runs
-
-### One job, from your side
+## One job, from your side
 
 1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>-<slug>.md` (`/f-survey` turns an idea into one).
 2. It walks the site (re-checks the handover, the repo and the live ticket), then asks for your **"go"**.
@@ -91,7 +91,7 @@ The roles and the name come from the building site.
 
 - **Owner:** you. Your word is needed for merges, pushes and the other acts `RULES.md` lists.
 - **Foreman:** the session that plans, writes work orders and checks the work. It never writes product code. The skill names start with `f-`, for foreman.
-- **Builder:** the cheaper session that writes the code, one work order at a time.
+- **Builder:** the session that writes the code, one work order at a time, on the model you pick for the job: a frontier model, a fast one or a cheap one.
 - **Inspectors:** fresh review sessions that only report. The **lens inspection** runs one review agent per angle (tests, errors, types and more, `agents/lens-*.md`); the **independent inspection** is a session from another model family.
 - **Work order:** a file with one or several exact tasks, each with its tests and its own commit. The builder gets a one-line pointer to it.
 - **Site walk:** the foreman's check at the start of a job that the handover still matches the repo and the live ticket.
@@ -110,7 +110,7 @@ The roles and the name come from the building site.
 3. **Everything goes through files.** Work orders are files, reports are files, reviews are files. The builder gets a one-line pointer (from the owner, or sent over a pane link by the foreman), never pasted text.
 4. **Disk before words.** After every builder step, the foreman checks commits, captures and files on disk *before* it reads the builder's report.
 5. **Every claim carries its evidence:** a command and its output, a commit hash, a test name. A claim without evidence counts as not done.
-6. **Some acts need the owner's word, typed in the session.** These are approval boundaries, not all of them irreversible: merging and pushes, tracker transitions, messages, branch and worktree deletion, edits outside the ticket's files, migrations, and a fourth Greptile round on one PR ("greploop"; rounds 1 to 3 come with opening the PR). A ticket key is never minted. A message relayed by voice (marked `[voice]`) is never the owner's word. The full list, and the exceptions (the job's own cleanup and records push after a verified merge, an autonomous run's grants), are in `RULES.md`.
+6. **Some acts need the owner's word, typed in the session.** These are approval boundaries, not all of them irreversible: merging and pushes, tracker transitions, messages, branch and worktree deletion, edits outside the ticket's files, migrations, and a fourth Greptile round on one PR. A message relayed by voice is never the owner's word. The full list, and the exceptions, are in `RULES.md`.
 7. **Every reply ends with the 5-line status block** (`templates/J-STATUS.md`).
 
 ---
@@ -120,7 +120,7 @@ The roles and the name come from the building site.
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/flow-dark.webp">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme/flow-light.webp">
-  <img alt="One job from ticket to merge, drawn as a fishbone spine: 01 plan (once per project), 02 start in a fresh session from the handover file, 03 build (the foreman writes work orders, a cheaper builder builds test-first), 04 check (tests before and after, a lens inspection, a reviewer from another model family, the acceptance ledger), 05 ship (the PR, up to three outside review rounds on your word, the merge checked), 06 close (lessons saved, the next job proposed, a handover written). Your words go, open the PR and merge sit on the spine. Then the next job starts in a fresh session, or the board tops out and you pick the next head. Three ways to run it: with you, an autonomous run, or a night shift." src="assets/readme/flow-dark.webp">
+  <img alt="One job from ticket to merge, drawn as a fishbone spine: 01 plan (once per project), 02 start in a fresh session from the handover file, 03 build (the foreman writes work orders, the builder you chose builds test-first), 04 check (tests before and after, a lens inspection, a reviewer from another model family, the acceptance ledger), 05 ship (the PR, up to three outside review rounds on your word, the merge checked), 06 close (lessons saved, the next job proposed, a handover written). Your words go, open the PR and merge sit on the spine. Then the next job starts in a fresh session, or the board tops out and you pick the next head. Three ways to run it: with you, an autonomous run, or a night shift." src="assets/readme/flow-dark.webp">
 </picture>
 
 <details>
@@ -168,7 +168,7 @@ The roles and the name come from the building site.
 
 ## Topping out
 
-The name comes from the building site: topping out is the ceremony held when the last beam goes on. Here, when a board reaches its head (every job merged or resolved), the end game freezes it as the project's record, writes what was built and what's carried over, and offers three to five candidate next heads. You pick one, whenever you're ready, and the cycle starts again on a new board (`METHOD.md` §11b). Work found while testing a product goes on an **iteration board** instead: no blueprint, small jobs added as you find them.
+When a board reaches its head (every job merged or resolved), the end game freezes it as the project's record, writes what was built and what's carried over, and offers three to five candidate next heads. You pick one, whenever you're ready, and the cycle starts again on a new board (`METHOD.md` §11b). Work found while testing a product goes on an **iteration board** instead: no blueprint, small jobs added as you find them.
 
 ## The board
 
@@ -180,7 +180,7 @@ The name comes from the building site: topping out is the ceremony held when the
 
 ## What it is not
 
-- **Not autonomous by default.** By default you give the word for every push, PR, review round and merge (except the job's own cleanup and records push after a verified merge): the owner is the one piece a confident report can't talk round. **Autonomy comes only from an explicit grant:** an autonomous run (`/goal autonomous run: <path to the job's opener>`) or a night shift covers exactly the acts `RULES.md` ("The one exception") lists, for the jobs it names, and repairs what goes red and stops only on the conditions `RULES.md` ("The one exception") lists. A standing goal never covers the other gated acts.
+- **Not autonomous by default.** By default you give the word for every push, PR, review round and merge (except the job's own cleanup and records push after a verified merge): the owner is the one piece a confident report can't talk round. **Autonomy comes only from an explicit grant:** an autonomous run (`/goal autonomous run: <path to the job's opener>`) or a night shift covers exactly the acts `RULES.md` ("The one exception") lists, for the jobs it names, and repairs what goes red and stops only on the conditions listed there. A standing goal never covers the other gated acts.
 - **Not a second judge on top of the foreman.** Reviews are layered by *independence* (a fresh session, a different reader), not by stacking graders. Separate reviewers reduce some failure modes; they don't guarantee correct code.
 - **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build. Every builder gets the same kind of work order (`Builder-Playbook.md`). In Orca the foreman drives it in the pane beside it: Pi, Claude Code running whichever Claude model you choose, or agy (Antigravity's CLI) running any model it lists (`SETUP.md` §4).
 

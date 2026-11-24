@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-24
+
+- **The pitch: you choose the builder.** The README, `AGENTS.md` and the site no longer say the builder is a cheaper model: the foreman runs in Claude Code on the Claude model you trust most, and the builder on whatever model you pick for each job, a frontier model, a fast one or a cheap one. The method is what makes any of them safe. The README lead is now one bold sentence, and "Try it" lists every required tool up front.
+
 ## 2026-11-23
 
 - **An autonomous run or a night shift can take acts 8 and 9 on a standing grant.** The repo profile's new "Standing grant (acts 8 and 9)" row holds the owner's own words, quoted, or `none` (the default, and the old rule). With a grant, a run may edit a file the job needs outside its ticket's files (act 8) and add at most one new migration file pair per job (act 9), both only inside the board's entry for that job; the foreman quotes the row into the job file each time and lists every such file in the PR body and the dev report. It never applies a migration to a non-disposable database, goes beyond the job's board entry, touches a file another job owns, or does anything irreversible or reserved for the owner (`RULES.md`, "A standing grant for acts 8 and 9"). `/f-shift` quotes the row with the job's facts, and the night shift's pre-flight records it and says when a shift will need it but the row is `none`.

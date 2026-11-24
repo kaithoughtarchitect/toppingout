@@ -193,7 +193,7 @@ ABOUT = {
     # the systems, newest first: (name, when, what it taught, placeholder?)
     # (name, when, what it changed, why it was needed, placeholder?, link)
     "floors": [
-        ("Topping Out", "now, first called Foreman", "Split the work by trust: a foreman decides, a cheap model builds, another model family checks.", "Specialist teams were costly, and still checked by one model family.", False, ""),
+        ("Topping Out", "now, first called Foreman", "Split the work by trust: a foreman decides, the builder you choose builds, another model family checks.", "Specialist teams were costly, and still checked by one model family.", False, ""),
         ("Journeyman", "2026", "Broke each job into stages, requirements, design, task list, build, review, with a specialist agent for each, and had a separate agent score the plan before any code.", "A single agent was marking its own homework.", False, ""),
         ("Noderr", "summer 2025", "Handed the bookkeeping to the AI, and traced every change through everything it touched.", "Maps and trackers kept by hand drifted away from the code.", False, "https://github.com/kaithoughtarchitect/noderr"),
         ("Pathfinder", "spring 2025", "Drew the whole app as a map, gave each part a spec, and marked nothing done until verified.", "So the AI could build fast without the app losing its shape.", False, ""),
@@ -2446,24 +2446,24 @@ FRONT_SUBS = [("#access", "Install"), ("#pillars", "Why Topping Out"), ("#route"
 
 FRONT = {
     "title": "Topping Out",
-    "description": "Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, a cheaper builder codes it, another model family reviews it.",
+    "description": "Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, the builder you choose codes it, another model family reviews it.",
     "board_kicker": "A software factory methodology",
     # the owner's pick (2026-11-22): the original headline back; "Hire a foreman." stays as the hi-vis line
     "headline": ["Stop babysitting agents.", "Hire a foreman."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
         ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
-        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on a cheaper model. Builds; never makes design decisions."),
+        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions."),
         ("inspectors", "Inspectors", "Fresh review agents, then another model family: Codex, on your ChatGPT subscription. Find problems; never fix them."),
         ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
-    # the owner's angle: long runs without drift, a cheaper builder, and proof for every merge (README lead, 2026-11-21).
+    # the owner's angle: long runs without drift, the builder of your choice, and proof for every merge (README lead, 2026-11-24).
     # The link preview (scripts/og-card.mjs) carries the headline, read from the built page.
-    "subline": "A foreman in Claude Code specs every ticket in a fresh session, a cheaper builder codes it, another model family reviews it, and nothing merges without its evidence.",
+    "subline": "A foreman in Claude Code, on the Claude model you trust most, specs every ticket in a fresh session, a builder on whatever model you choose codes it, another model family reviews it, and nothing merges without its evidence.",
     "shift_cmd": "/goal night shift: 3 jobs, auto-pick",
     # why Topping Out, in four pillars: (title, the one line); the sign each one is posted as is in SIGNS, same order
     "pillars": [
-        ("Cheaper", "The foreman decides, so a cheap model can build."),
+        ("Any builder", "Frontier, fast or cheap: the foreman decides and the proof checks, so the choice is yours."),
         ("Checked end to end", "Two separate reviews and a checklist. “Done” has to be proven."),
         ("Runs the night shift", "Hand it a list at night. Wake up to merged jobs."),
         ("Nothing forgotten", "A new session picks up where the last one stopped."),
@@ -2607,7 +2607,7 @@ FRONT = {
          "`RULES.md`, \"Acts that need the owner's exact word\""),
         ("Isn't it slow and costly?",
          "More steps per job. Less of your time.",
-         "A cheap model on a flat subscription does the building, the checks catch problems first, and jobs run while you sleep.",
+         "The builder can be a cheap model on a flat subscription, the checks catch problems first, and jobs run while you sleep.",
          "the Requirements page; the night shift above"),
         ("Am I locked in?",
          "No. It is plain text files in your own repo.",
@@ -2679,7 +2679,7 @@ ONE_JOB = [
     ("foreman", "Plan", [1, 2], ["Give the foreman a ticket", "It walks the site", '"go"'],
      'Pick a ticket, then say <q>go</q>.', "Reads the ticket and your code. Writes a plan."),
     ("builder", "Build", [3], ["It writes work orders", "you paste each pointer into the builder", "or the pane link does it"],
-     "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Small steps, each built tests first by a cheaper model."),
+     "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Small steps, each built tests first by the builder you chose."),
     ("inspectors", "Check", [3], ["the two inspections and the acceptance ledger"],
      "", "Two reviews, then proof for every requirement."),
     ("you", "Your OK", [4], ['("open the PR")', "up to three Greptile review rounds", '**"merge"** when the evidence satisfies you'],
@@ -2748,9 +2748,9 @@ ONE_JOB_NEXT = (
 
 def one_job_steps() -> list:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
-    sec = re.search(r"^### One job, from your side\s*\n(.*?)(?=^---|^## )", text, re.S | re.M)
+    sec = re.search(r"^##+ One job, from your side\s*\n(.*?)(?=^---|^## )", text, re.S | re.M)
     if not sec:
-        raise SystemExit("build_site: README.md needs '### One job, from your side'")
+        raise SystemExit("build_site: README.md needs '## One job, from your side'")
     steps = re.findall(r"^\d+\. (.+)$", sec.group(1), re.M)
     if len(steps) != 5:
         raise SystemExit(f"build_site: README 'One job, from your side' has {len(steps)} steps, the front page draws 5")
@@ -5389,7 +5389,7 @@ class Site:
             def dn(does, never):
                 return (f'<div class="dn"><div class="do"><h3>Does</h3><ul>{lst(does)}</ul></div>'
                         f'<div class="no"><h3>{never_h}</h3><ul>{lst(never)}</ul></div></div>')
-            return (('<p class="lead">The builder is a cheaper model than the foreman. Every builder gets the same kind of work order.</p>' if role == "builder" else "")
+            return (('<p class="lead">The builder runs on the model you pick for the job: a frontier model, a fast one or a cheap one. Every builder gets the same kind of work order.</p>' if role == "builder" else "")
                     + f'<div class="pl">{dn(*PLAIN_ROLES[role])}</div><div class="ex">{dn(*roles[role])}</div>'
                     + (f'<p class="jobnote">{note}</p>' if note else ""))
 
@@ -5672,7 +5672,7 @@ class Site:
                 builders = "".join(tile(b, "builder") for b in F["req_builders"])
                 builders += tile((None, "", "Another builder", "your pick", "Any agent that reads files, runs a shell, writes a report."), "builder")
                 extra = ('<div class="bpick"><h4>And one builder <small>pick one</small></h4>'
-                         '<p>It only builds what the foreman settled, so a cheaper model will do. I use Claude Sonnet 5.5 and Claude Haiku 5.5 in Claude Code, Gemini Hydrogen in Antigravity (agy), GPT-6.2 Sol and GPT-6.2 Terra in Pi, and GLM 5.3.</p>'
+                         '<p>It only builds what the foreman settled, so pick the model for the job: frontier for the hard ones, fast or cheap for the rest. I use Claude Sonnet 5.5 and Claude Haiku 5.5 in Claude Code, Gemini Hydrogen in Antigravity (agy), GPT-6.2 Sol and GPT-6.2 Terra in Pi, and GLM 5.3.</p>'
                          f'<ul class="kits">{builders}</ul></div>')
             lvn = {"ground": "Record", "extra": "Extra"}.get(lid, f"Level {len(blocks):02d}")
             blocks.append(f'<section class="lvl{" lvl0" if lid in ("ground", "extra") else ""}" id="{lid}"><div class="lvh"><span class="lvn">{lvn}</span><h2>{esc(title)}</h2><p>{esc(sub)}</p></div>'

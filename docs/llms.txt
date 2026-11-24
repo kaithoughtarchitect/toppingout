@@ -1,12 +1,12 @@
 # Topping Out
 
-> Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory with a planner/executor split: a foreman in Claude Code specs every ticket in a fresh session, a cheaper builder codes it, a rival model family reviews it, and nothing merges without evidence. It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+> Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory with a planner/executor split: a foreman in Claude Code, on the Claude model you trust most, specs every ticket in a fresh session; a builder on whatever model you choose codes it; a rival model family reviews it; and nothing merges without evidence. Frontier, fast or cheap: you pick the builder for each job.
 
 Topping Out is open source (MIT): https://github.com/kaithoughtarchitect/toppingout. Every skill and agent page has a Markdown twin, linked below.
 
 ## Pages
 
-- [Topping Out](https://toppingout.dev/): Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, a cheaper builder codes it, another model family reviews it.
+- [Topping Out](https://toppingout.dev/): Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, the builder you choose codes it, another model family reviews it.
 - [Playbooks](https://toppingout.dev/playbooks.html): Who does what: the foreman's, the builder's and your job, and the playbook each role follows.
 - [Order of works](https://toppingout.dev/route.html): Every step from an idea to a merged job: the 11 steps, each opening into exactly what happens.
 - [Your repo](https://toppingout.dev/repo.html): A site plan of every folder Topping Out adds to your repo, and where one job's files appear.
