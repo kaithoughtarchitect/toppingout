@@ -48,10 +48,12 @@ Test commands (always from $WT, through the repo's test adapter, templates/TEST-
     test folder instead when that set is empty, when this work order touches a conftest, fixture, test helper or
     a file the scan can't follow (data, SQL, config), for a stack the scan can't read, or when the repo profile
     says "Whole suite every work order: yes" (templates/TEST-ADAPTERS.md "Affected tests"). The whole suite
-    runs at t0 and at the final head.
+    runs once in the job, at the final head (METHOD.md section 8 step 6).
     <A BIG SET: when the affected set holds more than half the suite's test files, write instead:
-     "AFFECTED = the whole test folder; no BEFORE run: the baseline is <the last whole-suite output: t0's, or
-     the previous work order's AFFECTED>". One whole run then costs less than a big set run twice.>
+     "AFFECTED = the whole test folder, as a *-full capture; no BEFORE run: the baseline is <the previous work
+     order's whole-folder AFFECTED, or none>; a test red here that is green in that baseline, or that no
+     baseline covers, is re-run alone in the base worktree and labelled (BASE-VS-HEAD.txt 1.4)". One whole run
+     then costs less than a big set run twice.>
   (paid keys are stripped inside run_tests by the adapter's no_paid guard)
 
 FILES YOU MAY READ
@@ -161,7 +163,8 @@ B.4  Commit:
 B.5  Captures, one at a time: bash "$DAY/<gate runner>" t<k> then
      bash "$DAY/<other runner>" t<k>; wait for "ALL DONE" in each
      summary.txt; count the .exit files against the gates that ran (the
-     whole-suite gate says SKIP except at t0, t-final and *-full labels;
+     whole-suite gate says SKIP except at t-final and *-full labels, and at t0 only where
+     the profile says "CI runs the whole suite: no";
      a repeated t0 is t0-2, a second capture at the final head t-final-2).
 
 REPORT - ONE FILE, LF ENDINGS

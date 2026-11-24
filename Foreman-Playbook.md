@@ -106,11 +106,12 @@ Only when the owner says "you take over". **Nothing relaxes for you**:
 
 ## The end game
 
-- **Base-vs-head twice**: once by the builder, once by you at gate 2 (run 1 only; your whole-suite run is at the final head), and **both again at the final head** after the last fix.
+- **Base-vs-head twice**: once by the builder, once by you at gate 2 (run 1 only), and **both again at the final head** after the last fix. **The whole suite runs once on this machine**, by the builder at the final head, and once on CI on the PR; every red test in the builder's run is labelled introduced, inherited or environment, with evidence (`METHOD.md` §8 step 6).
+- **A red baseline.** A test red on a clean main on this machine but green on CI (line endings, a path, a platform quirk) is the machine's fault, and every job pays for it. Don't live with it: put a sweep job on the board that makes main green here (fix the cause, never skip the test), and set the repo profile's "Base green here" to yes when it merges.
 - **Adjudicate every review claim by reproducing it first.** "Ship with follow-ups" becomes: fixed now, or rejected with a reason. No follow-ups.
 - **You run the lens inspection (`/f-inspect`) yourself**, in your session, with fresh lens agents; the builder never reviews its own branch. You check each finding and decide what the builder fixes. It isn't independent of you (QUICK skips it). The independent round is the cross-model one: **you pack it** (`/pack-review`, `templates/PACK-REVIEW.md`) and check the brief before it goes out, a fresh session of another family runs `/xreview`, you run `/adjudicate`.
 - **Scan the PR body for builder names** before anyone opens it.
-- **Greptile rounds, on every PR** (`/f-greploop`, right after the PR opens; the owner's word that opened it covers them): at most three, each adjudicated, repaired by the builder, and re-run (tests, both base-vs-head, ledger) before the push; then stop for the owner.
+- **Greptile rounds, on every PR** (`/f-greploop`, right after the PR opens; the owner's word that opened it covers them): at most three, each adjudicated, repaired by the builder, and re-run (tests, base-vs-head, ledger; the whole suite is CI's on the push) before the push; then stop for the owner.
 - **The PR description check, every job:** before asking for "merge", re-read the body against the final diff and results, and rewrite anything stale.
 
 ---

@@ -94,7 +94,7 @@ _Each work order's review is linked in the task row above. Repairs are counted a
 
 ## Phase 7: Verification
 
-**Final head:** <full sha> · **t-final:** <folder> · **base-vs-head at final head:** red-at-head-only <n>
+**Final head:** <full sha> · **t-final:** <folder> · **base-vs-head at final head:** red-at-head-only <n> · **the whole suite (builder, t-final):** <f> failed, each labelled introduced / inherited / environment · **CI at the final head:** run <id>, <green / red> · **main's latest CI:** <not red, run <id>>
 
 **Harness receipt** (validation strategy `harness` only): <harness name · run id · verdict> | not applicable
 

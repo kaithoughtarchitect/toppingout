@@ -59,6 +59,11 @@ PART 3 - CAPTURE t0, ONE GATE AT A TIME
 3.2  bash "$DAY/<other runner>" t0   only after 3.1 is done
 3.3  Count the .exit files (<n> and <n>) and "ALL DONE" in each summary.
 3.4  For every capture: its .exit value and the LAST line of its .txt.
+3.5  The whole-suite baseline is main's CI at the branch point (the whole-suite gate says SKIP at t0,
+     unless the runner has WHOLE_AT_T0=1):
+       gh run list --commit <branch point sha> --json name,conclusion,databaseId,url
+     Paste each run's name, conclusion and id. A red main: name its failing tests (gh run view <id> --log-failed)
+     and STOP: a job doesn't start on a red main without the owner's word.
 A failing test at t0 is not yours to fix: record it exactly. Known
 intermittents: <list>. Do not re-run anything to make it green.
 For comparison, the last job's final captures at this tree read:

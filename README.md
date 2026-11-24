@@ -141,17 +141,17 @@ The roles and the name come from the building site.
       │  after EACH: disk check → work order review (re-probe, verify test-first, switch-rule line)
       │  next work orders drafted while the current one runs
                                           │
- BASE-VS-HEAD  builder work order; any red-at-head-only = STOP, foreman characterises
+ BASE-VS-HEAD  builder work order (the tests that use what changed); any red-at-head-only = STOP, foreman characterises
  GATE 2   foreman reviews every commit + runs its own base-vs-head
  LENS INSP.    foreman runs /f-inspect in its own session (fresh lens agents) ──> checks each finding ──> repair work orders (QUICK: skipped)
                                           │
  CROSS-MODEL   foreman /pack-review (checks its own brief) ──> fresh session of another
                family runs /xreview ──> foreman /adjudicate ──> repair work orders
- FINAL RE-RUN  all captures, probes, both base-vs-head again at the final head
- ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE/blank to open the PR; every requirement row PASS (the foreman's own run done) to merge
+ FINAL RE-RUN  all captures, probes, base-vs-head again at the final head; the whole suite once (builder), each red test labelled
+ ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE/blank to open the PR; every requirement row PASS (CI green at the final head) to merge
                                           │
  PR opened (owner watches it in the browser) ──> /f-greploop: ≤3 Greptile rounds
-      (adjudicate → builder repairs → tests + both base-vs-head + ledger re-run → push) ──> PR description check
+      (adjudicate → builder repairs → tests + base-vs-head + ledger re-run → push → CI) ──> PR description check
                                           │
  [owner: "merge"]
                                           │

@@ -7,11 +7,12 @@
 #   - one <gate>.txt (full output) and one <gate>.exit (the exit code) per gate, in LOG;
 #   - a summary.txt with every gate's result, ending "ALL DONE";
 #   - every run strips the paid API keys first, and gates run one at a time;
-#   - the whole-suite gate (run_full_gate, through the repo's test adapter) runs at t0, t0-<n>, t-final,
+#   - the whole-suite gate (run_full_gate, through the repo's test adapter) runs at t-final,
 #     t-final-<n> (a second capture at the final head) and any label ending in "-full";
-#     at other labels it is skipped and says so, because the work order already ran its affected tests
-#     (METHOD.md section 7). FULL_EVERY_CAPTURE=1 runs it every time (the repo profile's
-#     "Whole suite every work order: yes", for a suite under about 5 minutes).
+#     at t0 it is skipped (main's CI at the branch point is the baseline, METHOD.md section 8 step 6) unless
+#     WHOLE_AT_T0=1 (the repo profile's "CI runs the whole suite: no"); at other labels it is skipped because
+#     the work order already ran its affected tests (METHOD.md section 7). FULL_EVERY_CAPTURE=1 runs it every
+#     time (the repo profile's "Whole suite every work order: yes", for a suite under about 5 minutes).
 # A code area that no gate covers gets its own copy of this file, with gates that name
 # that area's tests by explicit path.
 set +e
@@ -23,6 +24,7 @@ LOG="<absolute path to the day folder>/${TASK}-<ticket>-gates"
 MAIN_REF="origin/main"                 # the repo profile's remote and main branch
 PAID_KEYS=(OPENROUTER_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY)   # every paid key the tests could reach
 FULL_EVERY_CAPTURE=0                   # 1 = the repo profile says "Whole suite every work order: yes"
+WHOLE_AT_T0=0                          # 1 = the repo profile says "CI runs the whole suite: no" (then t0 runs it here)
 ADAPTER="<records>/test-adapter.sh"    # the repo's test adapter: the whole-suite gate runs through its run_tests
 # -----------------------------------------------------------------------------------------
 
@@ -63,15 +65,19 @@ run_gate() {
 
 # run_full_gate <name> <test paths...>: the whole test suite, through the adapter's run_tests (the same command
 # line, workers included, as every other run), so base-vs-head can reuse a t-final capture instead of running it
-# again. Runs at t0, t0-<n>, t-final, t-final-<n> and *-full labels, or every time with FULL_EVERY_CAPTURE=1;
-# otherwise writes no .txt/.exit and records the skip in the summary.
+# again. Runs at t-final, t-final-<n> and *-full labels (and t0, t0-<n> with WHOLE_AT_T0=1), or every time with
+# FULL_EVERY_CAPTURE=1; otherwise writes no .txt/.exit and records the skip in the summary.
 run_full_gate() {
   local name="$1"
   shift
   case "$TASK" in
-    t0|t0-*|t-final|t-final-*|*-full) ;;
+    t-final|t-final-*|*-full) ;;
+    t0|t0-*) if [ "$WHOLE_AT_T0" != 1 ] && [ "$FULL_EVERY_CAPTURE" != 1 ]; then
+         echo "SKIP $name (t0: the baseline is main's CI at the branch point, recorded by work order 1)" | tee -a "$SUMMARY"
+         return 0
+       fi ;;
     *) if [ "$FULL_EVERY_CAPTURE" != 1 ]; then
-         echo "SKIP $name (whole suite: t0, t-final and *-full captures only; this work order ran its affected tests)" | tee -a "$SUMMARY"
+         echo "SKIP $name (whole suite: t-final and *-full captures only; this work order ran its affected tests)" | tee -a "$SUMMARY"
          return 0
        fi ;;
   esac

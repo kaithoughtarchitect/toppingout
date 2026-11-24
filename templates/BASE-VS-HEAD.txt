@@ -37,33 +37,43 @@ RUN 1 - THE TESTS THAT DEPEND ON WHAT CHANGED
      The key of a base run is the base tree, its exact file list, the
      adapter and the installed environment<, and the database arm>:
        { git -C "$BASE" rev-parse 'HEAD^{tree}'; printf '%s\n' <base set> | sort; sha256sum "$REC/test-adapter.sh" | cut -d' ' -f1; ( cd "$BASE" && <environment listing, e.g. python -m pip freeze> ) | sha256sum | cut -d' ' -f1; } | sha256sum | cut -d' ' -f1 > "$B/base.key"
-       The same with <suite paths> in place of <base set>, into "$B/base-wide.key".
+       <Only where the repo profile says "CI runs the whole suite: no": the same with <suite paths> in place of
+       <base set>, into "$B/base-wide.key", and base-wide joins the loop below.>
      Then:
-       for r in base base-wide; do if cmp -s "$B/$r.key" "$S/$r.key" && [ -f "$S/$r.txt" ] && [ -f "$S/$r.exit" ]; then cp "$S/$r.txt" "$S/$r.exit" "$B/" && echo "$r REUSED"; else echo "$r RUN"; fi; done
+       for r in base <base-wide>; do if cmp -s "$B/$r.key" "$S/$r.key" && [ -f "$S/$r.txt" ] && [ -f "$S/$r.exit" ]; then cp "$S/$r.txt" "$S/$r.exit" "$B/" && echo "$r REUSED"; else echo "$r RUN"; fi; done
      A changed key (the target moved, the set grew, a dependency changed)
      means RUN. Never edit a key or a saved file by hand.
 1.3  Run that set at head, and at base only if 1.2 said "base RUN", same flags<, once per database arm if the repo has them>:
        ( cd "$WT"   && run_tests "$B/head.txt" "$B/head.exit" <set> )
        ( cd "$BASE" && run_tests "$B/base.txt" "$B/base.exit" <base set> )
      Each run_tests line is its own tool call, never chained: a call past the tool limit loses the exit file.
-1.4  WIDENED <the builder's first run (METHOD.md section 8 step 1) and both final-head runs (step 6) only; the
-     foreman's gate-2 run is run 1 alone: omit 1.4, and base-wide from 1.2's loop>: the same for the whole
-     affected suites, into base-wide.* and head-wide.* (again one call per run; base-wide only if 1.2 said
-     "base-wide RUN"):
+1.4  THE WHOLE SUITE <the builder's final-head run only (METHOD.md section 8 step 6); every other run of this
+     work order, and every foreman run, is run 1 alone: omit 1.4>: the whole suite at head, into head-wide.*:
        <suite paths>
+     Every test red in head-wide is re-run ALONE in the base worktree, one call each, and labelled:
+       for t in $(failed_ids "$B/head-wide.txt"); do ( cd "$BASE" && run_tests "$B/base-one-$(echo "$t" | tr -c 'A-Za-z0-9' _).txt" "$B/base-one-$(echo "$t" | tr -c 'A-Za-z0-9' _).exit" "$t" ); done
+       introduced  = green at base: a regression. Listed in red_at_head_only.txt (1.5).
+       inherited   = red at base too: quote both failing lines.
+       environment = a named cause outside the code (a port or database another process holds, a missing
+                     tool), shown by its own output. No evidence: introduced.
+     Never relabel a red test to get past a gate: CI on the PR runs the same suite again.
+     <Only where the repo profile says "CI runs the whole suite: no": the same for the whole affected suites
+     at base too, into base-wide.* (one call; only if 1.2 said "base-wide RUN"), in the builder's first run
+     and in both final-head runs, and no re-run alone.>
      HEAD-WIDE FROM YOUR OWN t-final CAPTURE <builder, final head only>: when your t-final capture ran the
      whole suite (run_full_gate, through the same adapter) at this exact head over exactly <suite paths>, copy
      it instead of running it again (G = the profile's whole-suite gate name, e.g. g1_tests):
        C="$DAY/t-final-<ticket>-gates"; G="<whole-suite gate name>"; grep -qE "^HEAD: +[0-9a-f]+ +$(git -C "$WT" rev-parse HEAD)$" "$C/summary.txt" && grep -qxF "PATHS $G: <suite paths>" "$C/summary.txt" && [ -z "$(git -C "$WT" status --porcelain --untracked-files=no)" ] && cp "$C/$G.txt" "$B/head-wide.txt" && cp "$C/$G.exit" "$B/head-wide.exit" && echo "head-wide REUSED from t-final" || echo "head-wide RUN"
      Only your own capture: the foreman never reuses the builder's, and the builder never the foreman's.
-     Save each base run you made, once ran_ok passes on it (1.5):
+     Save each base run you made, once ran_ok passes on it (1.5), except the base-one re-runs:
        cp "$B/<r>.txt" "$B/<r>.exit" "$B/<r>.key" "$S/"
 1.5  First ran_ok on every output (a run that collected nothing or crashed is a
      PROCESS FAILURE: report it, don't compare it):
-       for r in base head base-wide head-wide; do ran_ok "$B/$r.txt" "$B/$r.exit" && echo "$r ok" || echo "$r PROCESS FAILURE"; done
+       for r in base head <head-wide> <base-wide>; do ran_ok "$B/$r.txt" "$B/$r.exit" && echo "$r ok" || echo "$r PROCESS FAILURE"; done
      Then compare failing-test IDs:
        comm -13 <(failed_ids "$B/base.txt") <(failed_ids "$B/head.txt") > "$B/red_at_head_only.txt"
-       comm -13 <(failed_ids "$B/base-wide.txt") <(failed_ids "$B/head-wide.txt") >> "$B/red_at_head_only.txt"
+       <with head-wide: every head-wide test labelled introduced in 1.4>  >> "$B/red_at_head_only.txt"
+       <with base-wide instead: comm -13 <(failed_ids "$B/base-wide.txt") <(failed_ids "$B/head-wide.txt") >> "$B/red_at_head_only.txt">
      It must be EMPTY.
 
 RUN 2 - THE TESTS THAT CANNOT NORMALLY BE COLLECTED <omit if the repo has none>
@@ -76,8 +86,8 @@ RUN 2 - THE TESTS THAT CANNOT NORMALLY BE COLLECTED <omit if the repo has none>
      Compare as in 1.5.
      If none failed to load, write "run 2 empty" with the command that shows it.
 
-IF red_at_head_only IS NOT EMPTY: do NOT re-run anything, do NOT
-isolate, do NOT explain. Report every line, with the file:line of the
+IF red_at_head_only IS NOT EMPTY: do NOT re-run anything (beyond 1.4's
+one re-run at base), do NOT isolate, do NOT explain. Report every line, with the file:line of the
 test, and STOP. The foreman characterises it.
 
 Every output is already under $B (base, head, the exit files, red_at_head_only.txt).
@@ -85,8 +95,8 @@ Every output is already under $B (base, head, the exit files, red_at_head_only.t
 REPORT - ONE FILE, LF ENDINGS: $DAY/JOB-<N>-WORK-ORDER-<m>-REPORT.md
   1. The base-equality check. 2. Run 1: the set, COUNT, each base run
   REUSED or RUN with its key, both summaries,
-  the widened summaries (head-wide REUSED or RUN), each RAN_OK result and exit code, the comm
-  command and red_at_head_only (quoted, or "empty"). 3. Run 2 as above.
+  the whole-suite summary (head-wide REUSED or RUN) and each red test's label with its evidence, each RAN_OK
+  result and exit code, the comm command and red_at_head_only (quoted, or "empty"). 3. Run 2 as above.
   4. <Database roles restored after each arm, if the repo has arms.> 5. CR-byte count (0). 6. Final line: "WORK ORDER <m> DONE" or
   "WORK ORDER <m> STOPPED: red_at_head_only = <n>".
 

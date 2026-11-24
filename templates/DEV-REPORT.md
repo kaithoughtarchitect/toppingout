@@ -27,7 +27,7 @@
 | Merge | `<sha>`, parents `<a>` (+ `<b>`), in `<remote>/<main>`; `M^{tree}` `<tree>` = expected tree `<tree>` (reviewed head's, or the tested merge-preview's) |
 | Commits / files / lines | <n> / <n> / +<a> −<r> |
 | Tests added | <n>, plus <DB proofs> |
-| Test time | <n> whole-suite runs and <m> other runs, <h:mm> in all (`python snippets/run_times.py <day folder>`); the slowest tests (the script lists them). More than about 6 whole-suite runs in a job, or a whole suite over 15 minutes, goes on the board as a speed ticket |
+| Test time | <n> whole-suite runs and <m> other runs, <h:mm> in all (`python snippets/run_times.py <day folder>`); the slowest tests (the script lists them). More than 2 whole-suite runs on this machine in a job (the plan is 1, `METHOD.md` §8 step 6), or a whole suite over 15 minutes, goes on the board as a speed ticket |
 | Autonomous run notes | survey answers it gave itself, any in-scope option taken over a starred pick, every pick taken on a second opinion (`decided under the autonomous run, second opinion agreed`: the question, the pick, why), every blocker cleared (what, cost, undone or owed), usage-limit pauses (when and how long), or "not an autonomous run" |
 | Logbook upkeep | catch-up: <n jobs, n cards, or none>; dream: <proposal id, n merges / supersessions, n left for the owner, or not due>; distill preview: <path, n bullets waiting for `/f-distill`, or not due> |
 | Split under the autonomous run | `no`, or: the parent job, its children, the work-order count, the goal's words (`RULES.md`, "Its own job's split") |
