@@ -31,11 +31,21 @@ Flag: assertion-free tests, golden outputs copied from the implementation, over-
 
 Recommend the repo’s own shapes: a characterization test that pins current behavior before a controller refactor; deterministic tables through the pure core for thresholds, no snapshots. Spec the missing assert; full snippets only when tiny.
 
+## Excess tests (the other direction)
+
+A test earns its place when a plausible future break of behavior that matters makes it fail where no other test would. Tests the diff **adds or changes** that don't earn it are findings too, because every one is carried by every later run and every later edit. Report one only with all three:
+
+1. **The test:** `file:line` and the outcome it asserts.
+2. **What already protects that outcome:** the kept tests and assertions (`file:line`) that together fail for every regression this one catches. Read assertions, not test names.
+3. **The smaller set to keep:** the tests that stay, and why every regression the dropped one catches still fails one of them.
+
+Typical excess: the same assertion repeated at another layer; permutations one representative case already proves; a test that re-proves a library, the schema or the type system; a test that stubs the very function whose decision it claims to prove (it passes under every mutation of that function); a new test dependency for behavior that doesn't need it. Missing any of the three parts: the test stays. Never propose dropping a test that guards data, security, money or a deletion without part 2 naming its replacement assertion by `file:line`.
+
 Search **every** test tier the repo has, typically three: the offline unit suites, the live smokes (which write only to a disposable database or test scope), and any eval or regression gate the repo profile names for the surface the diff moved. Report only gaps this diff introduced. Pre-existing holes: one-line note max.
 
 ## Report
 
-Gaps only if `confidence_gap_is_real` ≥ 80. Rating 9–10 critical / 7–8 important / 5–6 consider. 1–4: count in the summary only.
+Gaps only if `confidence_gap_is_real` ≥ 80; excess tests only with all three parts, each as its own entry with `"kind": "excess"`, `"test"`, `"protected_by"` and `"keep_instead"` in place of the gap fields. Rating 9–10 critical / 7–8 important / 5–6 consider. 1–4: count in the summary only.
 
 ```json
 {
@@ -48,4 +58,4 @@ Gaps only if `confidence_gap_is_real` ≥ 80. Rating 9–10 critical / 7–8 imp
 }
 ```
 
-If coverage is adequate: one paragraph, positives, **stop**. Zero gaps rated 5+ is a valid result. Do not invent filler.
+If coverage is adequate and nothing is excess: one paragraph, positives, **stop**. Zero findings rated 5+ is a valid result. Do not invent filler.
