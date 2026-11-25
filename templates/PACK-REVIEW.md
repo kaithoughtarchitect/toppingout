@@ -14,7 +14,7 @@ mkdir -p "$PACK"
 git -C "$WT" diff <base>..<final head> > "$PACK/<ticket>-<base7>..<head7>.diff"
 ```
 
-Run `/pack-review` with these inputs and write its one fenced brief, verbatim, to `$PACK/REVIEW-BRIEF.md`:
+Run `/pack-review` with these inputs and write its one fenced brief, verbatim, to `$PACK/REVIEW-BRIEF.md` (a master builder job adds one input: the job file's task table, so the reviewer reads each new test's red-at-parent output against the diff):
 
 | Input | Content |
 |---|---|

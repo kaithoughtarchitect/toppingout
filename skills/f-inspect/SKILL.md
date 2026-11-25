@@ -4,7 +4,7 @@ description: >
   The foreman's lens inspection: review a finished job's commit range (base to
   final head, in its worktree) through fresh specialist lens agents and return
   evidence-checked findings only. Use when the owner or METHOD §8 says "run the
-  lens inspection", /f-inspect, or after gate 2 on a STANDARD or FULL job. No PR
+  lens inspection", /f-inspect, or after gate 2 on a STANDARD, FULL or MASTER BUILDER job. No PR
   exists yet and none is needed: this runs before the PR is prepared. Never
   fixes, never gives a verdict, never commits or pushes. Not the independent
   inspection (pack-review → xreview → adjudicate), not a review of an open PR
@@ -15,13 +15,13 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task"]
 
 # Topping Out: Lens inspection
 
-The first of a job's two inspections (`METHOD.md` §8 step 3). The foreman runs it **in its own session**, after gate 2, over the job's finished work. **There is no PR yet**: the PR is prepared only after both inspections, the final re-run and the acceptance ledger. The builder never runs this and never reviews its own branch. **QUICK jobs skip it** (the record says `lens inspection: SKIP (QUICK)`).
+The first of a job's two inspections (`METHOD.md` §8 step 3). The foreman runs it **in its own session**, after gate 2, over the job's finished work (in a MASTER BUILDER job, the master builder runs it, `METHOD.md`). **There is no PR yet**: the PR is prepared only after both inspections, the final re-run and the acceptance ledger. The builder never runs this and never reviews its own branch (the master builder runs it, but with fresh lens agents that only see the diff, the plan and the ticket). **QUICK jobs skip it** (the record says `lens inspection: SKIP (QUICK)`).
 
 Topping Out's rules are built in: the scope is always the job's range, the mode is always findings-only.
 
 ## 1 · Pin the scope
 
-**First, the job file:** `ls foreman/jobs/JOB_*_<slug>.md` must list exactly one file. None means this isn't a job yet (`RULES.md` rule 15): **stop** and say so; the job starts with work order 1, which writes it. A late job file needs the owner's word and states its gaps.
+**First, the job file:** `ls foreman/jobs/JOB_*_<slug>.md` must list exactly one file. None means this isn't a job yet (`RULES.md` rule 15): **stop** and say so; the job starts with work order 1, which writes it (a master builder job: its setup step). A late job file needs the owner's word and states its gaps.
 
 The scope is the job's commit range in its worktree, from the job record's header:
 
@@ -74,7 +74,7 @@ Write them to `templates/LENS-INSPECTION.md`'s findings table (`<day folder>/JOB
 
 ## 5 · Then
 
-The findings go to adjudication (`templates/ADJUDICATION.md`): each one reproduced against the code, then accepted, rejected or partly accepted. Accepted findings become the builder's test-first repair work orders. This skill fixes nothing itself.
+The findings go to adjudication (`templates/ADJUDICATION.md`): each one reproduced against the code, then accepted, rejected or partly accepted. Accepted findings become the builder's test-first repair work orders (in a MASTER BUILDER job, the master builder's own test-first fixes, read by the independent inspection that follows). This skill fixes nothing itself.
 
 ## Output
 

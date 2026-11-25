@@ -58,7 +58,8 @@ implement it, normally the session host. `--player <id>` overrides. **If it cann
 resolved with confidence, ask**, a wrong Player turns the read into self-review.
 
 The host is the session running this skill: `--host claude` for Claude Code, `codex` for
-Codex, `grok` for Grok Build; a pi-hosted session passes the model pi is running, any
+Codex, `grok` for Grok Build, and for a master builder the family of its model (`claude`, `codex`,
+`gemini`; never a tool name such as `agy` or `pi`, which can run several families); a pi-hosted session passes the model pi is running, any
 roster id, `cliModel`, slug, or family keyword the roster can resolve (e.g. `--host
 gemini-4-argon`). Both families are greyed in the picker and refused by its server,
 because a seat from either would be self-review.
@@ -73,6 +74,8 @@ Anthropic · excluded: Anthropic`.
 `qwen4-max` (OpenRouter, metered), one seat per vendor. On one plan check (2026-11-18,
 one assignment) Sol took 6 minutes with 34 findings, Hydrogen 6 minutes with 15 (8 the others
 missed) and Qwen4 Max 15 minutes with 25 (8 new); Gemini 4 Carbon returned nothing twice.
+
+**The dispatcher checks the family rule itself:** `--host <the Player's family>` is on every dispatch (§4's command), and it refuses any seat of that family, so a standing choice saved under one host can't seat a reader of another host's own family.
 
 **The owner's standing choice comes first.** If the repo profile's **Plan check seats** row, or the job's opener, names the seats (e.g. "codex, the $0 seat"), that is the owner's pick. **Before dispatch, apply §1's exclusions and the distinct-vendor rule to it:** drop any seat from the host's or the Player's vendor family, keep one seat per vendor, and echo what was dropped (a saved seat can become self-review when the host or the plan's author changes). Write `{scratch}/seats.json` as `{"seats":[{"id":"<roster id>","door":"<roster door>"}]}` from the row's **roster ids**, echo each seat as the picker path does, and dispatch without the picker. If no seat remains, an attended run opens the picker for this run (the row stays as it is) and an unattended run uses the resolver. Otherwise (no standing choice yet), the attended run opens the one-shot HTML picker.
 - **The first pick becomes the standing choice.** After the owner's first pick in this repo (no Plan check seats row yet), write it into the repo profile's **Plan check seats** row (the roster ids, the date, "the owner's pick in the picker"; add the row if the profile predates it) and **leave it uncommitted**: the foreman commits it with the job's records (`METHOD.md` §10 step 9); outside a job (a blueprint read), whoever ran the read commits it by explicit path with the blueprint's records, subject only. Tell the owner in one line: "Plan check seats saved as <seats>; say 'change the plan check seats' to pick again."
@@ -188,7 +191,7 @@ future edit tightening this back to "file tools only" would silently re-break ev
 codex seat, which is why the reason lives on this page and not only in a work record.
 
 ```
-node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment {scratch}/assignment.md --seats {scratch}/seats.json --out {scratch} --cwd <repo-root>
+node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment {scratch}/assignment.md --seats {scratch}/seats.json --out {scratch} --cwd <repo-root> --host <the Player's family>
 ```
 
 Every seat runs at high reasoning. `--effort medium` (or `low`) lowers it for every door, for a
@@ -392,7 +395,7 @@ The plan's only permitted review residue. Written on request, and **always, with
 that lives under or is headed for the ready-to-build plans folder**. That line is the *only* durable
 evidence a later run has that this plan was cold-read: a workflow that finds it can skip a second
 f-plancheck pass, so a ready plan without it gets re-read from scratch by every later run that uses it.
-Writing it is the one exception to "never edit the plan".
+Writing it is the one exception to "never edit the plan". In a master builder job the Player is the builder, so the line says `cross-vendor to the Player`, with no family (`RULES.md`: never name the builder).
 
 **Placement:** on its own line, unprefixed (it must start the line, so `grep -nE '^\*{0,2}gate: (plancheck|plan-read)'` finds it), directly under the plan's `## Plan check findings` heading if it has one, otherwise at the end of the plan's header.
 

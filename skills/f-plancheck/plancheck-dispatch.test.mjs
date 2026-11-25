@@ -14,6 +14,7 @@ import {
   buildArgvForSeat,
   parseAgyOutput,
   resolveSeats,
+  refuseOwnFamily,
   seatEnv,
   findPiModelRow,
   MAX_SEAT_OUTPUT_TOKENS,
@@ -266,6 +267,16 @@ t("the repo's plan-check pi folder is found when PI_CODING_AGENT_DIR is not set"
   const sp = resolvePlancheckPiDir("/r", {}, has(["sprint/plancheck-pi-agent"]));
   assert.ok(sp.dir.split("\\").join("/").endsWith("sprint/plancheck-pi-agent"));
   assert.deepEqual(resolvePlancheckPiDir("/r", {}, has([])), { dir: null, source: "none" });
+});
+
+t("a seat of the plan author's own family is refused when --host is given", () => {
+  const roster = JSON.parse(fs.readFileSync(new URL("./plancheck-roster.json", import.meta.url), "utf8"));
+  const seats = [{ id: "a", vendor: "OpenAI" }, { id: "b", vendor: "Google" }];
+  assert.equal(refuseOwnFamily(seats, null, roster).ok, true);
+  assert.equal(refuseOwnFamily(seats, "claude", roster).ok, true);
+  assert.equal(refuseOwnFamily(seats, "codex", roster).ok, false);
+  assert.equal(refuseOwnFamily(seats, "gemini", roster).ok, false);
+  assert.equal(refuseOwnFamily(seats, "agy", roster).ok, false);
 });
 
 console.log(`PASS ${n}/${n}`);

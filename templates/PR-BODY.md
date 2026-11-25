@@ -16,7 +16,7 @@
 Each with its evidence and what was rejected.
 
 ## 4 · Files
-<Each file, one line on what it does. Nothing outside the ticket's files.>
+<Each file, one line on what it does. Nothing outside the ticket's files (a master builder job: every file outside the plan's file list says why).>
 
 ## 5 · How it was proved
 - New tests: <n>, plus <database proofs, on which disposable DB>.
@@ -38,9 +38,9 @@ What this does NOT do, and which ticket owns it. Anything characterised as an in
 | Round | What it found |
 |---|---|
 | Plan review (gate 1) | |
-| Task reviews | |
+| Task reviews | <or, in a master builder job: `none (master builder)`, and the fix reviews below> |
 | Build review (gate 2) | |
-| Lens inspection (f-inspect, by the foreman) | <findings; accepted / rejected> or `SKIP (QUICK)` |
+| Lens inspection (f-inspect, by the foreman, or by the master builder with fresh lens agents) | <findings; accepted / rejected> or `SKIP (QUICK)` |
 | Independent inspection (xreview, another model family) | <claims; accepted / rejected> |
 | Greptile rounds (`/f-greploop`, on the open PR) | <round 1: n/5, findings accepted / rejected; round 2 …; at most three> or `none (no PR review bot: <the owner's recorded reason, from the repo profile>)` |
 | Split under the autonomous run | `no`, or: the parent job, its children, the work-order count that triggered it, the goal's words (`RULES.md`, "Its own job's split"); for the owner to review |

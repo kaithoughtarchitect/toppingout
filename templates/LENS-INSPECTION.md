@@ -1,6 +1,6 @@
 # J<N>: the lens inspection (`/f-inspect`): the record
 
-**Who runs it:** the foreman, **in its own session**, after gate 2. It is not a builder work order: the builder never reviews its own branch. **QUICK size:** skipped; record `lens inspection: SKIP (QUICK)` in the job header and the PR's review record.
+**Who runs it:** the foreman, **in its own session**, after gate 2. It is not a builder work order: the builder never reviews its own branch. **QUICK size:** skipped; record `lens inspection: SKIP (QUICK)` in the job header and the PR's review record. **MASTER BUILDER size:** the master builder runs it, with fresh lens agents that see only the diff, the plan and the ticket; they are its own family, so they count as fresh eyes, and the independent inspection still follows (`METHOD.md`).
 
 **Range:** `<base sha>..<final head sha>` in `<worktree>`. **Pinned head:** `<full sha>` (checked with `git -C <worktree> rev-parse HEAD` before the agents start).
 

@@ -4,7 +4,7 @@ For coding agents that open this repository. Humans: start with `README.md`.
 
 ## What this is
 
-Topping Out is a method and a set of skills for running AI coding agents one ticket at a time, for hours, without drifting. A **foreman** session plans each job and never writes product code; a **builder**, on whatever model the owner picks for the job, does the work; **inspectors** (one from another model family) review it; the **owner** gives the word for merges, pushes and other reserved acts. Every job starts a fresh session from files and ends with a record of what was asked, built, tested and found.
+Topping Out is a method and a set of skills for running AI coding agents one ticket at a time, for hours, without drifting. A **foreman** session plans each job and never writes product code; a **builder**, on whatever model the owner picks for the job, does the work; **inspectors** (one from another model family) review it; the **owner** gives the word for merges, pushes and other reserved acts. When the owner picks it, a **master builder** plans and builds a job in one session instead, with every review still done by someone else (`METHOD.md`, "MASTER BUILDER"). Every job starts a fresh session from files and ends with a record of what was asked, built, tested and found.
 
 ## If the user wants to use Topping Out in their own project
 

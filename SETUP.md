@@ -112,7 +112,7 @@ your-repo/
 │   │   ├── ARCHIVE-SYSTEM.md      how cards are moved to the archive
 │   │   ├── archive_cards.py       the script that moves them (with its test)
 │   │   └── README.md              which skill reads or writes which part
-│   ├── templates/                 the job file, by size: JOB-QUICK.md, JOB-STANDARD.md, JOB-FULL.md   install
+│   ├── templates/                 the job file, by size: JOB-QUICK.md, JOB-STANDARD.md, JOB-FULL.md, JOB-MASTER-BUILDER.md   install
 │   ├── ENDGAME-PENDING.md         only while a closed job still owes its end-game steps   /f-signoff
 │   ├── ENDGAME-PENDING-<lane>.md  the same, one per lane, in lane mode                    /f-signoff
 │   └── INSTALL-RECEIPT.txt        which Topping Out version is installed, and when   install

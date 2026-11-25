@@ -9,13 +9,14 @@
  * through `scrubSecrets` before it touches disk (a seat's read-only tools can
  * still open a local `.env`; a key echoed into findings must not persist).
  *
- *   node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment <file> --seats <seats.json> --out <dir> [--cwd <repo>] [--timeout <ms>] [--effort low|medium|high] [--dry-run] [--preflight-only]
+ *   node .claude/skills/f-plancheck/plancheck-dispatch.mjs --assignment <file> --seats <seats.json> --out <dir> [--cwd <repo>] [--timeout <ms>] [--effort low|medium|high] [--dry-run] [--preflight-only] [--host <family or model id>]
  */
 import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolvePlayerVendor } from "./plancheck-pick.mjs";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROSTER_PATH = path.join(DIR, "plancheck-roster.json");
@@ -490,6 +491,21 @@ export function resolveSeats(seatsFile, roster) {
     resolved.push({ id, name: row.name, vendor: row.vendor, door: row.door, doorSlug, model, log, raw: rawJsonName });
   }
   return { ok: true, seats: resolved };
+}
+
+/**
+ * Pure. The family rule in code, for the standing-choice path (the seats file written from the
+ * profile's "Plan check seats" row, which a session of any family may reuse): with a host or
+ * player given, every seat of its vendor family is refused, since that read would be self-review.
+ * `host` null means no check was asked for. Returns { ok: true } or { ok: false, reason }.
+ */
+export function refuseOwnFamily(seats, host, roster) {
+  if (host == null) return { ok: true };
+  const vendor = resolvePlayerVendor(String(host), roster);
+  if (!vendor) return { ok: false, reason: `--host ${JSON.stringify(host)} did not resolve to a family: pass the family of the model that wrote the plan (claude, codex, gemini, ...)` };
+  const own = seats.filter((s) => s.vendor === vendor).map((s) => s.id);
+  if (own.length) return { ok: false, reason: `seat(s) ${own.join(", ")} are the plan author's own family (${vendor}): drop them from the seats file` };
+  return { ok: true };
 }
 
 /**
@@ -1450,6 +1466,15 @@ async function main() {
     process.exit(1);
   }
   const seats = resolution.seats;
+  if (process.argv.includes("--host") && arg("host", null) === null) {
+    console.error("PLANCHECK_DISPATCH_ERR --host needs a value: the family of the model that wrote the plan");
+    process.exit(1);
+  }
+  const family = refuseOwnFamily(seats, arg("host", null), roster);
+  if (!family.ok) {
+    console.error(`PLANCHECK_DISPATCH_ERR ${family.reason}`);
+    process.exit(1);
+  }
 
   const cwd = path.resolve(cwdArg);
   const outDir = path.resolve(outArg);

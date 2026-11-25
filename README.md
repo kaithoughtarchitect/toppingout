@@ -71,6 +71,39 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
 5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
 
+## Two crews: foreman and builder, or a master builder
+
+| | Foreman and builder (the default) | Master builder |
+|---|---|---|
+| **Use it when** | the job is hard, risky or long; you want the strongest guarantees; or you want a fast or cheap builder | the job is clear, and the model doing it is strong enough to plan as well as build |
+| **Why** | a strong foreman plans, writes exact work orders and reviews every step, so a fast or less capable builder can't drift or make design calls | no handoffs and no work orders, so it should be faster; the same plan check, inspections, Greptile, CI and your merge still apply |
+| **The model** | the foreman on Opus or Fable; the builder on anything | one strong model doing both; a fast or cheap model isn't a good fit here, because nobody plans for it |
+
+Pick it at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal (`METHOD.md`, "MASTER BUILDER").
+
+**Who reads what, by master builder.** The plan check seats are the owner's standing choice minus the master builder's own family (here the usual three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
+
+**A master builder in Claude Code** (Opus or Fable):
+
+```mermaid
+flowchart LR
+  P["Plan<br/>Claude"] --> C["Plan check<br/>codex · Gemini · Qwen"] --> B["Build<br/>Claude"] --> L["Lens inspection<br/>Fable agents"] --> I["Independent inspection<br/>codex"] --> G["Greptile, CI"] --> M["You merge"]
+```
+
+**A master builder in codex:**
+
+```mermaid
+flowchart LR
+  P["Plan<br/>codex"] --> C["Plan check<br/>Gemini · Qwen<br/>(no codex seat)"] --> B["Build<br/>codex"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code"] --> G["Greptile, CI"] --> M["You merge"]
+```
+
+**A master builder in agy, on a Gemini model** (agy on a Claude model reads like the Claude Code chart, with the lens on its own model):
+
+```mermaid
+flowchart LR
+  P["Plan<br/>Gemini"] --> C["Plan check<br/>codex · Qwen<br/>(no Gemini seat)"] --> B["Build<br/>Gemini"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code<br/>(codex if Claude is unavailable)"] --> G["Greptile, CI"] --> M["You merge"]
+```
+
 ## Three ways to run a job
 
 Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over the pane link.
@@ -90,6 +123,7 @@ The roles and the name come from the building site.
 - **Owner:** you. Your word is needed for merges, pushes and the other acts `RULES.md` lists.
 - **Foreman:** the session that plans, writes work orders and checks the work. It never writes product code. The skill names start with `f-`, for foreman.
 - **Builder:** the session that writes the code, one work order at a time, on the model you pick for the job: a frontier model, a fast one or a cheap one.
+- **Master builder:** a builder that plans the job and builds it in one session, when you choose it at "go". No foreman and no work orders; the plan check, the lens inspection, an independent inspection from another model family, Greptile and your merge all stay (`METHOD.md`, "MASTER BUILDER").
 - **Inspectors:** fresh review sessions that only report. The **lens inspection** runs one review agent per angle (tests, errors, types and more, `agents/lens-*.md`); the **independent inspection** is a session from another model family.
 - **Work order:** a file with one or several exact tasks, each with its tests and its own commit. The builder gets a one-line pointer to it.
 - **Site walk:** the foreman's check at the start of a job that the handover still matches the repo and the live ticket.
@@ -104,7 +138,7 @@ The roles and the name come from the building site.
 ## The idea in seven lines
 
 1. **One ticket = one job = one branch = one PR.**
-2. **The foreman never writes product code; the builder never makes design decisions.**
+2. **The foreman never writes product code; the builder never makes design decisions.** The one exception is a master builder job, which you choose at "go": one session plans and builds, and everyone who checks it is someone else.
 3. **Everything goes through files.** Work orders are files, reports are files, reviews are files. The builder gets a one-line pointer (from the owner, or sent over a pane link by the foreman), never pasted text.
 4. **Disk before words.** After every builder step, the foreman checks commits, captures and files on disk *before* it reads the builder's report.
 5. **Every claim carries its evidence:** a command and its output, a commit hash, a test name. A claim without evidence counts as not done.

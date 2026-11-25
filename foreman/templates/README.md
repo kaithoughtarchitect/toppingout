@@ -6,6 +6,7 @@ The **form** for a job file. Copy one; don't invent a shape.
 |---|---|
 | STANDARD (the default) | `JOB-STANDARD.md` |
 | QUICK (owner agrees at "go") | `JOB-QUICK.md`: the same record, lens inspection pre-set to `SKIP (QUICK)` |
+| MASTER BUILDER (owner chooses at "go") | `JOB-MASTER-BUILDER.md`: one session plans and builds; the footprint, the checks by role and each step's time |
 | FULL (several services) | `JOB-STANDARD.md`, then the extras in `JOB-FULL.md` |
 
 Work order 1 writes the copy to `foreman/jobs/JOB_YYYY-MM-DD_<slug>.md`: the header filled in (Project, Job, Run, Ticket, SourcePlan, Size, Inspections, Validation strategy, Budgets, Target repo, Worktree, Branch, Base, Final head, Started, Acceptance ledger), then the body from `## Risk Assessment` on. The foreman keeps it current through the job (`METHOD.md` §7 step 6); `/f-signoff` moves it to `foreman/completed-jobs/YYYY-MM/`.

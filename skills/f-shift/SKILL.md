@@ -26,6 +26,8 @@ From the method folder (wherever the opener says the Topping Out package lives):
 5. `Foreman-Playbook.md`: the how and why behind your rules, and the mistakes they came from.
 6. `Builder-Playbook.md`: the one work order style every builder gets, and the switch rule.
 
+**A master builder job** (the goal or the owner's "go" says `master builder`): load the same, since the foreman rules bind it; the job then runs as `METHOD.md`, "MASTER BUILDER" says, with no work orders and no builder pane.
+
 Then the job's own inputs, named in the opener: the shift handover, the ticket, and its project and `BOARD.json` (every project has one).
 
 **Lane mode** (the board has `project.lanes`, the repo profile has a "Lanes" row): the opener's first line names its lane (`lane <X>`). Check `hostname` against that lane's machine in the profile's row; a different machine, or an opener with no lane line, stops here. Read the board through `snippets/board_pull.sh <remote> <board path>` first (the coordination branch `foreman-lanes` holds its one true copy), check this lane's end-game lock (`endgame.mjs check --lane <X>`), use `next --lane <X>`, which must list this job or show it reserved for this lane, and record every board event through `snippets/board_push.sh <remote> <board path> -- <event>` (start: `start <job> --run J<n> --lane <X>`). One job in progress per lane; one test run at a time on each machine.

@@ -25,6 +25,7 @@
  * any other vendor -> unknown), after stripping a leading `openrouter/`. Then:
  *   host family claude -> reviewer codex
  *   host family codex  -> reviewer claude
+ *   host family gemini -> reviewer claude (codex when claude is unavailable)
  *   host family unknown (e.g. "pi", "grok", "", an unrecognised id) -> REFUSED, no seat (exit 2).
  *     An unknown host is never defaulted to claude: the dispatcher cannot prove the reviewer is a
  *     different family from a host it cannot identify, so it refuses rather than guess. Pass the
@@ -63,7 +64,7 @@
  * plancheck-dispatch.mjs if a live run shows a quota message being retried into a second one.
  *
  * Usage:
- *   node scripts/cross-review-dispatch.mjs --host <claude|codex|a model id of either family> --brief <path> --out <dir> \
+ *   node scripts/cross-review-dispatch.mjs --host <claude|codex|gemini|a model id of one of them> --brief <path> --out <dir> \
  *     [--cwd <repo>] [--timeout <ms>]
  *   node scripts/cross-review-dispatch.mjs --self-test
  *
@@ -179,10 +180,12 @@ function isMainModule() {
  * followed by `-` -> codex). A `vendor/model` id resolves by its vendor alone: `anthropic/` ->
  * claude, `openai/` -> codex, any other vendor -> null (so `eleutherai/gpt-j-6b` and
  * `nomic/gpt4all` are refused, not seated as codex). A leading `openrouter/` is stripped first, so
- * `openrouter/<vendor>/<model>` resolves by the inner vendor. Anything else — "pi", "grok", "",
- * a non-string — is null: never guessed.
+ * `openrouter/<vendor>/<model>` resolves by the inner vendor. `google`, `gemini*` and a `google/`
+ * vendor -> gemini (a host only: never a reviewer seat here). A tool name (`agy`, `pi`) is not a
+ * family, since the tool can run models of several families. Anything else ("pi", "agy", "grok", "",
+ * a non-string) is null: never guessed.
  * @param {unknown} host
- * @returns {"claude" | "codex" | null}
+ * @returns {"claude" | "codex" | "gemini" | null}
  */
 export function hostFamily(host) {
   if (typeof host !== "string") return null;
@@ -194,12 +197,14 @@ export function hostFamily(host) {
     const vendor = id.slice(0, slash);
     if (vendor === "anthropic") return "claude";
     if (vendor === "openai") return "codex";
+    if (vendor === "google") return "gemini";
     return null;
   }
   if (id === "anthropic" || id === "claude" || id.startsWith("claude-")) return "claude";
   if (/^(opus|sonnet|haiku|fable)/.test(id)) return "claude";
   if (id === "openai") return "codex";
   if (/^(gpt-|chatgpt|codex)/.test(id) || /^o[134](-|$)/.test(id)) return "codex";
+  if (id === "google" || id.startsWith("gemini")) return "gemini";
   return null;
 }
 
@@ -218,11 +223,12 @@ export function selectReviewerSeat({ host, claudeAvailable, codexAvailable }) {
       ok: false,
       reviewer: null,
       reason:
-        `host ${JSON.stringify(host)} did not resolve to a known family (claude or codex) — cannot ` +
+        `host ${JSON.stringify(host)} did not resolve to a known family (claude, codex or gemini): cannot ` +
         `prove an independent reviewer, so this refuses rather than guessing`,
     };
   }
-  const reviewer = family === "claude" ? "codex" : "claude";
+  const reviewer =
+    family === "gemini" ? (claudeAvailable ? "claude" : "codex") : family === "claude" ? "codex" : "claude";
 
   if (reviewer === family) {
     return {
@@ -642,6 +648,14 @@ function selfTest() {
     "seat rule: host is case-insensitive",
     selectReviewerSeat({ host: "Claude", claudeAvailable: true, codexAvailable: true }).reviewer === "codex",
   );
+  check(
+    "seat rule: host gemini, claude unavailable -> codex",
+    selectReviewerSeat({ host: "gemini", claudeAvailable: false, codexAvailable: true }).reviewer === "codex",
+  );
+  check(
+    "seat rule: host gemini, neither available -> refused",
+    selectReviewerSeat({ host: "gemini-4-hydrogen", claudeAvailable: false, codexAvailable: false }).ok === false,
+  );
 
   // F11: host-family normalisation — vendor names and model ids map to a family; unknowns refuse.
   for (const [host, want] of [
@@ -653,6 +667,9 @@ function selfTest() {
     ["codex", "claude"],
     ["openai", "claude"],
     ["o3-mini", "claude"],
+    ["gemini-4-hydrogen", "claude"],
+    ["google/gemini-4-hydrogen", "claude"],
+    ["openrouter/google/gemini-4-hydrogen", "claude"],
   ]) {
     check(
       `seat rule: host ${JSON.stringify(host)}, both available -> reviewer ${want}`,
@@ -677,7 +694,7 @@ function selfTest() {
     );
   }
   for (const host of [
-    "pi", "grok", "", "   ", "x-ai/grok-build-0.1", "some-unknown-model", null, 42,
+    "pi", "agy", "grok", "", "   ", "x-ai/grok-build-0.1", "some-unknown-model", null, 42,
     "eleutherai/gpt-j-6b", "nomic/gpt4all", "openrouter/eleutherai/gpt-j-6b", "gpt4all", "o3x", "openrouter/",
   ]) {
     check(

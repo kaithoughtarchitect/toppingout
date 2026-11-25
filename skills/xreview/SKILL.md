@@ -26,7 +26,7 @@ Never review an artifact this same session produced. `disable-model-invocation: 
 Two ways you can be reached:
 
 - **Hand-carried.** A human pastes the brief here after running `/pack-review` elsewhere, then carries your output back by hand.
-- **Automated (unattended).** `scripts/cross-review-dispatch.mjs` seats you deterministically by its fixed seat rule (host family `claude` → reviewer `codex`; host family `codex` → reviewer `claude`; an **unknown host family**, or the other family's CLI unavailable → **refused**, no seat, exit 2; never a fallback, never a reviewer of the host's own family) and spawns you headless on your own CLI, with this file's full text and the brief piped into your prompt directly, not via `$ARGUMENTS` or a typed slash command. Treat everything after the `--- pasted review brief ---` delimiter as the artifact.
+- **Automated (unattended).** `scripts/cross-review-dispatch.mjs` seats you deterministically by its fixed seat rule (host family `claude` → reviewer `codex`; host family `codex` → reviewer `claude`; host family `gemini` → reviewer `claude`, or `codex` when claude is unavailable; an **unknown host family**, or the other family's CLI unavailable → **refused**, no seat, exit 2; never a fallback, never a reviewer of the host's own family) and spawns you headless on your own CLI, with this file's full text and the brief piped into your prompt directly, not via `$ARGUMENTS` or a typed slash command. Treat everything after the `--- pasted review brief ---` delimiter as the artifact.
 
 ## Input
 

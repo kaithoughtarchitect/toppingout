@@ -12,7 +12,7 @@ Drawn from real jobs run with Topping Out. In records, commits and PRs the build
 - At gate 1 of one job, a builder's own plan found 2 of 3 hard points. It missed the security one: it trusted a user ID taken from the request and used an ordinary key where a delegation credential was needed.
 - Built from the foreman's corrected plan, the same builder produced a clean commit, full captures and an honest report.
 
-So the foreman does all the thinking, and the builder does precise execution.
+So the foreman does all the thinking, and the builder does precise execution. The one exception is a **master builder** job, which the owner chooses at "go": the builder plans too, and the plan check from other model families is what catches the hard points its plan misses (`METHOD.md`, "MASTER BUILDER").
 
 ---
 

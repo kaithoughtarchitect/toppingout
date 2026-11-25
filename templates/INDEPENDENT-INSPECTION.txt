@@ -22,20 +22,24 @@ Who does what
 
 HOW THE REVIEW REACHES THE REVIEWER - pick one
 
-First name the foreman's family: claude (a Claude / Anthropic model) or
-codex (a codex / OpenAI model). A Pi-hosted or other harness foreman uses
-the family of the MODEL doing the work, not the harness name. The reviewer
-is always the OTHER family. If the family is neither, there is no
-independent seat: stop and tell the owner.
+First name the family of the session that did the work (the foreman, or
+in a master builder job the master builder): claude (a Claude / Anthropic
+model), codex (a codex / OpenAI model) or gemini (a Gemini / Google
+model). A Pi, agy or other harness uses the family of the MODEL doing the
+work, not the harness name. The reviewer is always another family (gemini
+gets claude, or codex when claude is unavailable). If the family is none
+of these, there is no independent seat: stop and tell the owner.
 
 A) Automated (preferred once set up). The dispatcher lives in the
    RECORDS repo (SETUP §1 installs it at <records>/scripts/, next to
    <records>/.claude/skills/xreview/SKILL.md, which it embeds). Call it
    by absolute path, pass the foreman's family as --host, and point the
    reviewer at the target worktree:
-     node "<records>/scripts/cross-review-dispatch.mjs" --host <the foreman's family: claude | codex>        --cwd "<absolute target worktree>"        --brief "<absolute day folder>/blind-pack/REVIEW-BRIEF.md"        --out "<absolute day folder>/blind-pack/xreview-out"
+     node "<records>/scripts/cross-review-dispatch.mjs" --host <the family that did the work: claude | codex | gemini>        --cwd "<absolute target worktree>"        --brief "<absolute day folder>/blind-pack/REVIEW-BRIEF.md"        --out "<absolute day folder>/blind-pack/xreview-out"
    Claude foreman: --host claude (the reviewer is seated on codex).
    codex foreman:  --host codex  (the reviewer is seated on Claude).
+   gemini (a master builder on a Gemini model): --host gemini (Claude, or codex when Claude is unavailable).
+   A master builder job: --out goes under scratch/, not the day folder.
    It seats the reviewer on the other family by a fixed rule, embeds the
    xreview skill and the work order, runs it headless and read-only, and
    refuses (exit 2, CROSS_REVIEW_NO_SEAT) if no independent seat exists or
@@ -45,11 +49,13 @@ A) Automated (preferred once set up). The dispatcher lives in the
 
 B) Hand-carried: the owner opens a fresh session of the OTHER family in
    the target worktree (Claude foreman -> a fresh codex session; codex
-   foreman -> a fresh Claude Code session) and pastes the ONE line below
+   foreman -> a fresh Claude Code session; Gemini master builder -> a fresh
+   Claude Code or codex session) and pastes the ONE line below
    (every path absolute; the xreview skill may not be installed in the
    target repo, so the line names its file). Open the session with:
      Claude foreman:  cd "<absolute target worktree>" && codex
      codex foreman:   cd "<absolute target worktree>" && claude
+     Gemini master builder: either of the two lines above
    The line to paste is the same for either family:
 
 >>>>>>>>>> START OF PROMPT - payload begins on the next line >>>>>>>>>>

@@ -74,7 +74,7 @@ With a pane link (the repo profile's builder delivery), run `orca terminal list 
 Read the entire job file. **First list every unfilled placeholder** (`grep -n '<[^>]*>' <job file> | grep -v '`[^`]*<[^`]*`'`, ignoring the JOB COMPLETE section, which Step 3.1 replaces): each one is the first finding of the preflight, filled from the reviews before anything else. Then extract:
 
 - **Title**: the job's `# Job <NN>, <title>` line
-- **Size**: QUICK / STANDARD / FULL (older job files call it **Lane**)
+- **Size**: QUICK / STANDARD / FULL / MASTER BUILDER (older job files call it **Lane**)
 - **Phase Status table**: All phases and their completion status
 - **Validation strategy**: `code-read | check | harness | UI` (the header line; older records: the State Summary block)
 - **Requirements**: How many satisfied
@@ -127,6 +127,7 @@ Every size uses the same phases 0–7 (`foreman/templates/JOB-STANDARD.md`, or `
 | --- | --- |
 | STANDARD, FULL | Phases 0–7 all ✅; both inspections have rows in Phase 6 |
 | QUICK | Phases 0–7 all ✅; Phase 6's lens-inspection row says `SKIP (QUICK)` and the independent inspection has a row |
+| MASTER BUILDER | Phases 0–7 all ✅; both inspections have rows in Phase 6; the file-list check is filled in; each step time is a noted time or `not recorded`, never filled in afterwards |
 
 A job record from before the current phase numbering (classic phase numbering) is checked against its own Phase Status table.
 
@@ -430,6 +431,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
     💸 Spend: <"none" | B and C carry ", spend up to <n> USD (read, or a ceiling under it)": <the paid seat or live-key walkthrough>>
     🤖🌙 Decided without you under B or C: <the survey questions it answers itself, each with its starred pick | "none">
     ⛔ Can't run now: <"none" | B: <what's missing, e.g. no Orca, no Pi> | C: <only one job is ready, or what's missing>>
+    🏗️ Master builder? <"no" | why this job suits one: clear, and a strong model for it>. Add ", master builder" to B or C, or say "go, master builder" under A
     Not now? Nothing starts until you paste one.
 ```
 

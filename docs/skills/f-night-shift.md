@@ -14,6 +14,8 @@ When you type /goal night shift with a list of jobs, or a number of jobs to pick
 ## Say it
 
 - "/goal night shift: jobs 13, 17, until done or stopped"
+- "13 (master builder)"
+- "all master builder"
 - "/goal night shift: 2 jobs, auto-pick, until done or stopped"
 
 ## When to use it

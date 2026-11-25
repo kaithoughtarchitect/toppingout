@@ -2453,7 +2453,7 @@ FRONT = {
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
         ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
-        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions."),
+        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions, unless you run the job as a master builder: one strong model that plans and builds."),
         ("inspectors", "Inspectors", "Fresh review agents, then another model family: Codex, on your ChatGPT subscription. Find problems; never fix them."),
         ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
