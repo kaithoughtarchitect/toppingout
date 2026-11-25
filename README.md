@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory with a planner/executor split: a foreman on Opus or Fable specs every ticket in a fresh session, a builder on whatever model you choose codes it (a frontier model, a fast one or a cheap one, per job), a rival model family reviews it, and nothing merges without evidence.**
+**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory where no agent marks its own homework: a rival model family reads every plan before any code and every change before the merge, and nothing merges without evidence. You pick the crew for each job: a planner/executor split, where a foreman on Opus or Fable specs the ticket for a builder on whatever model you choose (a frontier model, a fast one or a cheap one), or a master builder, one strong model that plans and builds a clear job itself.**
 
-It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder (codex too, as a master builder). Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
 
-> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and your planning model spends your usage on typing.
+> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. On a long job it drifts from the plan, and your best model spends your usage on typing.
 >
-> **What it does:** splits the work. The foreman plans each job and never writes code, the builder you pick for the job does the typing from exact work orders, inspectors from another model family check it, and you give the word for merges and pushes, or hand it over for one job or a night shift. For a clear job you can pick a **master builder** instead: one strong model plans and builds it, and every review still comes from someone else.
+> **What it does:** keeps the checking away from whoever did the work. Other model families read the plan and the finished change, every claim needs a command, a commit or a test behind it, and you give the word for merges and pushes, or hand it over for one job or a night shift. On a hard job, or with a fast or cheap builder, the foreman plans and writes exact work orders so the builder can't drift; on a clear job, a master builder skips the handoffs.
 >
 > **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
 
