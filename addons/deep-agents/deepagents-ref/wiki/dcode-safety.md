@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: approval modes, manual mode, auto mode, YOLO, --yolo, auto-approve, human in the loop, HITL, approval, shell allow list, -S, allow-fs-tools, sandbox, remote sandbox, daytona, modal, runloop, untrusted repo, project trust, SandboxProvider
 read_when: Read when running dcode unattended or in an untrusted repo, choosing an approval mode, allowing shell commands, or setting up a remote sandbox.
-updated: 2026-11-19
-sources_hash: e952498a20a0
+updated: 2026-11-25
+sources_hash: 63dce551cc42
 ---
 
 # dcode approval modes and remote sandboxes
@@ -50,6 +50,7 @@ How [[dcode]] limits what the agent can do. Three approval modes (Manual, Auto, 
 - Classifier model precedence: `/auto model [p:m|clear]` > `--auto-classifier-model` (TUI only) > `DEEPAGENTS_CODE_AUTO_CLASSIFIER_MODEL` (not from a project `.env`) > `[models].auto_classifier` > provider default > main model.
 - Provider defaults (2026-11-18 docs): Anthropic → `anthropic:claude-sonnet-5-5`. Google AI → `google_genai:gemini-4-hydrogen`. Vertex → `google_vertexai:gemini-4-hydrogen`. OpenAI → `openai:gpt-5.6-luna`. Codex → `openai_codex:gpt-5.6-luna`.
 - The classifier time budget per batch is 20 s by default (`[models].auto_classifier_timeout`, valid 1..300; config-file.md says out-of-range values are clamped, configuration.md says they fall back to 20). Misses are denied as `classifier_unavailable`.
+- Before 0.2.12 (changelog) Auto mode could resolve relative paths differently from the file tools; it now resolves them the same way. Upgrade if Auto's path checks matter to you.
 - Auto is an authorization heuristic, **not** containment. Parent-level Auto does not review actions inside delegated subagents or broadly configured `js_eval` fan-out. MCP `readOnlyHint` annotations are trusted without verification.
 
 ## Shell and filesystem allowlists
@@ -69,6 +70,7 @@ dcode -n "Fix the build" -S all       # any command, no confirmation
 
 - Project `.mcp.json` servers are default-deny, whether stdio or remote (remote servers could SSRF or exfiltrate `${VAR}` headers). The interactive prompt offers "Allow once" or "Allow for this project — until changed". Saved approvals go to `[mcp].enabled_project_server_approvals` as `{project_root, name, fingerprint}` entries; any change to the definition triggers a new prompt.
 - Headless runs silently skip unapproved project servers unless `--trust-project-mcp` is passed. Deny lists (`[mcp].disabled_project_servers`, `DEEPAGENTS_CODE_DISABLED_PROJECT_MCP_SERVERS`) always win. `DEEPAGENTS_CODE_DANGEROUSLY_ENABLE_PROJECT_MCP_SERVERS` approves by name across projects and replaces saved approvals.
+- Since 0.2.13 (changelog) the project MCP trust prompt shows the source file that defines the server, unapproved servers disabled with F2 are reported as disabled, and project servers skipped for missing approval are reported rather than dropped silently.
 - Before 0.2.11 dcode did not honour MCP hook approval policies (changelog: "Honor MCP hook approval policies"); upgrade if you rely on hooks to gate MCP tools.
 - Project hooks need workspace trust, stored in `.state/hooks_trust.json`. Project extensions need extension trust. Plugins are trusted by enabling them.
 - The project `.env` loads by default. Dangerous variables are blocked from dotenv, but `.env`, `Makefile` and build scripts can still influence what runs. Use `DEEPAGENTS_CODE_READ_PROJECT_DOTENV=0` and a remote sandbox for untrusted repositories.
@@ -131,7 +133,7 @@ A provider subclasses `deepagents_code.integrations.sandbox_provider.SandboxProv
 - `../sources/docs/oss/deepagents/code/cli-reference.md` (allowlist interplay)
 - `../sources/docs/oss/deepagents/code/mcp-tools.md` (project trust)
 - `../sources/docs/oss/deepagents/code/configuration.md` (dotenv blocking, managed policy)
-- `../sources/docs/github/deepagents-code-CHANGELOG.md` (OpenShell provider, Daytona snapshots)
+- `../sources/docs/github/deepagents-code-CHANGELOG.md` (OpenShell provider, Daytona snapshots, 0.2.12 Auto paths, 0.2.13 MCP trust reporting)
 - `../sources/package/deepagents/backends/protocol.py` (`SandboxBackendProtocol`)
 
 ## See also

@@ -4,6 +4,8 @@ What changed for a project that upgrades, newest first. `/f-setup` shows the ent
 
 ## 2026-11-25
 
+- **The Deep Agents add-on is current: deepagents 0.7.41 and today's LangChain docs.** The docs download reads LangChain's renamed indexes again (the old ones returned 404) and keeps pages an index stops listing. Every page whose sources changed was re-read: new in the wiki are the Managed Deep Agents patterns (dreaming, goals, swarm, watch mode, daily digest), deploying from GitHub, Slack's `trigger_mode`, the interpreter's `fs` bridge, Deep Agents Code 0.2.12 to 0.2.14, and two HITL findings (a pause raised from code; a reject message replaces the default text). The starter pins `deepagents==0.7.41`; the recipe, persistence (SQLite) and starter checks pass on it. Upgrade the add-on with `/f-setup`, then bump your own `deepagents` pin with it.
+
 - **An upgrade re-renders every board.** A board page changes only when its board gets an event, so a topped-out board kept the page of the renderer it last saw, missing what newer renderers show (the current layout, each job's footprint check). `/f-setup`'s upgrade now re-renders every `BOARD.json` when `render_board.py` changed and commits the pages with the upgrade.
 
 ## 2026-11-24

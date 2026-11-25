@@ -6,7 +6,7 @@ status: code
 product: all
 keywords: anti-patterns, wrong mental model, stale docs, doesn't work, TypeError, StoreBackend namespace, backend lambda, write_todos missing, virtual_mode, task args, pre-0.7 docs, common mistakes, breaking changes
 read_when: Read when a doc example raises an error or an answer feels off, before recommending any 0.7 API from memory.
-updated: 2026-11-19
+updated: 2026-11-25
 ---
 
 # Anti — wrong mental models and stale doc examples
@@ -29,7 +29,7 @@ If an answer does one of these, it has gone wrong. Most come from pre-0.7 docs, 
 | Blob offload: "set `artifacts_root` on the middleware" | `FilesystemMiddleware` has no such argument; the `blobs/` root follows `CompositeBackend(artifacts_root=...)` | [[backends]] |
 | Customization: a `FilesystemMiddleware` in `middleware=` "won't inherit the ... `permissions=` passed to `create_deep_agent()`" | Since 0.7.31 an unconfigured replacement inherits them, and different non-empty rules raise `ValueError` (it still does not inherit `backend=`). Code wins | [[middleware]] |
 | Content-builder pin `deepagents>=0.3.5,<0.4.0` | Stale | [[tutorials]] |
-| Subagents page, mode comparison table: a fork's optional system prompt "appends instructions and can reduce cache reuse" (also `create_deep_agent`'s docstring) | Since 0.7.35 the fork keeps the parent's system prompt unchanged and gets its own instructions in the task message (`_FORK_INSTRUCTIONS_KEY`, `middleware/subagents.py`); a `wrap_model_call` looking for them in `request.system_message` finds none. The same page's field table and fork section say so since the 2026-11-19 fetch. Code wins | [[subagents]] |
+| `create_deep_agent`'s docstring: a fork's optional system prompt "is appended" (the subagents page's comparison table said the same until the 2026-11-25 fetch, which fixed it) | Since 0.7.35 the fork keeps the parent's system prompt unchanged and gets its own instructions in the task message (`_FORK_INSTRUCTIONS_KEY`, `middleware/subagents.py`); a `wrap_model_call` looking for them in `request.system_message` finds none. The subagents page says so throughout since the 2026-11-25 fetch. Code wins | [[subagents]] |
 | Backends migration note: the factory pattern "still works at runtime and emits a deprecation warning" | `FilesystemMiddleware.__init__` raises `TypeError` for a factory since 0.7 | [[backends]] |
 | Going to production, "sync skills and memories": `StoreBackend(rt, namespace=...)` | `TypeError`: `StoreBackend` takes keyword arguments only (0.7.40 too) | [[production]] |
 | `deepagents deploy`, `deepagents.toml`, `agent.json` (upstream `examples/deploy-*`) | **Deprecated.** They come from `deepagents-cli` (last release 0.3.0, 2026-08-24; PyPI: "DEPRECATED … Use Managed Deep Agents"). Use `mda` ([[managed]]) or self-host ([[production]]). Checked 2026-09-30 | [[managed]] |

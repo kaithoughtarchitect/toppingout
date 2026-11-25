@@ -7,7 +7,7 @@ product: sdk
 keywords: summarizer, summarization, SummarizationMiddleware, context compression, compact_conversation, conversation history, large_tool_results, context overflow, ContextOverflowError, trim history, offload, compaction, artifacts_root, context window full, summarize old messages
 read_when: Read when the context fills up, history is summarized or lost, tuning summarization triggers, finding offloaded conversation files, or hitting ContextOverflowError.
 updated: 2026-11-19
-sources_hash: dcce7b79361f
+sources_hash: 097c3826d7c9
 ---
 
 # Summarization and offloading (context compression)

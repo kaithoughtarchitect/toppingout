@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: create_deep_agent, create deep agent, signature, parameters, kwargs, system_prompt, interrupt_on, response_format, structured output, state_schema, context_schema, checkpointer, store, backend, subagents, recursion_limit
 read_when: Read when you need the exact create_deep_agent signature, a parameter default, or the middleware/prompt assembly order.
-updated: 2026-11-19
-sources_hash: b1ffd4b73f64
+updated: 2026-11-25
+sources_hash: d6e554a7e522
 ---
 
 # create_deep_agent
@@ -85,7 +85,7 @@ Raises `ImportError` (missing/old provider package, e.g. `langchain-openrouter<0
 
 ## Return value
 
-A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.40"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
+A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.41"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
 
 ## Invoke / stream basics
 

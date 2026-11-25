@@ -11,7 +11,7 @@ updated: 2026-11-19
 
 # Gaps — what this folder does not cover
 
-If the answer is not in the wiki, `lookup.md`, or `../sources/`, it is not known in layer 1. **Go to layer 2**, the LangChain docs MCP server `docs-langchain` (see `../AGENTS.md`): `search_docs_by_lang_chain` with "python" in the query, then read the page with `query_docs_filesystem_docs_by_lang_chain`. The live URLs below are where each gap is covered. Label layer-2 answers "not checked against 0.7.40". Never fill a gap from memory. Checked by grep across `wiki/`, `sources/docs/`, and `sources/package/` on 2026-09-29, and re-checked against the 0.7.39 package and the 2026-11-18 docs on 2026-11-19 (the LangChain MCP page only links to auth; no SDK page covers token cost).
+If the answer is not in the wiki, `lookup.md`, or `../sources/`, it is not known in layer 1. **Go to layer 2**, the LangChain docs MCP server `docs-langchain` (see `../AGENTS.md`): `search_docs_by_lang_chain` with "python" in the query, then read the page with `query_docs_filesystem_docs_by_lang_chain`. The live URLs below are where each gap is covered. Label layer-2 answers "not checked against 0.7.41". Never fill a gap from memory. Checked by grep across `wiki/`, `sources/docs/`, and `sources/package/` on 2026-09-29, and re-checked against the 0.7.39 package and the 2026-11-18 docs on 2026-11-19 (the LangChain MCP page only links to auth; no SDK page covers token cost).
 
 | Topic | Status here | Live source |
 |---|---|---|

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: grep_exclude_dirs, sandbox, sandboxes, execute tool, run code, shell access, BaseSandbox, LangSmithSandbox, DaytonaSandbox, ModalSandbox, E2BSandbox, RunloopSandbox, isolated environment, run shell commands, install packages, SandboxBackendProtocol
 read_when: Read when the agent must run shell commands, tests or install packages, when choosing or writing a sandbox provider, or when execute is missing or file ops fail in a custom image.
-updated: 2026-11-19
-sources_hash: 06c95c0394cd
+updated: 2026-11-25
+sources_hash: 994085b374b3
 ---
 
 # Sandboxes (execute tool, BaseSandbox, providers)
@@ -68,7 +68,7 @@ finally:
 | `OpenShellSandbox` | `langchain-nvidia-openshell` | `OpenShellSandbox(sandbox=openshell.Sandbox(delete_on_exit=True))` |
 | `DatabricksSandbox` | `databricks-langchain[deepagents]>=0.22.0` | `DatabricksSandbox(WorkspaceClient(), "sandboxes/my-sandbox")` (`from databricks_langchain import DatabricksSandbox`, `from databricks.sdk import WorkspaceClient`; docs, 2026-11) |
 
-Also listed in the integrations index (2026-11-19 fetch): OpenSandbox, Opsen, Lizard, Kubernetes, Agent37, Nono, Islo, Prized, Runtime, Novita, Upstash Box, Briq, Leap0, Baponi, Superserve, WBX, Boxd, Kosa8, NoMac, PandaStack (new in that fetch). These are docs only; none ship in the 0.7.40 package except `LangSmithSandbox`. Deep Agents Code wires sandboxes with `--sandbox` ([[dcode]]); managed hosting: [[managed-capabilities]].
+Also listed in the integrations index (2026-11-19 fetch): OpenSandbox, Opsen, Lizard, Kubernetes, Agent37, Nono, Islo, Prized, Runtime, Novita, Upstash Box, Briq, Leap0, Baponi, Superserve, WBX, Boxd, Kosa8, NoMac, PandaStack (new in that fetch), and Instabox (`InstaboxSandbox`, new in the 2026-11-25 fetch). These are docs only; none ship in the 0.7.40 package except `LangSmithSandbox`. Deep Agents Code wires sandboxes with `--sandbox` ([[dcode]]); managed hosting: [[managed-capabilities]].
 
 ## How it works: BaseSandbox
 

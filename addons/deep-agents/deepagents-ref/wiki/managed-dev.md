@@ -6,13 +6,13 @@ status: sourced
 product: managed
 keywords: mda dev, local development, LangSmith Studio, hot reload, mda evals, Harbor, evals, eval-engineering, tutorial, Tavily tool, .mda/build, langgraph dev, test schedule locally, memory not persisting, MDA_DEV, harbor-job.json
 read_when: Read when running or debugging a Managed Deep Agent locally, writing Harbor evals, or working through the tool plus memory plus schedule tutorial.
-updated: 2026-11-19
-sources_hash: 0b6c56297f48
+updated: 2026-11-25
+sources_hash: dfc87182b868
 ---
 
 # MDA local development, evals and tutorial
 
-The inner loop for a Managed Deep Agent: `mda dev` runs it locally in LangSmith Studio, `mda evals init` sets up Harbor evals driven by a coding agent, and the tutorial shows the canonical tool + memory + schedule build-out. Overview: [[managed]].
+The inner loop for a Managed Deep Agent: `mda dev` runs it locally in LangSmith Studio, `mda evals init` sets up Harbor evals driven by a coding agent, and the daily digest pattern (the docs' former tutorial) shows memory + schedule on the quickstart agent. Overview: [[managed]].
 
 ## `mda dev`
 
@@ -43,7 +43,7 @@ Local behavior that differs from a deployment:
 - Hot reload watches sources (0.5.3), but the docs still say to stop and rerun after changing project files; rerun after adding new managed files (e.g. `memory.py`) so they are discovered.
 - Doc contradiction: the local-development page still says schedules never run under `mda dev`; the schedules and CLI pages and the 0.9.3 changelog say they fire locally. On >=0.9.3, trust the schedules page.
 - `mda chat [path]` is a terminal client for the local agent (now on the CLI page). It reuses a running dev server or starts one (since 0.8.6; log in `.mda/dev-server.log`). Flags: `--url URL` (must be a local dev server or a tunnel to one, because `mda chat` sends no credentials), `--assistant ID` (defaults to the one `mda dev` staged, then the agent `name`), `-t/--thread ID` (continue a thread), `--env-file PATH` (>=0.10.0; env file used when it starts a dev server). Per-call HITL (`interrupt_mode="per_call"`) needs `langgraph-api` 0.16 or later under `mda dev` (0.9.3).
-- Local traces in an agent-based workspace are rejected until the agent record exists. `mda deploy` creates it, `mda dev` does not: create the agent once (UI or API, same identifier) or deploy once. Studio chat still works meanwhile.
+- Local traces are rejected until the agent record exists (the 2026-11-25 local-development and quickstart pages dropped the old "in an agent-based workspace" qualifier, so expect this in any workspace). `mda deploy` creates it, `mda dev` does not: create the agent once (UI or API, same identifier) or deploy once. Studio chat still works meanwhile.
 - Test identity, sandbox and user-owned OAuth on a deployment, not locally. `mda deploy --agent-server-type serverless|dedicated` (default `serverless`). The 2026-11-18 docs renamed the flag; `--deployment-type` stays a hidden alias, and an older CLI may only know the old spelling (0.10.4 changelog: "Agent Server naming and flags with hidden deployment aliases"). The 0.10.0 changelog says `dev` and `prod` still work as values; the docs list only `serverless|dedicated`. Serverless is available in every LangSmith Cloud region and can scale to zero; use `dedicated` for always-on capacity (deploy page). BYOC data planes do not support Serverless and get Dedicated by default.
 - `mda pull [path]` (>=0.10.2) copies `instructions.md` and `skills/` from the deployed agent's Context Hub entry into the local project, so edits made in LangSmith come back to your files. It lists every add, overwrite and delete and asks first; `--dry-run` only shows them, `-y/--yes` is required without a terminal. It never changes agent code or memories and writes nothing remote. Other flags: `-n/--name`, `--workspace-id`, `--agent-environment`, `--env-file`.
 - `mda init` scaffolds an `AGENTS.md` for coding agents working in the project (0.10.2; 0.10.4 changelog). It lists the project commands and tells the agent not to run `mda deploy` unless the user asks. Build and deploy leave the root `AGENTS.md` out.
@@ -87,49 +87,49 @@ uv run --python 3.12 --with 'harbor[langsmith]==0.21.0' harbor view .mda/evals/j
 - With `LANGSMITH_API_KEY` set, runs are recorded in the `HARBOR_LANGSMITH_DATASET` dataset.
 - Trials have no Context Hub: the compiled project is copied in, so `/skills/` is the project's own `skills/` (fixed in 0.7.2). Memory is off and the authored sandbox is not instantiated in eval mode. All shell-exportable `.env` keys are forwarded to trials.
 - Edit `harbor-job.json` for datasets, attempts, concurrency, env vars.
+- Async subagents: `mda eval` starts a local Agent Server for an agent that declares async subagents (needs `managed-deepagents>=0.10.2` and the matching `mda` CLI; subagents page, 2026-11-25). The earlier docs said such agents could not be evaluated. Evaluated agents without declared async subagents still get neither the async `general-purpose` subagent nor the async task tools.
 
-## Tutorial: quickstart -> tool + memory + schedule
+## Daily digest pattern (was the tutorial)
 
-Starting from the quickstart `research-assistant` ([[tutorials]] for OSS equivalents):
+The 2026-11-25 docs replaced the tutorial ("Add a custom search tool, memory, and a schedule") with a shorter pattern, "Build a daily digest agent". It needs `managed-deepagents>=0.10.4` and the matching `mda` CLI. It keeps the quickstart's built-in web search and drops the authored Tavily tool and its `research-tavily` connection (for an authored search tool with a connection, see [[managed-capabilities]]).
 
-1. Authored Tavily tool replaces provider search. The key comes from an agent-owned connection (slug `research-tavily`), so the code is the same locally and deployed; for `mda dev` put `MDA_DEV_RESEARCH_TAVILY=<TAVILY_API_KEY>` in `.env`:
-
-```python
-# tools/search.py
-from typing import Literal
-from langchain.tools import tool
-from managed_deepagents import connections
-from tavily import AsyncTavilyClient   # uv add tavily-python
-
-@tool
-async def internet_search(query: str, max_results: int = 5,
-                          topic: Literal["general", "news", "finance"] = "general") -> dict:
-    """Search the internet for relevant sources."""
-    api_key = await connections.get("research-tavily", {"type": "agent"})
-    tavily_client = AsyncTavilyClient(api_key=api_key)
-    return await tavily_client.search(query, max_results=max_results, topic=topic)
-```
-
-After the first successful deploy, create the deployed credential (rotation applies on the next run, no redeploy):
-
-```bash
-uv run mda connections create research-tavily --secret-from-env MDA_DEV_RESEARCH_TAVILY
-```
+1. `memory.py` turns on shared agent memory:
 
 ```python
-# agent.py
-from managed_deepagents import define_deep_agent
-from tools.search import internet_search
+from managed_deepagents import MemoryLayer, define_memory
 
-agent = define_deep_agent(name="research-assistant", model="openai:gpt-6.1-sol", tools=[internet_search])
+memory = define_memory(agent=MemoryLayer())
 ```
 
-2. Add a `## Memory` policy section to `instructions.md` (what to keep, no personal data/secrets).
-3. `memory.py`: `memory = define_memory(agent=MemoryLayer())`; restart `mda dev`; teach a rule in one thread, verify in a new thread.
-4. `schedules/daily_digest.py` with `define_schedule(cron="0 8 * * 1-5", timezone="America/Los_Angeles", prompt=...)`. Schedule name = module stem (`daily_digest` in Python, `daily-digest` in TS).
-5. `uv run mda deploy` (no `--no-wait`), then confirm deployment ready, cron present, traces show `internet_search` and memory reads/writes.
+2. Replace `instructions.md`:
 
-Details for each piece: [[managed-capabilities]] (tools, memory), [[managed-channels]] (schedules), [[managed-project]] (instructions).
+```markdown
+# Digest agent
+
+You are a research assistant. When someone asks you to follow or stop
+following a topic, update /memories/agent/topics.md and confirm the change.
+
+When asked for a digest, read that file, search for news from the last day on
+each topic, and write a short digest with one or two cited items per topic.
+```
+
+3. `schedules/daily_digest.py`, every weekday at 8:00 AM Pacific. Schedule name = module stem (`daily_digest` in Python, `daily-digest` in TS):
+
+```python
+from managed_deepagents import define_schedule
+
+schedule = define_schedule(
+    cron="0 8 * * 1-5",
+    timezone="America/Los_Angeles",
+    prompt="Write today's digest.",
+)
+```
+
+4. Try it under `mda dev`: say "Follow LangChain releases", then in a new thread ask for today's digest; the agent reads the topics from memory with no thread history. Deploy to run the schedule; each scheduled run starts a new thread.
+
+Extensions the page lists: post the digest to Slack with schedule delivery (`deliver_to`), let people set their own time with runtime schedules ([[managed-channels]]), or use built-in web search so no separate API key is needed.
+
+Details for each piece: [[managed-capabilities]] (memory), [[managed-channels]] (schedules), [[managed-project]] (instructions). The other patterns are listed in [[managed]].
 
 ## Gotchas
 

@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA Slack, channels.slack, channels.http, webhook, HTTP channel, define_identity, identity.py, Supabase, define_schedule, cron, schedules, runtime.schedules, reminders, scheduled agent, Slack reactions, MCP endpoint, /mcp, interrupt_on Slack, attach_file, user_prompt_response, INTERRUPT_CORRELATION_KEY
 read_when: Read when wiring a Managed Deep Agent to Slack or a webhook, controlling who can call it, adding a cron schedule, or exposing it over MCP.
-updated: 2026-11-19
-sources_hash: 1b151236bb75
+updated: 2026-11-25
+sources_hash: 6d645d72f340
 ---
 
 # MDA channels, identity, schedules and MCP endpoint
@@ -17,7 +17,7 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 ## Quick reference
 
 - Slack: `channel = channels.slack(name=..., description=...)` in `channels/slack.py`; one per deployment; `mda channels init slack` adds it; deploy cannot use `--no-wait`.
-- Slack HITL supports only approve and reject; channel messages need an @mention unless `trigger_on_all_messages=True`, DMs always trigger.
+- Slack HITL supports only approve and reject; `trigger_mode="mention"|"thread"|"all"` (default `"mention"`) picks which channel messages start runs, DMs always trigger; an exact `[quiet]` answer posts nothing.
 - Slack file transfer (>=0.8.0) needs a sandbox; incoming files land in `/workspace/attachments/`, send back with `attach_file(path)`, and say so in `instructions.md`.
 - HTTP channel (>=0.8.0): `channels.http(provider=..., verify=..., parse=...)` serves `POST /channels/<name>/events`; `verify` is the only auth, so check a signature on `raw_body`.
 - HTTP `thread_id` must be a UUID (map external IDs with `uuid.uuid5`); 202 means accepted, not finished.
@@ -29,6 +29,7 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 - Since 0.9.3 `mda dev` creates the schedules on the local server, so they fire locally (`--no-schedules` stops that); on deploy, crons are created only after `DEPLOYED` and recreated on every deploy.
 - Runtime schedules (>=0.9.0): tools you write call `runtime.schedules.create(owner=..., cron=... or at=..., prompt=...)`; max 20 per owner per agent by default.
 - Every deployment serves `<DEPLOYMENT_API_URL>/mcp` with the agent as one tool named after `name`; send an `x-api-key` header, since URL-only clients hit a misleading OAuth error.
+- Patterns: watch mode (Slack `"all"` + `[quiet]` + one-time check-ins) and goals (agent-owned recurring check in the same thread) are below.
 - Gotcha: agent-owned interrupt tools re-run from the top on resume; guard side effects.
 
 ## Channels (`channels/<name>.py`)
@@ -40,7 +41,7 @@ Everything that decides who can start a Managed Deep Agent run and how: Slack an
 - A channel thread is owned by its source conversation (`mda:source-thread:{provider}:{key}`), not by the first sender (0.7.0).
 - Channel vs MCP connector: channels start runs; connectors give tools ([[managed-capabilities]]).
 - Experimental channels (0.10.0 changelog; `mda dev`, `build` and `deploy` warn when a project declares them): `channels.github()` starts runs from GitHub App events (one thread per issue or PR; 0.10.4 lets it handle its own App's events) and `channels.linear()` answers Linear agent sessions. `mda deploy` creates or reuses the App. The 2026-11-18 Python docs fetched here have no page for either, so their Python arguments are unverified.
-- Experimental handler options (0.10.0 changelog, spelled in TypeScript case there): Slack `onEvent`, `multitaskStrategy`, `onFinish`, `status`, `reply: "none"`; HTTP `input`, `onReceived`, `onFinish`, `multitaskStrategy`, `reply`, and `parse` may return `cancel`. `resolveUser` maps a verified channel sender to one of your users. The Python names are not in the fetched docs; check `help(channels.slack)` on your install.
+- Experimental handler options (0.10.0 changelog, spelled in TypeScript case there): Slack `onEvent`, `multitaskStrategy`, `onFinish`, `status`, `reply: "none"`; HTTP `input`, `onReceived`, `onFinish`, `multitaskStrategy`, `reply`, and `parse` may return `cancel`. `resolveUser` maps a verified channel sender to one of your users. The 2026-11-25 Python docs confirm `status=False` and an `on_event` `"message"` handler that returns `None` to drop a message before a run (watch-mode page); the other Python names are not in the fetched docs, so check `help(channels.slack)` on your install.
 
 ### Steering: messages to a running agent (beta, >=0.10.2)
 
@@ -65,19 +66,71 @@ channel = channels.slack(
     description="Answers order questions", # <=139 chars
     icon="support-agent.png",              # relative to channels/, 512x512 PNG <=1MB; auto-generated if omitted
     background_color="#1d4ed8",
-    trigger_on_all_messages=False,         # False: channel msgs need an @mention; DMs always trigger (deprecated, see trigger mode below)
+    trigger_mode="mention",                # "mention" (default) | "thread" | "all"; DMs always trigger
     allow_bot_triggers=False,
 )
 ```
 
-- Stop (0.10.0 changelog): Slack threads get a native Stop button that cancels the thread's runs; cancelled runs report `run.cancelled`. `status=False` hides the status and the Stop button (0.10.3 changelog; not on the fetched Python Slack page).
+- Stop (0.10.0 changelog): Slack threads get a native Stop button that cancels the thread's runs; cancelled runs report `run.cancelled`. `status=False` hides the status and the Stop button (0.10.3 changelog; the Python spelling is shown in the watch-mode page, not on the Slack page).
 - Reactions (0.9.0): the bot reacts to the message that starts a run with `eyes` by default. `channels.slack(..., reactions=False)` turns it off; a short name picks another emoji; a sync or async callable gets `{"text": ...}` and returns a short name (errors, or more than five seconds, fall back to the default).
-- Trigger mode (0.10.0 changelog): Slack channels take a trigger mode, `"mention"` (default for new apps), `"thread"` (keep replying in a thread after one mention) or `"all"`; `trigger_on_all_messages` is deprecated in favor of `"all"`. The changelog spells it `triggerMode`; the fetched Python Slack page still shows only `trigger_on_all_messages`, so the Python keyword name is unverified.
+- Trigger mode (0.10.0; Python Slack page since 2026-11-25): `trigger_mode` (`str`, default `"mention"`). `"mention"`: only messages that mention the agent. `"thread"`: one mention, then every later reply in that thread. `"all"`: every message in the channels the agent is in. DMs always start runs. `trigger_on_all_messages` (deprecated in 0.10.0) is gone from the Python page; use `trigger_mode="all"`. In `thread` and `all` mode the agent also gets messages not meant for it: if it answers exactly `[quiet]` the run posts nothing, so tell it in `instructions.md` when to answer `[quiet]`.
 - One Slack channel per deployment. `mda deploy` provisions the Slack app. The fetched Slack page still says: if LangSmith is not yet authorized it prints an HTTPS link, you approve, then press Enter. The 0.10.0 changelog (newer) says deploy now asks which Slack app to use (one LangSmith creates and manages, a new one from a manifest, or one you already have; self-hosted offers only your own), reads `MDA_SLACK_BOT_TOKEN` and `MDA_SLACK_SIGNING_SECRET` without a terminal, and prints the link and waits (up to an hour without a terminal) instead of asking for Enter. Since 0.10.1 a Slack deploy with a service key stops and names the key to use. After first deploy the bot DMs you. Cannot use `--no-wait`. Redeploy to apply name/icon changes.
 - `mda channels setup [channel]` (>=0.10.1, experimental) runs the deploy's channel setup against the deployed agent without deploying. `--json` (or no terminal) only reports each channel's state and exits non-zero unless all are set up, so it works as a CI check. Flags: `-n/--name`, `--workspace-id`, `--agent-environment`, `--env-file`. `mda deploy` also sets up an existing deployment's channels before uploading; a channel that cannot be set up stops the deploy.
 - HITL from `interrupt_on` renders in Slack with **only `approve` and `reject`** ([[human-in-the-loop]]).
 - File transfer (>=0.8.0, requires a sandbox): incoming files land in `/workspace/attachments/`; agent sends files via the `attach_file(path)` tool (path under `/workspace`). Never automatic, so say it in `instructions.md`. 200 MiB each way; files scoped to the Slack thread's sandbox; everyone in the thread can reach them.
 - Slack user-owned connections: Slack renders the OAuth connect link and resumes the run.
+
+### Watch mode pattern (needs >=0.10.4)
+
+A Slack agent that reads every channel message and decides when to reply:
+
+```python
+# channels/slack.py
+from managed_deepagents import channels
+
+channel = channels.slack(
+    trigger_mode="all",
+    reactions=False,
+    status=False,
+)
+```
+
+```markdown
+# Slack watch agent
+
+Answer direct questions and mentions. For other messages, reply only when you
+can add something useful. Otherwise, respond with exactly [quiet].
+```
+
+- Every message in a channel the bot is in starts a run, and each run costs usage. Turning off reactions and status keeps the agent silent when it chooses not to reply. To cut usage in busy channels, return `None` from an `on_event` `"message"` handler on `channels.slack(...)` to drop a message before a run starts.
+- Check-ins: a custom tool schedules a one-time run in the current thread (instructions: call it when a later check could help; on a check-in, reply only if something is new, else `[quiet]`). Check-ins run as the agent and see only messages already delivered to its thread.
+
+```python
+# tools/watch.py
+from datetime import datetime, timedelta, timezone
+
+from langchain.tools import tool
+from managed_deepagents import ManagedDeepAgentRuntime
+
+
+@tool
+async def schedule_check_in(
+    prompt: str, minutes: int, runtime: ManagedDeepAgentRuntime
+) -> str:
+    """Schedule one check-in in the current conversation, 2 to 1440 minutes from now."""
+    origin = runtime.thread.origin
+    if origin is None or origin.channel.provider != "slack":
+        return "A Slack conversation is required to schedule a check-in."
+    if not 2 <= minutes <= 1440:
+        return "Choose a delay between 2 and 1440 minutes."
+    item = await runtime.schedules.create(
+        owner={"type": "agent"},
+        at=datetime.now(timezone.utc) + timedelta(minutes=minutes),
+        new_thread=False,
+        prompt=prompt,
+    )
+    return f"Scheduled check-in {item['id']}."
+```
 
 ### Custom (HTTP) webhook channel (>=0.8.0)
 
@@ -221,6 +274,41 @@ async def remind_me(prompt: str, cron: str, runtime: ManagedDeepAgentRuntime, ti
 - `list`, `get`, `update` (`cron`, `at`, `timezone`, `prompt`, `input`, `paused`, `metadata`), `delete`, each with `owner=`. Channel and thread choice are fixed at creation.
 - Limit: 20 per owner per agent, paused ones included; override with `MDA_MAX_AGENT_SCHEDULES` / `MDA_MAX_USER_SCHEDULES` (>=0.9.3).
 
+### Goals pattern: the agent schedules its own follow-ups (needs >=0.10.4)
+
+For work that waits on outside events (a signature, a review, a release), two tools wrap runtime schedules. `check_progress` starts an agent-owned recurring check in the current thread; `stop_checking` deletes it when the goal is met or abandoned.
+
+```python
+# tools/goals.py
+from langchain.tools import tool
+from managed_deepagents import ManagedDeepAgentRuntime
+
+OWNER = {"type": "agent"}
+
+
+@tool
+async def check_progress(goal: str, cron: str, runtime: ManagedDeepAgentRuntime) -> str:
+    """Check back on unfinished work in this thread on a cron schedule, until you stop it."""
+    item = await runtime.schedules.create(
+        owner=OWNER,
+        cron=cron,
+        new_thread=False,
+        prompt=f"Check progress on this goal: {goal}",
+    )
+    return f"Checking progress with schedule {item['id']}."
+
+
+@tool
+async def stop_checking(schedule_id: str, runtime: ManagedDeepAgentRuntime) -> str:
+    """Stop checking progress on a goal that is met or abandoned."""
+    await runtime.schedules.delete(schedule_id, owner=OWNER)
+    return f"Stopped schedule {schedule_id}."
+```
+
+- Register them with the quickstart model and search: `tools=[{"type": "web_search"}, check_progress, stop_checking]`. `instructions.md` tells the agent to finish in the current turn when it can; otherwise define "done", pick an interval, call `check_progress` and end the turn; on each check inspect the real state, move the work on, and call `stop_checking` when done or permanently blocked.
+- Each check runs in the same thread, so it keeps the original request, earlier updates and the schedule ID `stop_checking` needs; in Slack it replies in the same Slack thread. Same-thread agent-owned schedules need a channel (the page uses Slack).
+- Each check is a model run: set a minimum interval in `check_progress`. Agent-owned schedules share the default limit of 20 per agent across all conversations, so prune finished goals.
+
 ## MCP endpoint (`<DEPLOYMENT_API_URL>/mcp`)
 
 Every deployment serves Agent Server's Streamable HTTP MCP endpoint; the agent appears as one tool named after `define_deep_agent(name=...)`. Opposite direction from MCP connectors ([[mcp]]).
@@ -264,6 +352,8 @@ Any MCP client that can send a custom header works the same way: Streamable HTTP
 - `../sources/docs/langsmith/python/managed-deep-agents-schedules.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-mcp-endpoint.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-runtime.md`
+- `../sources/docs/langsmith/python/managed-deep-agents-watch-mode.md`
+- `../sources/docs/langsmith/python/managed-deep-agents-goal-oriented.md`
 - `../sources/docs/github/managed-deepagents-CHANGELOG.md`
 
 ## See also

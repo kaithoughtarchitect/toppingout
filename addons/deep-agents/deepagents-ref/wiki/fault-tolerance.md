@@ -7,7 +7,7 @@ product: sdk
 keywords: fault tolerance, retry, ModelRetryMiddleware, ToolRetryMiddleware, ModelFallbackMiddleware, ModelCallLimitMiddleware, ToolCallLimitMiddleware, ModelRefusalMiddleware, ModelRefusalError, model refusal, rate_limiter, 429, resilience, error handling, timeout, fallback model
 read_when: Read when adding retries, fallback models, call limits or rate limiting, when errors kill a run or a subagent, or when a model refusal raises.
 updated: 2026-11-19
-sources_hash: 170f5c2ceba0
+sources_hash: 90038225ce24
 ---
 
 # Fault tolerance

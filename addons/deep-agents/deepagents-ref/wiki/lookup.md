@@ -145,12 +145,12 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 | Parameter | Read |
 |---|---|
 | `model=` | [[create-deep-agent]], [[models]], [[dcode]] |
-| `tools=` | [[create-deep-agent]], [[tools]], [[mcp]] |
+| `tools=` | [[create-deep-agent]], [[tools]], [[managed-capabilities]] |
 | `system_prompt=` | [[create-deep-agent]], [[subagents]], [[customization]] |
 | `middleware=` | [[create-deep-agent]], [[middleware]], [[customization]] |
 | `subagents=` | [[create-deep-agent]], [[dynamic-subagents]], [[dcode-extending]] |
 | `skills=` | [[create-deep-agent]], [[skills]], [[dcode-extending]] |
-| `memory=` | [[create-deep-agent]], [[memory]], [[agent-builder-memory]] |
+| `memory=` | [[create-deep-agent]], [[memory]], [[managed-capabilities]] |
 | `permissions=` | [[create-deep-agent]], [[permissions]], [[customization]] |
 | `backend=` | [[create-deep-agent]], [[backends]], [[middleware]] |
 | `interrupt_on=` | [[create-deep-agent]], [[human-in-the-loop]], [[customization]] |
@@ -161,7 +161,7 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 | `store=` | [[create-deep-agent]], [[persistence]], [[memory]] |
 | `debug=` | [[create-deep-agent]], [[streaming]], [[skills]] |
 | `name=` | [[create-deep-agent]], [[managed-project]], [[skills]] |
-| `cache=` | [[create-deep-agent]], [[context-engineering]], [[subagents]] |
+| `cache=` | [[create-deep-agent]], [[context-engineering]], [[skills]] |
 
 <!-- /GENERATED:symbols -->
 

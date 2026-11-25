@@ -7,7 +7,7 @@ product: sdk
 keywords: production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted
 read_when: Read when moving an agent to production, setting up thread_id/context/multi-tenancy, or choosing where the checkpointer and store come from.
 updated: 2026-11-19
-sources_hash: 599b7e4264f7
+sources_hash: 9997945a85e2
 ---
 
 # Going to production

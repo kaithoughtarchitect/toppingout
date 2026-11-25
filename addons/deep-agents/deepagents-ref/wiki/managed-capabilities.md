@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA tools, define_mcp, MCP connectors, connections, connections.get, OAuth, mda connections create, define_memory, MemoryLayer, durable memory, remember across sessions, define_sandbox, sandbox setup.sh, runtime.backend, Context Hub, async middleware, ManagedDeepAgentRuntime, ManagedToolRuntime, ManagedRuntime
 read_when: Read when adding tools, MCP servers, OAuth connections, memory or a sandbox to a Managed Deep Agent, or when memory or a connection does nothing.
-updated: 2026-11-19
-sources_hash: 5adac733e19d
+updated: 2026-11-25
+sources_hash: d138d80ce3ec
 ---
 
 # MDA capabilities (skills, tools, MCP, connections, middleware, memory, sandbox, Context Hub)
@@ -168,6 +168,44 @@ memory = define_memory(
 - Agent memory is a trust boundary: any caller can write content later callers read. No secrets/PII; never let memory grant authority.
 - Pre-0.8 legacy: `define_memory(scope="agent")`. 0.8.0 changelog says string scopes are now rejected (object-based legacy scope still works); the migrate page still shows the string form.
 
+### Dreaming pattern: nightly trace review into user memory
+
+Needs `managed-deepagents>=0.10.4`, the matching `mda` CLI and `langsmith>=0.10.15` (self-hosted LangSmith v0.16+). A user-owned nightly schedule runs as each opted-in person, reads their recent traces and updates their user memory.
+
+- Prerequisites: [[managed-channels]] identity so each person signs in as themselves; each person's traces routed to their own tracing project; `.env` maps principal IDs to project IDs, wrapped in single quotes so `mda deploy` keeps the JSON double quotes, and the deployment's LangSmith credentials can read those projects:
+
+```text
+DREAM_TRACE_PROJECTS='{"<principal-id>": "<project-id>"}'
+```
+
+- Memory: declare `memory = define_memory(user=MemoryLayer())` in `memory.py`. Scheduled runs have no channel event, so the factory selects user memory only when the run has no channel origin, and leaves `memory` unset on channel runs to keep the default rules (user memory in Slack DMs, off in shared channels). MDA always mounts the signed-in person's memory, so a prompt cannot read someone else's.
+
+```python
+from managed_deepagents import MemoryLayer, define_deep_agent, define_memory
+
+from tools.dreaming import recent_user_traces, schedule_dreaming
+
+
+def agent(runtime):
+    extra = (
+        {"memory": define_memory(user=MemoryLayer())}
+        if runtime.thread is None or runtime.thread.origin is None
+        else {}
+    )
+    return define_deep_agent(
+        name="private-assistant",
+        model="openai:gpt-6.1-sol",
+        tools=[recent_user_traces, schedule_dreaming],
+        interrupt_on={"schedule_dreaming": True},
+        **extra,
+    )
+```
+
+- Tools (full code in the source): `recent_user_traces` reads up to 25 of the current person's root runs from the last day with `Client().runs.query(project_ids=[project], min_start_time=..., is_root=True, selects=["INPUTS", "OUTPUTS"], page_size=25)`; `schedule_dreaming` calls `runtime.schedules.create(owner={"type": "user"}, cron="0 3 * * *", timezone="UTC", prompt=DREAM_PROMPT)`. Both refuse when `runtime.thread.origin` is set (any channel, Slack DMs included) or the principal is not a person with a mapped project. The prompt saves preferences to `/memories/user/AGENTS.md` and writes instruction or skill ideas to `/memories/user/dreaming-proposals.md`.
+- Factory definitions do not auto-install provider packages: `uv add langchain-openai`.
+- Trace contents reach the model; configure trace masking for anything it should not see.
+- Start it from a signed-in direct conversation outside channels (Studio or your own app) and approve the `schedule_dreaming` interrupt. Deployed instructions and skills stay read-only, so apply a proposal by editing the project and redeploying. Stop it by deleting the schedule.
+
 ## Sandbox (`sandbox/__init__.py`)
 
 Scaffolded by `mda init` (omit with `--no-sandbox`); enabled only while `sandbox/` exists. LangSmith Sandboxes, one per durable thread.
@@ -259,6 +297,7 @@ Everything else (tools, middleware, MCP, channels, schedules, sandbox, agent def
 - `../sources/docs/langsmith/python/managed-deep-agents-mcp-connectors.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-middleware.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-memory.md`
+- `../sources/docs/langsmith/python/managed-deep-agents-dreaming.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-sandboxes.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-context-hub.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-runtime.md`

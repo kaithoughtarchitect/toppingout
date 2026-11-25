@@ -6,13 +6,13 @@ status: sourced
 product: sdk
 keywords: streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events, checkpoint_ns, ToolMessage artifact
 read_when: Read when streaming agent output or tokens, seeing no subagent events, or moving to stream_events v3.
-updated: 2026-11-19
-sources_hash: f5f269c13205
+updated: 2026-11-25
+sources_hash: bc2ed5032ffa
 ---
 
 # Streaming (stream modes, subgraphs, event streaming v3)
 
-One-line truth: a deep agent is a compiled LangGraph graph, so you stream it with `agent.stream(..., stream_mode=..., subgraphs=True)`; subagent (`task`) runs are subgraphs identified by a `("tools:<id>", ...)` namespace. For new code the docs recommend the typed projection API `agent.stream_events(input, version="v3")` with `stream.subagents`.
+One-line truth: a deep agent is a compiled LangGraph graph, so you stream it with `agent.stream(..., stream_mode=..., subgraphs=True)`; subagent (`task`) runs are subgraphs identified by a `("tools:<id>", ...)` namespace. The typed projection API `agent.stream_events(input, version="v3")` with `stream.subagents` is the other option (the 2026-11-25 streaming page dropped its tip that recommended it for new applications).
 
 ## Two APIs
 

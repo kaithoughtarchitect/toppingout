@@ -7,7 +7,7 @@ product: all
 keywords: deep agents harness, agent harness, create_agent, middleware stack, built-in tools, virtual filesystem, StateBackend, write_todos missing, planning removed, execute tool, install deepagents, pip install deepagents, task tool, prompt caching, LangGraph graph
 read_when: Read when starting with Deep Agents, asking what is on or off by default, or wondering why write_todos or execute is missing.
 updated: 2026-11-19
-sources_hash: 0bcc4a161a7f
+sources_hash: 2376786574a1
 ---
 
 # The Deep Agents harness
@@ -119,7 +119,7 @@ Provider-native server tools can be passed as dicts in `tools=` (quickstart): `{
 - `../sources/docs/oss/python/deepagents/overview.md`
 - `../sources/docs/oss/python/deepagents/quickstart.md`
 - `../sources/docs/github/deepagents-README.md`
-- `../sources/package/deepagents-0.7.40.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.41.dist-info/METADATA`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_prompt_caching.py`

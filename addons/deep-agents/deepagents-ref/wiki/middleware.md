@@ -7,7 +7,7 @@ product: sdk
 keywords: middleware stack, middleware order, ModelRefusalMiddleware, ModelRefusalError, AgentMiddleware, _ParentNotifierMiddleware, SkillsMiddleware placement, custom middleware, wrap_tool_call, wrap_model_call, before_agent, PatchToolCallsMiddleware, prompt caching, FilesystemMiddleware, SubAgentMiddleware, SummarizationMiddleware, excluded_middleware, remove middleware, UnsupportedContentMiddleware, BackendConsumer, bind_backend, middleware needs backend
 read_when: Read when you need the exact middleware order, where custom middleware lands, how to replace or remove a built-in, or why a hook misbehaves across subagents.
 updated: 2026-11-19
-sources_hash: 64e98eaddd5e
+sources_hash: 63c3685c7e4e
 ---
 
 # The middleware stack

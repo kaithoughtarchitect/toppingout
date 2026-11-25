@@ -7,7 +7,7 @@ product: sdk
 keywords: dynamic subagents, dynamic sub-agent, task() in interpreter, CodeInterpreterMiddleware, QuickJS, Promise.all, fan-out, RLM, recursive subagents, langchain_quickjs, responseSchema, eval, batch dispatch
 read_when: Read when fanning out over many files or tickets from interpreter code, or when gating dynamic task() dispatch.
 updated: 2026-11-19
-sources_hash: 34c7d64faa61
+sources_hash: be65913283ca
 ---
 
 # Dynamic subagents (task() from interpreter code)
@@ -98,7 +98,7 @@ Other `CodeInterpreterMiddleware` kwargs (docs): `memory_limit=64MB`, `timeout=5
 - `../sources/docs/oss/python/deepagents/subagents.md`
 - `../sources/docs/oss/python/deepagents/interpreters.md`
 - `../sources/package/deepagents/middleware/subagents.py`
-- `../sources/package/deepagents-0.7.40.dist-info/METADATA` (`quickjs` extra)
+- `../sources/package/deepagents-0.7.41.dist-info/METADATA` (`quickjs` extra)
 
 ## See also
 

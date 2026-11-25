@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: custom tools, add tool, tools=, @tool, ToolRuntime, runtime.context, runtime.store, runtime.state, tool_call_id, Command update, large tool results, tool eviction, built-in tools, excluded_tools, get_stream_writer, tool returns image
 read_when: Read when adding a custom tool, a tool needs context/store/state via ToolRuntime, a tool returns Command or media, or a built-in tool is missing.
-updated: 2026-11-19
-sources_hash: d9d0af13944a
+updated: 2026-11-25
+sources_hash: 1a42211a38f6
 ---
 
 # Tools (custom tools, ToolRuntime, built-ins)
@@ -157,6 +157,7 @@ Custom state keys (`page_url`) must exist in the graph schema: pass `state_schem
 - `write_todos` is not a default tool in 0.7.x even though older docs/tutorials assume it.
 - Harness-profile `tool_description_overrides` rewrite only `BaseTool` and dict tools; **plain callables are left unchanged** (`_tools.py`). Wrap with `@tool` if you need profile overrides.
 - `create_deep_agent`'s docstring says `execute` "will return an error message" on non-sandbox backends; in practice `FilesystemMiddleware` also strips it from the tool list per model call, so the model normally never sees it. The error path only fires if it is called anyway.
+- Built-in tool descriptions change between patch releases. Through 0.7.40 the `edit_file` description said "You must read the file before editing; this tool errors otherwise.", though the tool never checked; 0.7.41 drops "this tool errors otherwise" (#7823, `EDIT_FILE_TOOL_DESCRIPTION` in `middleware/filesystem.py`) and trims backend details from the `execute` description (#7862). Do not test against the exact description text.
 - Two `write_file`/`edit_file`/`delete` calls on the same path in one model turn: the later ones get `Error: parallel file mutations to the same path are not allowed.`
 - Tool exceptions propagate through `FilesystemMiddleware.wrap_tool_call` unhandled; error-to-message conversion is LangChain's tool node behavior, not deepagents'.
 - Tool names collide with built-ins at your own risk; `HarnessProfile.excluded_tools` filters **all** tools by name, including yours, and runs last so custom middleware cannot restore them.

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: filesystem tools, file tools, grep_exclude_dirs, offload_binary_content, ls, read_file, write_file, edit_file, delete, glob, grep, execute, FilesystemMiddleware, tool_token_limit_before_evict, large_tool_results, grep regex, read file limit, tool eviction, big tool output
 read_when: Read when the agent's file tools behave unexpectedly, grep regex finds nothing, read_file truncates, a large tool result is evicted, or execute is missing or reports success on failure.
-updated: 2026-11-19
-sources_hash: 2f3ef7b90d47
+updated: 2026-11-25
+sources_hash: 288553b45e7f
 ---
 
 # Filesystem tools (ls, read_file, write_file, edit_file, delete, glob, grep, execute)
@@ -79,7 +79,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 ### write_file / edit_file / delete
 
 - `write_file` overwrites silently (description tells the model it need not read first).
-- `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing; this tool errors otherwise" - that read-before-edit check is **not enforced** in the 0.7.40 middleware.
+- `edit_file` requires exact match; non-unique `old_string` without `replace_all=True` is an error; `new_string` must differ. The description says "You must read the file before editing." (`middleware/filesystem.py:1611`); that read-before-edit rule is **not enforced**. Through 0.7.40 it added "this tool errors otherwise", which was never true; 0.7.41 dropped it.
 - `edit_file` on a binary file in `StateBackend`/`StoreBackend` returns `Error: Cannot edit binary files with text replacements.` (0.7.29+, still so in 0.7.40). Since 0.7.39 a `StoreBackend` file uploaded with a NUL byte is stored base64, so it counts as binary too ([[backends]]).
 - Two mutations (`write_file`/`edit_file`/`delete`) of the same path in one model response: the later ones return `Error: parallel file mutations to the same path are not allowed.`
 - `delete` is hidden from the model when the backend does not override `BackendProtocol.delete`.

@@ -7,7 +7,7 @@ product: sdk
 keywords: permissions, FilesystemPermission, read-only agent, hidden paths, dotfiles, DOTGLOB, deny write, allow deny, path restrictions, restrict paths, approval, interrupt mode, HITL, human in the loop, first match wins, access control, guardrails
 read_when: Read when making paths read-only, confining the agent to a directory, requiring approval for sensitive writes, or hitting NotImplementedError combining permissions with a shell backend.
 updated: 2026-11-19
-sources_hash: 4c2dc80984c2
+sources_hash: 86f8aad07517
 ---
 
 # Filesystem permissions (FilesystemPermission)

@@ -7,7 +7,7 @@ product: sdk
 keywords: skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools
 read_when: Read when adding task-specific procedures the agent loads on demand, when skills load zero, a new or edited skill does not appear, or a subagent lacks skills.
 updated: 2026-11-19
-sources_hash: efb9fc0649c7
+sources_hash: f19050bc6137
 ---
 
 # Skills (SKILL.md, progressive disclosure)

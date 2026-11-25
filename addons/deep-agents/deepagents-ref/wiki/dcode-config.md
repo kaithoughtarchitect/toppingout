@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode config, config.toml, managed_config.toml, API key, /auth, base_url, OPENAI_BASE_URL, gateway, DEEPAGENTS_CODE_, DEEPAGENTS_HOME, .env, provider, custom provider, class_path, recursion_limit, allowed models, retries
 read_when: Read when dcode uses the wrong model or API key, a setting seems ignored, you need a custom or gateway provider, or an admin must pin policy.
-updated: 2026-11-19
-sources_hash: 28dc71170e92
+updated: 2026-11-25
+sources_hash: 48f1f2412076
 ---
 
 # dcode configuration, providers and credentials
@@ -148,6 +148,7 @@ Install the package into dcode's environment with `dcode --install my_package --
 ## Credentials
 
 - `/auth` is the TUI manager. It covers LLM keys plus optional base URL, the Tavily key (enables `web_search`), and the LangSmith key (enables tracing). Row labels are `[stored]`, `[env: VAR]` or `[missing]`.
+- Built-in web search (`web_search`) is Tavily only. For another search provider, add a remote MCP server that exposes search tools; its tools sit alongside the built-ins, and `web_search` stays available if a Tavily key is set (`credentials.md` "Enable web search", `quickstart.md`; see [[dcode-extending]]).
 - From the shell: `echo "$KEY" | dcode auth set anthropic`, `dcode auth set openai --from-env OPENAI_API_KEY`, `dcode auth list|status <p>|remove <p>|path`. `set` refuses to run in an interactive TTY.
 - For CI, export env vars. Use `DEEPAGENTS_CODE_OPENAI_API_KEY` to scope a key to dcode without affecting other tools.
 
@@ -171,6 +172,7 @@ Install the package into dcode's environment with `dcode --install my_package --
 - `DEEPAGENTS_CODE_LANGSMITH_PROJECT` and `DEEPAGENTS_CODE_LANGSMITH_REPLICA_PROJECTS` now take an agent environment's `tracer_session_name` (agent-based workspaces); create the destination agent before enabling a replica.
 - An MCP tool-call timeout does not cancel the call on the server, so a retry can duplicate work.
 - Git trace attribution is on by default whenever tracing is on. In a large repo it adds latency around every tool that can change the checkout. `[tracing].git_attribution = false` or `DEEPAGENTS_CODE_GIT_ATTRIBUTION=false` (`0`, `no`, `off` or empty also work; the env var beats the user config file) skips it for the main agent and subagents. It does not turn tracing off (`config-file.md` "Disable Git trace attribution", `configuration.md`).
+- Since 0.2.12 (changelog) the OpenAI `prompt_cache_key` is shared across threads within a local profile instead of set per thread, so prompt-cache hits carry across sessions.
 - Since 0.2.8 (changelog) dcode sets `DEEPAGENTS_CODE=1` in its local shell environment, so a script or hook can detect it runs under dcode. The 2026-11-18 docs do not mention it.
 
 ## Sources
@@ -179,6 +181,7 @@ Install the package into dcode's environment with `dcode --install my_package --
 - `../sources/docs/oss/deepagents/code/config-file.md`
 - `../sources/docs/oss/deepagents/code/providers.md`
 - `../sources/docs/oss/deepagents/code/credentials.md`
+- `../sources/docs/oss/deepagents/code/quickstart.md` (web search note)
 - `../sources/docs/github/deepagents-code-CHANGELOG.md` (the docs changelog page now redirects to this GitHub file)
 
 ## See also

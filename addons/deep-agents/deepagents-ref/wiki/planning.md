@@ -7,7 +7,7 @@ product: sdk
 keywords: write_todos, TodoListMiddleware, todo list, planning tool, task planning, todos state, progress tracking, plan and track tasks, write_todos missing, opt-in planning, Codex harness profile
 read_when: Read when write_todos is missing or a prompt says use write_todos, or when adding planning/progress tracking to a long multi-step agent.
 updated: 2026-11-19
-sources_hash: 2d86da69653f
+sources_hash: 8ffd8f93b692
 ---
 
 # Planning (write_todos / TodoListMiddleware)

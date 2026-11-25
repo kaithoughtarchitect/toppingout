@@ -7,7 +7,7 @@ product: all
 keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context, notification metadata, read_file_media, fork prompt cache
 read_when: Read when deciding what goes in the prompt vs files vs state, passing per-run context, debugging how the system prompt is assembled, or context bloat.
 updated: 2026-11-19
-sources_hash: fa6749d8b1e4
+sources_hash: c0e393ad7686
 ---
 
 # Context engineering in Deep Agents

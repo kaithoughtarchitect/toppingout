@@ -7,7 +7,7 @@ product: dcode
 keywords: /goal, goal, /rubric, --rubric, rubric, acceptance criteria, grader, RubricMiddleware, keep iterating until done, self-grading, --rubric-max-iterations, --rubric-model, definition of done, CI quality gate
 read_when: Read when you want dcode to keep working until acceptance criteria pass, or need a rubric quality gate in headless or CI runs.
 updated: 2026-11-19
-sources_hash: 7ebf3a0beb5e
+sources_hash: 6cf948636f13
 ---
 
 # dcode goals and rubrics

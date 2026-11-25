@@ -7,7 +7,7 @@ product: sdk
 keywords: model, provider:model, init_chat_model, choose model, switch model, OpenRouter, Ollama, Bedrock, Azure OpenAI, harness profile, HarnessProfile, provider profile, ProviderProfile, register_harness_profile, register_provider_profile, use_responses_api, excluded_tools, runtime model switching
 read_when: Read when picking or configuring a model, tuning behaviour per model, excluding a tool or middleware for one model, or a profile does not apply.
 updated: 2026-11-19
-sources_hash: 24ed6c95b4df
+sources_hash: 5e051d11521a
 ---
 
 # Models and profiles

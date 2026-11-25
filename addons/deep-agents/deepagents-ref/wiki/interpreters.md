@@ -6,8 +6,8 @@ status: sourced
 product: sdk
 keywords: interpreter, code interpreter, CodeInterpreterMiddleware, QuickJS, eval tool, JavaScript REPL, programmatic tool calling, PTC, ptc, langchain_quickjs, run code in loop, orchestrate tools in code, REPL, dynamic subagents
 read_when: Read when the model should loop, batch or transform data in code without a shell, call tools or subagents from code (PTC), or when choosing between an interpreter and a sandbox.
-updated: 2026-11-19
-sources_hash: a6ed795de2db
+updated: 2026-11-25
+sources_hash: 803a12fc86d6
 ---
 
 # Interpreters (QuickJS CodeInterpreterMiddleware)
@@ -48,10 +48,11 @@ agent = create_deep_agent(
 
 - Tool `eval` (rename via `tool_name`). The model writes JS; the runtime returns the value of the last expression plus captured `console.log/warn/error`.
 - Top-level `await` works.
-- No host filesystem, network, shell, package manager, or clock by default. Only two bridges:
+- No host filesystem, network, shell, package manager, or clock by default. Three bridges:
   - `tools.*` (PTC): allowlisted tools as async functions, names camelCased (`web_search` -> `await tools.webSearch({query: "..."})`), input object follows the tool schema.
   - `task({description, subagentType})`: dispatch configured [[subagents]] from code; on by default when the agent has subagents (`subagents=False` to disable).
-- File access inside the interpreter only by putting built-in file tools in the PTC allowlist (e.g. `ptc=["read_file", "grep"]`, see [[filesystem-tools]]).
+  - `fs` (opt-in, `fs=True` or `fs=backend`): a Node-style `fs` global over the agent's backend. See "Files (`fs`)" below.
+- Without `fs`, file access inside the interpreter is only by putting built-in file tools in the PTC allowlist (e.g. `ptc=["read_file", "grep"]`, see [[filesystem-tools]]).
 
 ```js
 const topics = ["retrieval", "memory", "evaluation"];
@@ -63,6 +64,36 @@ results.join("\n\n");
 const reviews = await Promise.all(["src/auth.ts", "src/routes/api.ts"].map(path =>
   task({ description: `Review ${path} for authentication issues`, subagentType: "reviewer" })));
 reviews.join("\n\n");
+```
+
+## Files (`fs`)
+
+Added in the docs fetched 2026-11-25. Needs `langchain-quickjs>=0.4.0`; the `deepagents[quickjs]` extra in 0.7.40 only pins `>=0.3.12` (`../sources/package/deepagents-0.7.41.dist-info/METADATA`), so pin `langchain-quickjs>=0.4.0` yourself if you use `fs`.
+
+```python
+from deepagents import create_deep_agent
+from langchain_quickjs import CodeInterpreterMiddleware
+
+agent = create_deep_agent(
+    model="anthropic:claude-sonnet-5",
+    middleware=[CodeInterpreterMiddleware(fs=True)],
+)
+```
+
+- `fs=True` uses the backend `create_deep_agent` gives its file tools: the same files `read_file` and `write_file` see. With another factory such as `create_agent`, pass the backend itself: `CodeInterpreterMiddleware(fs=backend)`.
+- One middleware instance with `fs=True` cannot serve agents with different backends; make one per agent.
+- All functions are async (like `fs/promises`; `fs.promises` has the same ones): `fs.readFile(path)` (whole file as a string), `fs.writeFile(path, text)` (create or replace, makes parent dirs), `fs.readdir(dir)` (entry names), `fs.access(path)` (rejects with `ENOENT` if missing), `fs.rm(path, { recursive, force })` (a directory needs `recursive: true`; `force: true` ignores a missing path).
+- UTF-8 text only. Failures throw Node errors with a `code` (`ENOENT`, `EISDIR`, `EACCES`). `readFileSync` and other sync functions, `stat`, `glob`, `mkdir` and `appendFile` throw `ERR_METHOD_NOT_IMPLEMENTED`; `require` does not exist. A file too big for `memory_limit` ends the `eval` with a `MarshalError`.
+
+```js
+const names = await fs.readdir("/reports");
+const totals = {};
+for (const name of names) {
+  const { region, revenue } = JSON.parse(await fs.readFile(`/reports/${name}`));
+  totals[region] = (totals[region] ?? 0) + revenue;
+}
+await fs.writeFile("/summary/totals.json", JSON.stringify(totals));
+totals;
 ```
 
 ## Configuration (`CodeInterpreterMiddleware` kwargs, per docs)
@@ -77,6 +108,7 @@ reviews.join("\n\n");
 | `ptc` | `None` | Allowlist of tool names or `BaseTool` instances; `None` = PTC off |
 | `max_ptc_calls` | `256` | Max `tools.*` calls per `eval`; `None` only if trusted |
 | `subagents` | `True` | Expose `task()` when subagents exist |
+| `fs` | `None` | Node-style `fs` global over a backend; `True` = the backend from `create_deep_agent` (`langchain-quickjs>=0.4.0`) |
 | `mode` | `"thread"` | `"thread"`, `"turn"`, or `"call"` persistence |
 | `max_snapshot_bytes` | `None` (= `memory_limit`) | Drop larger snapshots |
 
@@ -90,7 +122,8 @@ reviews.join("\n\n");
 ## Security
 
 - QuickJS compiled to WebAssembly (via `quickjs-rs`), running in the host process on `wasmtime`. Per the current docs the WebAssembly sandbox is the isolation boundary: JS cannot read or write host memory, and each LangGraph thread gets its own instance. A `wasmtime` bug is the remaining way out, so keep `wasmtime` updated, and for hostile multi-tenant workloads still run agents in isolated workers or containers. (The deepagents package has no code for it; this is docs only, `../sources/docs/oss/python/deepagents/interpreters.md`.)
-- The sandbox contains the engine, not the capabilities: code can call every tool bridged into it.
+- The sandbox contains the engine, not the capabilities: code can call every tool bridged into it and, with `fs`, reach every file the backend can.
+- `fs` calls the backend directly, not the file tools, so [[permissions]] and `interrupt_on` approvals do not apply to it: interpreter code can read, write and delete anything the backend reaches. On `FilesystemBackend(virtual_mode=False)` or a local shell backend that is the host filesystem. Leave `fs` unset for agents that rely on permissions or approvals.
 - The PTC allowlist is a permission boundary; do not bridge tools that spend money, mutate data, or reach arbitrary networks unless intended.
 - PTC calls bypass the normal tool-call path, so `interrupt_on` approvals ([[human-in-the-loop]]) are **not** enforced for tools invoked from `eval`.
 
@@ -99,14 +132,14 @@ reviews.join("\n\n");
 - Beta: API and lifecycle may change between releases ([[versions]]).
 - Default 5 s timeout and 4000-char result cap are small; long fan-outs over `task()` need a larger `timeout`.
 - Interpreter code has no clock; `Date`-based logic needs an explicit time tool.
-- Putting a HITL-guarded tool in `ptc` silently removes its approval gate.
+- Putting a HITL-guarded tool in `ptc` silently removes its approval gate. Setting `fs` does the same for file writes guarded by `interrupt_on` or `permissions=`.
 - Snapshots live in graph state; large `thread`-mode state bloats checkpoints unless `max_snapshot_bytes` is set.
 - The middleware is external; verify kwargs against your installed `langchain-quickjs`, since this page is docs-sourced.
 
 ## Sources
 
 - `../sources/docs/oss/python/deepagents/interpreters.md`
-- `../sources/package/deepagents-0.7.40.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.41.dist-info/METADATA`
 - `../sources/package/deepagents/backends/state.py`
 
 ## See also
@@ -121,4 +154,5 @@ reviews.join("\n\n");
 - [[persistence]]
 - [[context-engineering]]
 - [[filesystem-tools]]
+- [[permissions]]
 - [[versions]]

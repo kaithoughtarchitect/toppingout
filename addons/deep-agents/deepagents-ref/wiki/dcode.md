@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode, deepagents-code, Deep Agents Code, terminal coding agent, CLI coding agent, TUI, headless mode, non-interactive, dcode -n, ACP server, slash commands, --model, --resume, --sandbox, install dcode
 read_when: Read when choosing between dcode and the SDK, installing or running dcode, scripting it headless in CI, or looking up a dcode flag or slash command.
-updated: 2026-11-19
-sources_hash: 511cb866e931
+updated: 2026-11-25
+sources_hash: 872d34f4d191
 ---
 
 # Deep Agents Code (dcode)
@@ -96,7 +96,7 @@ dcode -n "implement X" --rubric @acceptance.md --rubric-max-iterations 3
 
 ## Management subcommands
 
-`dcode tools list`, `agents list|reset [--target SRC]`, `skills list|create|info|delete [--project]`, `threads list|delete` (with `--sort`, `--branch`, `--cwd`, `-n/--limit`), `mcp login [NAME]`, `mcp config`, `config show|list|get|path`, `auth list|status|set|remove|path`, `plugin ...`, `doctor`, `update`, `uninstall NAME`, `completion` (shell completion scripts, 0.2.7 changelog; not in the 2026-11-18 CLI reference). The destructive ones (`agents reset`, `skills delete`, `threads delete`) accept `--dry-run`. Put tool-shaping flags before the subcommand: `dcode --allow-fs-tools ls,read_file tools list --json`.
+`dcode tools list`, `agents list|reset [--target SRC]`, `skills list|create|info|delete [--project]`, `threads list|delete` (with `--sort`, `--branch`, `--cwd`, `-n/--limit`), `mcp login [NAME]`, `mcp config`, `config show|list|get|path`, `auth list|status|set|remove|path`, `plugin ...`, `doctor`, `update`, `uninstall NAME`, `completion bash|zsh|fish [--prog NAME]` (static shell completion script; `--prog` is repeatable and replaces the default names `dcode` and `deepagents-code`; regenerate after upgrading; added in 0.2.7). The destructive ones (`agents reset`, `skills delete`, `threads delete`) accept `--dry-run`. Put tool-shaping flags before the subcommand: `dcode --allow-fs-tools ls,read_file tools list --json`.
 
 ## Most-used slash commands
 
@@ -148,6 +148,9 @@ Git trace attribution: with tracing on, dcode runs read-only Git checks around t
 - 0.2.9 (2026-11-16): updated stable model recommendations.
 - 0.2.10 (2026-11-17): agent status reported to terminals with OSC 7501; MCP trust lists load without blocking the server event loop.
 - 0.2.11 (2026-11-18): MCP hook approval policies are honoured; shutdown waits for background worker cleanup to finish.
+- 0.2.12 (2026-11-20): Gemini 4 Neon and GPT-6.2 Astra and Sol in the model picker; OpenAI `prompt_cache_key` shared across threads within a local profile (was per thread); Auto mode resolves relative paths the same way the file tools do; PTC tool discovery reads the exposed tools.
+- 0.2.13 (2026-11-20): unapproved MCP servers disabled with F2 are reported as disabled, project MCP servers skipped for missing approval are reported, and the project MCP trust prompt shows the source file.
+- 0.2.14 (2026-11-23): `/cost` attributes side-request spending correctly; local context detection fixed on Windows; corrected flag hints for verbose settings; `deepagents-acp>=0.1.0`, `langsmith[sandbox]>=0.16.0`.
 
 ## Gotchas
 

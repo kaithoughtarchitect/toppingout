@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode extensions, AGENTS.md, memory, skills, SKILL.md, subagents, sub-agent, MCP servers, .mcp.json, hooks, hooks.json, PreToolUse, plugins, marketplace, ExtensionAPI, Python extension, register_tool, allowedTools
 read_when: Read when adding memory, skills, subagents, MCP servers, hooks, plugins or Python extensions to dcode, or when a project MCP server or extension does not load.
-updated: 2026-11-19
-sources_hash: 6a727efcd651
+updated: 2026-11-25
+sources_hash: 31f61362087f
 ---
 
 # Extending dcode (memory, skills, subagents, hooks, plugins, extensions, MCP)
@@ -99,6 +99,7 @@ You are a research assistant...
 - `allowedTools` and `disabledTools` are mutually exclusive and must be non-empty. Entries are fnmatch globs matched against both `tool` and `{server}_{tool}`.
 - For OAuth: `dcode mcp login` lists servers that need login; `dcode mcp login <name>` runs the flow (DCR + PKCE paste-back, Slack's variant, or GitHub device flow). Tokens are stored in `.state/mcp-tokens/<server>-<sha16(url)>.json` (mode 0600). `auth: "oauth"` cannot be combined with an `Authorization` header or used on stdio servers.
 - Project `.mcp.json` servers are **default-deny**. See [[dcode-safety]] for trust handling. User-level configs are always trusted. The startup prompt can also deny a server for the session or permanently (permanent denials apply across all projects and live in `[mcp].disabled_project_servers`).
+- To use a search provider other than Tavily, add a remote MCP server that exposes search tools. Its tools appear alongside the built-ins; the built-in `web_search` stays available if a Tavily key is set (`credentials.md` "Enable web search", `quickstart.md`).
 - In Auto mode, a tool skips classifier review only when `readOnlyHint` is exactly `true` and `destructiveHint` is not `true`.
 - Since 0.1.71, MCP runs on FastMCP and `langchain.mcp`. See [[mcp]] and [[tools]].
 
@@ -165,6 +166,7 @@ async def extension(d: ExtensionAPI) -> None:          # must be async and named
 - `../sources/docs/oss/deepagents/code/plugins.md`
 - `../sources/docs/oss/deepagents/code/extensions.md`
 - `../sources/docs/oss/deepagents/code/mcp-tools.md`
+- `../sources/docs/oss/deepagents/code/credentials.md` (search through MCP)
 - `../sources/docs/oss/deepagents/code/configuration.md` (data locations, precedence)
 - `../sources/package/deepagents/backends/store.py` (`StoreBackend(*, namespace, store=None)`)
 - `../sources/package/deepagents/middleware/subagents.py` (`mode: "isolated" | "fork"`, fork instructions in the task message)

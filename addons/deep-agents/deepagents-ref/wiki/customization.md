@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: customize agent, system prompt, prompt composition, custom middleware, override middleware, SummarizationMiddleware, SkillsMiddleware, structured output, response_format, subagents, backends, human in the loop, HITL, interrupt_on, going fully custom, tools, memory, skills
 read_when: Read when deciding which create_deep_agent knob changes a behaviour, overriding a default middleware, or composing the system prompt.
-updated: 2026-11-19
-sources_hash: 65389ec5f44c
+updated: 2026-11-25
+sources_hash: ccfbce1d8a6d
 ---
 
 # Customizing a deep agent
@@ -63,7 +63,7 @@ Main agent: `USER` (your `system_prompt`) -> `BASE` (profile `base_system_prompt
 | - | - |
 | Main agent | `system_prompt` + profile BASE + profile SUFFIX |
 | Declarative subagent | (profile `base_system_prompt` if set, **replacing** the spec's `system_prompt`, else spec's) + SUFFIX of the subagent's own model profile |
-| Forked subagent (`mode="fork"`, experimental) | parent's final prompt, byte-identical (keeps the parent's prompt-cache prefix); since 0.7.35 the spec's `system_prompt` is not appended to it but sent in the task `HumanMessage`, after the inherited history (preamble, then instructions, a blank line, then the task). Since the 2026-11-19 fetch the subagents docs' field table and fork section say the same (the fork keeps the parent's prompt; its instructions go in the task message). The page's mode comparison table ("An optional system prompt appends instructions and can reduce cache reuse") and `create_deep_agent`'s own docstring still say it is appended; the code wins |
+| Forked subagent (`mode="fork"`, experimental) | parent's final prompt, byte-identical (keeps the parent's prompt-cache prefix); since 0.7.35 the spec's `system_prompt` is not appended to it but sent in the task `HumanMessage`, after the inherited history (preamble, then instructions, a blank line, then the task). Since the 2026-11-25 fetch the whole subagents docs page says the same, comparison table included ("An optional `system_prompt` is delivered with the task message to preserve cache reuse"). `create_deep_agent`'s own docstring still says it is appended; the code wins |
 | Auto `general-purpose` | `general_purpose_subagent.system_prompt` -> else profile `base_system_prompt` -> else SDK GP default; then SUFFIX |
 
 Middleware then appends dynamic sections at call time, in stack order: filesystem host-path routing notes (composite backends only), your own middleware's fragments, the skills catalog (`SkillsMiddleware`, after your middleware, seen in 0.7.39), then memory content (`MemoryMiddleware`). `SystemMessage` input keeps content blocks (useful for `cache_control`); subagent dict specs take strings only.
@@ -203,7 +203,7 @@ Compose `langchain.agents.create_agent` with `deepagents.middleware` pieces your
 
 - `../sources/docs/oss/python/deepagents/customization.md`
 - `../sources/docs/oss/python/deepagents/profiles.md`
-- `../sources/docs/oss/python/deepagents/subagents.md` (forked subagents: fixed in the field table and fork section on 2026-11-19; the comparison table still says "appends")
+- `../sources/docs/oss/python/deepagents/subagents.md` (forked subagents: field table and fork section fixed on 2026-11-19, comparison table on 2026-11-25)
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/profiles/harness/harness_profiles.py`
 - `../sources/package/deepagents/middleware/summarization.py`

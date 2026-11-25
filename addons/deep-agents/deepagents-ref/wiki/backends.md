@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: backend, backends, offload_binary_content, blobs, StateBackend, StoreBackend, CompositeBackend, FilesystemBackend, LocalShellBackend, ContextHubBackend, BackendProtocol, namespace, virtual_mode, long-term memory storage, persistent storage, where do files live, custom backend, route prefix, virtual filesystem
 read_when: Read when choosing where agent files are stored, persisting files across threads, routing /memories/ to a store, writing a custom backend, or hitting a backend factory TypeError or StoreBackend namespace error.
-updated: 2026-11-19
-sources_hash: a8e96d61a887
+updated: 2026-11-25
+sources_hash: 0db8aff6cbfc
 ---
 
 # Backends (pluggable filesystem storage)
@@ -210,7 +210,7 @@ agent = create_deep_agent(
 
 - Docs say `FilesystemBackend` defaults to `virtual_mode=False`; code (0.7.40) defaults to `virtual_mode=True` for both `FilesystemBackend` and `LocalShellBackend`. Code wins; still pass it explicitly.
 - Docs say factories (`backend=lambda rt: StateBackend(rt)`) still work with a deprecation warning; code raises `TypeError` (factories removed in 0.7) and `StateBackend.__init__` takes no args.
-- Docs say omitting `StoreBackend(namespace=...)` falls back to `assistant_id`; code makes `namespace` a required keyword argument.
+- Docs say omitting `StoreBackend(namespace=...)` falls back to a legacy `assistant_id` default; code makes `namespace` a required keyword argument. Since the 2026-11-25 fetch the docs' quick table, protocol notes and migration table pass `namespace=` (`StoreBackend(namespace=lambda rt: (rt.server_info.user.identity,))`), but the namespace section's legacy-default note is still there.
 - Docs protocol reference says `write` is create-only and mentions `files_update`; code: every built-in `write` overwrites, and `WriteResult`/`EditResult` have no `files_update` field.
 - `FilesystemBackend` alone writes `/large_tool_results/...` and `/conversation_history/...` onto real disk under `root_dir`. Use a `CompositeBackend` with a `StateBackend` default.
 - `StateBackend` methods called outside a graph run raise `RuntimeError`; seed files via the `files` input key.

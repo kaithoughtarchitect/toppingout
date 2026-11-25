@@ -19,10 +19,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "sources" / "docs"
 BASE = "https://docs.langchain.com"
+# The llms.txt indexes (listed at {BASE}/llms.txt; renamed by the site on 2026-11-25, when the
+# old `_llms/agent-development-lifecycle/...md` ones started returning 404).
 INDEXES = (
-    f"{BASE}/_llms/agent-development-lifecycle/build/python.md",
-    f"{BASE}/_llms/agent-development-lifecycle/build.md",
-    f"{BASE}/_llms/products-and-setup.md",
+    f"{BASE}/_llms/agent-runtime/build/python.txt",
+    f"{BASE}/_llms/agent-runtime/build.txt",
 )
 KEEP = (
     re.compile(r"^/oss/python/deepagents/"),
@@ -112,10 +113,24 @@ def html_to_text(html: str) -> str:
     return re.sub(r"\n\s*\n+", "\n\n", "".join(parser.out)).strip() + "\n"
 
 
+def known() -> set[str]:
+    """The pages the last fetch kept: a page an index stops listing is still fetched (the Deep Agents
+    Code pages left every index on 2026-11-25 but are still served); one the site removed fails loudly."""
+    try:
+        text = (OUT / "MANIFEST.md").read_text(encoding="utf-8")
+    except OSError:
+        return set()
+    return {p for p in re.findall(rf"^\| {re.escape(BASE)}(/\S+?\.md) \|", text, re.M) if any(k.match(p) for k in KEEP)}
+
+
 def discover() -> list[str]:
-    paths = set(EXTRA)
+    paths = set(EXTRA) | known()
     for idx in INDEXES:
-        for _, path in LINK_RE.findall(get(idx)):
+        try:
+            listing = get(idx)
+        except Exception as e:  # noqa: BLE001
+            sys.exit(f"index unreachable: {idx} ({e}); see {BASE}/llms.txt for the current index names")
+        for _, path in LINK_RE.findall(listing):
             if any(k.match(path) for k in KEEP):
                 paths.add(path)
     return sorted(paths)

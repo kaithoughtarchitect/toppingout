@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: memory, long-term memory, remember across sessions, cross-thread memory, persistent memory, AGENTS.md, MemoryMiddleware, memory=, /memories/, StoreBackend, per-user memory, user preferences, short-term memory, agent memory, store namespace
 read_when: Read when the agent should remember things across threads or users, when a UI seeds or reads memory files, when memory edits do not show up mid-thread, or when scoping memory per user or org.
-updated: 2026-11-19
-sources_hash: 0a77e827d244
+updated: 2026-11-25
+sources_hash: e398ec79dcb6
 ---
 
 # Memory (AGENTS.md files, long-term memory)
@@ -168,7 +168,7 @@ This deny misses hidden paths such as `/policies/.x` ([[permissions]], Gotchas):
 - Agent-scoped: `namespace=lambda rt: (rt.server_info.assistant_id,)` shared by all users. Multiple agents per deployment: `(assistant_id, user_identity)`.
 - Organization-level: `namespace=lambda rt: (rt.context.org_id,)`, typically read-only.
 - Episodic: threads are already checkpointed; wrap `client.threads.search(metadata={"user_id": ...})` + `get_history` in a tool.
-- Background consolidation ("sleep-time compute"): a second deep agent registered in `langgraph.json`, run by `client.crons.create(assistant_id="consolidation_agent", schedule="0 */6 * * *", ...)`; cron is UTC; keep lookback window == cron interval.
+- Background consolidation ("sleep-time compute"): a second deep agent registered in `langgraph.json`, run by `client.crons.create(assistant_id="consolidation_agent", schedule="0 */6 * * *", ...)`; cron is UTC; keep lookback window == cron interval. Its `search_recent_conversations` tool (docs fetched 2026-11-25) calls `threads.search(metadata={"user_id": user_id}, sort_by="updated_at", sort_order="desc", limit=20)`, stops at the first thread whose `updated_at` is older than the window, and reads each thread's messages from `threads.get_state(thread_id=...)["values"]["messages"]`. The earlier example passed `updated_after=` and read `get_history`; copy the new one. (`langgraph_sdk` is not vendored here, so this is docs only.)
 - Concurrency: same-file concurrent writes are last-write-wins; split memory into per-topic files or consolidate in background for shared scopes.
 - Security: default to user scope; anything one user can write and another reads is a prompt-injection channel.
 
@@ -183,7 +183,7 @@ This deny misses hidden paths such as `/policies/.x` ([[permissions]], Gotchas):
 - `rt.server_info` is only meaningful under LangSmith Deployment / Agent Server (`deepagents>=0.5.0`); locally the namespace lambda can raise. Use `rt.context`.
 - `StoreBackend` without `store=` calls `get_store()`: fine inside the graph, `RuntimeError` when you call it from app code. Pass `store=` if app code also touches the backend.
 - Memory files are fully injected every model call; keep them short and move procedures to [[skills]]. Agents append but rarely compact (see [[agent-builder-memory]]).
-- The `edit_file` description says "must read before editing; errors otherwise", but 0.7.40's tool does not enforce a prior read; `old_string` must still match exactly and uniquely unless `replace_all=True`.
+- The `edit_file` description says "must read before editing", but the tool does not enforce a prior read (through 0.7.40 it also claimed an error, removed in 0.7.41, #7823); `old_string` must still match exactly and uniquely unless `replace_all=True`.
 - The context-engineering docs list `memory=["~/.deepagents/preferences.md"]`; `~` is just a literal key on State/Store backends. Only `FilesystemBackend` / Deep Agents Code treat it as home (see [[dcode-config]]).
 - Managed Deep Agents have their own memory product surface; see [[managed-capabilities]].
 
@@ -197,6 +197,7 @@ This deny misses hidden paths such as `/policies/.x` ([[permissions]], Gotchas):
 - `../sources/package/deepagents/backends/composite.py`
 - `../sources/package/deepagents/backends/utils.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
+- `../sources/docs/github/deepagents-CHANGELOG.md`
 
 ## See also
 - [[index]]

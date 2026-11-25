@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: managed deep agents, MDA, mda CLI, managed-deepagents, define_deep_agent, mda deploy, mda dev, mda init, LangSmith deployment, Agent Server, hosted agent, Context Hub, deploy agent to production, migrate from create_deep_agent
 read_when: Read when deciding between the OSS SDK and Managed Deep Agents, running mda init, build, dev or deploy, or migrating create_deep_agent code to define_deep_agent.
-updated: 2026-11-19
-sources_hash: 06693ac85cc0
+updated: 2026-11-25
+sources_hash: d970bd7cf0f5
 ---
 
 # Managed Deep Agents (MDA)
@@ -26,6 +26,7 @@ Status: public beta on LangSmith Cloud and Bring Your Own Cloud (BYOC; needs CLI
 - Quickstart: `uvx --from managed-deepagents mda init <name>`, then `uv run mda dev`, then `uv run mda deploy`.
 - Not accepted: `system_prompt`, `backend`, `store`, `checkpointer`, `state_schema`; static definitions also can't set `skills` or `memory` (a factory can). Prompt goes to `instructions.md`, skills to `skills/`, memory to `memory.py`, backend to `sandbox/` or `routes`.
 - Middleware must use async hooks; `permissions` is cleared when `sandbox/` exists.
+- Deploy from GitHub (2026-11-25 deploy page): **Agent Servers** > **+ Agent Server**, pick the repo, tick **This is a Managed Deep Agent project**, set **Project directory**; optional rebuild on push.
 - `mda deploy` flags: `--name`, `--agent-server-type serverless|dedicated` (2026-11-18 docs; `--deployment-type` is a hidden alias, and an older CLI may need it; Serverless is the default since 0.10.0), `--context-strategy overwrite|keep-hub`, `--no-wait` (not allowed with Slack).
 - Put provider keys in `.env` or workspace secrets; `.env` is not archived but non-reserved values are forwarded as deployment secrets.
 - Gotcha: `mda build` does not validate the definition call; a forbidden param like `backend=` only fails under `mda dev`.
@@ -52,7 +53,7 @@ agent = define_deep_agent(
 )
 ```
 
-Project layout and every file's role: [[managed-project]]. Tools/MCP/memory/sandbox/connections: [[managed-capabilities]]. Slack/HTTP/identity/schedules/MCP endpoint: [[managed-channels]]. `mda dev`, evals, tutorial: [[managed-dev]].
+Project layout and every file's role: [[managed-project]]. Tools/MCP/memory/sandbox/connections: [[managed-capabilities]]. Slack/HTTP/identity/schedules/MCP endpoint: [[managed-channels]]. `mda dev`, evals, daily digest: [[managed-dev]]. Patterns (daily digest, watch mode, goals, dreaming, swarm): see [Patterns](#patterns) below.
 
 ## Quickstart (Python)
 
@@ -114,6 +115,18 @@ schedules/**                 -> LangSmith cron jobs after the deployment is live
 
 Auth key lookup order: `LANGGRAPH_HOST_API_KEY`, `LANGSMITH_API_KEY`, `LANGCHAIN_API_KEY`. The CLI and deploy pages still say project `.env` first, then process env; the 0.10.0 changelog (breaking) says the shell now wins over `.env` for `LANGSMITH_API_KEY`, `LANGSMITH_ENDPOINT`, `LANGSMITH_WORKSPACE_ID`, `LANGSMITH_PROJECT` (in `mda dev`) and `--secret-from-env`, with a one-time warning naming the key when they differ. Trust the changelog for >=0.10.0, and unset a global shell value if the project `.env` should win. Values deployed as secrets still come from `.env` only. An interactive terminal with no key prompts for one (saved to `.env`) or offers browser sign-in. Reserved platform vars (`LANGSMITH_API_KEY`, `LANGGRAPH_HOST_API_KEY`, `LANGCHAIN_API_KEY`, `LANGSMITH_WORKSPACE_ID`) are never uploaded as deployment secrets.
 
+### Deploy from GitHub (LangSmith Cloud)
+
+The deploy page now also documents a UI path that builds from a GitHub repository, with optional automatic rebuilds on branch pushes. Authorize the LangSmith GitHub app for the repository first.
+
+1. Push the project to GitHub. Do not commit `.env` or `.mda/build/`.
+2. In LangSmith open **Agent Servers**, select **+ Agent Server**, pick the repository, name the deployment and set a branch or tag.
+3. Select **This is a Managed Deep Agent project** and set **Project directory** to the folder holding `agent.py` (`.` for the repo root).
+4. Choose **Serverless** or **Dedicated**, and optionally turn on automatic updates on push.
+5. Add model provider keys and other secrets under **Environment Variables**, then **Submit**.
+
+LangSmith compiles the project during the build, syncs `instructions.md` and `skills/` to Context Hub, and sets up declared schedules and channels. The page's prerequisites list is now headed "For CLI deployments".
+
 Python version (needs `managed-deepagents>=0.8.0`): image is 3.11-3.14, newest allowed by `requires-python` unless pinned:
 
 ```toml
@@ -170,6 +183,18 @@ def agent_params(runtime: ManagedServerRuntime) -> dict:
 def agent(params: dict):
     return define_deep_agent(name="assistant", model="openai:gpt-6.1-sol", instructions=PROMPTS[params["mode"]])
 ```
+
+## Patterns
+
+The docs now group five worked examples on a patterns page. Each needs `managed-deepagents>=0.10.4` and the matching `mda` CLI (dreaming also `langsmith>=0.10.15`).
+
+| Pattern | What it combines | Wiki page |
+| - | - | - |
+| Daily digest (was "Tutorial") | Agent memory + a weekday schedule | [[managed-dev]] |
+| Watch mode | Slack `trigger_mode="all"`, `[quiet]` replies, one-time `at` check-ins | [[managed-channels]] |
+| Goals | Agent-owned recurring runtime schedule in the same thread, stopped when done | [[managed-channels]] |
+| Dreaming | User memory + a nightly user-owned schedule that reads the person's traces | [[managed-capabilities]] |
+| Swarm | Async subagents (or `general-purpose` tasks) fanned out in one turn | [[managed-project]] |
 
 ## Model options
 
@@ -243,7 +268,8 @@ Other migration rules:
 - `../sources/docs/langsmith/python/managed-deep-agents-overview.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-quickstart.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-migrate.md`
-- `../sources/docs/langsmith/python/managed-deep-agents-deploy.md`
+- `../sources/docs/langsmith/python/managed-deep-agents-deploy.md` (deploy from GitHub)
+- `../sources/docs/langsmith/python/managed-deep-agents-patterns.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-cli.md`
 - `../sources/docs/langsmith/python/managed-deep-agents-runtime.md`
 - `../sources/docs/github/managed-deepagents-CHANGELOG.md`
