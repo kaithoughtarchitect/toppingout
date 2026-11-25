@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-25
+
+- **An upgrade re-renders every board.** A board page changes only when its board gets an event, so a topped-out board kept the page of the renderer it last saw, missing what newer renderers show (the current layout, each job's footprint check). `/f-setup`'s upgrade now re-renders every `BOARD.json` when `render_board.py` changed and commits the pages with the upgrade.
+
 ## 2026-11-24
 
 - **The names check starts clean.** `/f-setup` now runs the names check over the installed method files and the repo profile and brings it to zero hits: a package line or a launch command that names a tool by design goes in the allowed-contexts file, whole (never the bare name, which would hide real hits), and a profile row that names the builder's model is rewritten to name the role (the profile is tracked, so the names never go in it). The next records push that stages one of these files no longer stops on a hit nobody wrote in a record. `/f-setup`'s upgrade runs the same pass (Step 1b item 7).

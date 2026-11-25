@@ -32,7 +32,7 @@ description: >
 
 Every card is in the page, so without JavaScript the page reads in full (the cards as a list); the script draws the spine to fit and shows one card at a time. On a phone the blocks stack and nothing scrolls sideways but the spine's own box. Light and dark themes both follow the viewer's setting.
 
-**The design lives in `render_board.py`, not in any per-project file.** Every project's `board.html` is regenerated from its `BOARD.json` on each event or `render`, so a change to the renderer reaches every board at its next render. To bring an existing board up to date, run `render_board.py <path>/BOARD.json render`.
+**The design lives in `render_board.py`, not in any per-project file.** Every project's `board.html` is regenerated from its `BOARD.json` on each event or `render`, so a change to the renderer reaches every board at its next render. To bring an existing board up to date, run `render_board.py <path>/BOARD.json render`. A board that gets no more events (a topped-out one) only changes that way, so `/f-setup`'s upgrade re-renders every board when the renderer changed.
 
 **Optional fields** (all validated; each written by the step that knows it):
 
