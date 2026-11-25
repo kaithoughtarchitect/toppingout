@@ -2453,7 +2453,8 @@ FRONT = {
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
         ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
-        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions, unless you run the job as a master builder: one strong model that plans and builds."),
+        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions."),
+        ("builder", "Master builder", "Optional, your pick per job: one strong model plans and builds it. Every review stays with someone else."),
         ("inspectors", "Inspectors", "Fresh review agents, then another model family: Codex, on your ChatGPT subscription. Find problems; never fix them."),
         ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
@@ -2937,6 +2938,61 @@ def addon_html(parts: bool = False) -> str:
             + (f'<ul class="adparts">{tiles}</ul>' if parts else "")
             + '<p class="adneed">Works with LangChain&rsquo;s open-source tools. The logos are LangChain&rsquo;s own, shown as supplied; '
             'no partnership or endorsement is implied. The docs and the package the add-on cites are fetched at install, not shipped.</p></div>')
+
+
+CREWS_CSS = r"""
+.crews{margin:26px 0 8px}
+.crews h2{margin:0 0 6px;font:800 28px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
+.crews h2 small,.cw2 b small{margin-left:8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:none;color:var(--ink-3)}
+.crews>p{margin:0 0 12px;max-width:70ch;color:var(--ink-2);font-size:14.5px}
+.crews h3{margin:18px 0 8px;font:700 12px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.cwt{border:2px solid var(--ink);background:var(--panel)}
+.cw2{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(0,1fr);gap:14px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}
+.cw2:last-child{border-bottom:0}.cw2:first-child{background:var(--panel-2)}
+.cw2>span{font:700 10.5px/1.4 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.cw2 p{margin:0;color:var(--ink-2)}.cw2 b{font-weight:700}
+.cwf{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.cwf>li{border:2px solid var(--ink);background:var(--panel);padding:10px 14px}
+.cwf>li>b{display:block;margin-bottom:8px;font-size:14px}
+.cwf ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.cwf ol li{display:flex;flex-direction:column;gap:2px;padding:6px 9px;border:1.5px solid var(--line);font-size:13px;line-height:1.3}
+.cwf ol li span{font:700 10px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.cwf ol li small{font-size:13px;color:var(--ink)}
+@media (max-width:720px){.cw2{grid-template-columns:minmax(0,1fr)}.cw2:first-child{display:none}.cw2 p:nth-of-type(1)::before{content:"Foreman and builder: ";font-weight:700}.cw2 p:nth-of-type(2)::before{content:"Master builder: ";font-weight:700}}
+"""
+
+
+def crews() -> tuple:
+    """README "Two crews: foreman and builder, or a master builder": the comparison table and the three who-reads-what flowcharts."""
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    sec = re.search(r"^## Two crews: foreman and builder, or a master builder\s*\n(.*?)(?=^## )", text, re.S | re.M)
+    if not sec:
+        raise SystemExit("build_site: README.md needs '## Two crews: foreman and builder, or a master builder'")
+    body = sec.group(1)
+    rows = []
+    for ln in body.splitlines():
+        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+        if len(cells) == 3 and cells[0].startswith("**"):
+            rows.append((cells[0].strip("*"), cells[1], cells[2]))
+    charts = []
+    for title, chart in re.findall(r"^\*\*(A master builder in [^*]+)\*\*[^\n]*\n\n```mermaid\n(.*?)```", body, re.S | re.M):
+        charts.append((title.rstrip(":"), [lab.split("<br/>") for lab in re.findall(r'\w\["([^"]+)"\]', chart)]))
+    if len(rows) != 3 or len(charts) != 3:
+        raise SystemExit(f"build_site: README 'Two crews' needs 3 table rows and 3 flowcharts (found {len(rows)}, {len(charts)})")
+    return rows, charts
+
+
+def crews_html() -> str:
+    rows, charts = crews()
+    head = '<div class="cw2"><span></span><b>Foreman and builder <small>the default</small></b><b>Master builder <small>your pick, per job</small></b></div>'
+    trs = "".join(f'<div class="cw2"><span>{inline(k)}</span><p>{inline(a)}</p><p>{inline(b)}</p></div>' for k, a, b in rows)
+    flows = "".join(f'<li><b>{inline(t)}</b><ol>'
+                    + "".join(f'<li><span>{inline(s[0])}</span>{"".join(f"<small>{inline(x)}</small>" for x in s[1:])}</li>' for s in steps)
+                    + '</ol></li>' for t, steps in charts)
+    return ('<section class="crews" aria-labelledby="crh"><h2 id="crh">Two crews <small>from the README</small></h2>'
+            '<p>Pick at &ldquo;go&rdquo;: the foreman and builder for the strongest guarantees or a fast, cheap builder; a master builder when the job is clear and one strong model can plan it too.</p>'
+            f'<div class="cwt">{head}{trs}</div>'
+            f'<h3>Who reads what, by master builder</h3><ul class="cwf">{flows}</ul></section>')
 
 
 def enforced_rows() -> list:
@@ -5468,7 +5524,8 @@ class Site:
         arrow_l = '<svg viewBox="0 0 44 14" aria-hidden="true"><path d="M42 7H6" stroke="currentColor" stroke-width="2.5"/><path d="M10 2l-6 5 6 5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>'
         flow = f'<div class="flow" aria-hidden="true"><div>{arrow_r}Work order</div><div>{arrow_l}Report</div></div>'
         body = (f'<main id="roles" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("playbooks.html")} · Playbooks</span><h1>Who does what</h1>'
-                '<p class="lede">Three roles: the foreman thinks and checks, the builder builds, you decide.</p></header>'
+                '<p class="lede">Three roles: the foreman thinks and checks, the builder builds, you decide. Or, when you pick it, one master builder does the first two.</p></header>'
+                + crews_html() +
                 '<p class="rpick" id="rpick">Pick a role to read its job <i aria-hidden="true">&darr;</i></p>'
                 f'<div class="tabs" role="tablist" aria-labelledby="rpick">{tabb("f", "foreman", "Foreman", "Plans, writes, reviews", True)}{flow}'
                 f'{tabb("b", "builder", "Builder", "Builds what is written", False)}{tabb("y", "you", "You", "Decides", False)}</div>'
@@ -5476,7 +5533,7 @@ class Site:
                 f'{pane("b", "Builder-Playbook.md", "Builder", False)}{pane("y", "", "You", False)}</div>'
                 '</div></main>' + self.foot() + ROLES_JS)
         return self.page("Playbooks · Topping Out", "Who does what: the foreman's, the builder's and your job, and the playbook each role follows.",
-                         ROLES_CSS + PICK_CSS, "playbooks.html", body, subs=[("#foreman", "Foreman"), ("#builder", "Builder"), ("#you", "You")])
+                         ROLES_CSS + PICK_CSS + CREWS_CSS, "playbooks.html", body, subs=[("#foreman", "Foreman"), ("#builder", "Builder"), ("#you", "You")])
 
     # ---------- your repo: a site plan of the folders Topping Out adds, from SETUP.md section 2 ----------
 

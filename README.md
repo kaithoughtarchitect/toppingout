@@ -8,7 +8,7 @@ It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as t
 
 > **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. After an hour or two it drifts from the plan, and your planning model spends your usage on typing.
 >
-> **What it does:** splits the work. The foreman plans each job and never writes code, the builder you pick for the job does the typing from exact work orders, inspectors from another model family check it, and you give the word for merges and pushes, or hand it over for one job or a night shift.
+> **What it does:** splits the work. The foreman plans each job and never writes code, the builder you pick for the job does the typing from exact work orders, inspectors from another model family check it, and you give the word for merges and pushes, or hand it over for one job or a night shift. For a clear job you can pick a **master builder** instead: one strong model plans and builds it, and every review still comes from someone else.
 >
 > **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
 
@@ -36,7 +36,7 @@ Every job's PR is titled the same way, `J<N> · board <id>: <what it delivers>`,
 
 ## Try it
 
-You need `git`, Node 18+, Python 3.9+, Bash and Claude Code, plus a builder, Pi, the codex CLI, an OpenRouter key and the Greptile app ([What you need](#what-you-need) says what each is for).
+You need `git`, Node 18+, Python 3.9+, Bash and Claude Code, plus a builder (Pi, Claude Code or agy), Pi for the plan check, the codex CLI, an OpenRouter key and the Greptile app ([What you need](#what-you-need) says what each is for).
 
 **How to start:**
 
@@ -52,7 +52,7 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 |---|---|---|
 | Claude Code, on your Claude subscription | the foreman (the tested one) | required |
 | `git`, Node 18+, Python 3.9+, Bash | the installer, the checks and the work orders | required; `/f-setup` checks each |
-| A builder: Pi, Claude Code (any Claude model) or Antigravity's agy CLI (any model it lists) | the coding | required, any one (`Builder-Playbook.md`) |
+| A builder: Pi, Claude Code (any Claude model) or Antigravity's agy CLI (any model it lists) | the coding; a master builder can also be a codex session | required, any one (`Builder-Playbook.md`) |
 | Pi | the plan check's OpenRouter readers and `agent-council` | required |
 | Orca | the pane link: the foreman sends each step to the builder in the pane beside it. Autonomous runs and night shifts run through it | needed to run without you; without it you paste one line per step (`SETUP.md` §4) |
 | Codex: the codex CLI, signed in with your ChatGPT subscription | the second model family: the independent review, and the `sol` plan-check seat (GPT-6.2 Sol), at no per-call cost | required (`METHOD.md` §8); carrying the brief to that session by hand also works |
@@ -66,8 +66,8 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 ## One job, from your side
 
 1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>-<slug>.md` (`/f-survey` turns an idea into one).
-2. It walks the site (re-checks the handover, the repo and the live ticket), then asks for your **"go"**.
-3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done.
+2. It walks the site (re-checks the handover, the repo and the live ticket), then asks for your **"go"** (or "go, master builder").
+3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done. A master builder builds it itself, with no pointers to paste.
 4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
 5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
 
@@ -81,7 +81,7 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 
 Pick it at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal (`METHOD.md`, "MASTER BUILDER").
 
-**Who reads what, by master builder.** The plan check seats are the owner's standing choice minus the master builder's own family (here the usual three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
+**Who reads what, by master builder.** The plan check seats are your standing choice minus the master builder's own family (here the default three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
 
 **A master builder in Claude Code** (Opus or Fable):
 
@@ -106,7 +106,7 @@ flowchart LR
 
 ## Three ways to run a job
 
-Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over the pane link.
+Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over the pane link (a master builder has none). Any of the three can run as a master builder: say so at "go", or add `, master builder` to the goal.
 
 - **👤 With you:** you paste the job's opener into a fresh session and give each word yourself.
 - **🤖 An autonomous run:** `/goal autonomous run: <path to the job's opener>, until done or stopped`. With an autonomous-run goal, a job runs to the merge without you (with the pane link carrying the pointers), inside the grants `RULES.md` ("The one exception") lists. It repairs what goes red and stops only on the conditions listed there. Any other standing goal grants nothing.
@@ -123,11 +123,11 @@ The roles and the name come from the building site.
 - **Owner:** you. Your word is needed for merges, pushes and the other acts `RULES.md` lists.
 - **Foreman:** the session that plans, writes work orders and checks the work. It never writes product code. The skill names start with `f-`, for foreman.
 - **Builder:** the session that writes the code, one work order at a time, on the model you pick for the job: a frontier model, a fast one or a cheap one.
-- **Master builder:** a builder that plans the job and builds it in one session, when you choose it at "go". No foreman and no work orders; the plan check, the lens inspection, an independent inspection from another model family, Greptile and your merge all stay (`METHOD.md`, "MASTER BUILDER").
+- **Master builder:** a builder that plans the job and builds it in one session, when you choose it (at "go", or in an autonomous run's or night shift's goal). No foreman and no work orders; the plan check, the lens inspection, an independent inspection from another model family, Greptile and your merge all stay (`METHOD.md`, "MASTER BUILDER").
 - **Inspectors:** fresh review sessions that only report. The **lens inspection** runs one review agent per angle (tests, errors, types and more, `agents/lens-*.md`); the **independent inspection** is a session from another model family.
 - **Work order:** a file with one or several exact tasks, each with its tests and its own commit. The builder gets a one-line pointer to it.
 - **Site walk:** the foreman's check at the start of a job that the handover still matches the repo and the live ticket.
-- **Plan check:** a cold read of the foreman's plan by readers from other model families, before any code (`/f-plancheck`).
+- **Plan check:** a cold read of the plan (the foreman's, or the master builder's) by readers from other model families, before any code (`/f-plancheck`).
 - **Acceptance ledger:** every requirement and check with its evidence. Every row must read PASS before the merge.
 - **Board and head:** a project's jobs drawn as a fishbone. The head is what the product must do when every job is done.
 - **Topping out:** the ceremony when a building's last beam goes on; here, when a board reaches its head.
@@ -157,6 +157,8 @@ The roles and the name come from the building site.
 
 <details>
 <summary><b>Full detail: every step</b></summary>
+
+This is the foreman and builder crew. A master builder job runs the same checks in one session, without the work orders (`METHOD.md`, "MASTER BUILDER").
 
 **Before any job**, a big plan is cut into tickets: `/f-survey` → `/f-blueprint` → **`/f-plancheck`** (cold cross-family read) → **`/f-schedule`** (project, one ticket per job, the project board, a width report, one lane or two). Each job below builds **one** ticket (`METHOD.md` §13).
 
@@ -226,7 +228,7 @@ Most of the method is instructions the agents follow; a few checks are scripts t
 | A voice message never stands in for your word | **a script in the voice add-on, plus instruction:** Topping Out Gaffer refuses to send a message that is only a gated act ("merge", "push", "open the PR", "greploop") and marks every message it sends `[voice]` (`addons/gaffer/brain.ts`); `RULES.md` says a `[voice]` message is never the owner's word | the refusal covers only a message that is the gated act alone; any other `[voice]` message reaches the session, where only the instruction stops it |
 | What merged is what was reviewed | **a check the foreman runs:** the merged commit's tree must equal the reviewed and tested tree (`METHOD.md` §10 step 3), and `skills/f-signoff/endgame.mjs verify-merge` refuses a close whose merge isn't on the main branch | with one lane the tree comparison is not scripted (in lane mode `snippets/land_tested.sh` refuses to push a merge whose tree differs from the proven head's, and its `verify` checks the landed merge), and `verify-merge` checks only that the merge commit is on main (and runs because `/f-signoff` calls it); an edit after the final re-run invalidates the acceptance and is caught only if the foreman re-runs, as the rules require |
 | Nothing new starts until a closed job's end game is done | **a script the skills run:** `endgame.mjs` keeps a lock file (one per lane with two lanes); the planning skills and work order 1 run its `check` and stop while it exists | an agent that skips the `check` call isn't stopped |
-| The review is independent | **a script, when used:** `scripts/cross-review-dispatch.mjs` seats the reviewer on another vendor's CLI, in a separate process, from a brief (`/pack-review`) | the foreman writes the brief, so it chooses what the reviewer is pointed at and told (the reviewer can also read the checkout, read-only); seats exist only for Claude and codex foremen; this is separation, not adversarial isolation |
+| The review is independent | **a script, when used:** `scripts/cross-review-dispatch.mjs` seats the reviewer on another vendor's CLI, in a separate process, from a brief (`/pack-review`) | the foreman (or the master builder) writes the brief, so it chooses what the reviewer is pointed at and told (the reviewer can also read the checkout, read-only); seats exist only for Claude, codex and Gemini hosts; this is separation, not adversarial isolation |
 | The whole ask is done | **instruction plus a record:** the acceptance ledger lists every requirement and check with its evidence, and `/f-signoff` refuses unless every row is PASS. A change to the ask is recorded in the owner's own words (`METHOD.md` §2) | the ledger is written and checked by agents; a wrong PASS is caught only by the reviews or by you |
 | Builder names stay out of the records | **a script the foreman runs:** `skills/f-signoff/names-check.mjs` checks every staged record at the records push and exits non-zero on a hit | it runs only when the foreman calls it at the records push; it checks only the names in your names file, and skips allowed contexts and rendered board pages |
 
@@ -242,6 +244,7 @@ In your project, **between jobs**, type `/f-setup`. It pulls the newest Topping 
 | The owner | this README → `METHOD.md` §"The owner's loop" → `Builder-Playbook.md` |
 | Setting it up in a new repo | `SETUP.md` |
 | Choosing or running a builder | `Builder-Playbook.md` |
+| Choosing a crew: foreman and builder, or a master builder | "Two crews" above → `METHOD.md`, "MASTER BUILDER" |
 
 ## Folder map
 
