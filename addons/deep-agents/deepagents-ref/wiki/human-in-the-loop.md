@@ -6,7 +6,7 @@ status: code
 product: sdk
 keywords: human in the loop, human-in-the-loop, HITL, approval, approve edit reject, interrupt_on, InterruptOnConfig, HumanInTheLoopMiddleware, interrupt, Command resume, allowed_decisions, confirm before tool runs, pause for review, __interrupt__, interrupt_mode, per_call, ToolApprovalRequest, edit_notice
 read_when: Read when a tool needs human approval before running, when a resume fails, or when subagent interrupts do not fire.
-updated: 2026-11-19
+updated: 2026-11-25
 sources_hash: 898baa9c356d
 ---
 
@@ -73,7 +73,7 @@ interrupt_on = {"write_file": {"allowed_decisions": ["approve", "edit", "reject"
 | `reject` | skip the tool and send feedback to the model | `{"type": "reject", "message": "Not executed. Do not retry; ask which file instead."}` |
 | `respond` | skip the tool and return your text **as the tool result** | for "ask_user"-style tools only |
 
-- If `message` is omitted on `reject`, a default says the tool was not executed and not to retry unless asked.
+- If `message` is omitted on `reject`, a default says the tool was not executed and not to retry unless asked. **With a `message`, that default is dropped:** the model gets only "User rejected the tool call for `<tool>` with reason: <message>" (`langchain/agents/middleware/human_in_the_loop.py:268-282`, `_answer_message`; langchain 1.5.2 with deepagents 0.7.40, probed 2026-11-25). When the user's own note is the message, write the state around it yourself ("Not executed; the draft is closed. Do not retry. The user's note: ..."), or a question in the note reads as a request to try again (seen in app rehearsals, Nov 2026: the model re-called the tool, then told the user it had tried a step that doesn't exist). Bound such wording to the turn ("in this turn"): an unbounded "do not raise it again" stays in the history, and a later explicit "yes, apply it now" was refused.
 - Never use `respond` to deny a side-effecting tool, because the model may read it as success.
 - Edit conservatively. Large edits can make the model re-plan or re-run the tool. In langchain 1.5.0 the result of an edited call carries a default `edit_notice` telling the model a reviewer replaced its call and ending "Do not re-issue your original call."; change it or turn it off with `HumanInTheLoopMiddleware(..., edit_notice=None)`.
 
@@ -137,6 +137,10 @@ create_deep_agent(model=..., permissions=[
 
 - **No checkpointer means no resume.** Always pass `checkpointer=` and reuse the same `thread_id` ([[persistence]]).
 - The decision list must match `action_requests` order and length.
+- **Raising the pause from code, with no model call** (probed on langchain 1.5.2 with deepagents 0.7.40, 2026-11-25; not in the docs, version-pinned, batched mode only). `agent.update_state(cfg, {"messages": [AIMessage(content="", tool_calls=[{"name": "apply", "args": {...}, "id": "<unique>"}])]}, as_node="model")` then `agent.invoke(None, cfg, context=ctx)` pauses with that `action_request`: `model` is wired to the last middleware's `after_model` (`langchain/agents/factory.py:1860`), and HITL's `after_model` reads the last AIMessage (`langchain/agents/middleware/human_in_the_loop.py:764-821`). Approve runs the tool once; reject runs nothing. Put several calls in one AIMessage (one interrupt with one request each) and give each a unique id. In `per_call` mode `after_model` returns None (`human_in_the_loop.py:780-782`), so this does not pause. If `invoke(None)` never runs, `PatchToolCallsMiddleware` turns the dangling call into a "cancelled" tool message on the next turn.
+  - Don't instead send the model a hidden "[system] call apply" message: in rehearsals a small model ignored it 5 times in 8, then quoted it to the user.
+  - If the model must never call that tool itself, hide it with a `wrap_model_call` that drops it via `request.override(tools=...)`, as `deepagents/middleware/_tool_exclusion.py:53-62` does, but without that middleware's `wrap_tool_call` rejection (`:87-93`), which would refuse the code-raised calls too. The tool stays registered, so those calls still execute; the provider accepted the calls in the history with the tool unbound (observed through OpenRouter, Nov 2026, not a code check).
+  - Hiding is not a guarantee: the model can imitate calls it sees in the history (in rehearsals it re-called the tool on an already-applied draft after Approve). Keep a code check on every paused call.
 - Setting `interrupt_on` on a subagent **replaces** the inherited map. Re-list every tool you still want gated.
 - A user `interrupt_on` entry for `write_file` etc. silently overrides the permission-derived path predicate for that tool, so it may interrupt on every call.
 - The docs say permission interrupts apply to `write_file`/`edit_file`. In code they cover **all** FS tools whose operation matches the rule, reads included. Code wins.

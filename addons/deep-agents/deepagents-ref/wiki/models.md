@@ -81,6 +81,8 @@ model = init_chat_model("openai:gpt-5.5", use_responses_api=True, store=False,
 
 Other built-in provider profiles: `openai` (`use_responses_api=True`), `nvidia` (header `X-BILLING-INVOKE-ORIGIN: DeepAgents`).
 
+**Seen working through OpenRouter (an observation, not a code check):** `openrouter:google/gemini-4-hydrogen` ran the full HITL flow (a code-raised pause, approve and reject resumes, a batched two-call resume) on two builds, 2026-11-25, with no provider issues ([[human-in-the-loop]]).
+
 ## Provider profiles (model construction)
 
 ```python
