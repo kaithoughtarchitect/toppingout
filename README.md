@@ -178,16 +178,16 @@ This is the foreman and builder. A master builder job runs the same checks in on
       │  next work orders drafted while the current one runs
                                           │
  BASE-VS-HEAD  builder work order (the tests that use what changed); any red-at-head-only = STOP, foreman characterises
- GATE 2   foreman reviews every commit + runs its own base-vs-head
+ GATE 2   foreman reviews every commit + checks the builder's base-vs-head on disk
  LENS INSP.    foreman runs /f-inspect in its own session (fresh lens agents) ──> checks each finding ──> repair work orders (QUICK: skipped)
                                           │
  CROSS-MODEL   foreman /pack-review (checks its own brief) ──> fresh session of another
                family runs /xreview ──> foreman /adjudicate ──> repair work orders
- FINAL RE-RUN  all captures, probes, base-vs-head again at the final head; the whole suite once (builder), each red test labelled
+ FINAL RE-RUN  after the last repair (repairs re-run only what they touch): captures, probes, base-vs-head; the whole suite once (builder), each red test labelled
  ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE/blank to open the PR; every requirement row PASS (CI green at the final head) to merge
                                           │
  PR opened (owner watches it in the browser) ──> /f-greploop: ≤3 Greptile rounds
-      (adjudicate → builder repairs → tests + base-vs-head + ledger re-run → push → CI) ──> PR description check
+      (adjudicate → builder repairs → affected tests + ledger re-run → push → CI runs the whole suite) ──> PR description check
                                           │
  [owner: "merge"]
                                           │

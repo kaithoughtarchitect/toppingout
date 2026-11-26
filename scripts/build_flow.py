@@ -55,14 +55,14 @@ PHASES = [
  ]),
  ("4", "Inspections", "Inspect", "After the last task. The owner stays out of it.", [
    ("bu", "Base versus head", "Every test that depends on a changed module, at base and at head, through the repo's test adapter. Anything red only at head: stop.", [("file", "BASE-VS-HEAD.txt"), ("file", "TEST-ADAPTERS.md")], None),
-   ("or", "Gate 2", "Every commit against its review, final captures against t0, the foreman's own base-vs-head, the one safety fact.", [("file", "GATE2-REVIEW.md")], None),
+   ("or", "Gate 2", "Every commit against its review, final captures against t0, the builder's base-vs-head checked on disk, the one safety fact.", [("file", "GATE2-REVIEW.md")], None),
    ("or", "Lens inspection", "The foreman runs it in its own session over the job's range, lenses as fresh subagents, findings only. No PR exists yet. QUICK jobs skip it.", [("skill", "f-inspect"), ("agent", "review lenses"), ("file", "LENS-INSPECTION.md")], None),
    ("or", "Check every finding", "Reproduce each against the code; accept, reject or partly accept. Only what's accepted goes back.", [("file", "ADJUDICATION.md")], None),
    ("bu", "Fix what was accepted", "Test-first repair work orders, reviewed like any other.", [("file", "WORK-ORDER.txt")], None),
    ("or", "Pack the review", "One blind brief: goal, constraints verbatim, non-goals, the diff, absolute paths. Nothing names the builder.", [("skill", "pack-review"), ("file", "PACK-REVIEW.md")], None),
    ("rv", "Cross-model review", "A fresh session of the other model family reviews it cold. Carried by hand, or the bundled dispatcher runs it headless.", [("skill", "xreview"), ("tool", "cross-review-dispatch.mjs")], None),
    ("or", "Adjudicate", "Every claim reproduced first. Accepted fixes become work orders; security and concurrency fixes go back to the reviewer.", [("skill", "adjudicate")], None),
-   ("or", "Final re-run and the ledger", "Captures, probes and base-vs-head again at the final head, and the whole suite once, every red test labelled. Every requirement and VP passes, or there is no PR; CI on the PR is the second whole run.", [("file", "ACCEPTANCE-LEDGER.md")], None),
+   ("or", "Final re-run and the ledger", "Once, after the last repair (repairs re-run only what they touch): captures, probes, base-vs-head and the whole suite, every red test labelled. Every requirement and VP passes, or there is no PR; CI on the PR is the second whole run.", [("file", "ACCEPTANCE-LEDGER.md")], None),
  ]),
  ("5", "PR and merge", "Merge", "Outward acts: each one needs your word.", [
    ("or", "PR body", "Titled J<N> · board <id>: what it delivers, the same as the body's first heading. What changed, acceptance, proof, limitations, rollback, the review record. Scanned for builder names.", [("file", "PR-BODY.md")], None),

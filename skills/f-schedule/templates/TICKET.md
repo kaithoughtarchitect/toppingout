@@ -34,4 +34,4 @@ One PR, one module area, roughly 8–9 work orders at most. If scoping shows it'
 **To decide:** <the question>. **Owner:** <who>. **Options and evidence:** <each option, what it costs, what it unblocks>. **Until decided:** <what stays visibly unavailable>.
 
 ## Record (filled at close)
-Job: <J-number, archived job file> · PR: <#n> · Merge: <sha> · Verified: `M^{tree}` `<tree>` = the reviewed / merge-preview tree `<tree>` (`METHOD.md` §10 step 3) · Footprint misses: <files, or none> · Difficulty: <held / off: rated n, went like m / not valid: builder swapped>
+Job: <J-number, archived job file> · PR: <#n> · Merge: <sha> · Verified: `M^{tree}` `<tree>` = the reviewed head's tree `<tree>` (`METHOD.md` §10 step 3) · Footprint misses: <files, or none> · Difficulty: <held / off: rated n, went like m / not valid: builder swapped>

@@ -1,6 +1,6 @@
 # J<N>: acceptance ledger (pre-merge)
 
-**By:** the foreman, <date>. **Final reviewed head:** `<full sha>` on `<branch>` (the head every row below was proven at). **Base:** `<sha>`.
+**By:** the foreman, <date>. **Final reviewed head:** `<full sha>` on `<branch>` (the head every row below was proven at, or the sha a row names, with the repairs since and their affected-test runs listed under it). **Base:** `<sha>`.
 
 The PR may open when no row is FAIL, UNTESTED, INCONCLUSIVE or blank; a row waiting only on CI on the PR at the final head (the job's second whole-suite run), on the foreman's own final-head run where CI doesn't run the whole suite, or on a Linux check that runs as CI on the PR, is PENDING (`METHOD.md` §8 steps 1 and 6). **The merge waits until every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks).** A requirement dropped from scope, weakened (reworded so less is proven) or substituted needs the owner's recorded decision below (quote it), never a smaller denominator or a quietly reworded row (`RULES.md`, Evidence). The requirement column is copied verbatim from the job file's requirement table, which work order 1 writes from the ticket as the site walk left it (`METHOD.md` §2), so the baseline is fixed before the build starts. `/f-signoff` reads this ledger: every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks); no deferrals.
 

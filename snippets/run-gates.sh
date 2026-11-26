@@ -8,7 +8,7 @@
 #   - a summary.txt with every gate's result, ending "ALL DONE";
 #   - every run strips the paid API keys first, and gates run one at a time;
 #   - the whole-suite gate (run_full_gate, through the repo's test adapter) runs at t-final,
-#     t-final-<n> (a second capture at the final head) and any label ending in "-full";
+#     t-final-<n> (a second whole capture at the final head, taken only where CI doesn't run the whole suite) and any label ending in "-full";
 #     at t0 it is skipped (main's CI at the branch point is the baseline, METHOD.md section 8 step 6) unless
 #     WHOLE_AT_T0=1 (the repo profile's "CI runs the whole suite: no"); at other labels it is skipped because
 #     the work order already ran its affected tests (METHOD.md section 7). FULL_EVERY_CAPTURE=1 runs it every
@@ -85,7 +85,9 @@ run_full_gate() {
   start=$(date +%s)
   echo "START $name $(date -Iseconds)" | tee -a "$SUMMARY"
   # strip every key this runner lists before the adapter runs (its own no_paid strips only the adapter's list)
-  ( unset "${PAID_KEYS[@]}"; source "$ADAPTER" && run_tests "$LOG/${name}.txt" "$LOG/${name}.exit" "$@" )
+  ( unset "${PAID_KEYS[@]}"; source "$ADAPTER" \
+    && echo "WORKERS $name: $(if [ -z "${TEST_WORKERS+set}" ]; then echo "not set by this adapter (its own default)"; else echo "${TEST_WORKERS:-1 (no foreman/.test-workers on this machine: one process)}"; fi)" | tee -a "$SUMMARY" \
+    && run_tests "$LOG/${name}.txt" "$LOG/${name}.exit" "$@" )
   rc=$(cat "$LOG/${name}.exit" 2>/dev/null || echo "no exit file")
   end=$(date +%s)
   echo "END $name rc=$rc elapsed=$((end - start))s" | tee -a "$SUMMARY"

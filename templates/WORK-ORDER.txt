@@ -167,7 +167,8 @@ B.5  Captures, one at a time: bash "$DAY/<gate runner>" t<k> then
      summary.txt; count the .exit files against the gates that ran (the
      whole-suite gate says SKIP except at t-final and *-full labels, and at t0 only where
      the profile says "CI runs the whole suite: no";
-     a repeated t0 is t0-2, a second capture at the final head t-final-2).
+     a repeated t0 is t0-2. A repair work order captures under its own t<k>,
+     never t-final: t-final is taken once, after the last repair before the PR).
 
 REPORT - ONE FILE, LF ENDINGS
 -----------------------------

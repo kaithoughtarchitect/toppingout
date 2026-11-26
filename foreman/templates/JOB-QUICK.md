@@ -86,7 +86,7 @@ _Each work order's review is linked in the task row above. Repairs are counted a
 | Round | File | Findings | Accepted | Repair work orders |
 | --- | --- | --- | --- | --- |
 | Base-vs-head (builder) | | red-at-head-only <n> | | |
-| Gate 2 (foreman + its own base-vs-head) | | | | |
+| Gate 2 (foreman; the builder's base-vs-head checked on disk) | | | | |
 | Lens inspection | SKIP (QUICK) | none | none | none |
 | Independent inspection (`/xreview`, another family) | | | | |
 | Fix review | | | | |
@@ -94,7 +94,7 @@ _Each work order's review is linked in the task row above. Repairs are counted a
 
 ## Phase 7: Verification
 
-**Final head:** <full sha> · **t-final:** <folder> · **base-vs-head at final head:** red-at-head-only <n> · **the whole suite (builder, t-final):** <f> failed, each labelled introduced / inherited / environment · **CI at the final head:** run <id>, <green / red> · **main's latest CI:** <not red, run <id>>
+**Final head:** <full sha> · **t-final:** <folder> · **base-vs-head:** red-at-head-only <n> at `<sha>` · **repairs since t-final:** <none, or their affected tests at `<sha>`> · **the whole suite (builder, t-final):** <f> failed, each labelled introduced / inherited / environment · **CI at the final head:** run <id>, <green / red> · **main's latest CI:** <not red, run <id>>
 
 **Harness receipt** (validation strategy `harness` only): <harness name · run id · verdict> | not applicable
 
@@ -114,7 +114,7 @@ _Each work order's review is linked in the task row above. Repairs are counted a
 
 ## PR and merge
 
-**PR:** <#n, link> · **Reviewed head:** <sha> · **Reviewed tree:** <`git rev-parse <sha>^{tree}`> · **Merge:** <sha> · **Merge tree check:** <equal to the reviewed tree / the tested merge-preview tree: command + output>
+**PR:** <#n, link> · **Reviewed head:** <sha> · **Reviewed tree:** <`git rev-parse <sha>^{tree}`> · **Merge:** <sha> · **Merge tree check:** <equal to the reviewed tree / the head with main merged in: command + output>
 
 ---
 

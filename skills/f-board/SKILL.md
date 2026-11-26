@@ -110,7 +110,7 @@ Also: a build gate doesn't hold a start in lane mode (the other lane can build i
 ## Every update, in this order
 
 1. **Check reality before recording it.**
-   - `close`: the merge is verified as in `METHOD.md` §10 step 3 (the actual merge commit M is in `<remote>/<main>`, and **M's tree equals the reviewed head's tree, or the tested merge-preview tree** when the target moved); `--merge` records **M**. **Never close a job on a report's word.** **In lane mode** the merge is verified with `snippets/land_tested.sh verify <remote> <main> <proven head>` (M^2 is the proven head, trees equal outside the records folders), and `--merge` records that M.
+   - `close`: the merge is verified as in `METHOD.md` §10 step 3 (the actual merge commit M is in `<remote>/<main>`, and **M's tree equals the reviewed head's tree, or the head with main merged in** when the target moved); `--merge` records **M**. **Never close a job on a report's word.** **In lane mode** the merge is verified with `snippets/land_tested.sh verify <remote> <main> <proven head>` (M^2 is the proven head, trees equal outside the records folders), and `--merge` records that M.
    - `start`: the owner said "go" on this job.
    - `decided`: quote the owner's own words.
 2. **Choose `--next` for a close** (a topping out takes `--no-next`, then `topout`, `METHOD.md` §11b): run `next --after-close <job>`; among the jobs it lists, pick the one that unblocks the most jobs, then the one with the most partial work on disk, then the project's order. The reason goes into the next-ticket decision (`templates/NEXT-TICKET-DECISION.md`), which cites the board version read before the close.

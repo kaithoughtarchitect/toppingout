@@ -24,7 +24,7 @@
 
 | | |
 |---|---|
-| Merge | `<sha>`, parents `<a>` (+ `<b>`), in `<remote>/<main>`; `M^{tree}` `<tree>` = expected tree `<tree>` (reviewed head's, or the tested merge-preview's) |
+| Merge | `<sha>`, parents `<a>` (+ `<b>`), in `<remote>/<main>`; `M^{tree}` `<tree>` = expected tree `<tree>` (the reviewed head's; with main merged into the branch, that head's) |
 | Commits / files / lines | <n> / <n> / +<a> −<r> |
 | Tests added | <n>, plus <DB proofs> |
 | Test time | <n> whole-suite runs and <m> other runs, <h:mm> in all (`python snippets/run_times.py <day folder>`); the slowest tests (the script lists them). More than 2 whole-suite runs on this machine in a job (the plan is 1, `METHOD.md` §8 step 6), or a whole suite over 15 minutes, goes on the board as a speed ticket |

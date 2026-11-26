@@ -98,7 +98,7 @@ _Helper agents used (mechanical work only, inside the file list):_ <none, or wha
 
 ## Phase 7: Verification
 
-**Final head:** <full sha> · **t-final:** <folder> · **base-vs-head at final head:** red-at-head-only <n> · **the whole suite (t-final, <n> workers):** <f> failed, each labelled introduced / inherited / environment · **CI at the final head:** run <id>, <green / red> · **main's latest CI:** <not red, run <id>>
+**Final head:** <full sha> · **t-final:** <folder> · **base-vs-head:** red-at-head-only <n> at `<sha>` · **repairs since t-final:** <none, or their affected tests at `<sha>`> · **the whole suite (t-final, <n> workers):** <f> failed, each labelled introduced / inherited / environment · **CI at the final head:** run <id>, <green / red> · **main's latest CI:** <not red, run <id>>
 
 **Harness receipt** (validation strategy `harness` only): <harness name · run id · verdict> | not applicable
 
@@ -133,7 +133,7 @@ _Helper agents used (mechanical work only, inside the file list):_ <none, or wha
 
 ## PR and merge
 
-**PR:** <#n, link> · **Reviewed head:** <sha> · **Reviewed tree:** <`git rev-parse <sha>^{tree}`> · **Merge:** <sha> · **Merge tree check:** <equal to the reviewed tree / the tested merge-preview tree: command + output>
+**PR:** <#n, link> · **Reviewed head:** <sha> · **Reviewed tree:** <`git rev-parse <sha>^{tree}`> · **Merge:** <sha> · **Merge tree check:** <equal to the reviewed tree / the head with main merged in: command + output>
 
 ---
 
