@@ -8,7 +8,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Every platform on the public repo, where Actions is free; Linux only on the private one,
+        # where macOS bills 10x and Windows 2x (each sync then runs all three on the public side).
+        os: ${{ github.repository == 'kaithoughtarchitect/toppingout' && fromJSON('["ubuntu-latest","macos-latest","windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:

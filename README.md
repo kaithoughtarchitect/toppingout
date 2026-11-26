@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory where no agent marks its own homework: a rival model family reads every plan before any code and every change before the merge, and nothing merges without evidence. You pick the crew for each job: a planner/executor split, where a foreman on Opus or Fable specs the ticket for a builder on whatever model you choose (a frontier model, a fast one or a cheap one), or a master builder, one strong model that plans and builds a clear job itself.**
+**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory where no agent marks its own homework: a rival model family reads every plan before any code and every change before the merge, and nothing merges without evidence. For each job you choose who does it: a planner/executor split, where a foreman on Opus or Fable specs the ticket for a builder on whatever model you choose (a frontier model, a fast one or a cheap one), or a master builder, one strong model that plans and builds a clear job itself.**
 
 It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder (codex too, as a master builder). Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
 
@@ -71,7 +71,7 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
 5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
 
-## Two crews: foreman and builder, or a master builder
+## Two ways to staff a job: foreman and builder, or a master builder
 
 | | Foreman and builder (the default) | Master builder |
 |---|---|---|
@@ -158,7 +158,7 @@ The roles and the name come from the building site.
 <details>
 <summary><b>Full detail: every step</b></summary>
 
-This is the foreman and builder crew. A master builder job runs the same checks in one session, without the work orders (`METHOD.md`, "MASTER BUILDER").
+This is the foreman and builder. A master builder job runs the same checks in one session, without the work orders (`METHOD.md`, "MASTER BUILDER").
 
 **Before any job**, a big plan is cut into tickets: `/f-survey` → `/f-blueprint` → **`/f-plancheck`** (cold cross-family read) → **`/f-schedule`** (project, one ticket per job, the project board, a width report, one lane or two). Each job below builds **one** ticket (`METHOD.md` §13).
 
@@ -244,7 +244,7 @@ In your project, **between jobs**, type `/f-setup`. It pulls the newest Topping 
 | The owner | this README → `METHOD.md` §"The owner's loop" → `Builder-Playbook.md` |
 | Setting it up in a new repo | `SETUP.md` |
 | Choosing or running a builder | `Builder-Playbook.md` |
-| Choosing a crew: foreman and builder, or a master builder | "Two crews" above → `METHOD.md`, "MASTER BUILDER" |
+| Choosing who does a job: foreman and builder, or a master builder | "Two ways to staff a job" above → `METHOD.md`, "MASTER BUILDER" |
 
 ## Folder map
 

@@ -257,6 +257,11 @@ ROLE_ICONS = {
     # the builder: hat yellow, a brick
     "builder": _hat("#FBB401", '<rect x="27" y="35" width="17" height="9" fill="#C8553D" stroke="#101316" stroke-width="2.2"/>'
                     '<path d="M27 39.5h17M35.5 35v4.5" stroke="#101316" stroke-width="1.6"/>'),
+    # the master builder: hat orange, the foreman's pencil on the builder's brick (it plans and builds)
+    "master": _hat("#F07D1A", '<rect x="21" y="37" width="15" height="8" fill="#C8553D" stroke="#101316" stroke-width="2.2"/>'
+                   '<path d="M21 41h15M28.5 37v4" stroke="#101316" stroke-width="1.6"/>'
+                   '<g transform="rotate(-40 40 36)"><rect x="33" y="33" width="13" height="5.5" fill="#FBB401" stroke="#101316" stroke-width="2"/>'
+                   '<path d="M46 33l4.5 2.75-4.5 2.75Z" fill="#E9D7B0" stroke="#101316" stroke-width="2" stroke-linejoin="round"/></g>'),
     # the inspectors: the inspection scan's green, a magnifier
     "inspectors": _hat("#3FAE6A", '<circle cx="35" cy="38" r="6" fill="#DDEFE3" stroke="#101316" stroke-width="2.4"/>'
                        '<path d="M39.5 42.5l5 5" stroke="#101316" stroke-width="3.2" stroke-linecap="round"/>'),
@@ -2448,13 +2453,13 @@ FRONT = {
     "title": "Topping Out",
     "description": "Go to bed with a ticket list, wake up to merged PRs, each with its proof. An open-source software factory for Claude Code: a foreman specs each ticket, the builder you choose codes it, another model family reviews it.",
     "board_kicker": "A software factory methodology",
-    # the owner's pick (2026-11-22): the original headline back; "Hire a foreman." stays as the hi-vis line
-    "headline": ["Stop babysitting agents.", "Hire a foreman."],
+    # the owner's pick (2026-11-26): "Get the proof." replaces "Hire a foreman." as the hi-vis line, since a master builder job has no foreman
+    "headline": ["Stop babysitting agents.", "Get the proof."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
         ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
         ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions."),
-        ("builder", "Master builder", "Optional, your pick per job: one strong model plans and builds it. Every review stays with someone else."),
+        ("master", "Master builder", "Optional, your pick per job: one strong model plans and builds it. Every review stays with someone else."),
         ("inspectors", "Inspectors", "Fresh review agents, then another model family: Codex, on your ChatGPT subscription. Find problems; never fix them."),
         ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
@@ -2963,11 +2968,11 @@ CREWS_CSS = r"""
 
 
 def crews() -> tuple:
-    """README "Two crews: foreman and builder, or a master builder": the comparison table and the three who-reads-what flowcharts."""
+    """README "Two ways to staff a job: foreman and builder, or a master builder": the comparison table and the three who-reads-what flowcharts."""
     text = (ROOT / "README.md").read_text(encoding="utf-8")
-    sec = re.search(r"^## Two crews: foreman and builder, or a master builder\s*\n(.*?)(?=^## )", text, re.S | re.M)
+    sec = re.search(r"^## Two ways to staff a job: foreman and builder, or a master builder\s*\n(.*?)(?=^## )", text, re.S | re.M)
     if not sec:
-        raise SystemExit("build_site: README.md needs '## Two crews: foreman and builder, or a master builder'")
+        raise SystemExit("build_site: README.md needs '## Two ways to staff a job: foreman and builder, or a master builder'")
     body = sec.group(1)
     rows = []
     for ln in body.splitlines():
@@ -2978,7 +2983,7 @@ def crews() -> tuple:
     for title, chart in re.findall(r"^\*\*(A master builder in [^*]+)\*\*[^\n]*\n\n```mermaid\n(.*?)```", body, re.S | re.M):
         charts.append((title.rstrip(":"), [lab.split("<br/>") for lab in re.findall(r'\w\["([^"]+)"\]', chart)]))
     if len(rows) != 3 or len(charts) != 3:
-        raise SystemExit(f"build_site: README 'Two crews' needs 3 table rows and 3 flowcharts (found {len(rows)}, {len(charts)})")
+        raise SystemExit(f"build_site: README 'Two ways to staff a job' needs 3 table rows and 3 flowcharts (found {len(rows)}, {len(charts)})")
     return rows, charts
 
 
@@ -2989,7 +2994,7 @@ def crews_html() -> str:
     flows = "".join(f'<li><b>{inline(t)}</b><ol>'
                     + "".join(f'<li><span>{inline(s[0])}</span>{"".join(f"<small>{inline(x)}</small>" for x in s[1:])}</li>' for s in steps)
                     + '</ol></li>' for t, steps in charts)
-    return ('<section class="crews" aria-labelledby="crh"><h2 id="crh">Two crews <small>from the README</small></h2>'
+    return ('<section class="crews" aria-labelledby="crh"><h2 id="crh">Two ways to staff a job <small>from the README</small></h2>'
             '<p>Pick at &ldquo;go&rdquo;: the foreman and builder for the strongest guarantees or a fast, cheap builder; a master builder when the job is clear and one strong model can plan it too.</p>'
             f'<div class="cwt">{head}{trs}</div>'
             f'<h3>Who reads what, by master builder</h3><ul class="cwf">{flows}</ul></section>')
@@ -5086,7 +5091,7 @@ def share_tags(rel: str, title: str, description: str) -> str:
             f'<meta property="og:url" content="{url}"><meta property="og:title" content="{esc(title)}">'
             f'<meta property="og:description" content="{esc(description)}">'
             f'<meta property="og:image" content="{SITE_URL}{OG_CARD}"><meta property="og:image:width" content="1200">'
-            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Stop babysitting agents. Hire a foreman.">'
+            f'<meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topping Out: Stop babysitting agents. Get the proof.">'
             f'<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}">'
             f'<meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="{SITE_URL}{OG_CARD}">')
 
@@ -5698,7 +5703,7 @@ class Site:
         by = {r[2]: r for r in F["req_core"]}
         levels = [("ground", "Tested on", "Windows 11, with Git Bash and PowerShell. macOS and desktop Linux are expected to work, not yet verified. Or on a Linux server of your own: see Cloud setup.",
                    ["Windows 11", "Git Bash", "PowerShell", "Linux server"]),
-                  ("crew", "The crew", "Who plans and who builds.", ["Claude Code"]),
+                  ("crew", "The team", "Who plans and who builds.", ["Claude Code"]),
                   ("paper", "The paperwork", "Where the records live and what fetches them.", ["Git", "GitHub and gh", "Node", "Python 3"]),
                   ("site", "The workshop", "Where the builder works, who reviews each job and each PR, and the key the outside readers use.", ["Pi", "Codex", "Orca", "Greptile", "OpenRouter"]),
                   ("extra", "Optional", "Not needed to start. Each one adds something.", [r[2] for r in F["req_opt"]])]
@@ -5757,7 +5762,7 @@ class Site:
                 '</div></main>' + REQ_JS + self.foot())
         return self.page("Requirements · Topping Out", "The setup Topping Out is built and run on, as a site induction: tick off the kit you have, and the pass hands you the install lines.",
                          ROLES_CSS + REQ_CSS, "requirements.html", body,
-                         subs=[("#ground", "Tested on"), ("#crew", "The crew"), ("#paper", "The paperwork"), ("#site", "The workshop"), ("#extra", "Optional"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
+                         subs=[("#ground", "Tested on"), ("#crew", "The team"), ("#paper", "The paperwork"), ("#site", "The workshop"), ("#extra", "Optional"), ("#addon", "The add-on"), ("#windows", "Windows notes")])
 
     def logbook(self) -> str:
         """The Logbook on one screen, like the other sheets: the three card types (sections read from their templates), a card's
