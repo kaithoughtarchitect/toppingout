@@ -398,6 +398,7 @@ END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md; in lane mode foreman/END
    the handover and the opener point to it)
 3. board close event     -> endgame.mjs tick board --file <project>/BOARD.json   (every project has one; none yet: render_board.py … init)
 4. shift handover + opener -> endgame.mjs tick handover --file <handover> --opener foreman/handovers/OPENER-JOB-<next>.txt, then endgame.mjs clear
+   (the opener's Crew: line is this job's crew with its source, the owner's crew word quoted and the job it was said in, unless the owner named another for the next job; no owner's word on record: foreman and builder: METHOD.md, "The crew carries over")
    (the session brief's "Last key's mistakes" is filled from this job's dev report: the KEY-WRONG items of its own site walk's outside grade, so the new key doesn't repeat them)
    (then the **Topping Out version**, read-only: `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --check`, the package as `/f-setup` finds it; `UPDATE AVAILABLE` goes on the card's ⬆️ line with the first one to three headlines of the changelog lines it prints, and under a goal into the final status block's `owed:` line as `/f-setup before the next job (Topping Out update: <headline>)`; never applied here, since an upgrade commits method files on the owner's word)
    (then give the owner the opener's path and the **"how does the next job run" card** below, as the last thing on screen)
@@ -413,7 +414,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
                            endgame.mjs tick ground-investigation --file <day folder>/TOPPING-OUT-REPORT.md
 3.  board               -> endgame.mjs tick board --file <project>/BOARD.json   (must be topped out)
 4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
-    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade)
+    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade; and the crew line: the crew the owner last chose, quoted, which the next board's first job takes only if the owner says so again)
 ```
 
 **How the next job runs: always its own decision card.** After step 4 (not after a topping out), the end game's last message ends with this card, filled in, every option shown every time, even one that can't run now (it then says why). Never fold the three ways into a paragraph. Use the host's question tool when it has one (Claude Code: a question with the three options, the recommended one first), and print the card as well, so the paste lines stay on screen:
@@ -433,7 +434,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
     🤖🌙 Decided without you under B or C: <the survey questions it answers itself, each with its starred pick | "none">
     ⛔ Can't run now: <"none" | B: <what's missing, e.g. no Orca, no Pi> | C: <only one job is ready, or what's missing>>
     ⬆️ Topping Out: <"up to date" | "update available (<headline>; <headline>): run /f-setup before you start job <N>" | "not checked: <why>">
-    🏗️ Master builder? <"no" | why this job suits one: clear, and a strong model for it>. Add ", master builder" to B or C, or say "go, master builder" under A
+    🏗️ Crew: <foreman and builder | master builder>, the same as this job (the owner's "<crew word>", J<n>; or the default); change it with "go, foreman" / "go, master builder", or ", foreman" / ", master builder" in B or C<; why a change might suit this job, if one would>
     Not now? Nothing starts until you paste one.
 ```
 

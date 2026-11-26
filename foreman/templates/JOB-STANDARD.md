@@ -5,6 +5,7 @@
 **Ticket:** <tracker key and link>
 **SourcePlan:** <path to the blueprint section this job came from, or `none`>
 **Size:** STANDARD
+**Crew:** <foreman and builder | master builder> · **the owner's crew word:** <quoted, with where it was said (this job's "go", the goal, a night shift's marks, or carried over from J<n>), or "none: foreman and builder by default">
 **Inspections:** lens inspection: run · independent inspection: run
 **Validation strategy:** <code-read | check | harness | UI> (harness: its name and command from the repo profile)
 **Budgets:** repair work orders per task <3> · wall time <…> (usage-limit pauses don't count) · foreman tokens <…>

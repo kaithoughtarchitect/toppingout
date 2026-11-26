@@ -5,6 +5,7 @@
 **Ticket:** <tracker key and link>
 **SourcePlan:** <path to the blueprint section this job came from, or `none`>
 **Size:** MASTER BUILDER (chosen by the owner at "go")
+**Crew:** <foreman and builder | master builder> · **the owner's crew word:** <quoted, with where it was said (this job's "go", the goal, a night shift's marks, or carried over from J<n>), or "none: foreman and builder by default">
 **Master builder:** the master builder <(standard) or (strong), when the repo profile's "Builders" row has two; never a model, vendor or tool> (its model's family goes only to `--host`, never into this file)
 **Difficulty:** <1-5, from the ticket> · **Wall time budget:** <…>
 **Inspections:** lens inspection: run (fresh eyes, its own family) · independent inspection: run (another family)

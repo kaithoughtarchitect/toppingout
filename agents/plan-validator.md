@@ -22,7 +22,7 @@ If you cannot verify a finding by reading code, it is not a failed item. Known f
 2. **Patterns**, find 2–3 similar features; structure, naming, error handling, I/O split match this repo (the data-access and state patterns it actually uses, not an invented ORM or state library).
 3. **Deps**, the dependency manifest (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, …) + real internal imports/types; circular-import risk.
 4. **APIs**, call signatures, return shapes, new endpoints vs existing; breaking required-field adds.
-5. **Scope**, ripple files, migrations, tests, env; “small” vs file count.
+5. **Scope**, ripple files, migrations, tests, env; “small” vs file count. Flag every file the plan will change that is outside the ticket's scope (what the ticket asks for and the files it names): that file needs the owner's word (`RULES.md` act 8) unless a standing grant covers it.
 6. **Risk**, unstated assumptions, null/empty, errors, perf, security, breaking changes. `items_checked` = those six areas.
 
 ## Score (arithmetic)

@@ -69,7 +69,7 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 ## One job, from your side
 
 1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>-<slug>.md` (`/f-survey` turns an idea into one).
-2. It walks the site (re-checks the handover, the repo and the live ticket), then asks for your **"go"** (or "go, master builder").
+2. It walks the site (re-checks the handover, the repo and the live ticket), then asks for your **"go"** (or "go, master builder" / "go, foreman" to change the crew, which then carries over to the next jobs).
 3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done. A master builder builds it itself, with no pointers to paste.
 4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
 5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
@@ -82,7 +82,7 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 | **Why** | a strong foreman plans, writes exact work orders and reviews every step, so a fast or less capable builder can't drift or make design calls | no handoffs and no work orders, so it should be faster; the same plan check, inspections, Greptile, CI and your merge still apply |
 | **The model** | the foreman on Opus or Fable; the builder on anything | one strong model doing both; a fast or cheap model isn't a good fit here, because nobody plans for it |
 
-Pick it at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal (`METHOD.md`, "MASTER BUILDER").
+Pick it at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal. Your choice carries over to the next jobs until you say "go, foreman" (`METHOD.md`, "The crew carries over").
 
 **Who reads what, by master builder.** The dotted arrows are the repair loops: every accepted finding goes back to the master builder to fix, test-first, and is checked again (Greptile at most three rounds). In an autonomous run or a night shift the loops run without you, and your goal's words stand in for "merge". The plan check seats are your standing choice minus the master builder's own family (here the default three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
 
@@ -121,7 +121,7 @@ flowchart LR
 
 ## Three ways to run a job
 
-Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over the pane link (a master builder has none). Any of the three can run as a master builder: say so at "go", or add `, master builder` to the goal.
+Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over the pane link (a master builder has none). Any of the three can run as a master builder: say so at "go", or add `, master builder` to the goal; the choice carries over until you say "go, foreman".
 
 - **👤 With you:** you paste the job's opener into a fresh session and give each word yourself.
 - **🤖 An autonomous run:** `/goal autonomous run: <path to the job's opener>, until done or stopped`. With an autonomous-run goal, a job runs to the merge without you (with the pane link carrying the pointers), inside the grants `RULES.md` ("The one exception") lists. It repairs what goes red and stops only on the conditions listed there. Any other standing goal grants nothing.
@@ -138,7 +138,7 @@ The roles and the name come from the building site.
 - **Owner:** you. Your word is needed for merges, pushes and the other acts `RULES.md` lists.
 - **Foreman:** the session that plans, writes work orders and checks the work. It never writes product code. The skill names start with `f-`, for foreman.
 - **Builder:** the session that writes the code, one work order at a time, on the model you pick for the job: a frontier model, a fast one or a cheap one.
-- **Master builder:** a builder that plans the job and builds it in one session, when you choose it (at "go", or in an autonomous run's or night shift's goal). No foreman and no work orders; the plan check, the lens inspection, an independent inspection from another model family, Greptile and your merge all stay (`METHOD.md`, "MASTER BUILDER").
+- **Master builder:** a builder that plans the job and builds it in one session, when you choose it (at "go", or in an autonomous run's or night shift's goal); your choice carries over to the next jobs until you change it. No foreman and no work orders; the plan check, the lens inspection, an independent inspection from another model family, Greptile and your merge all stay (`METHOD.md`, "MASTER BUILDER").
 - **Inspectors:** fresh review sessions that only report. The **lens inspection** runs one review agent per angle (tests, errors, types and more, `agents/lens-*.md`); the **independent inspection** is a session from another model family.
 - **Work order:** a file with one or several exact tasks, each with its tests and its own commit. The builder gets a one-line pointer to it.
 - **Site walk:** the foreman's check at the start of a job that the handover still matches the repo and the live ticket.

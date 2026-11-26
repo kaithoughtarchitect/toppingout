@@ -26,7 +26,7 @@ From the method folder (wherever the opener says the Topping Out package lives):
 5. `Foreman-Playbook.md`: the how and why behind your rules, and the mistakes they came from.
 6. `Builder-Playbook.md`: the one work order style every builder gets, and the switch rule.
 
-**A master builder job** (the goal or the owner's "go" says `master builder`): load the same, since the foreman rules bind it; the job then runs as `METHOD.md`, "MASTER BUILDER" says, with no work orders and no builder pane.
+**A master builder job** (the opener's `Crew:` line says master builder and nothing overrides it, or the goal or the owner's "go" says `master builder`): load the same, since the foreman rules bind it; the job then runs as `METHOD.md`, "MASTER BUILDER" says, with no work orders and no builder pane.
 
 Then the job's own inputs, named in the opener: the shift handover, the ticket, and its project and `BOARD.json` (every project has one).
 

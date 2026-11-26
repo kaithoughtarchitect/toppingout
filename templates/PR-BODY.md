@@ -16,7 +16,7 @@
 Each with its evidence and what was rejected.
 
 ## 4 · Files
-<Each file, one line on what it does. Nothing outside the ticket's files (a master builder job: every file outside the plan's file list says why).>
+<Each file, one line on what it does. Nothing outside the ticket's own files (`RULES.md` act 8: the named files, their own tests, their folder's README, a new changelog entry) (a master builder job: every file outside the plan's file list says why).>
 
 ## 5 · How it was proved
 - New tests: <n>, plus <database proofs, on which disposable DB>.

@@ -1857,7 +1857,9 @@ When you type /goal night shift with a list of jobs, or a number of jobs to pick
 
 - "/goal night shift: jobs 13, 17, until done or stopped"
 - "13 (master builder)"
+- "13 (foreman)"
 - "all master builder"
+- "all foreman"
 - "/goal night shift: 2 jobs, auto-pick, until done or stopped"
 
 ## When to use it
@@ -2309,6 +2311,7 @@ END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md; in lane mode foreman/END
    the handover and the opener point to it)
 3. board close event     -> endgame.mjs tick board --file <project>/BOARD.json   (every project has one; none yet: render_board.py … init)
 4. shift handover + opener -> endgame.mjs tick handover --file <handover> --opener foreman/handovers/OPENER-JOB-<next>.txt, then endgame.mjs clear
+   (the opener's Crew: line is this job's crew with its source, the owner's crew word quoted and the job it was said in, unless the owner named another for the next job; no owner's word on record: foreman and builder: METHOD.md, "The crew carries over")
    (the session brief's "Last key's mistakes" is filled from this job's dev report: the KEY-WRONG items of its own site walk's outside grade, so the new key doesn't repeat them)
    (then the **Topping Out version**, read-only: `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --check`, the package as `/f-setup` finds it; `UPDATE AVAILABLE` goes on the card's ⬆️ line with the first one to three headlines of the changelog lines it prints, and under a goal into the final status block's `owed:` line as `/f-setup before the next job (Topping Out update: <headline>)`; never applied here, since an upgrade commits method files on the owner's word)
    (then give the owner the opener's path and the **"how does the next job run" card** below, as the last thing on screen)
@@ -2324,7 +2327,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
                            endgame.mjs tick ground-investigation --file <day folder>/TOPPING-OUT-REPORT.md
 3.  board               -> endgame.mjs tick board --file <project>/BOARD.json   (must be topped out)
 4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
-    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade)
+    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade; and the crew line: the crew the owner last chose, quoted, which the next board's first job takes only if the owner says so again)
 ```
 
 ## Common questions

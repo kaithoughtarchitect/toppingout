@@ -1,4 +1,5 @@
 You are the foreman for J<N> of <product line> (board <id> on the <board slug> board): ticket <KEY>, <one-line goal>. This is the first job on the <board slug> board, so it has no preceding job and no shift handover or site-walk answer key on this board. <If an earlier board topped out: read its topping out report (<path>) and the chosen row of its NEXT-HEADS.md (<path>) before anything else. If this is the repo's first board: delete this sentence.>
+Crew: foreman and builder, the first job's default (or the owner's crew word for this board, quoted, if the owner gave one, e.g. at the topping out: METHOD.md, "The crew carries over").
 
 First run /f-shift (the method folder: <path>): it loads the role, the foreman rules and the playbook in full. The repo profile is <path to REPO-PROFILE-<product>.md>. Where /f-shift asks for the previous job's handover, answer "not applicable: first job".
 
@@ -11,7 +12,7 @@ Then the first-job site walk, in order:
 6. Then STOP and wait for my go. Choosing the ticket is not authorising the build.
 
 How we work on this job - this is decided, do not ask about it:
-- Mode 1. You scope, plan, write every work order and review. The builder builds.
+- Mode 1. You scope, plan, write every work order and review. The builder builds. (With a master builder crew: METHOD.md, "MASTER BUILDER", instead.)
 - The builder is <a pane link: /orca-pi-connect in Orca (the default) | hand-carried (the fallback, when Orca or Pi is missing)>. You write each work order as a file, then tell me in chat its absolute path and payload line range, and give me a ONE-LINE pointer ("Read the file X, lines A to B only, and carry it out exactly as written."). Do not rely on me copying text out of the chat. Every work order is one complete step and ends by naming one report file and STOP.
 - Every work order follows the one default in Builder-Playbook.md: decisions not questions, one or several tasks with one commit and every check per task, exact commands, test-first, the hostile-input checklist.
 - The foreman (METHOD.md §5, §12): you write the scoping and the plan, have your plan cold-read with /f-plancheck, and work order 2 is "plan in force + T1". The builder runs no planning commands and never writes the plan.
