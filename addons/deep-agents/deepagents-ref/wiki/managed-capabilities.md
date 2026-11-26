@@ -7,7 +7,7 @@ product: managed
 keywords: MDA tools, define_mcp, MCP connectors, connections, connections.get, OAuth, mda connections create, define_memory, MemoryLayer, durable memory, remember across sessions, define_sandbox, sandbox setup.sh, runtime.backend, Context Hub, async middleware, ManagedDeepAgentRuntime, ManagedToolRuntime, ManagedRuntime
 read_when: Read when adding tools, MCP servers, OAuth connections, memory or a sandbox to a Managed Deep Agent, or when memory or a connection does nothing.
 updated: 2026-11-25
-sources_hash: d138d80ce3ec
+sources_hash: 4755f58cf1f2
 ---
 
 # MDA capabilities (skills, tools, MCP, connections, middleware, memory, sandbox, Context Hub)

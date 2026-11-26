@@ -6,8 +6,8 @@ status: code
 product: all
 keywords: context engineering, context window, context management, system prompt assembly, context_schema, runtime context, prompt layers, token limits, compression, offloading, context overflow, five layers, custom state, input context, notification metadata, read_file_media, fork prompt cache
 read_when: Read when deciding what goes in the prompt vs files vs state, passing per-run context, debugging how the system prompt is assembled, or context bloat.
-updated: 2026-11-19
-sources_hash: c0e393ad7686
+updated: 2026-11-26
+sources_hash: ac1241856ac6
 ---
 
 # Context engineering in Deep Agents
@@ -38,7 +38,7 @@ Checked on 0.7.29 with a scripted model that records its input: `system_prompt`,
 
 On 0.7.39 the main stack was captured in the same order (2026-11-19, fake model, see [[middleware]]), and again on 0.7.40 the same day.
 
-The docs' list puts memory before skills and includes filesystem/subagent prompt sections; the code order above wins. A skill can also keep related tool schemas out of the prompt until the skill is read (`metadata.include_tools`, [[skills]]). See [[middleware]], [[customization]], [[harness]].
+The docs' list puts memory before skills and includes filesystem/subagent prompt sections; the code order above wins. A skill can also keep related tool schemas out of the prompt until the skill is read (`metadata.include_tools`, [[skills]]). Whether that keeps the prompt cache depends on the model: when it is a `ChatAnthropic` or a `langchain_openai` chat model whose `profile` sets `mid_conversation_tools`, the newly available tools go into the conversation as a `SystemMessage` placed after the skill read, and `request.tools` stays the same, so the cached prefix survives; for any other model they are appended to `request.tools`, which sits at the front of the cached prefix and invalidates it (`disclose_tools` and `inline_block_builder` in `../sources/package/deepagents/middleware/_tool_disclosure.py:72-93`, `:180-189`; the module is new in 0.7.42 and holds the logic `_skill_tools.py` had, unchanged). See [[middleware]], [[customization]], [[harness]].
 
 Guidance:
 - `system_prompt` is static. For per-user/role text use a `@dynamic_prompt` or custom middleware reading `request.runtime.context` / `request.runtime.store`.
@@ -135,6 +135,7 @@ The directory can start empty; tell the agent in the prompt what to save where (
 - `../sources/package/deepagents/middleware/_message_eviction.py`
 - `../sources/package/deepagents/middleware/memory.py`
 - `../sources/package/deepagents/middleware/skills.py`
+- `../sources/package/deepagents/middleware/_tool_disclosure.py`
 - `../sources/package/deepagents/middleware/subagents.py`
 - `../sources/package/deepagents/profiles/harness/_nvidia_nemotron_3_ultra.py`
 - `../sources/docs/github/deepagents-CHANGELOG.md`

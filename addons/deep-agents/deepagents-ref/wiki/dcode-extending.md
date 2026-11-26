@@ -7,7 +7,7 @@ product: dcode
 keywords: dcode extensions, AGENTS.md, memory, skills, SKILL.md, subagents, sub-agent, MCP servers, .mcp.json, hooks, hooks.json, PreToolUse, plugins, marketplace, ExtensionAPI, Python extension, register_tool, allowedTools
 read_when: Read when adding memory, skills, subagents, MCP servers, hooks, plugins or Python extensions to dcode, or when a project MCP server or extension does not load.
 updated: 2026-11-25
-sources_hash: 31f61362087f
+sources_hash: c7a5e156b184
 ---
 
 # Extending dcode (memory, skills, subagents, hooks, plugins, extensions, MCP)

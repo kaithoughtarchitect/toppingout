@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: model, provider:model, init_chat_model, choose model, switch model, OpenRouter, Ollama, Bedrock, Azure OpenAI, harness profile, HarnessProfile, provider profile, ProviderProfile, register_harness_profile, register_provider_profile, use_responses_api, excluded_tools, runtime model switching
 read_when: Read when picking or configuring a model, tuning behaviour per model, excluding a tool or middleware for one model, or a profile does not apply.
-updated: 2026-11-19
-sources_hash: 5e051d11521a
+updated: 2026-11-26
+sources_hash: 4de2ce921f65
 ---
 
 # Models and profiles
@@ -126,7 +126,7 @@ Built-in harness profiles in 0.7.40 (registered lazily on first registry access)
 - `anthropic:claude-sonnet-4-6`, `anthropic:claude-haiku-4-5`: suffix with parallel-tool-calls, investigate-before-answering, tool-result-reflection blocks.
 - `anthropic:claude-opus-4-7`: same plus `<tool_usage>` and `<subagent_usage>` blocks.
 - `openai:gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.3-codex`: Codex behaviour suffix + `extra_middleware=[TodoListMiddleware()]` (so these models get `write_todos`, see [[planning]]).
-- Nemotron 3 Ultra specs (`nvidia:`, `NVIDIA:`, `baseten:`, `fireworks:`, `openrouter:`, `nebius:`, `together:`): suffix, `read_file` description override, 12 extra middleware (retry, tool-call parsing, final-answer guards). Since 0.7.35 each nudge `HumanMessage` they inject (`name` = a source such as `nemotron_final_answer_guard`) also carries notification metadata (`additional_kwargs["lc_source"]` = that source, read with `langchain_core.messages.get_notification_metadata`), so a UI can tell it from user input.
+- Nemotron 3 Ultra specs (`nvidia:`, `NVIDIA:`, `fireworks:`, `openrouter:`, `nebius:`, `together:`; since 0.7.42 `baseten:nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B` is no longer one of them, so Nemotron 3 Ultra served by Baseten no longer gets this profile (the package registers nothing else for `baseten:`), `_NEMOTRON_ULTRA_MODEL_SPECS` in `../sources/package/deepagents/profiles/harness/_nvidia_nemotron_3_ultra.py:42-53`): suffix, `read_file` description override, 12 extra middleware (retry, tool-call parsing, final-answer guards). Since 0.7.35 each nudge `HumanMessage` they inject (`name` = a source such as `nemotron_final_answer_guard`) also carries notification metadata (`additional_kwargs["lc_source"]` = that source, read with `langchain_core.messages.get_notification_metadata`), so a UI can tell it from user input.
 
 No provider-wide built-in for `anthropic` or `openai`; other models (e.g. `claude-sonnet-5`, `gpt-5.5`) get an empty profile.
 

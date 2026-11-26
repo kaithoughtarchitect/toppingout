@@ -7,7 +7,7 @@ product: sdk
 keywords: custom tools, add tool, tools=, @tool, ToolRuntime, runtime.context, runtime.store, runtime.state, tool_call_id, Command update, large tool results, tool eviction, built-in tools, excluded_tools, get_stream_writer, tool returns image
 read_when: Read when adding a custom tool, a tool needs context/store/state via ToolRuntime, a tool returns Command or media, or a built-in tool is missing.
 updated: 2026-11-25
-sources_hash: 1a42211a38f6
+sources_hash: c7f84328c4d5
 ---
 
 # Tools (custom tools, ToolRuntime, built-ins)

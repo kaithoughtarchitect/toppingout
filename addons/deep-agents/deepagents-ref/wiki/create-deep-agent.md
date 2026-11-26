@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: create_deep_agent, create deep agent, signature, parameters, kwargs, system_prompt, interrupt_on, response_format, structured output, state_schema, context_schema, checkpointer, store, backend, subagents, recursion_limit
 read_when: Read when you need the exact create_deep_agent signature, a parameter default, or the middleware/prompt assembly order.
-updated: 2026-11-25
-sources_hash: d6e554a7e522
+updated: 2026-11-26
+sources_hash: 6d2666f3854c
 ---
 
 # create_deep_agent
@@ -85,7 +85,7 @@ Raises `ImportError` (missing/old provider package, e.g. `langchain-openrouter<0
 
 ## Return value
 
-A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.41"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
+A `CompiledStateGraph` already wrapped with `.with_config({"recursion_limit": 9_999, "metadata": {"ls_integration": "deepagents", "lc_versions": {"deepagents": "0.7.42"}, "lc_agent_name": name}})`. State schema defaults to `DeepAgentState` (messages use `DeltaChannel` with `snapshot_frequency=50`, making checkpoint growth O(N)). With the default `StateBackend`, state also carries a `files` channel.
 
 ## Invoke / stream basics
 
@@ -127,7 +127,7 @@ for msg in stream.messages:
 1. Resolve model (`resolve_model`) and harness profile (`_harness_profile_for_model`); validate profile exclusions.
 2. Rewrite tool descriptions per profile; default backend to `StateBackend()`; call `bind_backend(backend)` on each `middleware=` entry that has it (0.7.36+).
 3. Build final system prompt (USER, BASE, SUFFIX).
-4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack (its spec `middleware`, plus the parent's for a fork, also gets `bind_backend(backend)`). A fork keeps the parent's final system prompt unchanged; its own `system_prompt` is stored aside and sent with the task message (0.7.35). The function's own docstring (`graph.py`, `subagents` arg) still says it is appended to the inherited prompt; the code wins.
+4. If `skills` is `None`, take it from a `SkillsMiddleware` passed in `middleware=`. Split `subagents` into async (has `"graph_id"`) vs inline; build each declarative subagent's own stack (its spec `middleware`, plus the parent's for a fork, also gets `bind_backend(backend)`). A fork keeps the parent's final system prompt unchanged; its own `system_prompt` is stored aside and sent with the task message (0.7.35). Since 0.7.42 the function's own docstring (`subagents` arg) agrees: "its own `system_prompt` is sent with the task" (`../sources/package/deepagents/graph.py:469-471`); up to 0.7.41 it said "appended". The same docstring now adds that a fork does not inherit the parent's `response_format`, so set the same format on the fork's spec if it should also return structured data (`graph.py:472-475`; the fork spec takes only its own, `graph.py:830-841`).
 5. Auto-add `general-purpose` subagent (index 0) unless disabled or overridden.
 6. Build main stack (core, then profile extras, Skills, caching, Memory, HITL, UnsupportedContent, `ModelRefusalMiddleware`), merge `middleware`, apply profile exclusions, append tool-exclusion middleware. `ModelRefusalMiddleware` (from `langchain.agents.middleware`) raises `ModelRefusalError` when the model refuses; it sits in the tail so a `ModelFallbackMiddleware` you pass retries on the next model first. Subagent stacks get it too.
 7. Call `create_agent(...)` and `.with_config(...)`.

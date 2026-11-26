@@ -90,11 +90,11 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 |---|---|---|---|
 | `AsyncSubAgent` | `from deepagents import AsyncSubAgent` | `../sources/package/deepagents/middleware/async_subagents.py:66` | [[async-subagents]], [[create-deep-agent]] |
 | `AsyncSubAgentMiddleware` | `from deepagents import AsyncSubAgentMiddleware` | `../sources/package/deepagents/middleware/async_subagents.py:1560` | [[async-subagents]], [[middleware]] |
-| `CompiledSubAgent` | `from deepagents import CompiledSubAgent` | `../sources/package/deepagents/middleware/subagents.py:269` | [[subagents]], [[create-deep-agent]] |
+| `CompiledSubAgent` | `from deepagents import CompiledSubAgent` | `../sources/package/deepagents/middleware/subagents.py:274` | [[subagents]], [[create-deep-agent]] |
 | `DeepAgentState` | `from deepagents import DeepAgentState` | `../sources/package/deepagents/graph.py:77` | [[create-deep-agent]], [[context-engineering]] |
-| `FilesystemMiddleware` | `from deepagents import FilesystemMiddleware` | `../sources/package/deepagents/middleware/filesystem.py:1903` | [[middleware]], [[filesystem-tools]] |
-| `FilesystemPermission` | `from deepagents import FilesystemPermission` | `../sources/package/deepagents/middleware/filesystem.py:376` | [[permissions]], [[memory]] |
-| `FsToolName` | `from deepagents import FsToolName` | `../sources/package/deepagents/middleware/filesystem.py:1691` | [[filesystem-tools]], [[tools]] |
+| `FilesystemMiddleware` | `from deepagents import FilesystemMiddleware` | `../sources/package/deepagents/middleware/filesystem.py:1904` | [[middleware]], [[filesystem-tools]] |
+| `FilesystemPermission` | `from deepagents import FilesystemPermission` | `../sources/package/deepagents/middleware/filesystem.py:377` | [[permissions]], [[memory]] |
+| `FsToolName` | `from deepagents import FsToolName` | `../sources/package/deepagents/middleware/filesystem.py:1692` | [[filesystem-tools]], [[tools]] |
 | `GeneralPurposeSubagentProfile` | `from deepagents import GeneralPurposeSubagentProfile` | `../sources/package/deepagents/profiles/harness/harness_profiles.py:83` | [[models]], [[subagents]] |
 | `HarnessProfile` | `from deepagents import HarnessProfile` | `../sources/package/deepagents/profiles/harness/harness_profiles.py:483` | [[models]], [[middleware]] |
 | `HarnessProfileConfig` | `from deepagents import HarnessProfileConfig` | `../sources/package/deepagents/profiles/harness/harness_profiles.py:192` | [[models]] |
@@ -102,17 +102,17 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 | `ProviderProfile` | `from deepagents import ProviderProfile` | `../sources/package/deepagents/profiles/provider/provider_profiles.py:38` | [[models]] |
 | `RubricMiddleware` | `from deepagents import RubricMiddleware` | `../sources/package/deepagents/middleware/rubric.py:491` | [[rubric]], [[dcode-goals]] |
 | `SubAgent` | `from deepagents import SubAgent` | `../sources/package/deepagents/middleware/subagents.py:121` | [[subagents]], [[middleware]] |
-| `SubAgentMiddleware` | `from deepagents import SubAgentMiddleware` | `../sources/package/deepagents/middleware/subagents.py:1031` | [[middleware]], [[subagents]] |
+| `SubAgentMiddleware` | `from deepagents import SubAgentMiddleware` | `../sources/package/deepagents/middleware/subagents.py:1036` | [[middleware]], [[subagents]] |
 | `create_deep_agent` | `from deepagents import create_deep_agent` | `../sources/package/deepagents/graph.py:296` | [[create-deep-agent]], [[managed]] |
 | `register_harness_profile` | `from deepagents import register_harness_profile` | `../sources/package/deepagents/profiles/harness/harness_profiles.py:980` | [[models]], [[middleware]] |
 | `register_provider_profile` | `from deepagents import register_provider_profile` | `../sources/package/deepagents/profiles/provider/provider_profiles.py:195` | [[models]] |
 | `DEFAULT_EXECUTE_TIMEOUT` | `from deepagents.backends import DEFAULT_EXECUTE_TIMEOUT` | `../sources/package/deepagents/backends/local_shell.py:37` | [[backends]] |
 | `BackendConsumer` | `from deepagents.backends import BackendConsumer` | `../sources/package/deepagents/backends/protocol.py:810` | [[middleware]], [[subagents]] |
 | `BackendProtocol` | `from deepagents.backends import BackendProtocol` | `../sources/package/deepagents/backends/protocol.py:404` | [[backends]], [[middleware]] |
-| `CompositeBackend` | `from deepagents.backends import CompositeBackend` | `../sources/package/deepagents/backends/composite.py:228` | [[backends]], [[memory]] |
+| `CompositeBackend` | `from deepagents.backends import CompositeBackend` | `../sources/package/deepagents/backends/composite.py:228` | [[backends]], [[production]] |
 | `ContextHubBackend` | `from deepagents.backends import ContextHubBackend` | `../sources/package/deepagents/backends/context_hub.py:101` | [[backends]], [[production]] |
 | `FilesystemBackend` | `from deepagents.backends import FilesystemBackend` | `../sources/package/deepagents/backends/filesystem.py:92` | [[backends]], [[tutorials]] |
-| `LangSmithSandbox` | `from deepagents.backends import LangSmithSandbox` | `../sources/package/deepagents/backends/langsmith.py:56` | [[sandboxes]], [[products]] |
+| `LangSmithSandbox` | `from deepagents.backends import LangSmithSandbox` | `../sources/package/deepagents/backends/langsmith.py:56` | [[sandboxes]], [[production]] |
 | `LocalShellBackend` | `from deepagents.backends import LocalShellBackend` | `../sources/package/deepagents/backends/local_shell.py:256` | [[backends]], [[production]] |
 | `NamespaceFactory` | `from deepagents.backends import NamespaceFactory` | `../sources/package/deepagents/backends/store.py:42` | [[backends]], [[persistence]] |
 | `StateBackend` | `from deepagents.backends import StateBackend` | `../sources/package/deepagents/backends/state.py:38` | [[backends]], [[harness]] |
@@ -128,10 +128,10 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 | `RubricEvaluation` | `from deepagents.middleware import RubricEvaluation` | `../sources/package/deepagents/middleware/rubric.py:219` | [[rubric]] |
 | `RubricResult` | `from deepagents.middleware import RubricResult` | `../sources/package/deepagents/middleware/rubric.py:75` | no wiki page — read the definition |
 | `RubricState` | `from deepagents.middleware import RubricState` | `../sources/package/deepagents/middleware/rubric.py:260` | no wiki page — read the definition |
-| `SkillMetadata` | `from deepagents.middleware import SkillMetadata` | `../sources/package/deepagents/middleware/skills.py:288` | no wiki page — read the definition |
-| `SkillToolResolver` | `from deepagents.middleware import SkillToolResolver` | `../sources/package/deepagents/middleware/skills.py:176` | [[skills]] |
-| `SkillsMiddleware` | `from deepagents.middleware import SkillsMiddleware` | `../sources/package/deepagents/middleware/skills.py:914` | [[skills]], [[middleware]] |
-| `SkillsState` | `from deepagents.middleware import SkillsState` | `../sources/package/deepagents/middleware/skills.py:353` | [[skills]] |
+| `SkillMetadata` | `from deepagents.middleware import SkillMetadata` | `../sources/package/deepagents/middleware/skills.py:285` | no wiki page — read the definition |
+| `SkillToolResolver` | `from deepagents.middleware import SkillToolResolver` | `../sources/package/deepagents/middleware/skills.py:173` | [[skills]] |
+| `SkillsMiddleware` | `from deepagents.middleware import SkillsMiddleware` | `../sources/package/deepagents/middleware/skills.py:911` | [[skills]], [[middleware]] |
+| `SkillsState` | `from deepagents.middleware import SkillsState` | `../sources/package/deepagents/middleware/skills.py:350` | [[skills]] |
 | `SummarizationMiddleware` | `from deepagents.middleware import SummarizationMiddleware` | `../sources/package/deepagents/middleware/summarization.py:1915` | [[summarization]], [[middleware]] |
 | `SummarizationToolMiddleware` | `from deepagents.middleware import SummarizationToolMiddleware` | `../sources/package/deepagents/middleware/summarization.py:2104` | [[summarization]], [[customization]] |
 | `TaskEvent` | `from deepagents.middleware import TaskEvent` | `../sources/package/deepagents/middleware/async_subagents.py:491` | [[async-subagents]] |
@@ -161,7 +161,7 @@ One grep target. Search this file for the word you have. The terms are hand-writ
 | `store=` | [[create-deep-agent]], [[persistence]], [[memory]] |
 | `debug=` | [[create-deep-agent]], [[streaming]], [[skills]] |
 | `name=` | [[create-deep-agent]], [[managed-project]], [[skills]] |
-| `cache=` | [[create-deep-agent]], [[context-engineering]], [[skills]] |
+| `cache=` | [[create-deep-agent]], [[context-engineering]], [[subagents]] |
 
 <!-- /GENERATED:symbols -->
 

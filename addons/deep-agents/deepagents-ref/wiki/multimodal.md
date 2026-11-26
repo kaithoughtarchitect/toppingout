@@ -7,7 +7,7 @@ product: sdk
 keywords: multimodal, image input, images, audio, video, PDF, file blocks, content blocks, read_file media, video frames, UnsupportedContentMiddleware, deepagents[video], screenshot, vision, unsupported content
 read_when: Read when passing images/audio/video/files to an agent, read_file media fails, or blocks are replaced by a text notice.
 updated: 2026-11-19
-sources_hash: 4867fea73b8e
+sources_hash: c8ff58c99d95
 ---
 
 # Multimodal input, read_file media, video frames
@@ -117,7 +117,7 @@ agent = create_agent(model, middleware=[FilesystemMiddleware(), UnsupportedConte
 - `../sources/package/deepagents/middleware/_blob_offload.py`
 - `../sources/package/deepagents/backends/state.py`
 - `../sources/package/deepagents/backends/store.py` (`_encode_upload`)
-- `../sources/package/deepagents-0.7.41.dist-info/METADATA` (`video` extra)
+- `../sources/package/deepagents-0.7.42.dist-info/METADATA` (`video` extra)
 
 ## See also
 - [[index]]

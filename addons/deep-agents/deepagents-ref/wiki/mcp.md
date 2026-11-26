@@ -7,7 +7,7 @@ product: sdk
 keywords: MCP, Model Context Protocol, MCPAdapter, langchain.mcp, langchain[mcp], FastMCP, MCP server tools, langchain-mcp-adapters, MultiServerMCPClient, list_tools, mcpServers, stdio, streamable http, connect MCP
 read_when: Read when connecting a deep agent to an MCP server or seeing old MultiServerMCPClient examples.
 updated: 2026-11-19
-sources_hash: cd01b3d2de2a
+sources_hash: 76e1dc5fb63e
 ---
 
 # MCP tools (MCPAdapter)
@@ -85,7 +85,7 @@ The Deep Agents docs no longer have their own MCP page: the old URL redirects to
 - `../sources/docs/oss/python/langchain/mcp/index.md` (the old Deep Agents MCP page redirects here)
 - `../sources/docs/oss/python/langchain/mcp/tools.md`
 - `../sources/docs/oss/python/deepagents/tools.md` (MCP tools section)
-- `../sources/package/deepagents-0.7.41.dist-info/METADATA` (langchain version pin)
+- `../sources/package/deepagents-0.7.42.dist-info/METADATA` (langchain version pin)
 
 ## See also
 - [[index]]

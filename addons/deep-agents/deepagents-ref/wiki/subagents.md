@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: subagent, sub-agent, sub agent, task tool, SubAgent, CompiledSubAgent, general-purpose subagent, context quarantine, delegate to specialist, fork mode, subagent_type, SubAgentMiddleware, parallel fan-out, model refusal, ModelRefusalError, lc_subagent_tool_call_id, checkpoint_ns, ToolMessage artifact, BackendConsumer, bind_backend
 read_when: Read when a subagent can't see parent middleware/memory, when adding a specialist agent, when a task call is rejected, or when a subagent's model refuses.
-updated: 2026-11-25
-sources_hash: ea209c4ecee8
+updated: 2026-11-26
+sources_hash: 44d78346825a
 ---
 
 # Subagents (task tool, SubAgent, CompiledSubAgent)
@@ -160,11 +160,13 @@ What each kind of declarative child gets (0.7.40, `graph.py` and `middleware/sub
 | `MemoryMiddleware` | none | added when the parent has `memory=` |
 | parent state | non-excluded, non-private keys | full state, private keys included, minus the keys listed below |
 | parent `todos` | no | no (`OmitFromInput`) |
+| parent `response_format` | no | no: only the spec's own `response_format` |
 
 - The child receives the parent's **effective** history, meaning the summarization event is applied ([[summarization]]). The trailing AIMessage that holds the `task` call is dropped, and a `HumanMessage` is appended containing a continuation preamble, then the fork's own `system_prompt` if it has one, then the `description` (`f"{preamble}{instructions}\n\n{description}"` in `_fork_messages`).
 - A declarative fork inherits the full parent state, including private keys, except `structured_response`, the summarization event/session id, `rubric`, `pinned_skills` and `_skill_tools_disclosed` (the rubric grades the parent's goal, pending pins and disclosed skill tools belong to the parent). It also mirrors the parent's system prompt and prompt-producing middleware (Skills with the parent's `skills`, Memory, and the parent `middleware=`), which is good for prompt-cache reuse.
 - A fork inherits the parent's `tools=` unless it sets `tools`, which replaces them. Its spec `middleware` replaces inherited entries with the same `.name` and adds the rest. Middleware that rewrites the inherited system-prompt prefix or changes tool definitions shortens the shared cache prefix.
 - Since 0.7.35 a declarative fork keeps the parent's system prompt **byte-identical**, so it reuses the parent's cached prefix. Its own `system_prompt` is moved to a private spec key (`_FORK_INSTRUCTIONS_KEY`) and delivered in the task message after the inherited history. Probe on 0.7.39 on 2026-11-18: `_fork_messages([...], None, "DESC", instructions="INSTR")` ends the task message with `"...Your actual task is below.]\n\nINSTR\n\nDESC"`. On 0.7.34 it was appended to the system prompt, which broke the cache. Since the 2026-11-25 fetch the docs agree everywhere: the field table, the fork section and the comparison table say an optional `system_prompt` "is delivered with the task message to preserve cache reuse", and a note says this needs `deepagents>=0.7.35`. `skills` on a fork raises `ValueError`.
+- A fork does not inherit the parent's `response_format`. The fork's spec is built from `**spec` plus model, tools, middleware and prompt, with no parent `response_format` (`../sources/package/deepagents/graph.py:830-841`), and the child agent gets the per-call or spec format only (`selected_response_format`, `../sources/package/deepagents/middleware/subagents.py:667`). This was already so before 0.7.42; the 0.7.42 docstrings now say it (`graph.py:472-475`, `middleware/subagents.py:231-234`). If the fork should also return structured data, set the same format on its spec: the result then comes back as JSON instead of the final message, and the request is closer to the parent's for prompt caching (a cache hit is not guaranteed). The docs do not mention this.
 - The fork *does* carry a `task` tool (so tool lists match the parent's for caching), but any call returns the refusal "You are a subagent and cannot delegate to another subagent...".
 - The `task` listing appends "(inherits your full conversation and system prompt — no need to restate context here)" to fork entries.
 - A compiled fork gets the parent's messages but keeps its own prompt, and it gets only the non-private state.

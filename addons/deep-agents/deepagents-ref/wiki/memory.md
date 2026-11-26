@@ -7,7 +7,7 @@ product: sdk
 keywords: memory, long-term memory, remember across sessions, cross-thread memory, persistent memory, AGENTS.md, MemoryMiddleware, memory=, /memories/, StoreBackend, per-user memory, user preferences, short-term memory, agent memory, store namespace
 read_when: Read when the agent should remember things across threads or users, when a UI seeds or reads memory files, when memory edits do not show up mid-thread, or when scoping memory per user or org.
 updated: 2026-11-25
-sources_hash: e398ec79dcb6
+sources_hash: 579b8954b962
 ---
 
 # Memory (AGENTS.md files, long-term memory)

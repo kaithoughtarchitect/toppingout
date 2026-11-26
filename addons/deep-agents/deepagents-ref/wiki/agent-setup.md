@@ -7,7 +7,7 @@ product: sdk
 keywords: agent setup, reference setup, workspace, workspace_id, per-workspace memory, Memory tab, MemoryService, UI reads memory, read-only except memory, allow then deny, thread per workspace, workspace switch, leakage test, FreshMemory, GPT-6 Luna
 read_when: Read when building, reviewing or debugging your agent, its per-workspace memory, its Memory tab, or workspace switching.
 updated: 2026-11-19
-sources_hash: c7b2ec17328d
+sources_hash: 8ddd2a29ebda
 ---
 
 # Agent setup — the checked reference setup

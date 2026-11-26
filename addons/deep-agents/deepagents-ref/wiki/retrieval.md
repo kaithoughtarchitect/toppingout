@@ -7,7 +7,7 @@ product: sdk
 keywords: retrieval, RAG, retrieval augmented generation, vector store, vector search, retriever, agentic RAG, 2-step RAG, knowledge base, semantic search, embeddings, search tool, document search, RubricMiddleware
 read_when: Read when adding RAG or a vector store to a deep agent, deciding how to wire a retrieval tool, or offloading search hits to files and subagents.
 updated: 2026-11-19
-sources_hash: da601e41fc99
+sources_hash: 4b926350f3fb
 ---
 
 # Retrieval and RAG with Deep Agents

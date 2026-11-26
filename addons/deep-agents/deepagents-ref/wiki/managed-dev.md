@@ -7,7 +7,7 @@ product: managed
 keywords: mda dev, local development, LangSmith Studio, hot reload, mda evals, Harbor, evals, eval-engineering, tutorial, Tavily tool, .mda/build, langgraph dev, test schedule locally, memory not persisting, MDA_DEV, harbor-job.json
 read_when: Read when running or debugging a Managed Deep Agent locally, writing Harbor evals, or working through the tool plus memory plus schedule tutorial.
 updated: 2026-11-25
-sources_hash: dfc87182b868
+sources_hash: bb36f1d9f96a
 ---
 
 # MDA local development, evals and tutorial

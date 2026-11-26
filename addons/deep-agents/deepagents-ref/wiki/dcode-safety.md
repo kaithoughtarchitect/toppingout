@@ -7,7 +7,7 @@ product: dcode
 keywords: approval modes, manual mode, auto mode, YOLO, --yolo, auto-approve, human in the loop, HITL, approval, shell allow list, -S, allow-fs-tools, sandbox, remote sandbox, daytona, modal, runloop, untrusted repo, project trust, SandboxProvider
 read_when: Read when running dcode unattended or in an untrusted repo, choosing an approval mode, allowing shell commands, or setting up a remote sandbox.
 updated: 2026-11-25
-sources_hash: 63dce551cc42
+sources_hash: 23a6ec7f3579
 ---
 
 # dcode approval modes and remote sandboxes

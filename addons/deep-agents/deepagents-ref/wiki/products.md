@@ -7,7 +7,7 @@ product: all
 keywords: Deep Agents vs LangChain, Deep Agents vs LangGraph, Claude Agent SDK comparison, create_agent, harness vs framework vs runtime, which one to use, when to use deep agents, build harness yourself, CrewAI, Temporal, Manus, agent framework choice
 read_when: Read when choosing between Deep Agents, LangChain, LangGraph or Claude Agent SDK, or deciding whether to build the harness yourself.
 updated: 2026-11-19
-sources_hash: 6af03887e8bf
+sources_hash: 5aa6943625aa
 ---
 
 # Deep Agents vs LangChain, LangGraph and Claude Agent SDK

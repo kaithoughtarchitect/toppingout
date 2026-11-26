@@ -6,20 +6,20 @@ status: sourced
 product: managed
 keywords: managed deep agents, MDA, mda CLI, managed-deepagents, define_deep_agent, mda deploy, mda dev, mda init, LangSmith deployment, Agent Server, hosted agent, Context Hub, deploy agent to production, migrate from create_deep_agent
 read_when: Read when deciding between the OSS SDK and Managed Deep Agents, running mda init, build, dev or deploy, or migrating create_deep_agent code to define_deep_agent.
-updated: 2026-11-25
-sources_hash: d970bd7cf0f5
+updated: 2026-11-26
+sources_hash: f51fbff6dfaa
 ---
 
 # Managed Deep Agents (MDA)
 
 LangSmith-hosted Deep Agents: you write a project folder (`agent.py` + `instructions.md` + optional `skills/`, `tools/`, `memory.py`, `sandbox/`, `channels/`, `schedules/` ...) and the `mda` CLI compiles it into a LangGraph app that runs on LangSmith Agent Server. Reach for it when you want the agent in production with Slack/webhooks, OAuth for end users, cron, a managed sandbox and durable memory, without running any of that yourself.
 
-Status: public beta on LangSmith Cloud and Bring Your Own Cloud (BYOC; needs CLI and SDK v0.10 or later). `LANGSMITH_ENDPOINT` picks the region: GCP US (default), GCP EU, GCP APAC, AWS US or Azure US (`https://azure.api.smith.langchain.com`, added in the 2026-11-18 deploy page); LangSmith managed tools are GCP US only. Package `managed-deepagents` (PyPI and npm publish together at the same version; latest in sources 0.10.5, 2026-11-18; this page was re-checked against the changelog through 0.10.5). The `mda` binary is a Rust CLI shipped inside the package. None of this is in the `deepagents` 0.7.40 source; everything here is docs-only. Since 0.10.0 MDA needs `deepagents>=0.7.30` (PyPI).
+Status: beta on LangSmith Cloud and Bring Your Own Cloud (BYOC; needs CLI and SDK v0.10 or later). `LANGSMITH_ENDPOINT` picks the region: GCP US (default), GCP EU, GCP APAC, AWS US or Azure US (`https://azure.api.smith.langchain.com`, added in the 2026-11-18 deploy page); LangSmith managed tools are GCP US only. Package `managed-deepagents` (PyPI and npm publish together at the same version; latest in sources 0.10.5, 2026-11-18; this page was re-checked against the changelog through 0.10.5). The `mda` binary is a Rust CLI shipped inside the package. None of this is in the `deepagents` 0.7.40 source; everything here is docs-only. Since 0.10.0 MDA needs `deepagents>=0.7.30` (PyPI).
 
 ## Quick reference
 
-- MDA = LangSmith-hosted Deep Agents; public beta on LangSmith Cloud and BYOC (v0.10+; region via `LANGSMITH_ENDPOINT`, GCP US default); package `managed-deepagents`, CLI `mda` (latest in sources 0.10.5).
-- Only required file is root `agent.py` exporting `agent = define_deep_agent(name=..., model=..., tools=[...])`; `name` is required, static, `[a-zA-Z][a-zA-Z0-9_-]*`.
+- MDA = LangSmith-hosted Deep Agents; beta on LangSmith Cloud and BYOC (v0.10+; region via `LANGSMITH_ENDPOINT`, GCP US default); package `managed-deepagents`, CLI `mda` (latest in sources 0.10.5).
+- Only required file is root `agent.py` exporting `agent = define_deep_agent(name=..., model=..., tools=[...])`; `name` is required, static, `[a-zA-Z][a-zA-Z0-9_-]*`; never rename a deployed agent (threads stop loading; a deploy without the old `--name` makes a new server with empty memory).
 - `define_deep_agent` returns a definition; the runtime supplies backend, store, checkpointer, system prompt, skills and memory.
 - `agent` can instead be a sync or async factory `agent(runtime)` that returns a definition per run (0.9.0); only a factory may set `instructions`, `skills`, `mcp`, `sandbox`, `memory`, `browser`. `@cached_agent(keyed_by=...)` (>=0.10.2) reuses compiled graphs.
 - `routes={"/prefix/": backend}` (>=0.10.3) mounts your own Deep Agents backends under path prefixes; the default backend still can't be replaced.
@@ -113,7 +113,7 @@ project source files         -> .mda/build source archive -> hosted deployment
 schedules/**                 -> LangSmith cron jobs after the deployment is live
 ```
 
-Auth key lookup order: `LANGGRAPH_HOST_API_KEY`, `LANGSMITH_API_KEY`, `LANGCHAIN_API_KEY`. The CLI and deploy pages still say project `.env` first, then process env; the 0.10.0 changelog (breaking) says the shell now wins over `.env` for `LANGSMITH_API_KEY`, `LANGSMITH_ENDPOINT`, `LANGSMITH_WORKSPACE_ID`, `LANGSMITH_PROJECT` (in `mda dev`) and `--secret-from-env`, with a one-time warning naming the key when they differ. Trust the changelog for >=0.10.0, and unset a global shell value if the project `.env` should win. Values deployed as secrets still come from `.env` only. An interactive terminal with no key prompts for one (saved to `.env`) or offers browser sign-in. Reserved platform vars (`LANGSMITH_API_KEY`, `LANGGRAPH_HOST_API_KEY`, `LANGCHAIN_API_KEY`, `LANGSMITH_WORKSPACE_ID`) are never uploaded as deployment secrets.
+Auth: `mda deploy` authenticates with `LANGSMITH_API_KEY`, looked up in the shell environment, then the project `.env`, then a cached browser sign-in (CLI page, 2026-11-26 fetch; the old docs listed `LANGGRAPH_HOST_API_KEY`, `LANGSMITH_API_KEY`, `LANGCHAIN_API_KEY` with `.env` first). With none set, an interactive terminal prompts you to paste a key (saved to `.env`) or press Enter to sign in through the browser. Shell variables win over `.env` for every setting the CLI reads, including `LANGSMITH_ENDPOINT` and `LANGSMITH_WORKSPACE_ID` (and `LANGSMITH_PROJECT` in `mda dev`, plus `--secret-from-env`, per the 0.10.0 changelog); when the two differ the CLI uses the shell value and prints a warning. The docs and the 0.10.0 changelog (breaking) now agree. Unset a global shell value if the project `.env` should win. Reserved platform vars (`LANGSMITH_API_KEY`, `LANGGRAPH_HOST_API_KEY`, `LANGCHAIN_API_KEY`, `LANGSMITH_WORKSPACE_ID`) are never uploaded as deployment secrets; non-reserved `.env` entries are, and a model provider key found only in the shell is forwarded for that deploy (deploy page).
 
 ### Deploy from GitHub (LangSmith Cloud)
 

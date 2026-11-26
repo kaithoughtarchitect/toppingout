@@ -7,7 +7,7 @@ product: all
 keywords: Agent Builder, LangSmith Agent Builder, file-based memory, agent memory lessons, COALA, procedural memory, semantic memory, episodic memory, memory in Postgres, virtual filesystem memory, memory human approval, AGENTS.md learning, tools.json, no-code agent
 read_when: Read when designing file-based agent memory, or wanting real-world lessons on self-updating AGENTS.md, memory approval, and compaction from LangSmith Agent Builder.
 updated: 2026-11-19
-sources_hash: b50025bb0449
+sources_hash: 78160439bbf6
 ---
 
 # Lessons from Agent Builder's memory system

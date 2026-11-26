@@ -4,6 +4,7 @@ What changed for a project that upgrades, newest first. `/f-setup` shows the ent
 
 ## 2026-11-26
 
+- **The Deep Agents add-on is on deepagents 0.7.42 and today's docs.** 0.7.42 is fixes: `glob` passes interrupts and parent commands on instead of reporting a failure, stored file text replaces lone surrogates, Baseten's Nemotron 3 Ultra leaves its profile, and the fork docstrings now match the code (so `anti.md` drops that row). Minimums rise to `langchain-core>=1.8.5`, `langchain-anthropic>=1.7.13` and `langsmith>=0.16.2`. From the docs: `mda deploy` reads `LANGSMITH_API_KEY` only, shell before `.env`; never rename a deployed Managed agent; the production sync example is fixed; Deep Agents Code 0.2.15; the Platinum sandbox. The starter pins `deepagents==0.7.42`; the recipe, persistence (SQLite) and starter checks pass on it.
 - **You're reminded to update when you can act on it.** The end of every job now checks for a newer Topping Out (read-only) and, if there is one, the next-job card gains a line: `⬆️ Topping Out: update available (<headline>): run /f-setup before you start job <N>`. Under an autonomous run it goes in the final status block's `owed:` line, and a night shift puts it at the top of the morning summary. The start-of-job line stays and now says the reminder will come at the end. Nothing upgrades on its own: `/f-setup` commits method files only on your word.
 
 ## 2026-11-25

@@ -6,8 +6,8 @@ status: sourced
 product: managed
 keywords: MDA project layout, agent.py, instructions.md, define_deep_agent, agent factory, per-run configuration, shared local package, project structure, system prompt, Context Hub, managed context, skills folder, tools folder, middleware folder, interrupt_on, agent name, assistant_id, .env, hatchling
 read_when: Read when unsure where a file goes in an MDA project, what define_deep_agent accepts, or when the name-is-required error appears.
-updated: 2026-11-25
-sources_hash: be7be17ba80b
+updated: 2026-11-26
+sources_hash: 67d26adc9886
 ---
 
 # MDA project structure, agent definition and instructions
@@ -83,7 +83,7 @@ It returns a definition, not a graph. The runtime compiles it with `create_deep_
 
 | Parameter | Notes |
 | - | - |
-| `name` | Required. Static string literal matching `[a-zA-Z][a-zA-Z0-9_-]*`. Becomes graph ID, `assistant_id` clients pass, default deployment name (override with `mda deploy --name`), and the tool name on the MCP endpoint. |
+| `name` | Required. Static string literal matching `[a-zA-Z][a-zA-Z0-9_-]*`. Becomes graph ID, `assistant_id` clients pass, default deployment name (override with `mda deploy --name`), and the tool name on the MCP endpoint. Do not rename after deploying (see Gotchas). |
 | `model` | `provider:model` string (key in `.env`) or chat model instance. Gateway: `"langsmith:provider/model"`. See [[models]]. |
 | `tools` | Authored tools / provider tool dicts. Not auto-discovered. |
 | `middleware` | Runs in list order. Must use async hooks. |
@@ -176,6 +176,7 @@ keep notes, and return concise answers with citations.
 - `mda build` does not validate the definition call; a forbidden param (e.g. `backend=`) only fails when `mda dev` loads the graph (0.8.3 notes build-time catching of unsupported settings).
 - Syntax errors in authored files are reported as `failed to parse <file>:<line>:<column>` since 0.5.0; before that they surfaced as "agent `name` is required".
 - `name` must be a literal; computed names are rejected (static extraction).
+- You cannot rename a deployed agent: after a rename, existing threads stop loading, and unless you pass the old name to `mda deploy --name` the next deploy also creates a new Agent Server with empty memory (agent-definition page, 2026-11-26 fetch).
 - `mda init` scaffolds `model="openai:gpt-6-luna"` since 0.10.5 (changelog); the docs' examples still show `openai:gpt-6.1-sol`. Either works; set the model you pay for. `mda init --from` (0.10.5, changelog only) builds the project from an existing Fleet agent instead of the template ([[managed]]).
 - `channels/channel.py` is a forbidden declaration name.
 - `tools/mcp.py` is reserved; do not put a regular tool there.

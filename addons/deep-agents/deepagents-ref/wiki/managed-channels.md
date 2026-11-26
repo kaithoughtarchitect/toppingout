@@ -7,7 +7,7 @@ product: managed
 keywords: MDA Slack, channels.slack, channels.http, webhook, HTTP channel, define_identity, identity.py, Supabase, define_schedule, cron, schedules, runtime.schedules, reminders, scheduled agent, Slack reactions, MCP endpoint, /mcp, interrupt_on Slack, attach_file, user_prompt_response, INTERRUPT_CORRELATION_KEY
 read_when: Read when wiring a Managed Deep Agent to Slack or a webhook, controlling who can call it, adding a cron schedule, or exposing it over MCP.
 updated: 2026-11-25
-sources_hash: 6d645d72f340
+sources_hash: f9ae3d4b74e5
 ---
 
 # MDA channels, identity, schedules and MCP endpoint

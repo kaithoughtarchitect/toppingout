@@ -6,23 +6,24 @@ status: code
 product: sdk
 keywords: deepagents version, changelog, breaking changes, 0.7.0, upgrade, migration, dependencies, extras, public API, __all__, deprecated, BASE_AGENT_PROMPT, virtual_mode, write_file overwrite, TodoListMiddleware removed, what changed
 read_when: Read when upgrading deepagents, code behaves differently after 0.7.x, or you need to know which module exports a class or what a dependency is.
-updated: 2026-11-25
-sources_hash: 821d0e8f2304
+updated: 2026-11-26
+sources_hash: eded01b10457
 ---
 
 # Versions, dependencies and public API map
 
-This repo targets `deepagents==0.7.41` (released 2026-11-20; `deepagents.__version__ == "0.7.41"`). Upgraded from 0.7.19 on 2026-09-30, from 0.7.20 on 2026-10-21, from 0.7.29 on 2026-11-09, from 0.7.34 on 2026-11-18, from 0.7.39 on 2026-11-19, then from 0.7.40 on 2026-11-25. Use this page to check what changed between versions, which deps you get, and where each public class lives.
+This repo targets `deepagents==0.7.42` (released 2026-11-26; `deepagents.__version__ == "0.7.42"`). Upgraded from 0.7.19 on 2026-09-30, from 0.7.20 on 2026-10-21, from 0.7.29 on 2026-11-09, from 0.7.34 on 2026-11-18, from 0.7.39 on 2026-11-19, from 0.7.40 on 2026-11-25, then from 0.7.41 on 2026-11-26. Use this page to check what changed between versions, which deps you get, and where each public class lives.
 
 ## Quick reference
 
-- Target is `deepagents==0.7.41` (2026-11-20); Python `>=3.11,<4.0`.
+- Target is `deepagents==0.7.42` (2026-11-26); Python `>=3.11,<4.0`.
 - **0.7.20** (2026-09-29): one fix: `StateBackend.upload_files` now tags binary content `base64` (it was stored as base64 but tagged `utf-8`). Code diff vs 0.7.19: only `backends/state.py` and `_version.py`. Minimum versions raised: `langchain>=1.4.3`, `langchain-core>=1.6.6`, `langchain-anthropic>=1.7.5`, `langsmith>=0.14.1`, quickjs extra `>=0.3.8`.
 - **0.7.21 to 0.7.29** (2026-09-30 to 2026-10-20): `SkillsMiddleware` moved to the tail of the stack, skill tools (`metadata.include_tools`, `SkillsMiddleware(tools=...)`) and `pinned_skills`, async subagents gained `mode="fork"`, a `waiting` status and push notifications to the parent (`TaskEvent`, `_ParentNotifierMiddleware`), permissions also check symlink targets on `FilesystemBackend`, `edit_file` refuses binary files, `SummarizationMiddleware(summarizer=...)`, `FilesystemMiddleware(offload_binary_content=...)`. Details in the 0.7.20 to 0.7.29 table below. Minimum versions raised: `langchain>=1.4.6`, `langchain-core>=1.6.12`, `langchain-anthropic>=1.7.6`, `langchain-google-genai>=4.4.2`, `langsmith>=0.14.11`, aws extra `langchain-aws>=1.9.0`, quickjs extra `>=0.3.9`.
 - **0.7.30 to 0.7.34** (2026-10-22 to 2026-11-05): model refusals raise an error by default and a subagent's refusal is reported to the parent; async subagents gained `notify_parent`, `webhook`, queued follow-ups and notification metadata; summaries drop reasoning blocks of the history they replace and anchor the cutoff to a message ID; the Python `grep` fallback searches only the requested file and clips long lines; rubric middleware is out of beta. Details: Changes 0.7.29 to 0.7.34 below. Minimum versions raised: `langchain>=1.4.9`, `langchain-core>=1.7.6`, `langchain-anthropic>=1.7.10`, `langchain-google-genai>=4.4.3`, `langsmith>=0.14.17`; extras by 0.7.34: aws `langchain-aws>=1.9.1`, quickjs `>=0.3.11`.
 - **0.7.35 to 0.7.39** (2026-11-09 to 2026-11-16): a fork keeps the parent's system prompt and gets its own `system_prompt` in the task message; middleware with a `bind_backend` method (`BackendConsumer`) receives the agent's backend; the `task` tool message records the subagent's checkpoint namespace; `ls`, `glob` and `grep` drop results that would need approval outside the call's scope; `FilesystemBackend` keeps symlink names and no longer hangs on a FIFO; `StoreBackend` stores uploads with NUL bytes as base64; async subagents on the same deployment stream like an app's own runs. Minimums now `langchain>=1.5.0`, `langchain-core>=1.8.1`; extras aws `langchain-aws>=1.9.3`, quickjs `>=0.3.12` (0.7.34 and 0.7.39 METADATA compared).
 - **0.7.40** (2026-11-18): `LocalShellBackend` timeouts keep the output so far and warn when the command may still run; cancelled commands are cleaned up (process group on POSIX, shell only on Windows); one entry-point scan for profile plugins; a thread-safe `warn_deprecated`. Minimums raised: `langchain>=1.5.1`, `langchain-core>=1.8.3`, `langchain-anthropic>=1.7.11`, `langsmith>=0.15.0`.
 - **0.7.41** (2026-11-20): the messages reducer comes from LangGraph again (`langgraph.graph.message._messages_delta_reducer`; the private copy `deepagents/_messages_reducer.py` is gone), so `langgraph>=1.2.24` is now a direct requirement; the `edit_file` description no longer claims an unread file is an error (the tool never checked); the `execute` description drops its backend note (the tool is removed from the list when the backend can't execute). Minimums raised: `langchain>=1.5.2`, `langgraph>=1.2.24`.
+- **0.7.42** (2026-11-26): `glob` re-raises an interrupt or a parent `Command` from the backend instead of reporting "glob failed"; stored utf-8 file text rejoins split surrogate pairs and replaces lone surrogates with U+FFFD; Baseten's Nemotron 3 Ultra no longer gets the Nemotron harness profile; the mid-conversation tool disclosure moved to `middleware/_tool_disclosure.py` with no change in behaviour; the `create_deep_agent` and subagent docstrings now say a fork's `system_prompt` goes with the task and a fork doesn't inherit `response_format`. Minimums raised: `langchain-core>=1.8.5`, `langchain-anthropic>=1.7.13`, `langsmith>=0.16.2`; extras `aws` -> `langchain-aws>=1.10.0`, `quickjs` -> `langchain-quickjs>=0.4.0`.
 - Extras: `aws` (Bedrock caching), `quickjs` (`CodeInterpreterMiddleware`), `video` (frames in `read_file`); `langchain-openai` is not included.
 - 0.7.0 removed `TodoListMiddleware` from defaults; restore with `middleware=[TodoListMiddleware()]`.
 - 0.7.0 lean prompts: empty base prompt; `BASE_AGENT_PROMPT` deprecated (removal 0.9.0).
@@ -33,13 +34,13 @@ This repo targets `deepagents==0.7.41` (released 2026-11-20; `deepagents.__versi
 - Pending removals: `model=None` (1.0.0), `BASE_AGENT_PROMPT` (0.9.0).
 - `deepagents.profiles` is beta and may change in minor releases.
 
-## Package metadata (0.7.41)
+## Package metadata (0.7.42)
 
 - License MIT; "Development Status :: 4 - Beta"; Python `>=3.11,<4.0` (3.11 to 3.14).
-- Required: `langchain>=1.5.2,<2`, `langchain-core>=1.8.3,<2`, `langchain-anthropic>=1.7.11,<2`, `langchain-google-genai>=4.4.3,<5`, `langgraph>=1.2.24,<2` (direct since 0.7.41), `langsmith>=0.15.0`, `packaging>=23.2`, `wcmatch>=11.0`.
+- Required: `langchain>=1.5.2,<2`, `langchain-core>=1.8.5,<2`, `langchain-anthropic>=1.7.13,<2`, `langchain-google-genai>=4.4.3,<5`, `langgraph>=1.2.24,<2` (direct since 0.7.41), `langsmith>=0.16.2`, `packaging>=23.2`, `wcmatch>=11.0`.
 - Extras: `aws` -> `langchain-aws>=1.9.3,<2` (Bedrock prompt caching); `quickjs` -> `langchain-quickjs>=0.3.12` (`CodeInterpreterMiddleware`); `video` -> `av>=18`, `pillow>=12.3` (video frames in `read_file`; no upper bounds, already so in 0.7.34).
 - Not included: `langchain-openai`, `langchain-openrouter` (need `>=0.2.0`), `langchain-fireworks`, sandbox partner packages.
-- Traces carry metadata `lc_versions.deepagents` (`"0.7.41"`, or `"0.7.41+editable"` for editable installs; since 0.7.39 the editable check scans only the `deepagents` distribution records).
+- Traces carry metadata `lc_versions.deepagents` (`"0.7.42"`, or `"0.7.42+editable"` for editable installs; since 0.7.39 the editable check scans only the `deepagents` distribution records).
 
 ## Breaking changes in 0.7.0 (2026-07-29)
 
@@ -123,6 +124,10 @@ Code files changed between the 0.7.39 and 0.7.40 wheels: `_version.py`, `_api/de
 | - | - |
 | 0.7.40 | `LocalShellBackend.execute` runs the command with `subprocess.Popen` and its own reader instead of `subprocess.run`; a timeout keeps the output printed so far (`Output before the timeout:`) and says when the command may still be running; a timeout, interruption or async cancel kills the process group on POSIX (only the shell on Windows); `aexecute` cancellation cleans up the process within a 1 s grace period; `warn_deprecated` passes `stacklevel` to `langchain_core` instead of re-emitting through `warnings.catch_warnings` (which raced across threads); provider and harness profile plugins come from one entry-point scan ([[backends]], [[models]]) |
 
+## Changes 0.7.41 to 0.7.42
+
+Code files changed between the 0.7.41 and 0.7.42 wheels: `_version.py`, `graph.py` (docstrings only), `backends/utils.py` (surrogates), `middleware/filesystem.py` (`glob`), `middleware/skills.py`, `middleware/_skill_tools.py` and the new `middleware/_tool_disclosure.py` (the disclosure code moved, same order and result), `middleware/subagents.py` (docstring), `profiles/harness/_nvidia_nemotron_3_ultra.py`. Re-run on 0.7.42 / langgraph 1.2.24 / langchain 1.5.2 / langchain-core 1.8.5, 2026-11-26: `check_recipes.py` PASS 10/10, `check_persistence.py` passes 1 and 2 on SQLite, the starter's tests 6 passed.
+
 ## Changes 0.7.40 to 0.7.41
 
 Code files changed between the 0.7.40 and 0.7.41 wheels: `_version.py`, `graph.py` (imports `_messages_delta_reducer` from `langgraph.graph.message`), `middleware/filesystem.py` (two tool descriptions); removed `_messages_reducer.py`. No behaviour change in the recipes: `check_recipes.py` PASS 10/10 and `check_persistence.py` passes 1 and 2 on SQLite, on 0.7.41 / langgraph 1.2.24 / langchain 1.5.2 / langchain-core 1.8.4, 2026-11-25.
@@ -177,7 +182,7 @@ Also documented in the reference: the Nemotron middleware classes (`NemotronTool
 
 ## Sources
 
-- `../sources/package/deepagents-0.7.41.dist-info/METADATA`
+- `../sources/package/deepagents-0.7.42.dist-info/METADATA`
 - `../sources/package/deepagents/backends/protocol.py`
 - `../sources/docs/github/deepagents-CHANGELOG.md`
 - `../sources/docs/oss/python/reference/deepagents-python.md`

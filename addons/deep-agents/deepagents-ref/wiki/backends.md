@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: backend, backends, offload_binary_content, blobs, StateBackend, StoreBackend, CompositeBackend, FilesystemBackend, LocalShellBackend, ContextHubBackend, BackendProtocol, namespace, virtual_mode, long-term memory storage, persistent storage, where do files live, custom backend, route prefix, virtual filesystem
 read_when: Read when choosing where agent files are stored, persisting files across threads, routing /memories/ to a store, writing a custom backend, or hitting a backend factory TypeError or StoreBackend namespace error.
-updated: 2026-11-25
-sources_hash: 0db8aff6cbfc
+updated: 2026-11-26
+sources_hash: ddcb93960562
 ---
 
 # Backends (pluggable filesystem storage)
@@ -134,6 +134,8 @@ Validation (`_validate_namespace`): non-empty tuple of non-empty `str`, each mat
 
 `FileInfo = {path, is_dir?, size?, modified_at?}`, `GrepMatch = {path, line, text, context_before?, context_after?}`, `FileData = {content: str, encoding: "utf-8"|"base64", created_at?, modified_at?}`.
 
+Since 0.7.42, `create_file_data` and `update_file_data` (used by `StateBackend` and `StoreBackend` for writes, edits and uploads, and by `ContextHubBackend.read`) make `"utf-8"` content encodable first: a surrogate pair split across two code points is rejoined, and each lone surrogate becomes U+FFFD, "as Node does when it writes a JavaScript string" (`_encodable_text`, `../sources/package/deepagents/backends/utils.py:513-525`, applied at `:548` and `:569`). Before, such a string was stored as is, and it does not encode as UTF-8. `"base64"` content is left alone.
+
 Rules: return result objects with `error=...`, never raise for expected failures. For `execute`, subclass `SandboxBackendProtocol` (adds `id` property and `execute(command, *, timeout=None) -> ExecuteResponse`) or better `BaseSandbox` ([[sandboxes]]). `ExecuteResponse(output, exit_code=None, truncated=False)` feeds the tool's `ExecuteArtifact` (`exit_code?`, `truncated?`, `output_file?`; seen in 0.7.39) on `ToolMessage.artifact` ([[filesystem-tools]]).
 
 ```python
@@ -236,6 +238,7 @@ agent = create_deep_agent(
 - `../sources/package/deepagents/backends/_windows_process.py`
 - `../sources/package/deepagents/backends/composite.py`
 - `../sources/package/deepagents/backends/context_hub.py`
+- `../sources/package/deepagents/backends/utils.py`
 - `../sources/package/deepagents/middleware/filesystem.py`
 - `../sources/package/deepagents/middleware/_blob_offload.py`
 - `../sources/package/deepagents/graph.py`

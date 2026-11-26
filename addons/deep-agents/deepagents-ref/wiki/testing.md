@@ -7,7 +7,7 @@ product: sdk
 keywords: testing, test, unit test, pytest, fake model, fake chat model, mock model, GenericFakeChatModel, FakeMessagesListChatModel, bind_tools, no API calls, offline tests, scripted model
 read_when: Read when writing tests for an agent that must not call the real model, or when a fake model raises NotImplementedError or StopIteration.
 updated: 2026-11-19
-sources_hash: 94339f0eb09a
+sources_hash: b7a7b3d5aa5a
 ---
 
 # Testing a deep agent (pytest, fake models)

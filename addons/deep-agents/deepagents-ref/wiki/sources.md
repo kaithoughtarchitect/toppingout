@@ -4,7 +4,7 @@ id: sources
 type: reference
 status: sourced
 product: all
-keywords: sources, raw docs, ground truth, package source, deepagents 0.7.41, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs
+keywords: sources, raw docs, ground truth, package source, deepagents 0.7.42, wheel, docs mirror, changelog, fetch_docs, where to look, citations, refresh docs
 read_when: Read when you need the raw doc or code path to cite, or to know which source wins when docs and code disagree.
 updated: 2026-11-19
 ---
@@ -15,7 +15,7 @@ What this graph is distilled from. Raw is immutable between refreshes: read it, 
 
 ## Ground truth order
 
-1. `../sources/package/deepagents/` — the `deepagents` 0.7.41 wheel, extracted ([[versions]]). Signatures, defaults, behaviour.
+1. `../sources/package/deepagents/` — the `deepagents` 0.7.42 wheel, extracted ([[versions]]). Signatures, defaults, behaviour.
 2. `../sources/docs/oss/python/deepagents/` — official Python SDK docs.
 3. Everything else below.
 

@@ -7,7 +7,7 @@ product: sdk
 keywords: frontend, UI, useStream, @langchain/react, React, Vue, Svelte, Angular, langgraph dev, langgraph.json, Agent Server, subagent cards, todo list UI, sandbox IDE, chat UI, stream.values
 read_when: Read when building a web UI over a deep agent, or deciding what state the frontend should render.
 updated: 2026-11-19
-sources_hash: 487f3206267b
+sources_hash: 4f64a8153dbe
 ---
 
 # Frontend UIs over a Python deep agent

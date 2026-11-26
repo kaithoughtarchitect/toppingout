@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode config, config.toml, managed_config.toml, API key, /auth, base_url, OPENAI_BASE_URL, gateway, DEEPAGENTS_CODE_, DEEPAGENTS_HOME, .env, provider, custom provider, class_path, recursion_limit, allowed models, retries
 read_when: Read when dcode uses the wrong model or API key, a setting seems ignored, you need a custom or gateway provider, or an admin must pin policy.
-updated: 2026-11-25
-sources_hash: 48f1f2412076
+updated: 2026-11-26
+sources_hash: 535fee5af483
 ---
 
 # dcode configuration, providers and credentials
@@ -173,6 +173,7 @@ Install the package into dcode's environment with `dcode --install my_package --
 - An MCP tool-call timeout does not cancel the call on the server, so a retry can duplicate work.
 - Git trace attribution is on by default whenever tracing is on. In a large repo it adds latency around every tool that can change the checkout. `[tracing].git_attribution = false` or `DEEPAGENTS_CODE_GIT_ATTRIBUTION=false` (`0`, `no`, `off` or empty also work; the env var beats the user config file) skips it for the main agent and subagents. It does not turn tracing off (`config-file.md` "Disable Git trace attribution", `configuration.md`).
 - Since 0.2.12 (changelog) the OpenAI `prompt_cache_key` is shared across threads within a local profile instead of set per thread, so prompt-cache hits carry across sessions.
+- Since 0.2.15 (changelog) a cost total that includes unpriced usage is flagged as partial in the status bar, unpriced usage stays out of the priced cost rows, and the price catalog (`prices_auto_update`) starts refreshing when a turn begins. Upgrade if you rely on the status-bar total for spend.
 - Since 0.2.8 (changelog) dcode sets `DEEPAGENTS_CODE=1` in its local shell environment, so a script or hook can detect it runs under dcode. The 2026-11-18 docs do not mention it.
 
 ## Sources

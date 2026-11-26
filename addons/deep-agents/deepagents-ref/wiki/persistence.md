@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: persistence, checkpointer, store, remember across sessions, long-term memory, InMemorySaver, SqliteSaver, PostgresSaver, PostgresStore, StoreBackend, thread_id, survive restart, durable state
 read_when: Read when state or memory is lost after a restart, when thread_id seems ignored, or when choosing a durable checkpointer and store.
-updated: 2026-11-25
-sources_hash: b9b0a5f36c73
+updated: 2026-11-26
+sources_hash: 55869bb6bb7b
 ---
 
 # Persistence (checkpointers and stores)
@@ -189,7 +189,7 @@ Deployed: `await client.store.put_item((org_id,), "/compliance.md", create_file_
 - `thread_id` without a checkpointer does nothing. Every "multi-turn" example that omits `checkpointer=` (e.g. the content-builder tutorial) is single-turn.
 - Seed the stripped key. Because `CompositeBackend` strips the route prefix, an agent reading `/memories/AGENTS.md` reads store key `/AGENTS.md`; an item seeded as `"/memories/AGENTS.md"` is never found. Docs fetched before 2026-11-18 seeded the prefixed key; the 2026-11-18 memory page seeds `"/AGENTS.md"` and says why (`../sources/docs/oss/python/deepagents/memory.md`).
 - `namespace` is required in 0.7 (`StoreBackend.__init__(self, *, namespace, store=None)`, `backends/store.py`). The backends page fetched 2026-11-25 now passes it in its Python examples (`StoreBackend(namespace=lambda rt: (rt.server_info.user.identity,))`, and `StoreBackend(namespace=...)` in the migration tables), but it still has the note that without a namespace factory "the legacy default uses the `assistant_id`" (`../sources/docs/oss/python/deepagents/backends.md`). That default is gone; code wins.
-- Docs use backend factories in two places still: backends.md's migration note ("the factory pattern still works at runtime and emits a deprecation warning", with `backend=lambda rt: CompositeBackend(default=StateBackend(rt), ...)`) and going-to-production.md's `StoreBackend(rt, namespace=...)`. In 0.7.40 factories raise `TypeError("backend must be an initialized backend instance. Backend factories were removed in deepagents 0.7 ...")`, `StateBackend()` takes no arguments and `StoreBackend` is keyword-only. Code wins. (The memory page's examples were fixed in the 2026-11-18 docs.)
+- Docs still use backend factories in backends.md's migration note ("the factory pattern still works at runtime and emits a deprecation warning", with `backend=lambda rt: CompositeBackend(default=StateBackend(rt), ...)`). going-to-production.md's `StoreBackend(rt, namespace=...)` was fixed to `StoreBackend(namespace=...)` in the 2026-11-26 fetch. In 0.7.40 factories raise `TypeError("backend must be an initialized backend instance. Backend factories were removed in deepagents 0.7 ...")`, `StateBackend()` takes no arguments and `StoreBackend` is keyword-only. Code wins. (The memory page's examples were fixed in the 2026-11-18 docs.)
 - On a Postgres store, before 0.7.39 `StoreBackend.upload_files` of valid UTF-8 that contains a NUL byte saved it as text, which JSONB cannot hold. Since 0.7.39 such content is stored as base64 (`_encode_upload` in `backends/store.py`; changelog 0.7.39). Agent `write_file`/`edit_file` content is not affected by this change.
 - HITL and `ToolCallLimitMiddleware/ModelCallLimitMiddleware(thread_limit=...)` require a checkpointer; resume must reuse the same `thread_id`.
 - Concurrent writes to the same store key are last-write-wins. Prefer user-scoped namespaces or per-topic files.

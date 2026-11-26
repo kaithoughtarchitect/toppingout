@@ -6,8 +6,8 @@ status: sourced
 product: dcode
 keywords: dcode, deepagents-code, Deep Agents Code, terminal coding agent, CLI coding agent, TUI, headless mode, non-interactive, dcode -n, ACP server, slash commands, --model, --resume, --sandbox, install dcode
 read_when: Read when choosing between dcode and the SDK, installing or running dcode, scripting it headless in CI, or looking up a dcode flag or slash command.
-updated: 2026-11-25
-sources_hash: 872d34f4d191
+updated: 2026-11-26
+sources_hash: eb3695d9a48c
 ---
 
 # Deep Agents Code (dcode)
@@ -25,14 +25,14 @@ sources_hash: 872d34f4d191
 - `--sandbox` takes an optional value, so keep the bare form last on the command line.
 - Gotcha: dcode is not in the SDK source, so there are no `deepagents_code` imports to find there.
 - Gotcha: `--startup-cmd` output is not visible to the model; pipe content in instead.
-- SDK version (0.7.40 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
+- SDK version (0.7.42 here) and dcode version (0.2.x since 2026-10-22) are separate; `dcode doctor` shows both.
 
 ## What it is, relative to the SDK
 
 - dcode wraps the SDK [[harness]]: planning, filesystem tools, `task` subagents, [[summarization]] and compaction, [[memory]] (`AGENTS.md`) and [[skills]]. You configure it with files and flags. You do not write Python, except for the optional experimental extensions (see [[dcode-extending]]).
 - Architecture: the TUI talks to a local LangGraph agent server (`/restart` restarts it). Threads are checkpointed to SQLite at `~/.deepagents/.state/sessions.db`.
-- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.40; see [[versions]]) separate from the dcode version (0.2.x).
-- The SDK source (0.7.40) has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
+- `dcode --version` and `/version` print both `deepagents-code` and SDK versions. `dcode doctor` shows `deepagents (SDK): 0.7.x`. Keep the SDK version (this repo documents 0.7.42; see [[versions]]) separate from the dcode version (0.2.x).
+- The SDK source (0.7.42) has no dcode code. The only mentions are comments that name the "deepagents-code TUI/CLI" in `backends/utils.py` and `middleware/summarization.py`. Everything below comes from the docs only.
 - SDK features that dcode exposes: the JS [[interpreters]] (`js_eval`, QuickJS, on by default), which make [[dynamic-subagents]] work out of the box; `RubricMiddleware`, which backs goals and rubrics ([[rubric]], [[dcode-goals]]); forked `general-purpose` subagents; and the sandbox-as-tool pattern for [[sandboxes]].
 - For the product landscape (SDK vs dcode vs Managed), see [[products]]. To build the same thing yourself, see [[create-deep-agent]].
 
@@ -151,6 +151,7 @@ Git trace attribution: with tracing on, dcode runs read-only Git checks around t
 - 0.2.12 (2026-11-20): Gemini 4 Neon and GPT-6.2 Astra and Sol in the model picker; OpenAI `prompt_cache_key` shared across threads within a local profile (was per thread); Auto mode resolves relative paths the same way the file tools do; PTC tool discovery reads the exposed tools.
 - 0.2.13 (2026-11-20): unapproved MCP servers disabled with F2 are reported as disabled, project MCP servers skipped for missing approval are reported, and the project MCP trust prompt shows the source file.
 - 0.2.14 (2026-11-23): `/cost` attributes side-request spending correctly; local context detection fixed on Windows; corrected flag hints for verbose settings; `deepagents-acp>=0.1.0`, `langsmith[sandbox]>=0.16.0`.
+- 0.2.15 (2026-11-26): the status bar flags partial cost totals and unpriced usage is kept out of priced cost rows; the price catalog starts refreshing when a turn begins; Baseten models retiring on December 18 replaced in `/model` recommendations; `genai-prices>=0.2.5,<0.3.0`; pins `deepagents==0.7.42`.
 
 ## Gotchas
 

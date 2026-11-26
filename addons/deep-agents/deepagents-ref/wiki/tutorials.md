@@ -7,7 +7,7 @@ product: sdk
 keywords: tutorials, examples, data analysis agent, deep research agent, content builder, RAG agent, chunk-analyst, research-agent, sample agents, reference architecture, copy pattern, load_subagents, official tutorial
 read_when: Read when looking for an end-to-end pattern to copy (research, data analysis, content, RAG), or when a tutorial example fails on 0.7.40.
 updated: 2026-11-19
-sources_hash: 4e68ac75c362
+sources_hash: 65f3325e3bfd
 ---
 
 # Official tutorials (patterns to copy)

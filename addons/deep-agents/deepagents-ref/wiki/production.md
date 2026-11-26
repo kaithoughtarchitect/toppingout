@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: production, deploy, deployment, langgraph.json, LangSmith Deployment, thread_id, context_schema, multi-tenant, per-user memory, namespace, sandbox lifecycle, checkpointer, go live, self-hosted
 read_when: Read when moving an agent to production, setting up thread_id/context/multi-tenancy, or choosing where the checkpointer and store come from.
-updated: 2026-11-19
-sources_hash: 9997945a85e2
+updated: 2026-11-26
+sources_hash: ee984dcde272
 ---
 
 # Going to production
@@ -22,7 +22,8 @@ One-line truth: a production deep agent = a compiled graph plus a durable checkp
 - `thread_id` scopes history and StateBackend files; `context` is per-run data read via `runtime.context`.
 - Cross-thread memory: route `/memories/` to `StoreBackend(namespace=...)` including the user id.
 - Never deploy `FilesystemBackend` or `LocalShellBackend`; use a sandbox backend for code.
-- `StoreBackend.__init__(*, namespace, store=None)` is keyword-only; the docs' `StoreBackend(rt, ...)` is a `TypeError`.
+- `StoreBackend.__init__(*, namespace, store=None)` is keyword-only; pass `StoreBackend(namespace=...)` (the docs dropped the stray positional `rt` in the 2026-11-26 fetch).
+- A store <-> sandbox sync middleware must call the sandbox backend, not the `CompositeBackend`: the composite routes `/skills/` and `/memories/` back to `StoreBackend`.
 - `rt.server_info` is only populated on LangGraph server; self-hosted read ids from `rt.context`.
 - `create_deep_agent` already sets `recursion_limit` 9999; only raise it client-side.
 - Keep `StateBackend` as default so internal artifacts do not land in the durable store.
@@ -146,7 +147,7 @@ async def agent(config: RunnableConfig):
 ```
 
 - Thread-scoped (most common): fresh per conversation, TTL cleanup. Assistant-scoped: shared repo/deps across threads; needs TTL/snapshots/cleanup or it grows unbounded.
-- Move data across the boundary with `backend.upload_files([(path, bytes)])` / `backend.download_files([paths])` (seed skills/memories before, pull artifacts after). A `before_agent`/`after_agent` middleware can sync store <-> sandbox. Since 0.7.36 such a middleware can get the agent's backend from `create_deep_agent` by defining `bind_backend(backend)` (`BackendConsumer`, [[backends]]). Uploads into a `StoreBackend` on Postgres need 0.7.39+ if the content can hold a NUL byte (stored base64 since then; before it was stored as text, which a Postgres JSONB store cannot hold: `_encode_upload` in `backends/store.py`).
+- Move data across the boundary with `backend.upload_files([(path, bytes)])` / `backend.download_files([paths])` (seed skills/memories before, pull artifacts after). A `before_agent`/`after_agent` middleware can sync store <-> sandbox. Give it the sandbox backend itself (`sandbox_backend = LangSmithSandbox(sandbox=ls_sandbox)`, used as `CompositeBackend(default=sandbox_backend, ...)` and passed as `SandboxSyncMiddleware(sandbox_backend)`) and call `await self.sandbox.aupload_files(files)` / `await self.sandbox.adownload_files(paths)`. Calling `upload_files` on the composite would route `/skills/...` and `/memories/...` to the `StoreBackend` routes and write back to the store instead of seeding the container (docs comment, 2026-11-26 fetch; routing in `backends/composite.py`). Since 0.7.36 such a middleware can get the agent's backend from `create_deep_agent` by defining `bind_backend(backend)` (`BackendConsumer`, [[backends]]). Uploads into a `StoreBackend` on Postgres need 0.7.39+ if the content can hold a NUL byte (stored base64 since then; before it was stored as text, which a Postgres JSONB store cannot hold: `_encode_upload` in `backends/store.py`).
 
 ## Async, durability, frontend
 
@@ -169,7 +170,7 @@ async def agent(config: RunnableConfig):
 
 ## Gotchas
 
-- The docs' "sync skills and memories" example constructs `StoreBackend(rt, namespace=...)` with an undefined `rt` (still so in the 2026-11-18 fetch). In 0.7.40 (as in 0.7.29) `StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only; positional `rt` is a `TypeError`. Use `StoreBackend(namespace=...)`.
+- Before the 2026-11-26 fetch the docs' "sync skills and memories" example had two bugs: it constructed `StoreBackend(rt, namespace=...)` with an undefined `rt` (`StoreBackend.__init__(self, *, namespace, store=None)` is keyword-only, so positional `rt` is a `TypeError`), and its middleware called `upload_files`/`download_files` on the `CompositeBackend`, which sends `/skills/` and `/memories/` paths back to the store, so nothing reached the sandbox. The current example uses `StoreBackend(namespace=...)` and calls the `LangSmithSandbox` directly; copy that version. It now ships one tab per provider (Google, OpenAI, Anthropic, OpenRouter, Fireworks, Baseten, Ollama) that differ only in `model=`.
 - `rt.server_info` is only populated on LangGraph server. In a plain local `agent.invoke`, a namespace lambda reading `rt.server_info.user.identity` raises. For self-hosting read ids from `rt.context` instead.
 - `create_deep_agent` already applies `.with_config({"recursion_limit": 9_999, ...})` (graph.py). You only need a higher limit on the client side (the frontend docs suggest `recursionLimit: 10000`).
 - Deep Agents write internal artifacts (`/conversation_history/...`, `/large_tool_results/...`) to the default backend (the root of `CompositeBackend.artifacts_root`). Keep `StateBackend` as the default so these don't land in a durable store or on disk.
@@ -182,6 +183,7 @@ async def agent(config: RunnableConfig):
 - `../sources/docs/oss/python/deepagents/backends.md`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/backends/store.py`
+- `../sources/package/deepagents/backends/composite.py` (`upload_files` routes by path prefix)
 - `../sources/package/deepagents/backends/langsmith.py`
 - `../sources/package/deepagents/middleware/summarization.py`
 - `../sources/package/deepagents/middleware/subagents.py` (refusal notice)

@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: filesystem tools, file tools, grep_exclude_dirs, offload_binary_content, ls, read_file, write_file, edit_file, delete, glob, grep, execute, FilesystemMiddleware, tool_token_limit_before_evict, large_tool_results, grep regex, read file limit, tool eviction, big tool output
 read_when: Read when the agent's file tools behave unexpectedly, grep regex finds nothing, read_file truncates, a large tool result is evicted, or execute is missing or reports success on failure.
-updated: 2026-11-25
-sources_hash: 288553b45e7f
+updated: 2026-11-26
+sources_hash: 18f3d2290254
 ---
 
 # Filesystem tools (ls, read_file, write_file, edit_file, delete, glob, grep, execute)
@@ -89,6 +89,7 @@ All paths go through `validate_path`: normalized to leading `/`, forward slashes
 - Supports `*`, `**`, `?`, `[abc]`, `[!abc]`, `{a,b}`. A pattern without `/` matches the basename at any depth (`*.py` finds `src/app/main.py`); with `/` it matches the root-relative path; a leading `/` anchors to the search root.
 - Dot names match only if the pattern segment starts with `.`; `**` does not descend into dot-dirs, so `*.yml` finds `.github/workflows/ci.yml` but `**/*.yml` does not.
 - Timeout: 10 s at the middleware (`GLOB_TIMEOUT`), 5 s walk budget in `FilesystemBackend`, 5 s / 10,000 matches in sandbox scripts. Partial results come with a truncation note. At most 4 concurrent sync globs, then `Error: too many glob calls...`.
+- Any other exception from the backend's `glob` / `aglob` becomes an error `ToolMessage` `"Error: glob failed: {e}"`. Since 0.7.42 a `GraphBubbleUp` (an `interrupt()` or a parent `Command` raised inside the backend glob) is re-raised instead, so it pauses or routes the graph rather than reaching the model as a failed search (`../sources/package/deepagents/middleware/filesystem.py:2785-2787` sync, `:2866-2868` async).
 - With no `path`, permission is checked against `/`.
 
 ### grep

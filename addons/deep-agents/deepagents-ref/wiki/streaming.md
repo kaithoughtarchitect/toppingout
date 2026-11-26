@@ -7,7 +7,7 @@ product: sdk
 keywords: streaming, stream, stream_mode, subgraphs=True, version v2, StreamPart, chunk type ns data, stream_events, astream_events, version v3, stream.subagents, stream.messages, subagent events, token streaming, custom stream, get_stream_writer, updates mode, progress events, checkpoint_ns, ToolMessage artifact
 read_when: Read when streaming agent output or tokens, seeing no subagent events, or moving to stream_events v3.
 updated: 2026-11-25
-sources_hash: bc2ed5032ffa
+sources_hash: 6d7605166e11
 ---
 
 # Streaming (stream modes, subgraphs, event streaming v3)

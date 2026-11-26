@@ -13,7 +13,7 @@ updated: 2026-11-19
 
 Hard nos for any agent answering from this repo. Confirmed 2026-09-29.
 
-- **Never invent an API.** No parameter, import path, class or default that is not in `../sources/package/` or `../sources/docs/`. Say "not found in 0.7.41" instead.
+- **Never invent an API.** No parameter, import path, class or default that is not in `../sources/package/` or `../sources/docs/`. Say "not found in 0.7.42" instead.
 - **Never answer from training memory when the repo has the page.** Deep Agents moves fast; memory is months stale. Read the page, cite the raw path.
 - **Never rewrite `../sources/`.** Refresh with `python scripts/fetch_docs.py`; distil into `wiki/`.
 - **Never mix up the three products.** SDK (`deepagents`), Deep Agents Code (`dcode`, a terminal app), Managed Deep Agents (LangSmith-hosted, `mda`). See [[constitution]].

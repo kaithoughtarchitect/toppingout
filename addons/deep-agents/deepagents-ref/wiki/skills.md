@@ -6,8 +6,8 @@ status: code
 product: sdk
 keywords: skills, SKILL.md, SkillsMiddleware, skills=, pinned_skills, pin a skill, include_tools, skill tools, SkillToolResolver, disclosed_skill_tool_names, progressive disclosure, agent skills, reusable procedures, playbooks, skills_metadata, reload skills, task-specific instructions, skill directory, allowed-tools
 read_when: Read when adding task-specific procedures the agent loads on demand, when skills load zero, a new or edited skill does not appear, or a subagent lacks skills.
-updated: 2026-11-19
-sources_hash: f19050bc6137
+updated: 2026-11-26
+sources_hash: f6dca791fe85
 ---
 
 # Skills (SKILL.md, progressive disclosure)
@@ -161,7 +161,12 @@ agent = create_deep_agent(
 - Gated: until the model `read_file`s the skill's `SKILL.md` (or the skill is pinned), a call to a skill tool fails as an unknown tool. When summarization drops that read or pinned message, the tool disappears again.
 - Skill tools are kept off `self.tools`, so they are not registered with the tool node on their own. Passing a tool to the agent's `tools=` instead makes it always visible, so `include_tools` then has no effect, unless the tool is deferred (`extras={"defer_loading": True}`), in which case reading the skill reveals it without a search (the docs pair this with LangChain's `ProviderToolSearchMiddleware`, so the model can also find it by search).
 - When a skill lists a tool the agent already has (including built-ins such as `edit_file`), the agent's tool wins.
-- How a disclosed tool reaches the model: on Anthropic and OpenAI chat models whose profile sets `mid_conversation_tools`, it is inserted mid-conversation (cache stays valid); otherwise it is added to the request's `tools` (cache invalidated). Since 0.7.32 the model check reads `sys.modules` (`is_anthropic_chat_model` in `middleware/_utils.py`, `_is_openai_chat_model` in `middleware/_skill_tools.py`) instead of importing `langchain_anthropic` / `langchain_openai`; the result is the same.
+- How a disclosed tool reaches the model. Since 0.7.42 this lives in `middleware/_tool_disclosure.py`: `SkillsMiddleware` plans the disclosure and calls `disclose_tools(request, disclosure)` (`../sources/package/deepagents/middleware/skills.py:1307-1308`). The behaviour is the same as in 0.7.41; only the module moved. In order (`../sources/package/deepagents/middleware/_tool_disclosure.py:72-93`):
+  1. On an Anthropic chat model, any disclosed tool whose input schema has a top-level `oneOf`, `anyOf` or `allOf` is dropped with a warning, inline and bound alike (`_tool_disclosure.py:156-177`).
+  2. Nothing left to disclose: the request goes out unchanged.
+  3. Inline, when the model (unwrapped from `.bind(...)` / `.with_config(...)`) is a `ChatAnthropic` or a `langchain_openai` `BaseChatOpenAI` **and** its `profile` has `mid_conversation_tools` set (`_tool_disclosure.py:180-189`). One `SystemMessage` per insertion point is added right after the skill read's tool-result batch (and any user messages or empty replies queued behind it), carrying an Anthropic `{"type": "tool_addition", ...}` block or an OpenAI Responses `{"type": "additional_tools", "role": "developer", ...}` item per tool (`_tool_disclosure.py:104-140`, `:211-226`). `request.tools` is not touched, so the cached prompt prefix survives.
+  4. Otherwise (any other provider, or no `mid_conversation_tools`): the tools are bound in `request.tools`, skill tools appended sorted by name and deferred tools copied without `defer_loading` (`_tool_disclosure.py:143-153`). That changes the tool list at the front of the cached prefix, so the cache is invalidated.
+  The model checks read `sys.modules` (`is_anthropic_chat_model` in `middleware/_utils.py`, `_is_openai_chat_model` in `middleware/_tool_disclosure.py:192-200`) instead of importing `langchain_anthropic` / `langchain_openai` (since 0.7.32).
 - `include_tools` as a YAML list, or with commas, logs a warning and matches nothing. Unmatched names log at DEBUG only.
 - `disclosed_skill_tool_names(state)` (from `deepagents.middleware.skills`) returns the skill tools shown to the latest model call, for middleware that gates tool calls itself.
 
@@ -181,7 +186,7 @@ agent = create_deep_agent(
 
 ## Executing skill scripts
 
-Reading works on any backend; running `scripts/*.py` needs a shell, i.e. a sandbox backend ([[sandboxes]]). Skill files stored in a `StoreBackend` route are not inside the sandbox: copy them in with a `before_agent` middleware (`backend.aupload_files([...])`) and copy edits back in `after_agent` (docs' full skills+memory sync example lives in the production guide, see [[production]]).
+Reading works on any backend; running `scripts/*.py` needs a shell, i.e. a sandbox backend ([[sandboxes]]). Skill files stored in a `StoreBackend` route are not inside the sandbox: copy them in with a `before_agent` middleware that calls the **sandbox's** own `aupload_files([...])`, not the composite's: `CompositeBackend.aupload_files` routes each path by prefix, so `/skills/...` files would be written back to the store route instead of into the container (`../sources/package/deepagents/backends/composite.py:920-939`; the docs' `SkillSandboxSyncMiddleware` example was fixed to take the sandbox in the 2026-11-26 fetch). Copy edits back in `after_agent` (docs' full skills+memory sync example lives in the production guide, see [[production]]).
 
 ## Skills vs memory vs tools
 
@@ -212,6 +217,8 @@ Reading works on any backend; running `scripts/*.py` needs a shell, i.e. a sandb
 - `../sources/docs/oss/python/deepagents/memory.md`
 - `../sources/package/deepagents/middleware/skills.py`
 - `../sources/package/deepagents/middleware/_skill_tools.py`
+- `../sources/package/deepagents/middleware/_tool_disclosure.py`
+- `../sources/package/deepagents/backends/composite.py`
 - `../sources/package/deepagents/middleware/_utils.py`
 - `../sources/package/deepagents/graph.py`
 - `../sources/package/deepagents/middleware/subagents.py`
