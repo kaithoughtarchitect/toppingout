@@ -2,15 +2,17 @@
 
 [![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory where no agent marks its own homework: a rival model family reads every plan before any code and every change before the merge, and nothing merges without evidence. For each job you choose who does it: a planner/executor split, where a foreman on Opus or Fable specs the ticket for a builder on whatever model you choose (a frontier model, a fast one or a cheap one), or a master builder, one strong model that plans and builds a clear job itself.**
+**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory that builds your product head by head: you name what it must do, it lays the jobs out on a board and builds them floor by floor, and when the board tops out you choose the next head. Nothing lives in a chat: every job starts a fresh session from files (the board, the handover, its work-session folder and a Logbook of every lesson so far), so the hundredth job knows what the first one learned and nothing drifts.**
 
-It runs in Orca, with Claude Code as the foreman and Pi, Claude Code or agy as the builder (codex too, as a master builder). Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+No agent marks its own homework: a rival model family reads every plan and every change, and nothing merges without evidence. Each job runs as a planner/executor split, a foreman on Opus or Fable with a builder on any model, or as one master builder. It all runs in Orca, with Claude Code as the foreman. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
 
-> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. On a long job it drifts from the plan, and your best model spends your usage on typing.
+> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. On a long job it drifts from the plan, every new session starts from nothing, and your best model spends your usage on typing.
 >
-> **What it does:** keeps the checking away from whoever did the work. Other model families read the plan and the finished change, every claim needs a command, a commit or a test behind it, and you give the word for merges and pushes, or hand it over for one job or a night shift. On a hard job, or with a fast or cheap builder, the foreman plans and writes exact work orders so the builder can't drift; on a clear job, a master builder skips the handoffs.
+> **What it does:** turns your product into heads and boards of jobs, keeps every job's context in files so each session starts knowing it, and keeps the checking away from whoever did the work. Other model families read the plan and the finished change, every claim needs a command, a commit or a test behind it, and you give the word for merges and pushes, or hand it over for one job or a night shift. On a hard job, or with a fast or cheap builder, the foreman plans and writes exact work orders so the builder can't drift; on a clear job, a master builder skips the handoffs.
 >
-> **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
+> 🚀 **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
+>
+> 🔄 **Keep it current:** Topping Out improves almost daily. Between jobs, type **`/f-setup`** in your project: it shows what's new, applies it on your yes and keeps everything you've adapted. The end of every job tells you when there's an update ([Updating](#updating)).
 
 Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
 

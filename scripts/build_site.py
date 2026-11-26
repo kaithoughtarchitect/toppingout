@@ -2465,7 +2465,7 @@ FRONT = {
     ],
     # the owner's angle: long runs without drift, the builder of your choice, and proof for every merge (README lead, 2026-11-24).
     # The link preview (scripts/og-card.mjs) carries the headline, read from the built page.
-    "subline": "A rival model family reads every plan and every change, and nothing merges without evidence. A foreman on Opus or Fable specs each ticket for a builder on any model, or one strong master builder plans and builds a clear job itself.",
+    "subline": "You name what your product must do; it builds it job by job, floor by floor, until the board tops out. Every job starts fresh from files, so nothing drifts, a rival model family reads every plan and change, and nothing merges without evidence.",
     "shift_cmd": "/goal night shift: 3 jobs, auto-pick",
     # why Topping Out, in four pillars: (title, the one line); the sign each one is posted as is in SIGNS, same order
     "pillars": [
