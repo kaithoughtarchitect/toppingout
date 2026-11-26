@@ -2949,7 +2949,7 @@ CREWS_CSS = r"""
 .crews{margin:26px 0 8px}
 .crews h2{margin:0 0 6px;font:800 28px/1 "Big Shoulders Display","Arial Narrow",sans-serif;text-transform:uppercase}
 .crews h2 small,.cw2 b small{margin-left:8px;font:600 10px/1 "Martian Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:none;color:var(--ink-3)}
-.crews>p{margin:0 0 12px;max-width:70ch;color:var(--ink-2);font-size:14.5px}
+.crews>p,.crews h3+p{margin:0 0 12px;max-width:70ch;color:var(--ink-2);font-size:14.5px}
 .crews h3{margin:18px 0 8px;font:700 12px/1.2 "Martian Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .cwt{border:2px solid var(--ink);background:var(--panel)}
 .cw2{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(0,1fr);gap:14px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}
@@ -2997,7 +2997,7 @@ def crews_html() -> str:
     return ('<section class="crews" aria-labelledby="crh"><h2 id="crh">Two ways to staff a job <small>from the README</small></h2>'
             '<p>Pick at &ldquo;go&rdquo;: the foreman and builder for the strongest guarantees or a fast, cheap builder; a master builder when the job is clear and one strong model can plan it too.</p>'
             f'<div class="cwt">{head}{trs}</div>'
-            f'<h3>Who reads what, by master builder</h3><ul class="cwf">{flows}</ul></section>')
+            f'<h3>Who reads what, by master builder</h3><p>Every accepted finding loops back to the build, fixed test-first and checked again (Greptile at most three rounds). In an autonomous run or a night shift the loops run without you, and your goal stands in for &ldquo;merge&rdquo;.</p><ul class="cwf">{flows}</ul></section>')
 
 
 def enforced_rows() -> list:

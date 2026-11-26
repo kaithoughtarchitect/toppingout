@@ -43,6 +43,7 @@ You need `git`, Node 18+, Python 3.9+, Bash and Claude Code, plus a builder (Pi,
 1. `git clone https://github.com/kaithoughtarchitect/toppingout`
 2. In Claude Code, in the repo that will hold your records, say: `Read <path to toppingout>/skills/f-setup/SKILL.md and follow it`. It checks each tool, installs the skills and templates, writes a profile of your repo and asks only what it can't find out (`SETUP.md` §1).
 3. Start your first job the way `/f-setup` ends by suggesting: `/f-survey` to turn an idea into a ticket, `/f-schedule` to cut a big plan into tickets, or the first-job opener for a ticket you already have (`SETUP.md` §7).
+4. **Keep it current:** between jobs, type `/f-setup` again. Topping Out changes often, and the end of every job tells you when there's something new ([Updating](#updating)).
 
 You don't need the whole flow first: the foreman follows `METHOD.md`, and you answer when it asks.
 
@@ -81,27 +82,39 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 
 Pick it at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal (`METHOD.md`, "MASTER BUILDER").
 
-**Who reads what, by master builder.** The plan check seats are your standing choice minus the master builder's own family (here the default three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
+**Who reads what, by master builder.** The dotted arrows are the repair loops: every accepted finding goes back to the master builder to fix, test-first, and is checked again (Greptile at most three rounds). In an autonomous run or a night shift the loops run without you, and your goal's words stand in for "merge". The plan check seats are your standing choice minus the master builder's own family (here the default three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
 
 **A master builder in Claude Code** (Opus or Fable):
 
 ```mermaid
 flowchart LR
-  P["Plan<br/>Claude"] --> C["Plan check<br/>codex · Gemini · Qwen"] --> B["Build<br/>Claude"] --> L["Lens inspection<br/>Fable agents"] --> I["Independent inspection<br/>codex"] --> G["Greptile, CI"] --> M["You merge"]
+  P["Plan<br/>Claude"] --> C["Plan check<br/>codex · Gemini · Qwen"] --> B["Build<br/>Claude"] --> L["Lens inspection<br/>Fable agents"] --> I["Independent inspection<br/>codex"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
+  C -. "findings: fix the plan" .-> P
+  L -. "fixes" .-> B
+  I -. "fixes" .-> B
+  G -. "fixes, up to 3 rounds" .-> B
 ```
 
 **A master builder in codex:**
 
 ```mermaid
 flowchart LR
-  P["Plan<br/>codex"] --> C["Plan check<br/>Gemini · Qwen<br/>(no codex seat)"] --> B["Build<br/>codex"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code"] --> G["Greptile, CI"] --> M["You merge"]
+  P["Plan<br/>codex"] --> C["Plan check<br/>Gemini · Qwen<br/>(no codex seat)"] --> B["Build<br/>codex"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
+  C -. "findings: fix the plan" .-> P
+  L -. "fixes" .-> B
+  I -. "fixes" .-> B
+  G -. "fixes, up to 3 rounds" .-> B
 ```
 
 **A master builder in agy, on a Gemini model** (agy on a Claude model reads like the Claude Code chart, with the lens on its own model):
 
 ```mermaid
 flowchart LR
-  P["Plan<br/>Gemini"] --> C["Plan check<br/>codex · Qwen<br/>(no Gemini seat)"] --> B["Build<br/>Gemini"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code<br/>(codex if Claude is unavailable)"] --> G["Greptile, CI"] --> M["You merge"]
+  P["Plan<br/>Gemini"] --> C["Plan check<br/>codex · Qwen<br/>(no Gemini seat)"] --> B["Build<br/>Gemini"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code<br/>(codex if Claude is unavailable)"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
+  C -. "findings: fix the plan" .-> P
+  L -. "fixes" .-> B
+  I -. "fixes" .-> B
+  G -. "fixes, up to 3 rounds" .-> B
 ```
 
 ## Three ways to run a job
@@ -234,7 +247,7 @@ Most of the method is instructions the agents follow; a few checks are scripts t
 
 ## Updating
 
-In your project, **between jobs**, type `/f-setup`. It pulls the newest Topping Out, shows what's new (`CHANGELOG.md`), applies it on your yes, keeps every file you've adapted, and commits exactly the changed files on your word; read-only check at any time: `node <path to toppingout>/skills/f-setup/install.mjs --repo . --check` (`SETUP.md` §1, "Upgrade").
+**Run `/f-setup` between jobs to stay current.** It takes the newest Topping Out from this repo's `main` (you don't wait for a release; releases are dated snapshots of the same changes), and the end of every job tells you when there's something new (the next-job card's ⬆️ line; after a night shift, the morning summary). In your project, **between jobs**, type `/f-setup`. It pulls the newest Topping Out, shows what's new (`CHANGELOG.md`), applies it on your yes, keeps every file you've adapted, and commits exactly the changed files on your word; read-only check at any time: `node <path to toppingout>/skills/f-setup/install.mjs --repo . --check` (`SETUP.md` §1, "Upgrade").
 
 ## Read next
 
