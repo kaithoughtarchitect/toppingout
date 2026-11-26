@@ -2310,6 +2310,7 @@ END-GAME OWED for job <NN> (foreman/ENDGAME-PENDING.md; in lane mode foreman/END
 3. board close event     -> endgame.mjs tick board --file <project>/BOARD.json   (every project has one; none yet: render_board.py … init)
 4. shift handover + opener -> endgame.mjs tick handover --file <handover> --opener foreman/handovers/OPENER-JOB-<next>.txt, then endgame.mjs clear
    (the session brief's "Last key's mistakes" is filled from this job's dev report: the KEY-WRONG items of its own site walk's outside grade, so the new key doesn't repeat them)
+   (then the **Topping Out version**, read-only: `node <package>/skills/f-setup/install.mjs --repo <repo> --pkg <package> --check`, the package as `/f-setup` finds it; `UPDATE AVAILABLE` goes on the card's ⬆️ line with the first one to three headlines of the changelog lines it prints, and under a goal into the final status block's `owed:` line as `/f-setup before the next job (Topping Out update: <headline>)`; never applied here, since an upgrade commits method files on the owner's word)
    (then give the owner the opener's path and the **"how does the next job run" card** below, as the last thing on screen)
 5. records push         -> names check over everything staged (names-check.mjs --staged, METHOD.md §10 step 9; a hit is rewritten first), merge <remote>/<main> into
                            the records branch (never a rebase), check only records differ, push; then check CI on main
@@ -2323,7 +2324,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
                            endgame.mjs tick ground-investigation --file <day folder>/TOPPING-OUT-REPORT.md
 3.  board               -> endgame.mjs tick board --file <project>/BOARD.json   (must be topped out)
 4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
-    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts)
+    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade)
 ```
 
 ## Common questions

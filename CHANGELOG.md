@@ -2,6 +2,10 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-26
+
+- **You're reminded to update when you can act on it.** The end of every job now checks for a newer Topping Out (read-only) and, if there is one, the next-job card gains a line: `⬆️ Topping Out: update available (<headline>): run /f-setup before you start job <N>`. Under an autonomous run it goes in the final status block's `owed:` line, and a night shift puts it at the top of the morning summary. The start-of-job line stays and now says the reminder will come at the end. Nothing upgrades on its own: `/f-setup` commits method files only on your word.
+
 ## 2026-11-25
 
 - **A new job size: MASTER BUILDER.** Whenever you choose it at "go", one session plans the job and builds it, with no foreman and no work orders; you pick its model. Every check stays and is done by someone else: the plan check, the lens inspection with fresh agents, the independent inspection by another model family, a fix review for any fix no reviewer specified, Greptile, CI and your merge. No reader is ever the master builder's own family: it passes its model's family (`claude`, `codex` or `gemini`, never a tool name) as `--host`, and the tools refuse a seat of that family. The plan check's dispatcher now enforces that in code for saved seats too, and the cross-review dispatcher seats a Gemini-family host (claude, or codex when claude is unavailable). The plan lists the tests it writes first and the files it expects to touch, checked at the PR. The job file (`foreman/templates/JOB-MASTER-BUILDER.md`) records each step's time, so these jobs can be compared with QUICK and STANDARD ones. It works in autonomous runs and night shifts too: add `, master builder` to the goal (`/goal autonomous run: <opener>, master builder, until done or stopped`), or mark jobs in a night shift (`jobs 13 (master builder), 17`); the shift opens those with the profile's new "Master builder launch command" (`METHOD.md`, "MASTER BUILDER").
