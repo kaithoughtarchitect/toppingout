@@ -70,7 +70,21 @@
           "tone": "warn"
         }
       ],
-      "lesson": "Count the rows in and the rows out: a silent skip looks exactly like a clean import."
+      "lesson": "Count the rows in and the rows out: a silent skip looks exactly like a clean import.",
+      "builders": [
+        "standard"
+      ],
+      "difficulty": 2,
+      "difficulty_check": "held",
+      "work_orders": 4,
+      "started": "2026-09-29",
+      "closed": "2026-09-30",
+      "est_work_orders": 4,
+      "footprint": [
+        "src/catalogue/",
+        "tests/catalogue/"
+      ],
+      "report": "foreman/jobs/JOB-1/DEV-REPORT.md"
     },
     {
       "id": "02",
@@ -103,7 +117,21 @@
           "tone": "good"
         }
       ],
-      "lesson": "Write the hostile inputs into the work order: the builder tests what it is told to test."
+      "lesson": "Write the hostile inputs into the work order: the builder tests what it is told to test.",
+      "builders": [
+        "strong"
+      ],
+      "difficulty": 4,
+      "difficulty_check": "held",
+      "work_orders": 6,
+      "started": "2026-09-30",
+      "closed": "2026-10-02",
+      "est_work_orders": 5,
+      "footprint": [
+        "src/accounts/",
+        "tests/accounts/"
+      ],
+      "report": "foreman/jobs/JOB-2/DEV-REPORT.md"
     },
     {
       "id": "03",
@@ -139,7 +167,21 @@
           "tone": "warn"
         }
       ],
-      "lesson": "Probe every ranking rule, not just the happy path."
+      "lesson": "Probe every ranking rule, not just the happy path.",
+      "builders": [
+        "standard"
+      ],
+      "difficulty": 2,
+      "difficulty_check": "off",
+      "work_orders": 5,
+      "started": "2026-10-02",
+      "closed": "2026-10-03",
+      "est_work_orders": 3,
+      "footprint": [
+        "src/search/",
+        "tests/search/"
+      ],
+      "report": "foreman/jobs/JOB-3/DEV-REPORT.md"
     },
     {
       "id": "04",
@@ -179,7 +221,21 @@
       "notes": [
         "Owner's word, 2026-10-03 (quoted): \"keep a basket for 30 days, not forever\". Recorded in the job file before work order 2."
       ],
-      "lesson": "Two tabs are two customers: test every shared row from both at once."
+      "lesson": "Two tabs are two customers: test every shared row from both at once.",
+      "builders": [
+        "standard"
+      ],
+      "difficulty": 3,
+      "difficulty_check": "held",
+      "work_orders": 4,
+      "started": "2026-10-06",
+      "closed": "2026-10-07",
+      "est_work_orders": 4,
+      "footprint": [
+        "src/basket/",
+        "tests/basket/"
+      ],
+      "report": "foreman/jobs/JOB-4/DEV-REPORT.md"
     },
     {
       "id": "05",
@@ -206,6 +262,20 @@
           "label": "mutation probes bite",
           "tone": "good"
         }
+      ],
+      "builders": [
+        "strong"
+      ],
+      "difficulty": 4,
+      "started": "2026-10-09",
+      "est_work_orders": 6,
+      "footprint": [
+        "src/checkout/",
+        "tests/checkout/"
+      ],
+      "requires": [
+        "browser",
+        "login:STRIPE_TEST_KEY"
       ]
     },
     {
@@ -216,7 +286,15 @@
         "05"
       ],
       "ticket": "tickets/TICKET-06-stock.md",
-      "summary": "Two customers buying the last copy at once: one order succeeds, the other is told it's sold out."
+      "summary": "Two customers buying the last copy at once: one order succeeds, the other is told it's sold out.",
+      "est_work_orders": 3,
+      "footprint": [
+        "src/stock/",
+        "tests/stock/"
+      ],
+      "requires": [
+        "postgres"
+      ]
     },
     {
       "id": "07",
@@ -233,7 +311,15 @@
         "05"
       ],
       "ticket": "tickets/TICKET-08-dispatch.md",
-      "summary": "An email when the order is packed, with the tracking number."
+      "summary": "An email when the order is packed, with the tracking number.",
+      "est_work_orders": 3,
+      "footprint": [
+        "src/email/",
+        "tests/email/"
+      ],
+      "requires": [
+        "login:SMTP_PASSWORD"
+      ]
     },
     {
       "id": "09",
@@ -245,7 +331,17 @@
         "08",
         "11"
       ],
-      "summary": "Switch payments to live mode and open the shop."
+      "summary": "Switch payments to live mode and open the shop.",
+      "est_work_orders": 2,
+      "footprint": [
+        "deploy/"
+      ],
+      "requires": [
+        "owner",
+        "browser",
+        "login:SHOP_ADMIN_USER",
+        "login:SHOP_ADMIN_PASSWORD"
+      ]
     },
     {
       "id": "10",
@@ -262,7 +358,15 @@
         "02",
         "05"
       ],
-      "summary": "A customer sees their past orders and can download a receipt."
+      "summary": "A customer sees their past orders and can download a receipt.",
+      "est_work_orders": 3,
+      "footprint": [
+        "src/orders/",
+        "tests/orders/"
+      ],
+      "requires": [
+        "browser"
+      ]
     }
   ],
   "log": [

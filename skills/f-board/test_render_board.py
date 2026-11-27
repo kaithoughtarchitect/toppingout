@@ -906,5 +906,71 @@ class BoardBuilder(unittest.TestCase):
             self.assertNotIn(x, page)
 
 
+class BoardTags(unittest.TestCase):
+    """What a job needs to run (requires): tags on the page, logins by name only, and the pre-flight."""
+    setUp, tearDown, run_tool, data, digest, edit, ok, refused = (Board.setUp, Board.tearDown, Board.run_tool, Board.data,
+                                                                  Board.digest, Board.edit, Board.ok, Board.refused)
+
+    def need(self, jid, *req):
+        self.edit(lambda s: next(j for j in s["jobs"] if j["id"] == jid).update(requires=list(req)))
+
+    def test_logins_are_names_on_any_board(self):
+        self.need("01", "browser", "login:SHOP_ADMIN_PASSWORD")
+        self.ok("check")
+        for bad in ("login:sk_live_51HxQ", "login:has space", "login:ghp_abcdef", "login:aB3dE5gH7jK9mN1pQ3sT5v"):
+            self.need("01", bad)
+            rc, out = self.run_tool("check")
+            self.assertEqual(rc, 1, out)
+            self.assertNotIn(bad[6:], out, "a refused login must never be echoed")
+
+    def test_page_shows_tags_and_setup(self):
+        self.need("01", "browser", "owner", "docker", "login:STRIPE_TEST_KEY")
+        self.ok("render")
+        page = (self.dir / "board.html").read_text(encoding="utf-8")
+        self.assertIn("Set up · 01", page)            # 01 is next: the owner sees what to set up first
+        self.assertIn("🔑 STRIPE_TEST_KEY", page)
+        self.assertIn('class="ribtags"', page)
+        self.assertIn('"tags": "🌐👤🐳🔑"', page)
+
+    def test_done_jobs_lose_their_tags(self):
+        self.need("00", "browser")
+        self.ok("render")
+        page = (self.dir / "board.html").read_text(encoding="utf-8")
+        self.assertNotIn("Set up · 00", page)
+        self.assertNotIn('class="ribtags"', page)
+
+    def test_preflight(self):
+        self.need("01", "owner", "browser", "login:SHOP_KEY")
+        env = self.dir / ".env"
+        env.write_text("SHOP_KEY=\"\"\nOTHER=1\n", encoding="utf-8")
+        rc, out = self.run_tool("preflight", "01,02", "--unattended", "--machine", "docker", "--env", str(env))
+        self.assertEqual(rc, 4, out)
+        self.assertIn("SKIP 01", out)
+        for why in ("owner present", "lacks browser", "SHOP_KEY not set"):
+            self.assertIn(why, out)
+        self.assertIn("RUN 02", out)
+        env.write_text("export SHOP_KEY=abc\n", encoding="utf-8")
+        self.need("01", "browser", "login:SHOP_KEY")
+        out = self.ok("preflight", "01", "--unattended", "--machine", "browser", "--env", str(env))
+        self.assertIn("RUN 01", out)
+        self.assertNotIn("abc", out)
+        self.assertIn("not checked: browser", self.ok("preflight", "01", "--env", str(env)))
+        self.refused(2, "preflight", "01", "--machine", "teleport")
+
+
+class BoardTagsLanes(unittest.TestCase):
+    setUp, tearDown, run_tool, data, digest, edit, ok, refused = (BoardLanes.setUp, Board.tearDown, Board.run_tool, Board.data,
+                                                                  Board.digest, Board.edit, Board.ok, Board.refused)
+    def test_logins_are_not_machine_capabilities(self):
+        self.edit(lambda s: s["jobs"][1].update(requires=["docker", "login:API_KEY"]))
+        out = self.ok("check")
+        self.assertNotIn("unrunnable", out)
+        self.ok("start", "01", "--run", "J1", "--lane", "A")
+
+    def test_v2_board_accepts_login(self):
+        self.edit(lambda s: s["jobs"][2].update(requires=["login:API_KEY"]))
+        self.ok("check")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

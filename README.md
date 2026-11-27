@@ -221,9 +221,11 @@ When a board reaches its head (every job merged or resolved), the end game freez
 
 ## The board
 
-![A made-up project board: the head (what the product must do) on top, then what needs the owner, the job running now, and a fishbone whose ribs are the jobs that feed the head](assets/readme/board.webp)
+![A made-up project board: the head (what the product must do) on top, then what needs the owner (including what to set up before the next job runs), the job running now, a fishbone whose ribs are the jobs that feed the head with icons for what each needs to run, and the selected job's docket](assets/readme/board.webp)
 
-*A made-up project board (`examples/example-board/board.html`). On top, the head: what the product must do. Then "Needs you": every decision and owed item waiting on you. Then the job running now. Below, every line off the spine is one job: solid is merged, yellow is in progress or next, dotted is blocked.*
+*A made-up project board (`examples/example-board/board.html`). On top, the head: what the product must do. Then "Needs you": every decision and owed item waiting on you, and what to set up before the next job runs. Then the job running now. Below, every line off the spine is one job: solid is merged, yellow is in progress or next, dotted is blocked; the icons beside a number are what that job needs to run.*
+
+**Tags say what a job needs to run:** 🌐 a browser, 👤 you present, 🖥️ a screen, 🔑 a login (named by the variable that holds it, never the password itself), plus the machine's needs (Docker, Postgres, a GPU). Before an autonomous run or a night shift, the board's "Needs you" lists what to set up, and the shift's pre-flight skips a job it can't run (say, one that needs you, or a login that isn't in `.env`) and tells you why in the morning, instead of stalling on it.
 
 ---
 

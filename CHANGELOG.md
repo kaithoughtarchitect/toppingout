@@ -2,6 +2,11 @@
 
 What changed for a project that upgrades, newest first. `/f-setup` shows the entries your install hasn't seen yet. To upgrade: between jobs, run `/f-setup` in your project (see the README, "Updating").
 
+## 2026-11-28
+
+- **Tags: what a job needs to run.** A job's `requires` now shows on the board as tags (🌐 browser, 👤 owner, 🖥️ screen, the machine's needs) and takes logins: `login:<NAME>`, the environment variable that holds a key or password, never the value (the board refuses anything that looks like one). "Needs you" lists what to set up before the next job runs. A new read-only `render_board.py BOARD.json preflight` checks jobs against this machine and your env file; night shifts and autonomous runs run it first and skip, with the reason, a job they can't meet. Two new repo profile rows, "This machine has" and "Logins file": `/f-setup` fills them on upgrade.
+- **The example board is current.** It shows builders, difficulty, dates, work orders and tags, and the README picture is re-shot from it.
+
 ## 2026-11-27
 
 - **Act 8 asks less.** "The ticket's own files" now includes the files its plan names inside the ticket's scope, the tests of those files, the README in their folder (or the one above) and a new changelog entry (`RULES.md` act 8), so a job no longer stops for permission to edit its own tests or its folder's README. A board footprint stays a forecast, never a permission. If act 8 or 9 still stops your autonomous runs and night shifts, the repo profile's "Standing grant (acts 8 and 9)" row takes your own words once.

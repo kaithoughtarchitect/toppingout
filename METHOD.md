@@ -312,6 +312,8 @@ When the builder is done (or out of budget) and only review fixes remain, **the 
 
 The board is generated and maintained by `f-board` events (§13): **never edit the page or a job's state by hand.** (The old "hand-maintained board" and the end-game's free-text "n/a" are retired: together they let "no board" pass unnoticed. `init` plus backfill moves any older board into `BOARD.json`.)
 
+**What a job needs to run** (`requires`, set by `/f-schedule` or `requires <job> --set`): the board shows it as tags on each job not yet done: 🌐 browser, 👤 owner, 🖥️ screen, the machine's needs (🐳 docker, 🐘 postgres and the rest) and 🔑 each login the job uses, named by the environment variable that holds it (`login:STRIPE_TEST_KEY`), never its value. A job about to run that needs the owner, a screen, a browser or a login gets a "Set up" line in "Needs you", so the owner sets it up before an autonomous run or a night shift, not at 2am. Unattended runs check the tags first (`render_board.py BOARD.json preflight`, `RULES.md`), and skip a job they can't meet instead of stalling on it.
+
 **A thin board can't choose.** When the ready jobs tie on what they unblock and on partial work, only the project's order is left: the next-ticket decision says so, and the foreman adds the planned work that's missing.
 
 

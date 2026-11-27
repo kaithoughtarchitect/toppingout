@@ -38,6 +38,9 @@ summaries), then run `render`.
   render_board.py BOARD.json width [--lanes 2]          the cut's width: waves, longest chain, a two-lane
                                                         estimate and its ceiling, pairs now, warnings
   render_board.py BOARD.json accuracy                   footprints against the landed diffs, summed
+  render_board.py BOARD.json preflight <job>[,<job>...] [--unattended] [--machine a,b] [--env .env[,other]]
+                                     can each job run here and now? owner, machine and logins against its requires;
+                                     prints RUN or SKIP per job, exit 4 if any is skipped (read-only; never prints a value)
   add and promote take the v2 fields: --ticket, --footprint, --barriers, --consumes, --gates, --requires
   (comma lists), --uses "03=what it uses; 04=..." (or a JSON object), --est n; add also --placeholder.
   split takes --est "a=3,b=4" and --ticket "a=path,b=path"; on a v2 board --est and --ticket for every
@@ -90,6 +93,13 @@ LANE_NAMES = ("A", "B")
 LANE_MODE = False   # set by validate(): the board has project.lanes (two jobs at once, METHOD.md §13)
 REQUIRES = ("screen", "browser", "owner", "windows", "macos", "linux", "docker", "postgres", "gpu")
 LIST_FIELDS = ("gates", "footprint", "barriers", "consumes", "requires")
+# login:<NAME> in requires: the job needs a login, key or password, named by the environment variable that holds it
+# (never the value). A login is checked by preflight, not against a machine's capabilities.
+LOGIN = re.compile(r"^login:([A-Za-z_][A-Za-z0-9_]{0,63})$")
+SECRET_LIKE = re.compile(r"^(sk|pk|rk)[-_]|^(ghp|gho|ghs|ghu|github_pat)_|^xox[abprs]-|^AKIA|^AIza|^eyJ", re.I)
+TAG_ICON = {"screen": "🖥️", "browser": "🌐", "owner": "👤", "windows": "💻", "macos": "💻", "linux": "💻",
+            "docker": "🐳", "postgres": "🐘", "gpu": "⚡"}
+ATTENTION = ("owner", "screen", "browser")   # with every login: what the owner sets up or attends before a job runs
 SHOWN = ("merged", "resolved", "in-progress", "ready", "blocked", "decision")
 LABEL = {"merged": "merged", "resolved": "decided", "in-progress": "in progress", "ready": "ready to build",
          "blocked": "blocked", "decision": "needs a decision"}
@@ -152,6 +162,47 @@ def next_ids(board):
     return {n} if n else set()
 
 
+def machine_req(b):
+    """What a job needs of the machine it runs on (its requires, without the logins)."""
+    return {r for r in b.get("requires", []) if isinstance(r, str) and not r.startswith("login:")}
+
+
+def logins(b):
+    return [r[6:] for r in b.get("requires", []) if isinstance(r, str) and r.startswith("login:")]
+
+
+def secret_like(name):
+    """A login entry that looks like a value (a key, a token), not a variable's name."""
+    return bool(SECRET_LIKE.search(name)) or (len(name) >= 20 and any(c.islower() for c in name)
+                                               and any(c.isupper() for c in name) and any(c.isdigit() for c in name))
+
+
+def attention(r):
+    return r in ATTENTION or r.startswith("login:")
+
+
+def tag_text(r):
+    if r.startswith("login:"):
+        return "🔑 " + r[6:]
+    if r.startswith("reach:"):
+        return "📡 " + r[6:]
+    return TAG_ICON.get(r, "•") + " " + r
+
+
+def tag_html(rs):
+    return "".join(f'<span class="tag{" att" if attention(r) else ""}">{esc(tag_text(r))}</span>' for r in rs)
+
+
+def rib_icons(b):
+    """The icons drawn beside a rib's number: one per kind of need, for a job not done yet."""
+    out = []
+    for r in b.get("requires", []):
+        i = tag_text(r).split(" ")[0]
+        if i not in out:
+            out.append(i)
+    return "".join(out)
+
+
 def lane_caps(board, lane):
     caps = ((board.get("project") or {}).get("lane_caps") or {}).get(lane)
     return None if caps is None else set(caps)
@@ -197,8 +248,8 @@ def lane_refusal(board, b, lane, overlap_ok=False):
     if res and res.get("lane") != lane:
         return f"job {b['id']} is reserved by Lane {res['lane']}"
     caps = lane_caps(board, lane)
-    if caps is not None and not set(b.get("requires", [])) <= caps:
-        return f"Lane {lane}'s machine lacks {sorted(set(b.get('requires', [])) - caps)} that job {b['id']} requires"
+    if caps is not None and not machine_req(b) <= caps:
+        return f"Lane {lane}'s machine lacks {sorted(machine_req(b) - caps)} that job {b['id']} requires"
     if not overlap_ok:
         noise = ((board["project"].get("cut") or {}).get("noise", []))
         for x in lane_holds(board, other):
@@ -437,9 +488,18 @@ def validate(board):
             if isinstance(x, str) and (x.strip().startswith("/") or re.match(r"^[A-Za-z]:", x.strip())
                                        or norm_path(x).split("/")[0] in ("..", "")):
                 e.append(f"job {bid}: footprint {x!r} must be a folder or file inside the repo (no '..', not absolute, not the root)")
+        for r in (b.get("requires", []) if isinstance(b.get("requires", []), list) else []):
+            if isinstance(r, str) and r.startswith("login:"):
+                m = LOGIN.match(r)
+                if not m:
+                    e.append(f"job {bid}: a login in requires must be login:<NAME>, the environment variable that holds it "
+                             f"(letters, digits and _, at most 64), never the value itself")
+                elif secret_like(m.group(1)):
+                    e.append(f"job {bid}: a login in requires looks like a key or token, not a variable's name: "
+                             f"remove it from BOARD.json now, name the variable that holds it, and rotate the key if it was ever pushed")
         for r in (b.get("requires", []) if isinstance(b.get("requires", []), list) and project.get("schedule") == 2 else []):
-            if isinstance(r, str) and r not in REQUIRES and not re.match(r"^reach:\S+$", r):
-                e.append(f"job {bid}: requires {r!r} is not one of {', '.join(REQUIRES)} or reach:<name>")
+            if isinstance(r, str) and r not in REQUIRES and not re.match(r"^reach:\S+$", r) and not r.startswith("login:"):
+                e.append(f"job {bid}: requires {r!r} is not one of {', '.join(REQUIRES)}, reach:<name> or login:<NAME>")
         uses = b.get("uses", {})
         if not isinstance(uses, dict) or not all(isinstance(k, str) and is_str(v) for k, v in uses.items()):
             e.append(f"job {bid}: uses must map a needed job id to what this job uses from it")
@@ -595,7 +655,7 @@ def validate(board):
     caps = (board.get("project") or {}).get("lane_caps")
     if LANE_MODE and caps:
         for b in board["jobs"]:
-            req = set(b.get("requires", []))
+            req = machine_req(b)
             if stored(b) not in DONE and req and not any(req <= set(caps.get(l, [])) for l in LANE_NAMES):
                 WARNINGS.append(f"job {b['id']} is unrunnable: no lane's machine has {sorted(req)}; add the capability or reshape the job")
     if not v2(board) and not board.get("topped_out"):
@@ -1256,8 +1316,8 @@ def ev_requires(board, args):
     res = b.get("reserved") or {}
     if res:
         caps = lane_caps(board, res["lane"])
-        if caps is not None and not set(b["requires"]) <= caps:
-            raise Usage(f"job {b['id']} is reserved by Lane {res['lane']}, whose machine lacks {sorted(set(b['requires']) - caps)}: "
+        if caps is not None and not machine_req(b) <= caps:
+            raise Usage(f"job {b['id']} is reserved by Lane {res['lane']}, whose machine lacks {sorted(machine_req(b) - caps)}: "
                         f"unreserve it (--lane {res['lane']}) and let the other lane take it")
     b.setdefault("notes", []).append(f"requires set to {', '.join(b['requires']) or 'any machine'} at v{board['version'] + 1}")
     bump(board, None)
@@ -1459,7 +1519,7 @@ def width_report(board, lanes=2):
     if caps:
         only, none = {}, []
         for i in build:
-            req = set(by_id[i].get("requires", []))
+            req = machine_req(by_id[i])
             can = [l for l in LANE_NAMES if req <= set(caps.get(l, []))]
             if not can:
                 none.append(i)
@@ -1558,6 +1618,8 @@ def fishbone(board, by_id):
         cw = max(36, 9 * len(b["id"]) + 14)
         p.append(f'<rect class="chip" x="{tx - cw / 2:.0f}" y="{cy}" width="{cw}" height="18"/>')
         p.append(f'<text class="chipt" x="{tx:.0f}" y="{cy + 13}" text-anchor="middle">{esc(b["id"])}</text>')
+        if st not in DONE and rib_icons(b):
+            p.append(f'<text class="ribtags" x="{tx + cw / 2 + 4:.0f}" y="{cy + 14}">{esc(rib_icons(b))}</text>')
         names = wrap(b["title"], width=24, lines=2)
         cx = max(tx, 90)
         for k, ln in enumerate(names):
@@ -1604,6 +1666,8 @@ def job_detail(i, b, by_id, nxt):
         cells.append(("Lands after", "<br>".join(gates)))
     if b.get("footprint"):
         cells.append(("Footprint", "<br>".join(esc(x) for x in b["footprint"] + b.get("barriers", []))))
+    if b.get("requires"):
+        cells.append(("To run", tag_html(b["requires"])))
     if b.get("builders"):
         cells.append(("Builder", esc(builder_text(b)) + (" (swapped at a HALT)" if swapped(b) else "")))
     if b.get("difficulty") or b.get("difficulty_check"):
@@ -1671,6 +1735,8 @@ def job_rows(jobs, by_id, nxt):
                                             b.get("builders") and esc(builder_text(b)), b.get("pr") and f'PR {esc(b["pr"])}') if x)
         else:
             detail = "Needs met: " + ", ".join(esc(x) for x in b.get("needs") or []) if b.get("needs") else "Needs nothing first"
+        if st not in DONE and b.get("requires"):
+            detail += f' <span class="tags">{tag_html(b["requires"])}</span>'
         isn = b["id"] in nxt
         out.append(f'<li class="cr {st}{" isnext" if isn else ""}" data-job="{esc(b["id"])}"><span class="ck">{esc(b["id"])}</span>'
                    f'<span class="cn">{esc(b["title"])}</span><span class="cb">{detail}</span>'
@@ -1734,6 +1800,11 @@ h1{margin:0;font:800 clamp(30px,3.6vw,46px)/.95 "Big Shoulders Display","Arial N
 .need.alert>b,.need.dec>b{background:var(--hivis-ink);color:var(--hivis)}
 .need.dec{cursor:pointer}.need.dec:hover{box-shadow:inset 0 0 0 1px var(--hivis-ink)}
 .need .nt{font-weight:700;color:inherit}
+.need.setup{border-left:4px solid var(--decision)}
+.tag{display:inline-block;font:600 11px/1.6 "Martian Mono",ui-monospace,monospace;padding:0 6px;margin:1px 4px 1px 0;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);white-space:nowrap}
+.tag.att{border-color:var(--decision);color:var(--ink)}
+.tags{display:inline}
+.ribtags{font-size:12px}
 .calm{margin:0;color:var(--ink-3);font-size:14px}
 /* 3 · now */
 .nowrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline}
@@ -1898,6 +1969,7 @@ function draw(){
     const cw = Math.max(26, 8 * j.id.length + 10), cy = up ? ty - 20 : ty + 2;
     g.appendChild(el("rect", {class:"chip", x:tx - cw / 2, y:cy, width:cw, height:18}));
     g.appendChild(el("text", {class:"chipt", x:tx, y:cy + 13, "text-anchor":"middle"}, j.id));
+    if (j.tags) g.appendChild(el("text", {class:"ribtags", x:tx + cw / 2 + 4, y:cy + 14}, j.tags));
     const lines = twoLines(j.title, cpl), wide = Math.max(...lines.map(l => l.length)) * 6.8 / 2;
     const cx = Math.min(Math.max(tx, 4 + wide), W - 4 - wide);
     lines.forEach((ln, k) => g.appendChild(el("text", {class:"ribname", x:cx, "text-anchor":"middle",
@@ -2008,7 +2080,12 @@ def render(board, standalone=False):
     items = ([f'<li class="need alert"><b>Alert</b><span>{esc(a)}</span></li>' for a in alerts]
              + [f'<li class="need dec" data-job="{esc(b["id"])}"><b>Decide · {esc(b["id"])}</b><span><span class="nt">{esc(b["title"])}.</span> {esc(b.get("decision") or "")}</span></li>' for b in asks]
              + [f'<li class="need"><b>Owed</b><span>{esc(o)}</span></li>' for o in owed])
-    n_need = len(asks) + len(owed)
+    # a job about to run (in progress, ready, or next) that needs the owner, a screen, a browser or a login set up first
+    setup = [b for b in jobs if shown_state(b, by_id) not in DONE and (shown_state(b, by_id) in ("in-progress", "ready") or b["id"] in nset)
+             and any(attention(r) for r in b.get("requires", []))]
+    items += [f'<li class="need setup" data-job="{esc(b["id"])}"><b>Set up · {esc(b["id"])}</b><span><span class="nt">{esc(b["title"])}.</span> '
+              f'Before it runs: {tag_html([r for r in b["requires"] if attention(r)])}</span></li>' for b in setup]
+    n_need = len(asks) + len(owed) + len(setup)
     needs_html = (f'<section class="box" aria-label="Needs you"><div class="lbl">Needs you · {n_need or "nothing"}</div>'
                   + (f'<ul class="needs">{"".join(items)}</ul>' if items else '<p class="calm">Nothing waits on you.</p>') + '</section>')
 
@@ -2084,7 +2161,8 @@ def render(board, standalone=False):
     foot_html = f'<footer class="foot">{"".join(foot)}</footer>'
 
     data = {"start": start, "label": LABEL, "next": nxt, "topped": bool(board.get("topped_out")),
-            "jobs": [{"id": b["id"], "title": b["title"], "state": shown_state(b, by_id), "twigs": b.get("twigs", [])[:3]} for b in jobs]}
+            "jobs": [dict({"id": b["id"], "title": b["title"], "state": shown_state(b, by_id), "twigs": b.get("twigs", [])[:3]},
+                          **({"tags": rib_icons(b)} if shown_state(b, by_id) not in DONE and rib_icons(b) else {})) for b in jobs]}
     blob = json.dumps(data, ensure_ascii=False).replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
     logo = logo_uri(Path(__file__).with_name("foreman-logo.png"))
     icon = f'<link rel="icon" type="image/png" href="{logo}">' if logo else ""
@@ -2200,6 +2278,58 @@ def init(path, args):
     return 0
 
 
+def env_keys(files):
+    """The variable names an env file sets. Only the names are read out; no value is kept or printed."""
+    keys = set()
+    for f in files:
+        try:
+            text = Path(f).read_text(encoding="utf-8")
+        except OSError:
+            raise Usage(f"--env {f}: no such file")
+        for ln in text.splitlines():
+            m = re.match(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$", ln)
+            if m and m.group(2).strip().strip("\"'").strip():   # a name with an empty value ("" too) is not set
+                keys.add(m.group(1))
+    return keys
+
+
+def preflight(board, path, args):
+    """Read-only: can each listed job run here and now? (a night shift's and an autonomous run's pre-flight)"""
+    pos, vals, flags = parse(args, ("--machine", "--env"), ("--unattended",))
+    ids = [x for p in pos for x in csv(p)]
+    if not ids:
+        raise Usage("preflight needs one or more job ids")
+    machine = set(csv(vals["--machine"])) if "--machine" in vals else None
+    if machine is not None:
+        bad = [m for m in machine if m not in REQUIRES and not re.match(r"^reach:\S+$", m)]
+        if bad:
+            raise Usage(f"--machine {bad} is not from {', '.join(REQUIRES)}, reach:<name>")
+    files = csv(vals.get("--env"))
+    have = env_keys(files) | {k for k, v in os.environ.items() if v}
+    skipped = 0
+    for i in ids:
+        b = job(board, i)
+        why, unchecked = [], []
+        if "--unattended" in flags and "owner" in machine_req(b):
+            why.append("needs the owner present (run it attended)")
+        need = sorted(machine_req(b) - {"owner"})
+        if machine is None:
+            unchecked += need
+        elif set(need) - machine:
+            why.append(f"this machine lacks {', '.join(sorted(set(need) - machine))}")
+        gone = [n for n in logins(b) if n not in have]
+        if gone:
+            where = "the environment" + (" or " + ", ".join(files) if files else "")
+            why.append(f"login{'s' if len(gone) > 1 else ''} {', '.join(gone)} not set in {where}")
+        note = f" (not checked: {', '.join(unchecked)}; give --machine)" if unchecked else ""
+        if why:
+            skipped += 1
+            print(f"SKIP {b['id']} {b['title']}: " + "; ".join(why) + note)
+        else:
+            print(f"RUN {b['id']} {b['title']}" + (": " + ", ".join(tag_text(r) for r in b.get("requires", [])) if b.get("requires") else "") + note)
+    return 4 if skipped else 0
+
+
 def main(argv):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -2214,7 +2344,7 @@ def main(argv):
     cmd = args.pop(0) if args and not args[0].startswith("--") else "render"
     if cmd == "init":
         return init(path, args)
-    if cmd not in ("render", "check", "next", "report", "width", "accuracy") and cmd not in EVENTS:
+    if cmd not in ("render", "check", "next", "report", "width", "accuracy", "preflight") and cmd not in EVENTS:
         raise Usage(f"unknown command {cmd!r}; see --help")
     try:
         board = json.loads(path.read_text(encoding="utf-8"))
@@ -2230,6 +2360,8 @@ def main(argv):
             print("WARNING:", w, file=sys.stderr)
         print("\n".join(width_report(board)))
         return 0
+    if cmd == "preflight":
+        return preflight(board, path, args)
     if cmd == "accuracy":
         parse(args, ())
         print("\n".join(accuracy_report(board)))
