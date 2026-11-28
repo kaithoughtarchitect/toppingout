@@ -9,7 +9,7 @@ Source: `skills/f-night-shift/SKILL.md`
 
 ## On site
 
-When you type /goal night shift with a list of jobs, or a number of jobs to pick: usually before you sleep. Each job is its own autonomous run; the boss only starts it and checks the repo. Any stop ends the shift, and so does a completed topping out (the next head is yours to pick); the morning summary is one file. It runs wherever Orca runs: on your computer, or on a Linux server of your own (SETUP.md §8b), so your computer can sleep too.
+When you type /goal night shift with a list of jobs, or a number of jobs to pick: usually before you sleep. Each job is its own autonomous run; the boss only starts it and checks the repo. Any stop ends the shift, and so does a completed topping out (the next head is yours to pick); the morning summary is one file. It runs wherever Orca runs: on your computer, or on a Linux server of your own (SETUP.md §8b), so your computer can sleep too. Before the first job it checks each job's tags: a job that needs you, or a login that isn't set, is named before bed and skipped if you don't fix it, never left stuck at 2am.
 
 ## Say it
 
