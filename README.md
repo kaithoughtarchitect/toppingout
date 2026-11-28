@@ -26,8 +26,6 @@ Each job runs as one master builder (a strong model that plans and builds) or as
 | 🧠 **The memory** | Nothing lives in a chat. The board, the handover, each day's work-session folder and the Logbook carry every job's context, so each fresh session starts knowing it all. You manage none of it. |
 | 📋 **The proof** | Every claim needs a command, a commit or a test behind it. Every job ends with a record you can check. |
 
-**[Try it](#try-it)** · **[See a finished job](#what-a-finished-job-looks-like)** · **[toppingout.dev](https://toppingout.dev)**
-
 ## What a finished job looks like
 
 <picture>
@@ -86,6 +84,7 @@ Every PR is titled `J<N> · board <id>: <what it delivers>` (`METHOD.md` §10).
 | Tool | Its job on the site |
 |---|---|
 | Claude Code (your Claude subscription) | the foreman |
+| Orca | the site itself: foreman and builder side by side (the pane link, no pasting), autonomous runs and night shifts |
 | `git`, Node 18+, Python 3.9+, Bash | the installer and the checks (`/f-setup` checks each) |
 | A builder: Pi, Claude Code or agy | the coding, on any model (a master builder can also be codex) |
 | Codex CLI (your ChatGPT subscription) | the rival model family: the independent inspection and a plan-check seat |
@@ -96,7 +95,6 @@ Every PR is titled `J<N> · board <id>: <what it delivers>` (`METHOD.md` §10).
 
 | Tool | Adds |
 |---|---|
-| Orca | the pane link (no pasting), autonomous runs and night shifts |
 | Antigravity's agy CLI | a builder option and a free Gemini plan-check seat |
 | A Linux server and Tailscale | jobs that run while your computer sleeps (`SETUP.md` §8b) |
 
