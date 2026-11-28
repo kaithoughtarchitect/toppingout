@@ -133,7 +133,7 @@ Tested on Windows 11 and an Ubuntu 24.04 server through Orca; macOS and desktop 
 
 1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>-<slug>.md` (`/f-survey` turns an idea into one).
 2. It walks the site, then asks for your **"go"**.
-3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done. A master builder builds it itself.
+3. It writes work orders and the pane link passes each pointer to the builder (or you paste it), until the build, the two inspections and the acceptance ledger are done. A master builder builds it itself.
 4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
 5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
 

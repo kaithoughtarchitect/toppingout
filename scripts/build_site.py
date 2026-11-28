@@ -1868,7 +1868,7 @@ def method_roles() -> dict:
 # when a playbook section changes, the build warns until the plain version is checked and its hash updated.
 PLAIN_ROLES = {
     "foreman": (["Plans each job", "Settles every design question", "Writes every work order", "Reviews every change",
-                 "Tests the code before and after each change", "Runs the inspection, in its own session", "Writes the repair work orders",
+                 "Checks the builder's before-and-after test runs on disk", "Runs the inspection, in its own session", "Writes the repair work orders",
                  "Keeps the records"],
                 ["Writes product code while the builder is building (unless you hand it over)"]),
     "builder": (["Sets up its own copy of the code", "Keeps the job file", "Runs the checks and saves their results", "Writes the code and its tests",
@@ -1949,11 +1949,13 @@ PLAIN = {
     ],
     "f-the-end-game": [
         ("p", "Before the merge."),
-        ("r", "Test before and after the change twice, once by each of them, and again at the very end", ""),
+        ("r", "Test before and after the change: the builder runs it, the foreman checks it on disk and re-runs only what it doubts", ""),
+        ("r", "The whole suite runs once here, at the very end, and again on CI", "repairs re-run only the tests they touch"),
+        ("r", "A test red on a clean main here but green on CI gets a fix job on the board, never a skip", "otherwise every job pays for it"),
         ("r", 'Reproduce every review comment before acting on it. Fix it now or reject it with a reason. No "later"', ""),
         ("r", "Run the inspection itself, then send the work to a reviewer from a different model family", "the builder never reviews its own work"),
         ("r", "Check the PR for any builder name", ""),
-        ("r", "Automated review on every PR, at most three rounds, then stop for you", "your word to open the PR covers them; a fourth round is your word"),
+        ("r", "Automated review on every PR, at most three rounds, then stop for you", "your word to open the PR covers them; each fix re-runs the tests it touches, and CI runs the rest"),
         ("r", "Re-read the PR description against the final result before asking you to merge", ""),
     ],
     "f-talking-to-the-owner": [
@@ -2017,6 +2019,7 @@ PLAIN = {
         ("r", "Every new line is tested, or has a reason not to be", ""),
         ("r", "Every safety check is tested by trying to break it, straight away", ""),
         ("r", "A standard list of six common gaps, checked every time", ""),
+        ("r", "No test compares a fixed date with today's: freeze the clock", "it passes today and fails on its own later"),
         ("r", "The report lists what wasn't tested", ""),
         ("n", "Aim for about 8 or 9 work orders for a mid-sized ticket. Don't ask the builder to plan or review more: keep the thinking with the foreman."),
         ("h", "Bad inputs to test for"),
@@ -2055,20 +2058,20 @@ PLAIN = {
 }
 
 PLAIN_HASH = {
-    "f-job": "09819ffef0",
+    "f-job": "b3cac87d49",
     "f-before-you-plan": "ac3f147d05",
     "f-planning": "cc9465b88d",
     "f-writing-a-work-order": "8f85a49163",
     "f-reviewing-a-work-order": "2d933087ab",
     "f-when-the-builder-stops": "66ea3cb562",
     "f-when-you-write-code-yourself": "25d508d8f5",
-    "f-the-end-game": "628e5ec8d2",
+    "f-the-end-game": "db4b494c3d",
     "f-talking-to-the-owner": "5ecea1b78d",
     "f-tool-hygiene": "9f36e5fffc",
     "f-your-own-scorecard": "1aac6f628f",
     "b-job": "ffc33f1ee4",
     "b-before-the-job": "c986d78075",
-    "b-every-work-order": "f46749ce0f",
+    "b-every-work-order": "1749c881c8",
     "b-handing-work-orders-over": "78a50f75cb",
     "b-after-every-work-order": "252dedbb5a",
     "b-when-to-switch-builders": "91e3942981",
@@ -2459,9 +2462,9 @@ FRONT = {
     "headline": ["Stop babysitting agents.", "Get the proof."],
     # the site board's list of who runs the site: (icon, role, the one line that sets it apart)
     "roles": [
-        ("foreman", "Foreman", "Claude Code, on your Claude subscription. Plans and checks; never writes product code."),
-        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on the model you pick per job. Builds; never makes design decisions."),
-        ("master", "Master builder", "Optional, your pick per job: one strong model plans and builds it. Every review stays with someone else."),
+        ("master", "Master builder", "One strong model plans and builds the job. Every review stays with someone else."),
+        ("foreman", "Foreman", "Or split it: Claude Code, on your Claude subscription, plans and checks; never writes product code."),
+        ("builder", "Builder", "Pi, Claude Code or Antigravity (agy), on a fast or cheap model. Builds; never makes design decisions."),
         ("inspectors", "Inspectors", "Fresh review agents, then another model family: Codex, on your ChatGPT subscription. Find problems; never fix them."),
         ("you", "Owner: you", "OKs each merge, or the whole night at once."),
     ],
@@ -2686,8 +2689,8 @@ ADDON_SHORT = {
 ONE_JOB = [
     ("foreman", "Plan", [1, 2], ["Give the foreman a ticket", "It walks the site", '"go"'],
      'Pick a ticket, then say <q>go</q>.', "Reads the ticket and your code. Writes a plan."),
-    ("builder", "Build", [3], ["It writes work orders", "you paste each pointer into the builder", "or the pane link does it"],
-     "Nothing, if Orca links the panes. Otherwise paste one line per step.", "Small steps, each built tests first by the builder you chose."),
+    ("builder", "Build", [3], ["It writes work orders", "the pane link passes each pointer to the builder"],
+     "Nothing: Orca passes each step to the builder.", "Small steps, each built tests first by the builder you chose."),
     ("inspectors", "Check", [3], ["the two inspections and the acceptance ledger"],
      "", "Two reviews, then proof for every requirement."),
     ("you", "Your OK", [4], ['("open the PR")', "up to three Greptile review rounds", '**"merge"** when the evidence satisfies you'],
@@ -2965,7 +2968,7 @@ CREWS_CSS = r"""
 .cwf ol li{display:flex;flex-direction:column;gap:2px;padding:6px 9px;border:1.5px solid var(--line);font-size:13px;line-height:1.3}
 .cwf ol li span{font:700 10px/1.3 "Martian Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 .cwf ol li small{font-size:13px;color:var(--ink)}
-@media (max-width:720px){.cw2{grid-template-columns:minmax(0,1fr)}.cw2:first-child{display:none}.cw2 p:nth-of-type(1)::before{content:"Foreman and builder: ";font-weight:700}.cw2 p:nth-of-type(2)::before{content:"Master builder: ";font-weight:700}}
+@media (max-width:720px){.cw2{grid-template-columns:minmax(0,1fr)}.cw2:first-child{display:none}.cw2 p:nth-of-type(1)::before{content:"Master builder: ";font-weight:700}.cw2 p:nth-of-type(2)::before{content:"Foreman and builder: ";font-weight:700}}
 """
 
 
@@ -5531,7 +5534,7 @@ class Site:
         arrow_l = '<svg viewBox="0 0 44 14" aria-hidden="true"><path d="M42 7H6" stroke="currentColor" stroke-width="2.5"/><path d="M10 2l-6 5 6 5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>'
         flow = f'<div class="flow" aria-hidden="true"><div>{arrow_r}Work order</div><div>{arrow_l}Report</div></div>'
         body = (f'<main id="roles" data-desk><div class="wrap"><header class="rhead2"><span class="eyebrow">Sheet {sheet_no("playbooks.html")} · Playbooks</span><h1>Who does what</h1>'
-                '<p class="lede">Three roles: the foreman thinks and checks, the builder builds, you decide. Or, when you pick it, one master builder does the first two.</p></header>'
+                '<p class="lede">A master builder plans and builds; or split it, and a foreman thinks and checks while a builder builds. Either way, inspectors check and you decide.</p></header>'
                 + crews_html() +
                 '<p class="rpick" id="rpick">Pick a role to read its job <i aria-hidden="true">&darr;</i></p>'
                 f'<div class="tabs" role="tablist" aria-labelledby="rpick">{tabb("f", "foreman", "Foreman", "Plans, writes, reviews", True)}{flow}'

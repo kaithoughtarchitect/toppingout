@@ -123,7 +123,7 @@ your-repo/
 │   ├── captures                    test and gate outputs, from the first run and each work order
 │   ├── JOB-<N>-LENS-INSPECTION.md, blind-pack/ (the outside review's brief)  the two reviews
 │   ├── JOB-<N>-ACCEPTANCE-LEDGER.md, the PR body                              before the pull request
-│   └── the dev report, JOB-<next>-NEXT-TICKET-DECISION.md (J<N+1> with one lane; in lane mode the J-number the lane reserved), the next session's brief (at a topping out: TOPPING-OUT-REPORT.md, NEXT-HEADS.md)   after the merge
+│   └── the dev report, JOB-<next>-NEXT-TICKET-DECISION.md, the next session's brief (a topping out: TOPPING-OUT-REPORT.md, NEXT-HEADS.md)   after the merge
 ├── .claude/skills/deep/, deepagents-ref/, .mcp.json   the Deep Agents add-on (only on yes); its agent skeleton (src/agent/, tests/ …) only for a new project   /f-setup
 └── scratch/                       working files (plan checks, councils, voice) and names-kept-out.txt + names-allowed.txt (the names the records push checks for); keep it in .gitignore
 ```
