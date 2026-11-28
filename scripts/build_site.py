@@ -2997,7 +2997,7 @@ def crews_html() -> str:
                     + "".join(f'<li><span>{inline(s[0])}</span>{"".join(f"<small>{inline(x)}</small>" for x in s[1:])}</li>' for s in steps)
                     + '</ol></li>' for t, steps in charts)
     return ('<section class="crews" aria-labelledby="crh"><h2 id="crh">Two ways to staff a job <small>from the README</small></h2>'
-            '<p>Pick at &ldquo;go&rdquo;: the foreman and builder for the strongest guarantees or a fast, cheap builder; a master builder when the job is clear and one strong model can plan it too.</p>'
+            '<p>Your first job asks which you want, and the choice holds until you change it: the foreman and builder when you want a fast or cheap model coding, kept on track by a strong foreman; a master builder when you&rsquo;d rather your strong model builds too. It&rsquo;s about the model you want building, not how hard the job is.</p>'
             f'<div class="cwt">{head}{trs}</div>'
             f'<h3>Who reads what, by master builder</h3><p>Every accepted finding loops back to the build, fixed test-first and checked again (Greptile at most three rounds). In an autonomous run or a night shift the loops run without you, and your goal stands in for &ldquo;merge&rdquo;.</p><ul class="cwf">{flows}</ul></section>')
 

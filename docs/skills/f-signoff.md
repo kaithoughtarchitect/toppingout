@@ -70,7 +70,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
                            endgame.mjs tick ground-investigation --file <day folder>/TOPPING-OUT-REPORT.md
 3.  board               -> endgame.mjs tick board --file <project>/BOARD.json   (must be topped out)
 4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
-    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade; and the crew line: the crew the owner last chose, quoted, which the next board's first job takes only if the owner says so again)
+    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade; and the crew line: the crew the owner last chose, quoted; the next board's first job asks the staffing question again, naming it)
 ```
 
 ## Common questions

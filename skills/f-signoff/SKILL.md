@@ -414,7 +414,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
                            endgame.mjs tick ground-investigation --file <day folder>/TOPPING-OUT-REPORT.md
 3.  board               -> endgame.mjs tick board --file <project>/BOARD.json   (must be topped out)
 4.  next heads          -> endgame.mjs tick handover --file <day folder>/NEXT-HEADS.md (no opener), then endgame.mjs clear
-    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade; and the crew line: the crew the owner last chose, quoted, which the next board's first job takes only if the owner says so again)
+    (then tell the owner the project topped out, and give the candidate heads, the evidence's pick first, with how each starts; then the same ⬆️ Topping Out line as the next-job card, from the same read-only check, since a new head is the best moment to upgrade; and the crew line: the crew the owner last chose, quoted; the next board's first job asks the staffing question again, naming it)
 ```
 
 **How the next job runs: always its own decision card.** After step 4 (not after a topping out), the end game's last message ends with this card, filled in, every option shown every time, even one that can't run now (it then says why). Never fold the three ways into a paragraph. Use the host's question tool when it has one (Claude Code: a question with the three options, the recommended one first), and print the card as well, so the paste lines stay on screen:
@@ -434,7 +434,7 @@ TOPPING OUT (the decision says "Topping out: yes": every job merged or resolved,
     🤖🌙 Decided without you under B or C: <the survey questions it answers itself, each with its starred pick | "none">
     ⛔ Can't run now: <"none" | B: <what's missing, e.g. no Orca, no Pi> | C: <only one job is ready, or what's missing>>
     ⬆️ Topping Out: <"up to date" | "update available (<headline>; <headline>): run /f-setup before you start job <N>" | "not checked: <why>">
-    🏗️ Crew: <foreman and builder | master builder>, the same as this job (the owner's "<crew word>", J<n>; or the default); change it with "go, foreman" / "go, master builder", or ", foreman" / ", master builder" in B or C<; why a change might suit this job, if one would>
+    🏗️ Crew: <foreman and builder | master builder>, the same as this job (the owner's "<crew word>", J<n>; or the default); change it with "go, foreman" / "go, master builder", or ", foreman" / ", master builder" in B or C (no crew word on record yet: the staffing question from METHOD.md, "The crew carries over", instead)
     Not now? Nothing starts until you paste one.
 ```
 

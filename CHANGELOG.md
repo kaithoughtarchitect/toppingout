@@ -4,6 +4,7 @@ What changed for a project that upgrades, newest first. `/f-setup` shows the ent
 
 ## 2026-11-28
 
+- **The first job asks how you want to staff your jobs.** With no crew word on record (the first job on a board, and the first after a topping out), the "go" card asks: master builder (your strong model plans and builds) or foreman and builder (a fast or cheaper model codes, a strong foreman keeps it on track). Your answer carries over as before. The choice is framed as the model you want building, never the job's difficulty; an unattended first job runs as foreman and builder and the next card asks (`METHOD.md`, "The crew carries over").
 - **Tags: what a job needs to run.** A job's `requires` now shows on the board as tags (🌐 browser, 👤 owner, 🖥️ screen, the machine's needs) and takes logins: `login:<NAME>`, the environment variable that holds a key or password, never the value (the board refuses anything that looks like one). "Needs you" lists what to set up before the next job runs. A new read-only `render_board.py BOARD.json preflight` checks jobs against this machine and your env file; night shifts and autonomous runs run it first and skip, with the reason, a job they can't meet. Two new repo profile rows, "This machine has" and "Logins file": `/f-setup` fills them on upgrade.
 - **The example board is current.** It shows builders, difficulty, dates, work orders and tags, and the README picture is re-shot from it.
 

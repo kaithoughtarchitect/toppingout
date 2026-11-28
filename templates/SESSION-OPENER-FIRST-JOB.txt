@@ -1,5 +1,5 @@
 You are the foreman for J<N> of <product line> (board <id> on the <board slug> board): ticket <KEY>, <one-line goal>. This is the first job on the <board slug> board, so it has no preceding job and no shift handover or site-walk answer key on this board. <If an earlier board topped out: read its topping out report (<path>) and the chosen row of its NEXT-HEADS.md (<path>) before anything else. If this is the repo's first board: delete this sentence.>
-Crew: foreman and builder, the first job's default (or the owner's crew word for this board, quoted, if the owner gave one, e.g. at the topping out: METHOD.md, "The crew carries over").
+Crew: not chosen yet: ask me the staffing question with your go card (METHOD.md, "The crew carries over"), unless I gave a crew word for this board, quoted here: <the owner's words and where they were said, or delete this clause>. In an autonomous run with none on record: foreman and builder.
 
 First run /f-shift (the method folder: <path>): it loads the role, the foreman rules and the playbook in full. The repo profile is <path to REPO-PROFILE-<product>.md>. Where /f-shift asks for the previous job's handover, answer "not applicable: first job".
 
@@ -9,7 +9,7 @@ Then the first-job site walk, in order:
 3. Re-read the live ticket at <URL> (ticket mode "local": read <path to TICKET-<nn>.md> instead), confirm the linked panel in a screenshot where there is one, write <day folder>\<KEY>-TICKET-TRANSCRIPT.md verbatim.
 4. Run /f-search for the ticket's area (an empty Logbook is expected on a first job; say so).
 5. Report unprompted every owed decision and every gap in the profile.
-6. Then STOP and wait for my go. Choosing the ticket is not authorising the build.
+6. Then STOP and wait for my go, asking the staffing question with it while the Crew: line says not chosen yet. Choosing the ticket is not authorising the build.
 
 How we work on this job - this is decided, do not ask about it:
 - Mode 1. You scope, plan, write every work order and review. The builder builds. (With a master builder crew: METHOD.md, "MASTER BUILDER", instead.)

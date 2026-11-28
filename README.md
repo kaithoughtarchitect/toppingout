@@ -8,7 +8,7 @@ No agent marks its own homework: a rival model family reads every plan and every
 
 > **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. On a long job it drifts from the plan, every new session starts from nothing, and your best model spends your usage on typing.
 >
-> **What it does:** turns your product into heads and boards of jobs, keeps every job's context in files so each session starts knowing it, and keeps the checking away from whoever did the work. Other model families read the plan and the finished change, every claim needs a command, a commit or a test behind it, and you give the word for merges and pushes, or hand it over for one job or a night shift. On a hard job, or with a fast or cheap builder, the foreman plans and writes exact work orders so the builder can't drift; on a clear job, a master builder skips the handoffs.
+> **What it does:** turns your product into heads and boards of jobs, keeps every job's context in files so each session starts knowing it, and keeps the checking away from whoever did the work. Other model families read the plan and the finished change, every claim needs a command, a commit or a test behind it, and you give the word for merges and pushes, or hand it over for one job or a night shift. When you want a fast or cheap model coding, a strong foreman plans and writes exact work orders so it can't drift; when you'd rather your strong model builds too, a master builder skips the handoffs.
 >
 > 🚀 **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
 >
@@ -78,11 +78,11 @@ You don't need the whole flow first: the foreman follows `METHOD.md`, and you an
 
 | | Foreman and builder (the default) | Master builder |
 |---|---|---|
-| **Use it when** | the job is hard, risky or long; you want the strongest guarantees; or you want a fast or cheap builder | the job is clear, and the model doing it is strong enough to plan as well as build |
+| **Use it when** | you want a very fast model, or a cheaper and less capable one, doing the coding | you're running a strong model (Opus, Fable, codex) and want it to build too: a frontier model can plan and build a job of any difficulty itself |
 | **Why** | a strong foreman plans, writes exact work orders and reviews every step, so a fast or less capable builder can't drift or make design calls | no handoffs and no work orders, so it should be faster; the same plan check, inspections, Greptile, CI and your merge still apply |
 | **The model** | the foreman on Opus or Fable; the builder on anything | one strong model doing both; a fast or cheap model isn't a good fit here, because nobody plans for it |
 
-Pick it at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal. Your choice carries over to the next jobs until you say "go, foreman" (`METHOD.md`, "The crew carries over").
+It's your preference for the model that builds, not the job's difficulty. Your first job asks you which you want; after that, pick at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal. Your choice carries over to the next jobs until you say "go, foreman" (`METHOD.md`, "The crew carries over").
 
 **Who reads what, by master builder.** The dotted arrows are the repair loops: every accepted finding goes back to the master builder to fix, test-first, and is checked again (Greptile at most three rounds). In an autonomous run or a night shift the loops run without you, and your goal's words stand in for "merge". The plan check seats are your standing choice minus the master builder's own family (here the default three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
 
