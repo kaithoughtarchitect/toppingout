@@ -15,23 +15,28 @@
   <a href="https://toppingout.dev"><img src="https://img.shields.io/badge/docs-toppingout.dev-blue.svg" alt="Docs: toppingout.dev"></a>
 </p>
 
-**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory that builds your product head by head: you name what it must do, it lays the jobs out on a board and builds them floor by floor, and when the board tops out you choose the next head. Nothing lives in a chat: every job starts a fresh session from files (the board, the handover, its work-session folder and a Logbook of every lesson so far), so the hundredth job knows what the first one learned and nothing drifts.**
+**Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory for Claude Code: it builds your product job by job, floor by floor, and nothing merges without evidence.**
 
-No agent marks its own homework: a rival model family reads every plan and every change, and nothing merges without evidence. Each job runs as a planner/executor split, a foreman on Opus or Fable with a builder on any model, or as one master builder. It all runs in Orca, with Claude Code as the foreman. Every job ends with a record you can check: what was asked, what was built, what was tested and what the reviewers found.
+Each job runs as one master builder (a strong model that plans and builds) or as a planner/executor split (a foreman plans, a fast or cheap builder codes), in a fresh session that starts from files, so the hundredth job knows what the first one learned. In Orca, it runs while you sleep.
 
-> **The problem:** one agent plans, builds and then tells you it's done, so it marks its own homework. On a long job it drifts from the plan, every new session starts from nothing, and your best model spends your usage on typing.
->
-> **What it does:** turns your product into heads and boards of jobs, keeps every job's context in files so each session starts knowing it, and keeps the checking away from whoever did the work. Other model families read the plan and the finished change, every claim needs a command, a commit or a test behind it, and you give the word for merges and pushes, or hand it over for one job or a night shift. When you want a fast or cheap model coding, a strong foreman plans and writes exact work orders so it can't drift; when you'd rather your strong model builds too, a master builder skips the handoffs.
->
-> 🚀 **Try it:** clone this repo, then tell Claude Code, in your own project, to follow `skills/f-setup/SKILL.md` ([Try it](#try-it), below).
->
-> 🔄 **Keep it current:** Topping Out improves almost daily. Between jobs, type **`/f-setup`** in your project: it shows what's new, applies it on your yes and keeps everything you've adapted. The end of every job tells you when there's an update ([Updating](#updating)).
+| | |
+|---|---|
+| 🧱 **The problem** | One agent plans, builds and marks its own homework. On a long job it drifts, every new session starts from nothing, and your best model spends your usage on typing. |
+| 🏗️ **The fix** | Run it like a building site. A master builder (or a foreman with a builder) builds, rival model families inspect, and you give the word. Every job's context lives in files, not in a chat. |
+| 🧠 **The memory** | Nothing lives in a chat. The board, the handover, each day's work-session folder and the Logbook carry every job's context, so each fresh session starts knowing it all. You manage none of it. |
+| 📋 **The proof** | Every claim needs a command, a commit or a test behind it. Every job ends with a record you can check. |
 
-Site: [toppingout.dev](https://toppingout.dev) · Repo: [github.com/kaithoughtarchitect/toppingout](https://github.com/kaithoughtarchitect/toppingout)
+**[Try it](#try-it)** · **[See a finished job](#what-a-finished-job-looks-like)** · **[toppingout.dev](https://toppingout.dev)**
 
 ## What a finished job looks like
 
-One real job, run on its own from ticket to merge (an autonomous run; the project's name and feature are left out):
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/receipt-dark.webp">
+  <img alt="Inspection certificate for one real job, run on its own from ticket to merge: 5 plan-check findings from a rival model family, 4 applied before any code; 18 fixes from the lens inspectors, all accepted; 0 findings from the independent inspector; tests 831 to 848 passing with nothing newly red; 18 of 18 mutation probes caught; Greptile 5/5; acceptance ledger every row PASS; 1.34 USD of a 3 USD cap; merged tree equal to the reviewed tree" src="assets/readme/receipt-light.webp">
+</picture>
+
+<details>
+<summary>The same job as text (the project's name and feature are left out)</summary>
 
 ```text
 ticket      one feature, one branch, one PR
@@ -47,148 +52,97 @@ spend       at most 1.34 USD in paid calls, against a 3 USD cap
 record      acceptance ledger, both inspections, base-vs-head runs, lessons saved as cards
 ```
 
-Every job's PR is titled the same way, `J<N> · board <id>: <what it delivers>`, so you can tell which job and board it came from (`METHOD.md` §10).
+Every PR is titled `J<N> · board <id>: <what it delivers>` (`METHOD.md` §10).
+
+</details>
+
+## Zero context to manage
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/memory-dark.webp">
+  <img alt="Zero context to manage: every job starts a fresh session that first reads four things on disk: the board (every job toward the head), the handover (where the last job stopped and the next job's opener), the work-session folder (each day's plans, work orders, reports, reviews and ledgers) and the Logbook (INSIGHT, METHOD and BUILD cards, searched at every job start). You manage none of it" src="assets/readme/memory-light.webp">
+</picture>
+
+**The Logbook** is the site's memory. Every job ends by writing what it learned as cards: **INSIGHT** (a gotcha, and why), **METHOD** (a way of doing something that worked) and **BUILD** (what the job built). Every job starts by searching them for its area, so the same mistake doesn't happen twice. Every tenth job it tidies itself, and the best cards are offered to you as rules, or as checks a script can enforce (`METHOD.md` §14).
 
 ## Try it
-
-You need `git`, Node 18+, Python 3.9+, Bash and Claude Code, plus a builder (Pi, Claude Code or agy), Pi for the plan check, the codex CLI, an OpenRouter key and the Greptile app ([What you need](#what-you-need) says what each is for).
 
 **How to start:**
 
 1. `git clone https://github.com/kaithoughtarchitect/toppingout`
-2. In Claude Code, in the repo that will hold your records, say: `Read <path to toppingout>/skills/f-setup/SKILL.md and follow it`. It checks each tool, installs the skills and templates, writes a profile of your repo and asks only what it can't find out (`SETUP.md` §1).
-3. Start your first job the way `/f-setup` ends by suggesting: `/f-survey` to turn an idea into a ticket, `/f-schedule` to cut a big plan into tickets, or the first-job opener for a ticket you already have (`SETUP.md` §7).
-4. **Keep it current:** between jobs, type `/f-setup` again. Topping Out changes often, and the end of every job tells you when there's something new ([Updating](#updating)).
+2. In Claude Code, in your project, say: `Read <path to toppingout>/skills/f-setup/SKILL.md and follow it`. It checks your tools, installs the skills and asks only what it can't find out.
+3. Start your first job the way `/f-setup` suggests. It asks how you want to staff your jobs.
+4. **Keep it current:** between jobs, type `/f-setup` again.
 
-You don't need the whole flow first: the foreman follows `METHOD.md`, and you answer when it asks.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/update-dark.webp">
+  <img alt="Keep it current: Topping Out improves almost daily. The end of every job tells you when there's an update, then between jobs you type /f-setup: it shows what's new, applies it on your yes, and keeps every file you've adapted" src="assets/readme/update-light.webp">
+</picture>
 
 ## What you need
 
-| You need | For | |
-|---|---|---|
-| Claude Code, on your Claude subscription | the foreman (the tested one) | required |
-| `git`, Node 18+, Python 3.9+, Bash | the installer, the checks and the work orders | required; `/f-setup` checks each |
-| A builder: Pi, Claude Code (any Claude model) or Antigravity's agy CLI (any model it lists) | the coding; a master builder can also be a codex session | required, any one (`Builder-Playbook.md`) |
-| Pi | the plan check's OpenRouter readers and `agent-council` | required |
-| Orca | the pane link: the foreman sends each step to the builder in the pane beside it. Autonomous runs and night shifts run through it | needed to run without you; without it you paste one line per step (`SETUP.md` §4) |
-| Codex: the codex CLI, signed in with your ChatGPT subscription | the second model family: the independent review, and the `sol` plan-check seat (GPT-6.2 Sol), at no per-call cost | required (`METHOD.md` §8); carrying the brief to that session by hand also works |
-| An OpenRouter key | the plan check's other readers (`qwen4-max`), the councils, voice | required; paid calls only within the cap you set, and tests always run with paid keys stripped |
-| The Greptile app on your repo | up to three review rounds on every PR (`skills/f-greploop`) | required |
-| Antigravity: the agy CLI, signed in with your Antigravity subscription | a builder option (Gemini Hydrogen), and the `gemini-hydrogen-agy` plan-check seat at no per-call cost, seated by default in unattended runs | optional; without it that seat runs on OpenRouter |
-| A Linux server and Tailscale | running jobs while your computer sleeps (`SETUP.md` §8b) | optional |
+**The core kit**
 
-**Tested on** Windows 11 with Claude Code as the foreman, Git Bash, Node 22 and Python 3.12, on real codebases since September 2026, and on an Ubuntu 24.04 server through Orca. macOS and desktop Linux are expected to work (the scripts are Node, Python and Bash) but aren't verified yet: `SETUP.md` §9, "Tested setup".
+| Tool | Its job on the site |
+|---|---|
+| Claude Code (your Claude subscription) | the foreman |
+| `git`, Node 18+, Python 3.9+, Bash | the installer and the checks (`/f-setup` checks each) |
+| A builder: Pi, Claude Code or agy | the coding, on any model (a master builder can also be codex) |
+| Codex CLI (your ChatGPT subscription) | the rival model family: the independent inspection and a plan-check seat |
+| Pi and an OpenRouter key | the plan check's OpenRouter reader and the councils (needed with a master builder too); paid calls only within your cap |
+| The Greptile app on your repo | up to three review rounds on every PR |
 
-## One job, from your side
+**Extras**
 
-1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>-<slug>.md` (`/f-survey` turns an idea into one).
-2. It walks the site (re-checks the handover, the repo and the live ticket), then asks for your **"go"** (or "go, master builder" / "go, foreman" to change the crew, which then carries over to the next jobs).
-3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done. A master builder builds it itself, with no pointers to paste.
-4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
-5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
+| Tool | Adds |
+|---|---|
+| Orca | the pane link (no pasting), autonomous runs and night shifts |
+| Antigravity's agy CLI | a builder option and a free Gemini plan-check seat |
+| A Linux server and Tailscale | jobs that run while your computer sleeps (`SETUP.md` §8b) |
 
-## Two ways to staff a job: foreman and builder, or a master builder
+Tested on Windows 11 and an Ubuntu 24.04 server through Orca; macOS and desktop Linux expected to work, not yet verified (`SETUP.md` §9).
 
-| | Foreman and builder (the default) | Master builder |
-|---|---|---|
-| **Use it when** | you want a very fast model, or a cheaper and less capable one, doing the coding | you're running a strong model (Opus, Fable, codex) and want it to build too: a frontier model can plan and build a job of any difficulty itself |
-| **Why** | a strong foreman plans, writes exact work orders and reviews every step, so a fast or less capable builder can't drift or make design calls | no handoffs and no work orders, so it should be faster; the same plan check, inspections, Greptile, CI and your merge still apply |
-| **The model** | the foreman on Opus or Fable; the builder on anything | one strong model doing both; a fast or cheap model isn't a good fit here, because nobody plans for it |
-
-It's your preference for the model that builds, not the job's difficulty. Your first job asks you which you want; after that, pick at "go" ("go, master builder"), or add `, master builder` to an autonomous run's or a night shift's goal. Your choice carries over to the next jobs until you say "go, foreman" (`METHOD.md`, "The crew carries over").
-
-**Who reads what, by master builder.** The dotted arrows are the repair loops: every accepted finding goes back to the master builder to fix, test-first, and is checked again (Greptile at most three rounds). In an autonomous run or a night shift the loops run without you, and your goal's words stand in for "merge". The plan check seats are your standing choice minus the master builder's own family (here the default three: `sol` on codex, `gemini-hydrogen-agy` on agy, `qwen4-max` on OpenRouter). The independent inspection runs on that tool's default model.
-
-**A master builder in Claude Code** (Opus or Fable):
-
-```mermaid
-flowchart LR
-  P["Plan<br/>Claude"] --> C["Plan check<br/>codex · Gemini · Qwen"] --> B["Build<br/>Claude"] --> L["Lens inspection<br/>Fable agents"] --> I["Independent inspection<br/>codex"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
-  C -. "findings: fix the plan" .-> P
-  L -. "fixes" .-> B
-  I -. "fixes" .-> B
-  G -. "fixes, up to 3 rounds" .-> B
-```
-
-**A master builder in codex:**
-
-```mermaid
-flowchart LR
-  P["Plan<br/>codex"] --> C["Plan check<br/>Gemini · Qwen<br/>(no codex seat)"] --> B["Build<br/>codex"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
-  C -. "findings: fix the plan" .-> P
-  L -. "fixes" .-> B
-  I -. "fixes" .-> B
-  G -. "fixes, up to 3 rounds" .-> B
-```
-
-**A master builder in agy, on a Gemini model** (agy on a Claude model reads like the Claude Code chart, with the lens on its own model):
-
-```mermaid
-flowchart LR
-  P["Plan<br/>Gemini"] --> C["Plan check<br/>codex · Qwen<br/>(no Gemini seat)"] --> B["Build<br/>Gemini"] --> L["Lens inspection<br/>its own model"] --> I["Independent inspection<br/>Claude Code<br/>(codex if Claude is unavailable)"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
-  C -. "findings: fix the plan" .-> P
-  L -. "fixes" .-> B
-  I -. "fixes" .-> B
-  G -. "fixes, up to 3 rounds" .-> B
-```
-
-## Three ways to run a job
-
-Work orders reach the builder as a one-line pointer: you paste it, or the foreman sends it over the pane link (a master builder has none). Any of the three can run as a master builder: say so at "go", or add `, master builder` to the goal; the choice carries over until you say "go, foreman".
-
-- **👤 With you:** you paste the job's opener into a fresh session and give each word yourself.
-- **🤖 An autonomous run:** `/goal autonomous run: <path to the job's opener>, until done or stopped`. With an autonomous-run goal, a job runs to the merge without you (with the pane link carrying the pointers), inside the grants `RULES.md` ("The one exception") lists. It repairs what goes red and stops only on the conditions listed there. Any other standing goal grants nothing.
-- **🌙 A night shift:** `/goal night shift: jobs 13, 17, until done or stopped` runs several autonomous runs in a row, each in a fresh session, and leaves you a morning report. It needs Orca. Any stop in a job ends the shift (`RULES.md`, "A night shift").
-
-When a job's end game is done and another job is next, the foreman ends with a **🚧 YOUR CALL · how does job <N> run?** card: the three ways, ★ on the recommended one, each with its line ready to paste. It's skipped under a goal, where nobody is there to answer, and after a topping out, where you pick the next head instead (`skills/f-signoff`).
-
-**Two lanes** (optional, off by default, not yet tried on a real project): two jobs at once on two machines, offered on a **🚧 YOUR CALL · one lane or two?** card at the end of every `/f-schedule` proposal (`METHOD.md` §13, "Two lanes").
-
-## Words you'll see
-
-The roles and the name come from the building site.
-
-- **Owner:** you. Your word is needed for merges, pushes and the other acts `RULES.md` lists.
-- **Foreman:** the session that plans, writes work orders and checks the work. It never writes product code. The skill names start with `f-`, for foreman.
-- **Builder:** the session that writes the code, one work order at a time, on the model you pick for the job: a frontier model, a fast one or a cheap one.
-- **Master builder:** a builder that plans the job and builds it in one session, when you choose it (at "go", or in an autonomous run's or night shift's goal); your choice carries over to the next jobs until you change it. No foreman and no work orders; the plan check, the lens inspection, an independent inspection from another model family, Greptile and your merge all stay (`METHOD.md`, "MASTER BUILDER").
-- **Inspectors:** fresh review sessions that only report. The **lens inspection** runs one review agent per angle (tests, errors, types and more, `agents/lens-*.md`); the **independent inspection** is a session from another model family.
-- **Work order:** a file with one or several exact tasks, each with its tests and its own commit. The builder gets a one-line pointer to it.
-- **Site walk:** the foreman's check at the start of a job that the handover still matches the repo and the live ticket.
-- **Plan check:** a cold read of the plan (the foreman's, or the master builder's) by readers from other model families, before any code (`/f-plancheck`).
-- **Acceptance ledger:** every requirement and check with its evidence. Every row must read PASS before the merge.
-- **Board and head:** a project's jobs drawn as a fishbone. The head is what the product must do when every job is done.
-- **Topping out:** the ceremony when a building's last beam goes on; here, when a board reaches its head.
-- **Pane link:** Orca running the foreman and the builder side by side, so pointers pass without you (`skills/orca-pi-connect`).
-
----
-
-## The idea in seven lines
-
-1. **One ticket = one job = one branch = one PR.**
-2. **The foreman never writes product code; the builder never makes design decisions.** The one exception is a master builder job, which you choose at "go": one session plans and builds, and everyone who checks it is someone else.
-3. **Everything goes through files.** Work orders are files, reports are files, reviews are files. The builder gets a one-line pointer (from the owner, or sent over a pane link by the foreman), never pasted text.
-4. **Disk before words.** After every builder step, the foreman checks commits, captures and files on disk *before* it reads the builder's report.
-5. **Every claim carries its evidence:** a command and its output, a commit hash, a test name. A claim without evidence counts as not done.
-6. **Some acts need the owner's word, typed in the session.** These are approval boundaries, not all of them irreversible: merging and pushes, tracker transitions, messages, branch and worktree deletion, edits outside the ticket's files, migrations, and a fourth Greptile round on one PR. A message relayed by voice is never the owner's word. The full list, and the exceptions, are in `RULES.md`.
-7. **Every reply ends with the 5-line status block** (`templates/J-STATUS.md`).
-
----
-
-## The flow at a glance
+## The crew
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/flow-dark.webp">
-  <source media="(prefers-color-scheme: light)" srcset="assets/readme/flow-light.webp">
-  <img alt="One job from ticket to merge, drawn as a fishbone spine: 01 plan (once per project), 02 start in a fresh session from the handover file, 03 build (the foreman writes work orders, the builder you chose builds test-first), 04 check (tests before and after, a lens inspection, a reviewer from another model family, the acceptance ledger), 05 ship (the PR, up to three outside review rounds on your word, the merge checked), 06 close (lessons saved, the next job proposed, a handover written). Your words go, open the PR and merge sit on the spine. Then the next job starts in a fresh session, or the board tops out and you pick the next head. Three ways to run it: with you, an autonomous run, or a night shift." src="assets/readme/flow-dark.webp">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/crew-dark.webp">
+  <img alt="The crew: the owner (you) says go and merge, or hands over a whole night; the master builder, one strong model, plans and builds with every check left to someone else; or split it: the foreman plans, writes work orders and checks every step, and the builder builds each work order test-first on a fast or cheap model; the inspectors, nine lens inspectors then a rival model family, find and never fix" src="assets/readme/crew-light.webp">
 </picture>
 
 <details>
-<summary><b>Full detail: every step</b></summary>
+<summary>Site words</summary>
 
-This is the foreman and builder. A master builder job runs the same checks in one session, without the work orders (`METHOD.md`, "MASTER BUILDER").
+| Word | On this site |
+|---|---|
+| Work order | a file of exact tasks, each with its tests and its own commit; the builder gets a one-line pointer to it |
+| Site walk | the foreman's check that the handover still matches the repo and the live ticket |
+| Plan check | a cold read of the plan by rival model families, before any code (`/f-plancheck`) |
+| Lens inspection | nine review agents, one per angle: tests, errors, types, code, comments, simplify, loose ends, migrations, instructions (`agents/lens-*.md`) |
+| Independent inspection | a fresh session from another model family |
+| Acceptance ledger | every requirement with its evidence; every row PASS before the merge |
+| Board and head | the project's jobs drawn as a fishbone; the head is what the product must do |
+| Topping out | when a building's last beam goes on; here, when a board reaches its head |
+| Pane link | Orca running the foreman and the builder side by side (`skills/orca-pi-connect`) |
 
-**Before any job**, a big plan is cut into tickets: `/f-survey` → `/f-blueprint` → **`/f-plancheck`** (cold cross-family read) → **`/f-schedule`** (project, one ticket per job, the project board, a width report, one lane or two). Each job below builds **one** ticket (`METHOD.md` §13).
+</details>
+
+## One job, from your side
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/floors-dark.webp">
+  <img alt="One job, floor by floor: G, the site walk, then your go; 1, the plan, read cold by rival model families; 2, the frame, built test-first and checked on disk after each step; 3, inspection by nine lens inspectors and an independent inspector from another family; 4, proof, with tests before and after, mutation probes and the acceptance ledger; 5, the pull request with CI and up to three Greptile rounds, then your merge; top, topped out, lessons saved and the next job proposed" src="assets/readme/floors-light.webp">
+</picture>
+
+1. Give the foreman a ticket: a tracker link, or a short `TICKET-<nn>-<slug>.md` (`/f-survey` turns an idea into one).
+2. It walks the site, then asks for your **"go"**.
+3. It writes work orders; you paste each pointer into the builder (or the pane link does it), until the build, the two inspections and the acceptance ledger are done. A master builder builds it itself.
+4. On your word ("open the PR") it opens the PR and runs up to three Greptile review rounds on it. You say **"merge"** when the evidence satisfies you.
+5. It closes the job, saves the lessons, and proposes the next ticket for you to confirm.
+
+<details>
+<summary>Every step, as the foreman runs it</summary>
+
+**Before any job**, a big plan is cut into tickets: `/f-survey` → `/f-blueprint` → **`/f-plancheck`** → **`/f-schedule`** (`METHOD.md` §13).
 
 ```
  SHIFT HANDOVER + OPENER ──> SITE WALK ──> [owner: "go"]
@@ -203,54 +157,116 @@ This is the foreman and builder. A master builder job runs the same checks in on
                                           │
  WORK ORDER 3..N  one or several decision-complete tasks per work order, test-first, one commit per task
       │  after EACH: disk check → work order review (re-probe, verify test-first, switch-rule line)
-      │  next work orders drafted while the current one runs
                                           │
- BASE-VS-HEAD  builder work order (the tests that use what changed); any red-at-head-only = STOP, foreman characterises
+ BASE-VS-HEAD  builder work order (the tests that use what changed); any red-at-head-only = STOP
  GATE 2   foreman reviews every commit + checks the builder's base-vs-head on disk
- LENS INSP.    foreman runs /f-inspect in its own session (fresh lens agents) ──> checks each finding ──> repair work orders (QUICK: skipped)
+ LENS INSP.    /f-inspect: nine fresh lens agents ──> each finding checked ──> repair work orders (QUICK: skipped)
                                           │
- CROSS-MODEL   foreman /pack-review (checks its own brief) ──> fresh session of another
-               family runs /xreview ──> foreman /adjudicate ──> repair work orders
- FINAL RE-RUN  after the last repair (repairs re-run only what they touch): captures, probes, base-vs-head; the whole suite once (builder), each red test labelled
- ACCEPTANCE LEDGER  no FAIL/UNTESTED/INCONCLUSIVE/blank to open the PR; every requirement row PASS (CI green at the final head) to merge
+ CROSS-MODEL   /pack-review ──> a fresh session of another family runs /xreview ──> /adjudicate ──> repairs
+ FINAL RE-RUN  captures, probes, base-vs-head; the whole suite once, each red test labelled
+ ACCEPTANCE LEDGER  every requirement row PASS (CI green at the final head) to merge
                                           │
- PR opened (owner watches it in the browser) ──> /f-greploop: ≤3 Greptile rounds
-      (adjudicate → builder repairs → affected tests + ledger re-run → push → CI runs the whole suite) ──> PR description check
+ PR opened ──> /f-greploop: ≤3 Greptile rounds ──> [owner: "merge"]
                                           │
- [owner: "merge"]
-                                          │
- /f-signoff (+ Logbook cards) ──> dev report ──> next-ticket decision ──> you confirm ──> /f-board close ──> handover + opener ──> records push
-                                          │
- when every job on the board is done: TOP OUT: close the last job ──> topout (board frozen as the record) ──> topping out report ──> candidate next heads
-                                          │
- [owner picks a head] ──> /f-survey ──> /f-blueprint ──> /f-plancheck ──> /f-schedule ──> a new board, and the loop starts again
+ /f-signoff (+ Logbook cards) ──> dev report ──> next ticket, you confirm ──> /f-board close ──> handover + opener
 ```
+
+A master builder job runs the same checks in one session, without the work orders (`METHOD.md`, "MASTER BUILDER").
 
 </details>
 
-## Topping out
+## Two ways to staff a job: foreman and builder, or a master builder
 
-When a board reaches its head (every job merged or resolved), the end game freezes it as the project's record, writes what was built and what's carried over, and offers three to five candidate next heads. You pick one, whenever you're ready, and the cycle starts again on a new board (`METHOD.md` §11b). Work found while testing a product goes on an **iteration board** instead: no blueprint, small jobs added as you find them.
+| | Master builder | Foreman and builder |
+|---|---|---|
+| **Use it when** | you want your strong model to build too: a frontier model can plan and build a job of any difficulty itself | you want a very fast model, or a cheaper and less capable one, doing the coding |
+| **Why** | no handoffs and no work orders; every check stays the same | a strong foreman plans, writes exact work orders and reviews every step, so the builder can't drift or make design calls |
+| **The model** | one strong model doing both, in Claude Code, codex or agy | a strong foreman; the builder on anything |
 
-## The board
+Your first job asks which you want; it carries over until you change it ("go, master builder" / "go, foreman", or in a goal).
 
-![A made-up project board: the head (what the product must do) on top, then what needs the owner (including what to set up before the next job runs), the job running now, a fishbone whose ribs are the jobs that feed the head with icons for what each needs to run, and the selected job's docket](assets/readme/board.webp)
+**A master builder in Claude Code.** Dotted arrows are repair loops: every accepted finding goes back, is fixed test-first and checked again.
 
-*A made-up project board (`examples/example-board/board.html`). On top, the head: what the product must do. Then "Needs you": every decision and owed item waiting on you, and what to set up before the next job runs. Then the job running now. Below, every line off the spine is one job: solid is merged, yellow is in progress or next, dotted is blocked; the icons beside a number are what that job needs to run.*
+```mermaid
+flowchart LR
+  P["Plan<br/>Claude"] --> C["Plan check<br/>codex · Gemini · Qwen"] --> B["Build<br/>Claude"] --> L["Lens inspection<br/>9 inspectors"] --> I["Independent inspection<br/>codex"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
+  C -. "findings: fix the plan" .-> P
+  L -. "fixes" .-> B
+  I -. "fixes" .-> B
+  G -. "fixes, up to 3 rounds" .-> B
+```
 
-**Tags say what a job needs to run:** 🌐 a browser, 👤 you present, 🖥️ a screen, 🔑 a login (named by the variable that holds it, never the password itself), plus the machine's needs (Docker, Postgres, a GPU). Before an autonomous run or a night shift, the board's "Needs you" lists what to set up, and the shift's pre-flight skips a job it can't run (say, one that needs you, or a login that isn't in `.env`) and tells you why in the morning, instead of stalling on it.
+The plan-check seats are your standing choice minus the master builder's own family.
 
----
+**A master builder in codex:**
+
+```mermaid
+flowchart LR
+  P["Plan<br/>codex"] --> C["Plan check<br/>Gemini · Qwen<br/>(no codex seat)"] --> B["Build<br/>codex"] --> L["Lens inspection<br/>9 inspectors<br/>on its own model"] --> I["Independent inspection<br/>Claude Code"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
+  C -. "findings: fix the plan" .-> P
+  L -. "fixes" .-> B
+  I -. "fixes" .-> B
+  G -. "fixes, up to 3 rounds" .-> B
+```
+
+**A master builder in agy, on a Gemini model** (agy on a Claude model reads like the Claude Code chart):
+
+```mermaid
+flowchart LR
+  P["Plan<br/>Gemini"] --> C["Plan check<br/>codex · Qwen<br/>(no Gemini seat)"] --> B["Build<br/>Gemini"] --> L["Lens inspection<br/>9 inspectors<br/>on its own model"] --> I["Independent inspection<br/>Claude Code<br/>(codex if Claude is unavailable)"] --> G["Greptile, CI"] --> M["You merge<br/>(or your goal, unattended)"]
+  C -. "findings: fix the plan" .-> P
+  L -. "fixes" .-> B
+  I -. "fixes" .-> B
+  G -. "fixes, up to 3 rounds" .-> B
+```
+
+## Three ways to run a job
+
+| | How | You |
+|---|---|---|
+| 👤 **With you** | paste the job's opener into a fresh session | give each word yourself |
+| 🤖 **Autonomous run** | `/goal autonomous run: <opener path>, until done or stopped` | come back to a merged PR |
+| 🌙 **Night shift** | `/goal night shift: jobs 13, 17, until done or stopped` | read the morning report |
+
+With an autonomous-run goal, a job runs to the merge without you (with the pane link carrying the pointers), inside the grants `RULES.md` ("The one exception") lists; it repairs what goes red and stops only on the conditions listed there. Any other standing goal grants nothing. A night shift runs several autonomous runs in a row, each in a fresh session, needs Orca, and ends at any stop. At the end of each job, a **🚧 YOUR CALL** card offers the three ways for the next one, each line ready to paste.
+
+## Site rules
+
+1. One ticket, one job, one branch, one PR.
+2. Whoever builds never inspects their own work; a foreman never writes product code.
+3. Everything goes through files, never pasted text.
+4. Disk before words: the foreman checks the commits before it reads the report.
+5. A claim without evidence counts as not done.
+6. Merges, pushes, messages and migrations wait for your typed word (`RULES.md`).
+7. No agent marks its own homework.
+
+## Heads, boards and topping out
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/cycle-dark.webp">
+  <img alt="Heads, boards and topping out: 1, the head, one outcome you name; 2, the board, its jobs built floor by floor, one PR each; 3, topped out, the board frozen as the record with what was built, what's carried over and three to five candidate next heads; 4, you pick one whenever you're ready, never picked for you, and the cycle starts again on a new board" src="assets/readme/cycle-light.webp">
+</picture>
+
+![A made-up project board: the head on top, then what needs you (including what to set up before the next job runs), the job running now, a fishbone whose ribs are the jobs that feed the head with icons for what each needs to run, and the selected job's docket](assets/readme/board.webp)
+
+Every project's jobs, drawn as a fishbone toward its head (`examples/example-board/board.html`). Solid is merged, yellow is in progress or next, dotted is blocked. The icons say what a job needs to run: 🌐 a browser, 👤 you, 🖥️ a screen, 🔑 a login (by name, never the password). "Needs you" lists what to set up before tonight's jobs.
+
+**Topping out.** When a board reaches its head (every job merged or resolved), the end game freezes it as the project's record, writes what was built and what's carried over, and offers three to five candidate next heads. You pick one, whenever you're ready, and the cycle starts again on a new board (`METHOD.md` §11b).
 
 ## What it is not
 
-- **Not autonomous by default.** By default you give the word for every push, PR, review round and merge (except the job's own cleanup and records push after a verified merge): the owner is the one piece a confident report can't talk round. **Autonomy comes only from an explicit grant:** an autonomous run (`/goal autonomous run: <path to the job's opener>`) or a night shift covers exactly the acts `RULES.md` ("The one exception") lists, for the jobs it names, and repairs what goes red and stops only on the conditions listed there. A standing goal never covers the other gated acts.
-- **Not a second judge on top of the foreman.** Reviews are layered by *independence* (a fresh session, a different reader), not by stacking graders. Separate reviewers reduce some failure modes; they don't guarantee correct code.
-- **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build. Every builder gets the same kind of work order (`Builder-Playbook.md`). In Orca the foreman drives it in the pane beside it: Pi, Claude Code running whichever Claude model you choose, or agy (Antigravity's CLI) running any model it lists (`SETUP.md` §4).
+- **Not autonomous by default.** You give the word for every push, PR, review round and merge. Autonomy comes only from an explicit grant: an autonomous run or a night shift, for the jobs it names (`RULES.md`, "The one exception").
+- **Not a guarantee.** Independent reviewers reduce failure modes; they don't promise correct code.
+- **Not tied to one builder.** Any agent that can read a file, run a shell and write a report can build (`Builder-Playbook.md`).
 
 ## What software enforces, and what is only instructed
 
-Most of the method is instructions the agents follow; a few checks are scripts that refuse. Know which is which:
+🔒 **Locked by a script:** the end-game lock, the merge-on-main check, the reviewer seated on another vendor's CLI (when used), the names check on records, the voice add-on's refusal of a bare "merge".
+
+📋 **Site rule (the agents follow it):** waiting for your word (plus your tool's own permission prompts), and the acceptance ledger's PASS rows.
+
+<details>
+<summary>Each promise, and what isn't prevented</summary>
 
 | Promise | Enforced today by | What is not prevented |
 |---|---|---|
@@ -262,50 +278,50 @@ Most of the method is instructions the agents follow; a few checks are scripts t
 | The whole ask is done | **instruction plus a record:** the acceptance ledger lists every requirement and check with its evidence, and `/f-signoff` refuses unless every row is PASS. A change to the ask is recorded in the owner's own words (`METHOD.md` §2) | the ledger is written and checked by agents; a wrong PASS is caught only by the reviews or by you |
 | Builder names stay out of the records | **a script the foreman runs:** `skills/f-signoff/names-check.mjs` checks every staged record at the records push and exits non-zero on a hit | it runs only when the foreman calls it at the records push; it checks only the names in your names file, and skips allowed contexts and rendered board pages |
 
+</details>
+
 ## Updating
 
-**Run `/f-setup` between jobs to stay current.** It takes the newest Topping Out from this repo's `main` (you don't wait for a release; releases are dated snapshots of the same changes), and the end of every job tells you when there's something new (the next-job card's ⬆️ line; after a night shift, the morning summary). In your project, **between jobs**, type `/f-setup`. It pulls the newest Topping Out, shows what's new (`CHANGELOG.md`), applies it on your yes, keeps every file you've adapted, and commits exactly the changed files on your word; read-only check at any time: `node <path to toppingout>/skills/f-setup/install.mjs --repo . --check` (`SETUP.md` §1, "Upgrade").
+Between jobs, type **`/f-setup`** in your project. It takes the newest Topping Out from `main`, shows what's new (`CHANGELOG.md`), applies it on your yes and keeps every file you've adapted. Check without changing anything: `node <path to toppingout>/skills/f-setup/install.mjs --repo . --check`.
 
 ## Read next
 
 | If you are... | Read |
 |---|---|
-| A new foreman | this README → `RULES.md` → `METHOD.md` → `OVERRIDES.md` → `Foreman-Playbook.md` → `Builder-Playbook.md` → `templates/` |
-| The owner | this README → `METHOD.md` §"The owner's loop" → `Builder-Playbook.md` |
-| Setting it up in a new repo | `SETUP.md` |
-| Choosing or running a builder | `Builder-Playbook.md` |
-| Choosing who does a job: foreman and builder, or a master builder | "Two ways to staff a job" above → `METHOD.md`, "MASTER BUILDER" |
+| The owner | this README → `METHOD.md`, "The owner's loop" |
+| Setting it up | `SETUP.md` |
+| A new foreman | `RULES.md` → `METHOD.md` → `OVERRIDES.md` → `Foreman-Playbook.md` |
+| Running a builder | `Builder-Playbook.md` |
+| An AI tool | [toppingout.dev/llms.txt](https://toppingout.dev/llms.txt) |
 
-## Folder map
+<details>
+<summary>Folder map, and which file wins</summary>
 
 | Path | What it is |
 |---|---|
 | `METHOD.md` | the full method, stage by stage, with the "why" behind each step |
-| `RULES.md` | the non-negotiables, and the list of acts that need the owner's word |
+| `RULES.md` | the non-negotiables, and the acts that need the owner's word |
 | `OVERRIDES.md` | where the method beats the bundled skills and agents |
 | `SETUP.md` | installing, requirements, the tested setup |
 | `Foreman-Playbook.md`, `Builder-Playbook.md` | how to do the foreman's part well, and how to run any builder |
 | `CHANGELOG.md`, `ROADMAP.md`, `CONTRIBUTING.md` | what changed, what's next, how to help |
 | `DESIGN.md` | the look every Topping Out page shares |
-| `flow.html` | the whole flow as one picture: 46 steps in seven stages (open in a browser) |
-| `skills/` | the 30 skills, each with a `SKILL.md` |
-| `agents/` | the review lenses and helper agents the skills call |
+| `flow.html` | the whole flow as one picture: 46 steps in seven stages |
+| `skills/`, `agents/` | the 30 skills and the review lenses and helpers they call |
 | `templates/`, `snippets/` | fill-in-the-blanks for every document the method writes, and code to copy |
-| `scripts/` | the review dispatcher, the voice scripts and the generators for the site, the wiki and the flow page |
-| `skills-wiki/` | the map of every skill and agent (`skills-wiki/index.md`) |
+| `scripts/` | the review dispatcher, the voice scripts and the generators for the site, the wiki and these pictures |
+| `skills-wiki/` | the map of every skill and agent |
 | `examples/example-board/` | a made-up project board: open `board.html` |
-| `foreman/` | the Logbook, the blueprints index and the job templates a project starts with |
-| `addons/deep-agents/` | **optional:** for an AI agent built on LangChain, LangGraph or Deep Agents; `/f-setup` installs it only on yes (`addons/deep-agents/README.md`) |
-| `addons/gaffer/` | **optional, in this repo only (not installed):** Topping Out Gaffer, a voice agent that runs on your machine for your boards and live Orca sessions; needs an OpenRouter key (`addons/gaffer/README.md`, `SETUP.md` §8c) |
+| `foreman/` | the Logbook, the blueprints index and the job templates |
+| `addons/deep-agents/` | optional: for an agent built on LangChain, LangGraph or Deep Agents |
+| `addons/gaffer/` | optional, in this repo only: Topping Out Gaffer, a voice agent for your boards and live sessions (`SETUP.md` §8c) |
 | `docs/`, `assets/` | the site at toppingout.dev, generated by `scripts/build_site.py`, and its images |
 
-Every folder in detail: `SETUP.md` §1, "The package, folder by folder". What Topping Out adds to your repo, and where a job's files go: `SETUP.md` §2.
+**When two sources disagree:** the owner's own words → `RULES.md` → `METHOD.md` → `OVERRIDES.md` → `SETUP.md` → the playbooks → `templates/` → the bundled `skills/` and `agents/`.
 
-## Precedence
+</details>
 
-When two sources disagree: **the owner's own words → `RULES.md` → `METHOD.md` → `OVERRIDES.md` → `SETUP.md` → `Foreman-Playbook.md` (the why behind the foreman rules in `RULES.md`) / `Builder-Playbook.md` → `templates/` → the bundled `skills/` and `agents/`.** The bundled skills and agents are general; `OVERRIDES.md` lists exactly where the method beats them.
-
-If this saves you a babysitting session, a star helps others find it.
+**Contributing:** issues and pull requests welcome (`CONTRIBUTING.md`). If this saves you a babysitting session, a star helps others find it.
 
 ## Licence
 

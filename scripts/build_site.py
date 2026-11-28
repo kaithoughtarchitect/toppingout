@@ -2991,7 +2991,7 @@ def crews() -> tuple:
 
 def crews_html() -> str:
     rows, charts = crews()
-    head = '<div class="cw2"><span></span><b>Foreman and builder <small>the default</small></b><b>Master builder <small>your pick, per job</small></b></div>'
+    head = '<div class="cw2"><span></span><b>Master builder <small>your strong model builds</small></b><b>Foreman and builder <small>a fast or cheap model codes</small></b></div>'
     trs = "".join(f'<div class="cw2"><span>{inline(k)}</span><p>{inline(a)}</p><p>{inline(b)}</p></div>' for k, a, b in rows)
     flows = "".join(f'<li><b>{inline(t)}</b><ol>'
                     + "".join(f'<li><span>{inline(s[0])}</span>{"".join(f"<small>{inline(x)}</small>" for x in s[1:])}</li>' for s in steps)
