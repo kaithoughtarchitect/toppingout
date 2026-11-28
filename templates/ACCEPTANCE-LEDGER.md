@@ -2,7 +2,7 @@
 
 **By:** the foreman, <date>. **Final reviewed head:** `<full sha>` on `<branch>` (the head every row below was proven at, or the sha a row names, with the repairs since and their affected-test runs listed under it). **Base:** `<sha>`.
 
-The PR may open when no row is FAIL, UNTESTED, INCONCLUSIVE or blank; a row waiting only on CI on the PR at the final head (the job's second whole-suite run), on the foreman's own final-head run where CI doesn't run the whole suite, or on a Linux check that runs as CI on the PR, is PENDING (`METHOD.md` §8 steps 1 and 6). **The merge waits until every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks).** A requirement dropped from scope, weakened (reworded so less is proven) or substituted needs the owner's recorded decision below (quote it), never a smaller denominator or a quietly reworded row (`RULES.md`, Evidence). The requirement column is copied verbatim from the job file's requirement table, which work order 1 writes from the ticket as the site walk left it (`METHOD.md` §2), so the baseline is fixed before the build starts. `/f-signoff` reads this ledger: every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks); no deferrals.
+The PR may open when no row is FAIL, UNTESTED, INCONCLUSIVE or blank (a page check `owed: no browser tool` is not blank: it goes in the PR body for the owner); a row waiting only on CI on the PR at the final head (the job's second whole-suite run), on the foreman's own final-head run where CI doesn't run the whole suite, or on a Linux check that runs as CI on the PR, is PENDING (`METHOD.md` §8 steps 1 and 6). **The merge waits until every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks).** A requirement dropped from scope, weakened (reworded so less is proven) or substituted needs the owner's recorded decision below (quote it), never a smaller denominator or a quietly reworded row (`RULES.md`, Evidence). The requirement column is copied verbatim from the job file's requirement table, which work order 1 writes from the ticket as the site walk left it (`METHOD.md` §2), so the baseline is fixed before the build starts. `/f-signoff` reads this ledger: every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks); no deferrals.
 
 ## Requirements and verification points
 
@@ -25,6 +25,14 @@ What a job can break without any requirement failing. Every row is filled: eithe
 | Security | | e.g. the inputs it now accepts and the probe that refuses a bad one; secrets never logged |
 | Privacy | | e.g. no personal data newly stored, logged or sent; retention as agreed |
 | Cost | | e.g. paid calls added per request, the measured spend |
+
+## Page check (page changes only)
+
+When the job changes something a user sees in a page, the foreman (or the master builder) opens the app at the final head in a browser tool and drives each changed screen the way its requirement describes (`METHOD.md` §10, "The page check"). Unit tests and a code read don't stand in for it. Save the evidence beside this ledger as `JOB-<N>-PAGE-<screen>.png` (or `.txt` for a snapshot), with no login value or personal data showing; a repair after it that touches a checked screen re-takes that row at the new head. **No browser tool loaded:** `owed: no browser tool`, listed for the owner in the PR body, never a PASS; attended, the owner does it before the merge or records that they won't; in an autonomous run it stops the job, as an UNTESTED row does. A job that changes no page writes `not applicable`.
+
+| Screen and what was done | Result | Achieved mode | Evidence |
+|---|---|---|---|
+| `<page or route>`: <the clicks and values, as the requirement describes> | PASS / FAIL / owed | live check | `JOB-<N>-PAGE-<screen>.png`, the browser tool used, the head sha |
 
 ## Behaviour (AI features only)
 
