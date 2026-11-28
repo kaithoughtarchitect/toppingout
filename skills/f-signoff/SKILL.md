@@ -144,7 +144,7 @@ Verify completion metrics:
 | ------------- | ------------ | -------- | ------ |
 | Requirements  | 100%         | X/Y (Z%) | ✅/❌  |
 | Tasks         | 100%         | X/Y (Z%) | ✅/❌  |
-| Acceptance ledger | every requirement and VP row PASS; non-functional rows PASS or `not touched` | X/Y | ✅/❌  |
+| Acceptance ledger | every requirement and VP row PASS; non-functional rows PASS or `not touched`; page check PASS, `not applicable` or owed | X/Y | ✅/❌  |
 | All Phases    | Complete     | X/Y      | ✅/❌  |
 ```
 
@@ -220,7 +220,7 @@ Find the "JOB COMPLETE" section (older records: "COMMISSION COMPLETE") and **rep
 **Lines of Code:** +X added, -Y removed (net +/-Z)
 ```
 
-There is no incomplete close: `/f-signoff` runs only after the merge, and the merge only after every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, and the behaviour row recorded (it never blocks). A job that can't finish is HALTed on the board (`f-board halt`), not closed.
+There is no incomplete close: `/f-signoff` runs only after the merge, and the merge only after every requirement and VP row PASS, the non-functional rows PASS or `not touched` with a reason, the page check PASS, `not applicable` or owed to the owner, and the behaviour row recorded (it never blocks). A job that can't finish is HALTed on the board (`f-board halt`), not closed.
 
 #### Step 3.2: Write the job's Logbook cards
 

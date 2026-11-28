@@ -59,7 +59,7 @@ Each check has a fixed authority, do not mix them:
 ### 6. Embedded-Copy Drift _(structural detection, semantic verdict)_
 
 - When the same policy, schema, table, or return-format appears as a literal copy in 2+ files, the _existence_ of uncontrolled copies is a standing hazard even while they still agree. Duplication is acceptable only when one of these holds: a sync mechanism exists, the copy is a pointer/reference rather than a restatement, or a reconciliation step is documented. Otherwise flag it and recommend designating one source + replacing the others with references.
-- Worked instance (Topping Out's own files): the list of acts that need the owner's exact word lives in `RULES.md` (the source) and is restated as a literal copy in `README.md` ("The idea in seven lines", item 6) and in `agents/handoff-builder.md` (§0 guidance). Verify the copies still agree with the source on every run that touches any of them.
+- Worked instance (Topping Out's own files): the list of acts that need the owner's exact word lives in `RULES.md` (the source) and is restated as a literal copy in `agents/handoff-builder.md` (§0 guidance); `README.md` only points to it. Verify the copies still agree with the source on every run that touches any of them.
 
 ## The Coupling Map (build it for the repo at hand: check these edges first)
 
