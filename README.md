@@ -1,6 +1,19 @@
-# Topping Out
+<p align="center">
+  <img src="docs/assets/brand/topping-out-icon-512.png" alt="Topping Out logo: a steel beam with a flag on top" width="160">
+</p>
 
-[![CI](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg)](https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+<h1 align="center">Topping Out</h1>
+
+<p align="center">
+  Stop babysitting agents.<br>
+  Get the proof.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-blue.svg" alt="Licence: MIT"></a>
+  <a href="https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml"><img src="https://github.com/kaithoughtarchitect/toppingout/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://toppingout.dev"><img src="https://img.shields.io/badge/docs-toppingout.dev-blue.svg" alt="Docs: toppingout.dev"></a>
+</p>
 
 **Go to bed with a ticket list, wake up to merged PRs, each with its proof. Topping Out is a spec-driven software factory that builds your product head by head: you name what it must do, it lays the jobs out on a board and builds them floor by floor, and when the board tops out you choose the next head. Nothing lives in a chat: every job starts a fresh session from files (the board, the handover, its work-session folder and a Logbook of every lesson so far), so the hundredth job knows what the first one learned and nothing drifts.**
 
